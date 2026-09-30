@@ -1,8 +1,10 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { GameHeader } from '../../components/game-header/game-header';
+import { Board } from '../../components/board/board';
+import { PlayerPanel } from '../../components/player-panel/player-panel';
 
 @Component({
-  imports: [RouterLink],
+  imports: [GameHeader, Board, PlayerPanel],
   selector: 'app-game',
   styleUrl: './game.scss',
   templateUrl: './game.html',

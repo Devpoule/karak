@@ -1,0 +1,76 @@
+:host {
+  display: block;
+  min-height: 0;
+}
+
+.board {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+
+  cursor: grab;
+  user-select: none;
+
+  // Décor provisoire
+  background-position-x: 60px;
+  background-position-y: 60px;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.board__world {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+
+.board__tile {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.board__debug {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  transform: translate(-50%, -50%);
+
+  span {
+    position: absolute;
+    font-weight: bold;
+  }
+}
+
+.board__debug-north {
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.board__debug-east {
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.board__debug-south {
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.board__debug-west {
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}

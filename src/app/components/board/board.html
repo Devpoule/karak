@@ -1,0 +1,121 @@
+<!--
+  Plateau de jeu interactif.
+
+  Les Pointer Events permettent de gérer le déplacement du plateau
+  aussi bien à la souris que sur un écran tactile.
+
+  Le déplacement effectué ici concerne uniquement la caméra :
+  les coordonnées logiques des tuiles ne sont jamais modifiées.
+-->
+<section
+  class="board"
+  (pointerdown)="startDragging($event)"
+  (pointermove)="drag($event)"
+  (pointerup)="stopDragging($event)"
+  (pointercancel)="stopDragging($event)"
+>
+  <!--
+    Monde contenant toutes les tuiles du donjon.
+
+    Le repère logique a son origine (0, 0) au centre du plateau.
+    La transformation CSS permet de déplacer visuellement ce monde
+    lorsque l'utilisateur déplace la caméra.
+  -->
+  <div
+    class="board__world"
+    [style.transform]="worldTransform"
+  >
+    @for (tile of tiles; track $index) {
+
+      <!--
+        Tuile placée dans le monde.
+
+        Les coordonnées x et y sont des coordonnées logiques :
+        une différence de 1 correspond exactement à une tuile.
+
+        Pour obtenir la position en pixels :
+          position = coordonnée × taille de tuile
+
+        On retire ensuite tileSize / 2 car left et top positionnent
+        le coin supérieur gauche de l'élément, alors que notre
+        coordonnée logique représente le centre de la tuile.
+
+        Le pointerdown mémorise également la tuile pressée.
+        Elle ne sera réellement sélectionnée au pointerup que si
+        aucun déplacement de caméra n'a eu lieu.
+      -->
+      <div
+        class="board__tile"
+        [style.left.px]="tile.x * tileSize - tileSize / 2"
+        [style.top.px]="tile.y * tileSize - tileSize / 2"
+        (pointerdown)="prepareTileSelection(tile)"
+      >
+        <!--
+          L'image provient de la TileDefinition associée.
+
+          La rotation CSS doit rester identique à la rotation logique
+          utilisée par le moteur pour déterminer les ouvertures.
+        -->
+        <img
+          [src]="getTileDefinition(tile)?.image"
+          [style.transform]="'rotate(' + tile.rotation + 'deg)'"
+          alt=""
+          draggable="false"
+        >
+      </div>
+    }
+
+    @if (selectedTile) {
+
+      <!--
+        Contrôles temporaires de développement affichés autour
+        de la tuile sélectionnée.
+
+        Signification :
+          ✓ : une tuile voisine existe et le passage est connecté.
+          ? : aucune tuile n'existe encore et la zone peut être explorée.
+          × : aucun passage n'est possible dans cette direction.
+
+        stopPropagation() empêche un clic sur ces contrôles de démarrer
+        simultanément un déplacement du plateau.
+      -->
+      <div
+        class="board__debug"
+        [style.left.px]="selectedTile.x * tileSize"
+        [style.top.px]="selectedTile.y * tileSize"
+      >
+        <span
+          class="board__debug-north"
+          (pointerdown)="$event.stopPropagation()"
+          (click)="explore(selectedTile, 'north')"
+        >
+          N {{ getDirectionStatus(selectedTile, 'north') }}
+        </span>
+
+        <span
+          class="board__debug-east"
+          (pointerdown)="$event.stopPropagation()"
+          (click)="explore(selectedTile, 'east')"
+        >
+          E {{ getDirectionStatus(selectedTile, 'east') }}
+        </span>
+
+        <span
+          class="board__debug-south"
+          (pointerdown)="$event.stopPropagation()"
+          (click)="explore(selectedTile, 'south')"
+        >
+          S {{ getDirectionStatus(selectedTile, 'south') }}
+        </span>
+
+        <span
+          class="board__debug-west"
+          (pointerdown)="$event.stopPropagation()"
+          (click)="explore(selectedTile, 'west')"
+        >
+          O {{ getDirectionStatus(selectedTile, 'west') }}
+        </span>
+      </div>
+    }
+  </div>
+</section>
