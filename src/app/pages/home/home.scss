@@ -1,0 +1,159 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.home {
+  min-height: 100vh;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 3rem clamp(2rem, 6vw, 7rem);
+
+  color: #352e2a;
+
+  // Palette claire inspirée de menu_01.jpg.
+  background:
+    radial-gradient(
+      circle at 70% 40%,
+      rgba(166, 145, 178, 0.12),
+      transparent 34%
+    ),
+    linear-gradient(
+      135deg,
+      #f7f3eb 0%,
+      #eee7dc 55%,
+      #e4dace 100%
+    );
+}
+
+.home__logo {
+  display: block;
+
+  width: clamp(220px, 22vw, 340px);
+  max-width: 100%;
+
+  margin-bottom: 2rem;
+
+  object-fit: contain;
+
+  user-select: none;
+}
+
+.home__hero {
+  width: min(1400px, 100%);
+
+  display: grid;
+  grid-template-columns: minmax(300px, 0.8fr) minmax(500px, 1.5fr);
+  align-items: center;
+
+  gap: clamp(2rem, 5vw, 6rem);
+}
+
+.home__content {
+  max-width: 520px;
+
+  h1 {
+    margin: 0 0 1.25rem;
+
+    font-size: clamp(2rem, 3vw, 3.4rem);
+    line-height: 1.05;
+
+    color: #352b28;
+  }
+
+  p {
+    margin: 0 0 2rem;
+
+    max-width: 44ch;
+
+    font-size: 1.1rem;
+    line-height: 1.65;
+
+    color: #62554c;
+  }
+}
+
+.home__play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 150px;
+  padding: 0.85rem 1.8rem;
+
+  color: #fff8e8;
+  font-weight: 700;
+  text-decoration: none;
+
+  background:
+    linear-gradient(
+      180deg,
+      #a74638 0%,
+      #7e2e29 100%
+    );
+
+  border: 1px solid #68251f;
+  border-radius: 4px;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 3px 8px rgba(64, 38, 29, 0.22);
+
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
+
+  &:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 5px 12px rgba(64, 38, 29, 0.28);
+  }
+}
+
+.home__illustration {
+  min-width: 0;
+
+  img {
+    display: block;
+
+    width: 100%;
+    max-height: 620px;
+
+    object-fit: contain;
+
+    border-radius: 6px;
+
+    box-shadow:
+      0 16px 35px rgba(46, 34, 42, 0.2);
+
+    user-select: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .home {
+    padding: 2rem 1.25rem;
+  }
+
+  .home__hero {
+    grid-template-columns: 1fr;
+  }
+
+  .home__content {
+    max-width: 650px;
+  }
+
+  .home__illustration {
+    order: -1;
+
+    img {
+      max-height: 420px;
+    }
+  }
+}

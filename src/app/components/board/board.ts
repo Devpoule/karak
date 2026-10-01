@@ -1,16 +1,9 @@
 import { Component } from '@angular/core';
 
 import { DungeonService } from '../../services/dungeon.service';
-import {
-  ExplorationService,
-  PendingTilePlacement,
-} from '../../services/exploration.service';
+import { ExplorationService, PendingTilePlacement } from '../../services/exploration.service';
 
-import {
-  Direction,
-  PlacedTile,
-  TileDefinition,
-} from '../../models/tile';
+import { Direction, PlacedTile, TileDefinition } from '../../models/tile';
 
 @Component({
   selector: 'app-board',
@@ -25,6 +18,27 @@ export class Board {
   ) {}
 
   /**
+   * Indique si le donjon a été révélé au joueur.
+   *
+   * La couverture est uniquement une présentation visuelle :
+   * elle ne modifie aucun état du moteur de jeu.
+   */
+  isBoardRevealed = false;
+  isBoardRevealing = false;
+
+  revealBoard(): void {
+    if (this.isBoardRevealing) {
+      return;
+    }
+
+    this.isBoardRevealing = true;
+
+    window.setTimeout(() => {
+      this.isBoardRevealed = true;
+    }, 1300);
+  }
+
+  /**
    * Taille d'affichage d'une tuile.
    *
    * Les coordonnées du donjon restent logiques :
@@ -32,6 +46,19 @@ export class Board {
    * indépendamment de cette valeur.
    */
   readonly tileSize = 120;
+
+  /**
+   * La tuile de départ est au centre.
+   * 79 emplacements restent disponibles dans chaque direction,
+   * soit 159 cases par axe.
+   */
+  readonly mapSizeInTiles = 159;
+
+  get mapSizeInPixels(): number {
+    return this.mapSizeInTiles * this.tileSize;
+  }
+
+  readonly mapCenterInPixels = this.mapSizeInPixels / 2;
 
   get tiles(): PlacedTile[] {
     return this.dungeonService.tiles;
@@ -67,7 +94,10 @@ export class Board {
   }
 
   get worldTransform(): string {
-    return `translate(${this.offsetX}px, ${this.offsetY}px)`;
+    const x = this.offsetX - this.mapCenterInPixels;
+    const y = this.offsetY - this.mapCenterInPixels;
+
+    return `translate(${x}px, ${y}px)`;
   }
 
   startDragging(event: PointerEvent): void {
@@ -123,10 +153,7 @@ export class Board {
     return this.dungeonService.hasTileOpening(tile, direction);
   }
 
-  getNeighborPosition(
-    tile: PlacedTile,
-    direction: Direction,
-  ): { x: number; y: number } {
+  getNeighborPosition(tile: PlacedTile, direction: Direction): { x: number; y: number } {
     return this.dungeonService.getNeighborPosition(tile, direction);
   }
 
@@ -138,10 +165,7 @@ export class Board {
     return this.dungeonService.getTileAt(x, y);
   }
 
-  getNeighbor(
-    tile: PlacedTile,
-    direction: Direction,
-  ): PlacedTile | undefined {
+  getNeighbor(tile: PlacedTile, direction: Direction): PlacedTile | undefined {
     return this.dungeonService.getNeighbor(tile, direction);
   }
 

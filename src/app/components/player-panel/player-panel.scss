@@ -1,0 +1,55 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.player-panel {
+  height: 100%;
+  box-sizing: border-box;
+
+  display: grid;
+  grid-template-columns:
+    minmax(160px, 1.35fr)
+    repeat(5, minmax(110px, 1fr));
+
+  align-items: stretch;
+
+  color: #352e2a;
+
+  // Même famille de couleurs que le header.
+  background:
+    linear-gradient(
+      180deg,
+      #e9e2d6 0%,
+      #f4f0e8 100%
+    );
+
+  border-top: 1px solid rgba(77, 64, 54, 0.24);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 -2px 8px rgba(32, 24, 20, 0.14);
+
+  > div {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 1rem;
+
+    font-weight: 600;
+
+    border-right: 1px solid rgba(77, 64, 54, 0.16);
+
+    // Petit accent intérieur pour éviter l'aspect
+    // "tableau HTML" trop plat.
+    box-shadow:
+      inset 1px 0 0 rgba(255, 255, 255, 0.35);
+
+    &:last-child {
+      border-right: 0;
+    }
+  }
+}

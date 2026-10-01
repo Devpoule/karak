@@ -7,13 +7,15 @@
 >
   <div
     class="board__world"
+    [style.width.px]="mapSizeInPixels"
+    [style.height.px]="mapSizeInPixels"
     [style.transform]="worldTransform"
   >
     @for (tile of tiles; track $index) {
       <div
         class="board__tile"
-        [style.left.px]="tile.x * tileSize - tileSize / 2"
-        [style.top.px]="tile.y * tileSize - tileSize / 2"
+        [style.left.px]="mapCenterInPixels + tile.x * tileSize - tileSize / 2"
+        [style.top.px]="mapCenterInPixels + tile.y * tileSize - tileSize / 2"
         (pointerdown)="prepareTileSelection(tile)"
       >
         <img
@@ -30,8 +32,8 @@
         <div
           class="board__tile board__tile--pending"
           [class.board__tile--invalid]="!isPendingTilePlacementValid()"
-          [style.left.px]="position.x * tileSize - tileSize / 2"
-          [style.top.px]="position.y * tileSize - tileSize / 2"
+          [style.left.px]="mapCenterInPixels + position.x * tileSize - tileSize / 2"
+          [style.top.px]="mapCenterInPixels + position.y * tileSize - tileSize / 2"
         >
           <img
             [src]="pending.definition.image"
@@ -66,8 +68,8 @@
     @if (selectedTile && !pendingTile) {
       <div
         class="board__debug"
-        [style.left.px]="selectedTile.x * tileSize"
-        [style.top.px]="selectedTile.y * tileSize"
+        [style.left.px]="mapCenterInPixels + selectedTile.x * tileSize"
+        [style.top.px]="mapCenterInPixels + selectedTile.y * tileSize"
       >
         <span
           class="board__debug-north"
@@ -103,4 +105,20 @@
       </div>
     }
   </div>
+  @if (!isBoardRevealed) {
+    <button
+      type="button"
+      class="board__cover"
+      [class.board__cover--revealing]="isBoardRevealing"
+      (pointerdown)="$event.stopPropagation()"
+      (pointermove)="$event.stopPropagation()"
+      (pointerup)="$event.stopPropagation()"
+      (click)="revealBoard()"
+      aria-label="Révéler le donjon"
+    >
+      <img src="/assets/board/karak_cover.jpg" alt="" draggable="false" />
+
+      <span class="board__cover-action"> Entrer dans le donjon </span>
+    </button>
+  }
 </section>

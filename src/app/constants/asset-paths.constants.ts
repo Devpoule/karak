@@ -4,6 +4,7 @@
  */
 export const ASSET_PATHS = {
   tiles: '/assets/tiles',
+  board: '/assets/board',
   heroes: '/assets/heroes',
   monsters: '/assets/monsters',
   items: '/assets/items',
