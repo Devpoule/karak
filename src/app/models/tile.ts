@@ -16,6 +16,26 @@
 export type Direction = 'north' | 'east' | 'south' | 'west';
 
 /**
+ * Liste des quatre directions possibles autour d'une tuile.
+ *
+ * Cette constante permet de parcourir systématiquement les quatre
+ * côtés d'une tuile lorsqu'un algorithme en a besoin.
+ *
+ * Elle ne définit aucune règle de placement : les règles officielles
+ * de Karak restent la source ultime pour déterminer les connexions
+ * obligatoires pendant l'exploration.
+ *
+ * L'ordre suit le sens horaire :
+ * north → east → south → west.
+ */
+export const DIRECTIONS: Direction[] = [
+  'north',
+  'east',
+  'south',
+  'west',
+];
+
+/**
  * Décrit un type de tuile du jeu.
  *
  * Une TileDefinition représente les propriétés intrinsèques
@@ -310,6 +330,14 @@ export function areConnected(
 /**
  * Recherche une rotation permettant à une tuile de présenter
  * une ouverture dans une direction donnée.
+ *
+ * RÈGLE OFFICIELLE KARAK — SOURCE ULTIME :
+ * pendant l'exploration, la nouvelle tuile doit permettre au héros
+ * d'y entrer depuis la tuile qu'il occupait.
+ *
+ * Cette fonction ne valide volontairement PAS les trois autres côtés :
+ * le livret autorise la nouvelle tuile à former une impasse dans les
+ * autres directions.
  *
  * Les quatre orientations possibles sont testées successivement :
  *

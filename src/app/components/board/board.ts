@@ -19,7 +19,6 @@ import { TILE_DEFINITIONS } from '../../data/tile-definitions';
   styleUrl: './board.scss',
 })
 export class Board {
-
   /**
    * Taille d'une tuile affichée sur le plateau, en pixels.
    *
@@ -46,25 +45,57 @@ export class Board {
   readonly tileDefinitions = TILE_DEFINITIONS;
 
   /**
+   * Pioche des tuiles encore disponibles pendant la partie.
+   *
+   * Chaque entrée représente un exemplaire physique disponible.
+   * Lorsqu'une tuile est tirée, son identifiant est retiré de ce
+   * tableau : elle ne pourra donc plus être tirée pendant cette partie.
+   *
+   * RÈGLE OFFICIELLE KARAK — SOURCE ULTIME :
+   * la tuile de départ est placée au centre du jeu. Les autres tuiles
+   * sont mélangées et constituent la réserve utilisée pendant
+   * l'exploration.
+   *
+   * La tuile de départ n'est donc pas présente dans cette pioche.
+   */
+  tileDeck: string[] = [
+    'length-01',
+    'length-02',
+    'length-03',
+    'length-04',
+    'teleporter-length-01',
+    'teleporter-length-02',
+    'teleporter-length-03',
+    'teleporter-length-04',
+    'length-room',
+    'corner-01',
+    'corner-02',
+    'corner-03',
+    'corner-04',
+    'healing-corner',
+    'intersection-01',
+    'intersection-02',
+    'intersection-03',
+    'intersection-04',
+    'intersection-05',
+    'intersection-room',
+    'cross',
+    'cross-room',
+  ];
+
+  /**
    * Tuiles actuellement présentes sur le plateau.
    *
-   * Chaque élément référence une TileDefinition et possède
-   * sa propre position ainsi que sa propre rotation.
+   * Une nouvelle partie commence uniquement avec la tuile de départ,
+   * placée à l'origine logique du donjon (0, 0).
    *
-   * Pour le moment, le plateau est initialisé avec :
-   * - la tuile de départ en (0, 0) ;
-   * - un couloir de test en (1, 0).
+   * Toutes les autres tuiles seront ajoutées progressivement
+   * par le mécanisme d'exploration.
    */
   tiles: PlacedTile[] = [
     {
       definitionId: 'start',
       x: 0,
-      y: 0,
-      rotation: 0,
-    },
-    {
-      definitionId: 'length-01',
-      x: 1,
       y: 0,
       rotation: 0,
     },
@@ -139,13 +170,8 @@ export class Board {
    * @param tile Tuile présente sur le plateau.
    * @returns Sa définition, ou undefined si elle n'existe pas.
    */
-  getTileDefinition(
-    tile: PlacedTile
-  ): TileDefinition | undefined {
-    return this.tileDefinitions.find(
-      definition =>
-        definition.id === tile.definitionId
-    );
+  getTileDefinition(tile: PlacedTile): TileDefinition | undefined {
+    return this.tileDefinitions.find((definition) => definition.id === tile.definitionId);
   }
 
   /**
@@ -167,17 +193,14 @@ export class Board {
    * hasDragged est réinitialisé : nous ne savons pas encore
    * s'il s'agit d'un clic ou d'un déplacement.
    */
-  startDragging(
-    event: PointerEvent
-  ): void {
+  startDragging(event: PointerEvent): void {
     this.isDragging = true;
     this.hasDragged = false;
 
     this.lastMouseX = event.clientX;
     this.lastMouseY = event.clientY;
 
-    (event.currentTarget as HTMLElement)
-      .setPointerCapture(event.pointerId);
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   }
 
   /**
@@ -195,18 +218,14 @@ export class Board {
    * Cela empêchera la sélection accidentelle d'une tuile
    * lorsque l'utilisateur voulait simplement déplacer le plateau.
    */
-  drag(
-    event: PointerEvent
-  ): void {
+  drag(event: PointerEvent): void {
     if (!this.isDragging) {
       return;
     }
 
-    const deltaX =
-      event.clientX - this.lastMouseX;
+    const deltaX = event.clientX - this.lastMouseX;
 
-    const deltaY =
-      event.clientY - this.lastMouseY;
+    const deltaY = event.clientY - this.lastMouseY;
 
     if (deltaX !== 0 || deltaY !== 0) {
       this.hasDragged = true;
@@ -233,9 +252,7 @@ export class Board {
    *
    * La capture du pointeur est ensuite libérée.
    */
-  stopDragging(
-    event: PointerEvent
-  ): void {
+  stopDragging(event: PointerEvent): void {
     this.isDragging = false;
 
     if (!this.hasDragged && this.pressedTile) {
@@ -244,8 +261,7 @@ export class Board {
 
     this.pressedTile = null;
 
-    const board =
-      event.currentTarget as HTMLElement;
+    const board = event.currentTarget as HTMLElement;
 
     if (board.hasPointerCapture(event.pointerId)) {
       board.releasePointerCapture(event.pointerId);
@@ -258,9 +274,7 @@ export class Board {
    * Elle n'est pas sélectionnée immédiatement afin de permettre
    * le drag du plateau depuis n'importe quelle tuile.
    */
-  prepareTileSelection(
-    tile: PlacedTile
-  ): void {
+  prepareTileSelection(tile: PlacedTile): void {
     this.pressedTile = tile;
   }
 
@@ -273,22 +287,14 @@ export class Board {
    *
    * Les deux informations sont combinées par hasOpening().
    */
-  hasTileOpening(
-    tile: PlacedTile,
-    direction: Direction
-  ): boolean {
-    const definition =
-      this.getTileDefinition(tile);
+  hasTileOpening(tile: PlacedTile, direction: Direction): boolean {
+    const definition = this.getTileDefinition(tile);
 
     if (!definition) {
       return false;
     }
 
-    return hasOpening(
-      definition.openings,
-      tile.rotation,
-      direction
-    );
+    return hasOpening(definition.openings, tile.rotation, direction);
   }
 
   /**
@@ -307,10 +313,7 @@ export class Board {
    * @param tile Tuile servant de point de départ.
    * @param direction Direction recherchée.
    */
-  getNeighborPosition(
-    tile: PlacedTile,
-    direction: Direction
-  ): { x: number; y: number } {
+  getNeighborPosition(tile: PlacedTile, direction: Direction): { x: number; y: number } {
     switch (direction) {
       case 'north':
         return {
@@ -339,27 +342,42 @@ export class Board {
   }
 
   /**
-   * Recherche la tuile située immédiatement dans une direction.
+   * Recherche une tuile déjà placée à des coordonnées précises.
    *
-   * La méthode calcule d'abord les coordonnées attendues,
-   * puis cherche si une tuile du plateau occupe cette position.
+   * Cette méthode permet d'interroger directement le plateau sans
+   * avoir besoin de connaître une tuile de départ et une direction.
    *
-   * L'absence de résultat n'est pas nécessairement une erreur :
-   * elle peut représenter une zone du donjon encore inexplorée.
+   * Elle sera notamment utilisée lors du placement d'une nouvelle
+   * tuile pour examiner toutes les cases qui entourent sa future
+   * position.
+   *
+   * @param x Coordonnée horizontale recherchée.
+   * @param y Coordonnée verticale recherchée.
+   * @returns La tuile présente à cette position, ou undefined
+   * si la case est actuellement vide.
    */
-  getNeighbor(
-    tile: PlacedTile,
-    direction: Direction
-  ): PlacedTile | undefined {
-    const position =
-      this.getNeighborPosition(tile, direction);
-
-    return this.tiles.find(
-      candidate =>
-        candidate.x === position.x &&
-        candidate.y === position.y
-    );
+  getTileAt(x: number, y: number): PlacedTile | undefined {
+    return this.tiles.find((tile) => tile.x === x && tile.y === y);
   }
+
+  /**
+   * Recherche la tuile située immédiatement dans une direction
+   * donnée par rapport à une autre tuile.
+   *
+   * La position de la case voisine est d'abord calculée avec
+   * getNeighborPosition(), puis getTileAt() vérifie si cette case
+   * est déjà occupée.
+   *
+   * @param tile Tuile servant de point de départ.
+   * @param direction Direction dans laquelle chercher.
+   * @returns La tuile voisine ou undefined si la case est vide.
+   */
+  getNeighbor(tile: PlacedTile, direction: Direction): PlacedTile | undefined {
+    const position = this.getNeighborPosition(tile, direction);
+
+    return this.getTileAt(position.x, position.y);
+  }
+
 
   /**
    * Détermine si un déplacement est possible entre une tuile
@@ -373,22 +391,16 @@ export class Board {
    *
    * areConnected() prend également en compte leurs rotations.
    */
-  canMoveTo(
-    tile: PlacedTile,
-    direction: Direction
-  ): boolean {
-    const neighbor =
-      this.getNeighbor(tile, direction);
+  canMoveTo(tile: PlacedTile, direction: Direction): boolean {
+    const neighbor = this.getNeighbor(tile, direction);
 
     if (!neighbor) {
       return false;
     }
 
-    const tileDefinition =
-      this.getTileDefinition(tile);
+    const tileDefinition = this.getTileDefinition(tile);
 
-    const neighborDefinition =
-      this.getTileDefinition(neighbor);
+    const neighborDefinition = this.getTileDefinition(neighbor);
 
     if (!tileDefinition || !neighborDefinition) {
       return false;
@@ -399,7 +411,7 @@ export class Board {
       tile.rotation,
       neighborDefinition.openings,
       neighbor.rotation,
-      direction
+      direction,
     );
   }
 
@@ -418,17 +430,10 @@ export class Board {
    *
    * → north est explorable.
    */
-  canExplore(
-    tile: PlacedTile,
-    direction: Direction
-  ): boolean {
-    const neighbor =
-      this.getNeighbor(tile, direction);
+  canExplore(tile: PlacedTile, direction: Direction): boolean {
+    const neighbor = this.getNeighbor(tile, direction);
 
-    return (
-      !neighbor &&
-      this.hasTileOpening(tile, direction)
-    );
+    return !neighbor && this.hasTileOpening(tile, direction);
   }
 
   /**
@@ -444,10 +449,7 @@ export class Board {
    * Ce système est actuellement utilisé comme outil de debug
    * pendant le développement du moteur.
    */
-  getDirectionStatus(
-    tile: PlacedTile,
-    direction: Direction
-  ): string {
+  getDirectionStatus(tile: PlacedTile, direction: Direction): string {
     if (this.canMoveTo(tile, direction)) {
       return '✓';
     }
@@ -460,23 +462,32 @@ export class Board {
   }
 
   /**
-   * Explore une zone encore inconnue du donjon.
+   * Explore un secteur encore inexploré du donjon.
    *
-   * Déroulement actuel :
+   * RÈGLE OFFICIELLE KARAK — SOURCE ULTIME :
+   * lorsqu'un héros entre dans un secteur inexploré, une tuile de
+   * catacombes est tirée et intégrée de manière que le héros puisse
+   * y entrer depuis la tuile qu'il occupe actuellement.
    *
+   * La règle précise que la nouvelle tuile doit être reliée uniquement
+   * à la tuile depuis laquelle le héros arrive. Elle peut donc former
+   * une impasse dans les autres directions, y compris contre une tuile
+   * déjà présente.
+   *
+   * Conséquence pour le moteur :
+   * nous ne validons PAS la compatibilité de la nouvelle tuile avec
+   * tous ses voisins. Nous cherchons seulement une rotation qui lui
+   * donne une ouverture vers la tuile d'origine.
+   *
+   * Déroulement :
    * 1. vérifier que la direction est explorable ;
-   * 2. tirer une définition de tuile ;
-   * 3. déterminer de quel côté la nouvelle tuile doit être ouverte ;
-   * 4. trouver une rotation compatible ;
-   * 5. calculer les coordonnées de destination ;
-   * 6. créer le PlacedTile ;
-   * 7. l'ajouter au plateau.
+   * 2. tirer une tuile de la pioche ;
+   * 3. déterminer le côté par lequel elle doit être accessible ;
+   * 4. rechercher une rotation présentant cette ouverture ;
+   * 5. calculer sa position ;
+   * 6. créer puis placer la nouvelle tuile.
    *
-   * Exemple d'une exploration vers north :
-   *
-   * La tuile actuelle possède une ouverture north.
-   *
-   * La nouvelle tuile sera située au-dessus :
+   * Exemple pour une exploration vers north :
    *
    *       nouvelle tuile
    *            ↓ south
@@ -484,57 +495,39 @@ export class Board {
    *            ↑ north
    *       tuile actuelle
    *
-   * Elle doit donc présenter une ouverture vers south.
+   * La nouvelle tuile doit donc posséder une ouverture vers south.
+   * Ses autres côtés n'imposent aucune contrainte de placement.
    *
-   * IMPORTANT :
-   * la pioche actuelle est encore temporaire. Une même définition
-   * peut être tirée plusieurs fois sans limite.
+   * Si une future interprétation du code contredit les règles
+   * officielles de Karak, ce sont les règles officielles qui priment.
    */
-  explore(
-    tile: PlacedTile,
-    direction: Direction
-  ): void {
+  explore(tile: PlacedTile, direction: Direction): void {
     if (!this.canExplore(tile, direction)) {
       return;
     }
 
-    const definition =
-      this.drawTileDefinition();
+    const definition = this.drawTileDefinition();
 
     if (!definition) {
       return;
     }
 
-    /*
-     * La nouvelle tuile doit être ouverte vers la tuile
-     * depuis laquelle l'exploration a commencé.
-     *
-     * Exploration north → nouvelle ouverture requise south.
-     * Exploration east  → nouvelle ouverture requise west.
-     * Etc.
-     */
-    const requiredDirection =
-      getOppositeDirection(direction);
-
-    const rotation =
-      findConnectingRotation(
-        definition.openings,
-        requiredDirection
-      );
+    const requiredDirection = getOppositeDirection(direction);
 
     /*
-     * Si aucune orientation de cette définition ne permet
-     * la connexion, la tuile ne peut pas être posée.
+     * Conformément à la règle officielle, seule la connexion avec
+     * la tuile d'origine est obligatoire.
      */
+    const rotation = findConnectingRotation(
+      definition.openings,
+      requiredDirection,
+    );
+
     if (rotation === undefined) {
       return;
     }
 
-    const position =
-      this.getNeighborPosition(
-        tile,
-        direction
-      );
+    const position = this.getNeighborPosition(tile, direction);
 
     const newTile: PlacedTile = {
       definitionId: definition.id,
@@ -547,51 +540,58 @@ export class Board {
   }
 
   /**
-   * Tire temporairement une définition de tuile au hasard.
+   * Tire aléatoirement une tuile parmi celles encore disponibles
+   * dans la pioche, puis la retire définitivement de celle-ci.
    *
-   * Pour le prototype actuel, seules les définitions dont
-   * l'identifiant commence par "length-" participent au tirage.
+   * RÈGLE OFFICIELLE KARAK — SOURCE ULTIME :
+   * les tuiles autres que la tuile de départ sont mélangées face
+   * cachée. Lorsqu'un héros entre dans un secteur inexploré, il prend
+   * une tuile dans cette réserve.
    *
-   * Math.random() produit une valeur comprise entre 0 inclus
-   * et 1 exclu.
+   * tileDeck représente numériquement cette réserve physique.
    *
-   * Exemple avec quatre définitions :
+   * Fonctionnement :
    *
-   * Math.random() = 0.63
+   * 1. vérifier que la pioche contient encore au moins une tuile ;
+   * 2. choisir aléatoirement un index dans tileDeck ;
+   * 3. retirer l'identifiant situé à cet index avec splice() ;
+   * 4. retrouver la TileDefinition correspondante dans le catalogue.
    *
-   * 0.63 × 4 = 2.52
+   * Exemple :
    *
-   * Math.floor(2.52) = 2
+   * tileDeck = [
+   *   'length-01',
+   *   'length-02',
+   *   'length-03',
+   *   'length-04'
+   * ]
    *
-   * → l'élément d'index 2 est sélectionné.
+   * Si randomIndex vaut 2 :
    *
-   * IMPORTANT :
-   * cette méthode ne représente pas encore une véritable pioche.
-   * Elle choisit dans le catalogue et ne retire aucun élément.
-   * Une même définition peut donc être sélectionnée indéfiniment.
+   * drawnDefinitionId = 'length-03'
    *
-   * Ce comportement sera remplacé par un deck contenant un nombre
-   * fini d'exemplaires de chaque tuile.
+   * puis tileDeck devient :
    *
-   * @returns Une définition tirée au hasard ou undefined si aucune
-   * définition compatible avec le filtre n'existe.
+   * [
+   *   'length-01',
+   *   'length-02',
+   *   'length-04'
+   * ]
+   *
+   * La tuile 'length-03' ne pourra donc plus être tirée.
+   *
+   * @returns La définition de la tuile tirée,
+   * ou undefined lorsque la pioche est vide.
    */
   drawTileDefinition(): TileDefinition | undefined {
-    const availableDefinitions =
-      this.tileDefinitions.filter(
-        definition =>
-          definition.id.startsWith('length-')
-      );
-
-    if (availableDefinitions.length === 0) {
+    if (this.tileDeck.length === 0) {
       return undefined;
     }
 
-    const randomIndex = Math.floor(
-      Math.random() *
-      availableDefinitions.length
-    );
+    const randomIndex = Math.floor(Math.random() * this.tileDeck.length);
 
-    return availableDefinitions[randomIndex];
+    const [drawnDefinitionId] = this.tileDeck.splice(randomIndex, 1);
+
+    return this.tileDefinitions.find((definition) => definition.id === drawnDefinitionId);
   }
 }
