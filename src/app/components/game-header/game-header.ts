@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 @Component({
@@ -7,4 +7,6 @@ import { RouterLink } from '@angular/router';
   styleUrl: './game-header.scss',
   templateUrl: './game-header.html',
 })
-export class GameHeader {}
+export class GameHeader {
+  @Input() context: 'game' | 'rules' = 'game';
+}

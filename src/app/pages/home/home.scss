@@ -116,6 +116,31 @@
   }
 }
 
+.home__actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.home__rules {
+  padding: 0.75rem 0.25rem;
+
+  color: #5b4038;
+  font-weight: 600;
+  text-decoration: none;
+
+  border-bottom: 2px solid transparent;
+
+  transition:
+    color 150ms ease,
+    border-color 150ms ease;
+
+  &:hover {
+    color: #7e2e29;
+    border-color: #7e2e29;
+  }
+}
+
 .home__illustration {
   min-width: 0;
 

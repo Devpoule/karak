@@ -1,0 +1,38 @@
+<app-game-header context="rules" />
+
+<main class="rules">
+  <section class="rules__viewer">
+    <button
+      type="button"
+      class="rules__navigation"
+      [disabled]="currentPage === 1"
+      (click)="previousPage()"
+      aria-label="Page précédente"
+    >
+      ‹
+    </button>
+
+    <div class="rules__document">
+      <img
+        class="rules__page"
+        [src]="currentPageImage"
+        [alt]="'Règles de Karak — page ' + currentPage"
+        draggable="false"
+      />
+
+      <span class="rules__counter">
+        {{ currentPage }} / {{ totalPages }}
+      </span>
+    </div>
+
+    <button
+      type="button"
+      class="rules__navigation"
+      [disabled]="currentPage === totalPages"
+      (click)="nextPage()"
+      aria-label="Page suivante"
+    >
+      ›
+    </button>
+  </section>
+</main>

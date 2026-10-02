@@ -13,7 +13,27 @@
     draggable="false"
   />
 
-  <div class="game-header__turn">
-    Tour / actions
+  <div class="game-header__actions">
+    @if (context === 'game') {
+      <a
+        class="game-header__link"
+        routerLink="/rules"
+      >
+        Règles
+      </a>
+
+      <span class="game-header__separator">|</span>
+
+      <div class="game-header__turn">
+        Tour / actions
+      </div>
+    } @else {
+      <a
+        class="game-header__link"
+        routerLink="/game"
+      >
+        Jouer →
+      </a>
+    }
   </div>
 </header>
