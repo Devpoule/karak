@@ -16,6 +16,9 @@ export const HERO_DEFINITIONS: readonly HeroDefinition[] = [
   {
     id: 'aderyn',
     name: 'Aderyn',
+
+    card: `${ASSET_PATHS.characters.cards}/aderyn.jpg`,
+
     pawn: {
       north: `${ASSET_PATHS.characters.pawns}/aderyn_pawn_north.png`,
       east: `${ASSET_PATHS.characters.pawns}/aderyn_pawn_east.png`,
@@ -26,6 +29,9 @@ export const HERO_DEFINITIONS: readonly HeroDefinition[] = [
   {
     id: 'argentus',
     name: 'Argentus',
+
+    card: `${ASSET_PATHS.characters.cards}/argentus.jpg`,
+
     pawn: {
       north: `${ASSET_PATHS.characters.pawns}/argentus_pawn_north.png`,
       east: `${ASSET_PATHS.characters.pawns}/argentus_pawn_east.png`,
@@ -36,6 +42,9 @@ export const HERO_DEFINITIONS: readonly HeroDefinition[] = [
   {
     id: 'horan',
     name: 'Horan',
+
+    card: `${ASSET_PATHS.characters.cards}/horan.jpg`,
+
     pawn: {
       north: `${ASSET_PATHS.characters.pawns}/horan_pawn_front.jpg`,
       east: `${ASSET_PATHS.characters.pawns}/horan_pawn_right.jpg`,
@@ -46,6 +55,9 @@ export const HERO_DEFINITIONS: readonly HeroDefinition[] = [
   {
     id: 'taia',
     name: 'Taia',
+
+    card: `${ASSET_PATHS.characters.cards}/taia.jpg`,
+
     pawn: {
       north: `${ASSET_PATHS.characters.pawns}/taia_pawn_north.png`,
       east: `${ASSET_PATHS.characters.pawns}/taia_pawn_east.png`,
@@ -56,6 +68,9 @@ export const HERO_DEFINITIONS: readonly HeroDefinition[] = [
   {
     id: 'victorius',
     name: 'Victorius',
+
+    card: `${ASSET_PATHS.characters.cards}/victorius.jpg`,
+
     pawn: {
       north: `${ASSET_PATHS.characters.pawns}/victorius_pawn_front.jpg`,
       east: `${ASSET_PATHS.characters.pawns}/victorius_pawn_right.jpg`,
@@ -66,6 +81,9 @@ export const HERO_DEFINITIONS: readonly HeroDefinition[] = [
   {
     id: 'xanros',
     name: 'Xanros',
+
+    card: `${ASSET_PATHS.characters.cards}/xanros.jpg`,
+
     pawn: {
       north: `${ASSET_PATHS.characters.pawns}/xanros_pawn_north.png`,
       east: `${ASSET_PATHS.characters.pawns}/xanros_pawn_east.png`,

@@ -32,5 +32,7 @@ export interface HeroDefinition {
   id: HeroId;
   name: string;
 
+  card: string;
+
   pawn: Record<Direction, string>;
 }

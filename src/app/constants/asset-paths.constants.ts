@@ -29,6 +29,15 @@ export const ASSET_PATHS = {
    * Assets graphiques des héros.
    */
   characters: {
+
+    /**
+     * Cartes illustrées des personnages.
+     */
+    cards: '/assets/characters/cards',
+
+    /**
+     * Pions des personnages utilisés sur le plateau.
+     */
     pawns: '/assets/characters/pawns',
   },
 
