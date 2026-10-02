@@ -18,9 +18,14 @@ export class PlayerHud {
   /**
    * Mode d'affichage actuel du HUD.
    *
-   * Temporaire :
-   * plus tard, cette valeur viendra de la configuration réelle
-   * de la partie.
+   * CHOIX D'IMPLÉMENTATION :
+   *
+   * Tant que la configuration d'une partie n'est pas encore
+   * modélisée, le mode est défini localement afin de permettre
+   * le développement et la validation des deux dispositions
+   * du HUD.
+   *
+   * À terme, cette valeur sera fournie par l'état de la partie.
    */
   readonly mode: HudMode = '1v1';
 

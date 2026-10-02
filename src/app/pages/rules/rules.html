@@ -1,7 +1,22 @@
 <app-game-header context="rules" />
 
+
+<!-- =========================================================
+     LECTEUR DES RÈGLES
+     =========================================================
+
+     Le manuel est parcouru page par page.
+
+     Les boutons précédent / suivant sont désactivés lorsque
+     l'utilisateur atteint respectivement la première ou
+     la dernière page.
+     ========================================================= -->
+
 <main class="rules">
+
   <section class="rules__viewer">
+
+    <!-- Page précédente -->
     <button
       type="button"
       class="rules__navigation"
@@ -12,6 +27,8 @@
       ‹
     </button>
 
+
+    <!-- Page actuellement affichée -->
     <div class="rules__document">
       <img
         class="rules__page"
@@ -25,6 +42,8 @@
       </span>
     </div>
 
+
+    <!-- Page suivante -->
     <button
       type="button"
       class="rules__navigation"
@@ -34,5 +53,7 @@
     >
       ›
     </button>
+
   </section>
+
 </main>

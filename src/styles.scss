@@ -1,8 +1,23 @@
+/* ==========================================================
+   NORMALISATION
+   ========================================================== */
+
+/*
+ * Toutes les dimensions incluent padding et bordures.
+ *
+ * Cette règle évite que l'ajout d'un padding ou d'une bordure
+ * modifie implicitement les dimensions calculées d'un élément.
+ */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
+
+
+/* ==========================================================
+   DOCUMENT
+   ========================================================== */
 
 html,
 body {
@@ -19,6 +34,14 @@ body {
   min-height: 100vh;
 }
 
+
+/*
+ * Le composant racine doit pouvoir occuper au minimum toute
+ * la hauteur du viewport.
+ *
+ * Les pages restent ensuite responsables de leur propre
+ * comportement de défilement.
+ */
 app-root {
   display: block;
 
@@ -29,13 +52,35 @@ app-root {
   padding: 0;
 }
 
+
+/* ==========================================================
+   DESIGN TOKENS
+   ========================================================== */
+
+/*
+ * Palette graphique commune de l'application.
+ *
+ * Les composants utilisent ces variables lorsqu'une couleur
+ * appartient à l'identité visuelle globale de Karak.
+ *
+ * Les couleurs strictement locales à un composant peuvent
+ * rester définies directement dans celui-ci.
+ */
 :root {
-  // Fond du donjon
+
+  /* ----------------------------------------------------------
+     DONJON
+     ---------------------------------------------------------- */
+
   --karak-dungeon: #201c1a;
   --karak-dungeon-deep: #151311;
   --karak-grid: rgba(151, 132, 109, 0.18);
 
-  // Pierre
+
+  /* ----------------------------------------------------------
+     PIERRE
+     ---------------------------------------------------------- */
+
   --karak-stone-deep: #29221d;
   --karak-stone-dark: #3a3028;
   --karak-stone: #625345;
@@ -43,17 +88,35 @@ app-root {
   --karak-stone-light: #a48b70;
   --karak-stone-highlight: #c5a782;
 
-  // Parchemin
+
+  /* ----------------------------------------------------------
+     PARCHEMIN
+     ---------------------------------------------------------- */
+
   --karak-parchment-dark: #b69568;
   --karak-parchment: #d6b985;
   --karak-parchment-light: #ead5a8;
 
-  // Texte
+
+  /* ----------------------------------------------------------
+     TEXTE
+     ---------------------------------------------------------- */
+
   --karak-text-dark: #2d2018;
   --karak-text-light: #ead8bb;
   --karak-text-highlight: #ffe5b7;
 
+
+  /* ----------------------------------------------------------
+     ÉTATS / ACCENTS
+     ---------------------------------------------------------- */
+
   --karak-red: #9b3d2c;
+
+
+  /* ----------------------------------------------------------
+     OMBRES
+     ---------------------------------------------------------- */
 
   --karak-shadow: rgba(0, 0, 0, 0.65);
 }

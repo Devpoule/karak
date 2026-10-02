@@ -11,6 +11,11 @@
     );
 }
 
+
+/* ==========================================================
+   PAGE DES RÈGLES
+   ========================================================== */
+
 .rules {
   box-sizing: border-box;
 
@@ -21,14 +26,25 @@
   padding: 2rem;
 }
 
+
+/* ==========================================================
+   LECTEUR
+   ========================================================== */
+
 .rules__viewer {
   display: flex;
   align-items: center;
   justify-content: center;
+
   gap: 1.5rem;
 
   width: 100%;
 }
+
+
+/* ==========================================================
+   DOCUMENT
+   ========================================================== */
 
 .rules__document {
   position: relative;
@@ -56,14 +72,21 @@
   user-select: none;
 }
 
+
+/*
+ * Indicateur superposé au document afin de ne pas consommer
+ * d'espace supplémentaire autour du manuel.
+ */
 .rules__counter {
   position: absolute;
+
   right: 1rem;
   bottom: 1rem;
 
   padding: 0.35rem 0.65rem;
 
   color: #fff8e8;
+
   font-size: 0.85rem;
   font-weight: 700;
 
@@ -71,6 +94,11 @@
 
   border-radius: 3px;
 }
+
+
+/* ==========================================================
+   NAVIGATION
+   ========================================================== */
 
 .rules__navigation {
   flex: 0 0 auto;
@@ -80,6 +108,7 @@
   padding: 0;
 
   color: #7e2e29;
+
   font-size: 2.5rem;
   line-height: 1;
 
@@ -96,11 +125,20 @@
     transform: scale(1.12);
   }
 
+  /*
+   * La première et la dernière page désactivent naturellement
+   * la direction de navigation devenue impossible.
+   */
   &:disabled {
     opacity: 0.2;
     cursor: default;
   }
 }
+
+
+/* ==========================================================
+   AFFICHAGE ÉTROIT
+   ========================================================== */
 
 @media (max-width: 700px) {
   .rules {

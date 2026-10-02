@@ -1,8 +1,28 @@
+<!-- =========================================================
+     PAGE DE JEU
+     =========================================================
+
+     La page est composée de deux zones principales :
+
+     - l'en-tête ;
+     - la zone de jeu.
+
+     Le HUD est superposé au plateau afin de conserver toute
+     la surface disponible pour l'affichage du donjon.
+     ========================================================= -->
+
 <section class="game">
+
   <app-game-header />
 
   <div class="game__play-area">
+
+    <!-- Plateau / caméra du donjon -->
     <app-board />
+
+    <!-- Interface superposée des joueurs -->
     <app-player-hud />
+
   </div>
+
 </section>
