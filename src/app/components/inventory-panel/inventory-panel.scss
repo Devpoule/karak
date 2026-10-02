@@ -1,0 +1,21 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.inventory-panel {
+  width: 100%;
+}
+
+.inventory-panel__board {
+  display: block;
+
+  width: 100%;
+  height: auto;
+
+  user-select: none;
+  pointer-events: none;
+
+  filter:
+    drop-shadow(0 6px 6px rgba(0, 0, 0, 0.55));
+}

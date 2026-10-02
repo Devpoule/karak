@@ -1,0 +1,40 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+
+/* ==========================================================
+   PANNEAU DU HÉROS
+   ========================================================== */
+
+.hero-panel {
+  width: 100%;
+}
+
+
+/* ==========================================================
+   ASSET DU PLATEAU
+   ========================================================== */
+
+.hero-panel__board {
+  display: block;
+
+  /*
+   * L'asset conserve son ratio original lorsque la largeur
+   * de la fiche joueur évolue.
+   */
+  width: 100%;
+  height: auto;
+
+  /*
+   * Le plateau est actuellement purement visuel :
+   * il ne doit ni être sélectionnable ni intercepter
+   * les interactions utilisateur.
+   */
+  user-select: none;
+  pointer-events: none;
+
+  filter:
+    drop-shadow(0 6px 6px rgba(0, 0, 0, 0.55));
+}

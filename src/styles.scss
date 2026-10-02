@@ -1,9 +1,18 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html,
 body {
   width: 100%;
   min-height: 100%;
+
   margin: 0;
   padding: 0;
+
+  background: var(--karak-dungeon-deep);
 }
 
 body {
@@ -12,5 +21,39 @@ body {
 
 app-root {
   display: block;
+
+  width: 100%;
   min-height: 100vh;
+
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  // Fond du donjon
+  --karak-dungeon: #201c1a;
+  --karak-dungeon-deep: #151311;
+  --karak-grid: rgba(151, 132, 109, 0.18);
+
+  // Pierre
+  --karak-stone-deep: #29221d;
+  --karak-stone-dark: #3a3028;
+  --karak-stone: #625345;
+  --karak-stone-mid: #786655;
+  --karak-stone-light: #a48b70;
+  --karak-stone-highlight: #c5a782;
+
+  // Parchemin
+  --karak-parchment-dark: #b69568;
+  --karak-parchment: #d6b985;
+  --karak-parchment-light: #ead5a8;
+
+  // Texte
+  --karak-text-dark: #2d2018;
+  --karak-text-light: #ead8bb;
+  --karak-text-highlight: #ffe5b7;
+
+  --karak-red: #9b3d2c;
+
+  --karak-shadow: rgba(0, 0, 0, 0.65);
 }

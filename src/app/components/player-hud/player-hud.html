@@ -1,0 +1,117 @@
+<div class="player-hud">
+
+  <!-- =====================================================
+       JOUEUR GAUCHE
+       ===================================================== -->
+
+  <aside
+    class="player-hud__side player-hud__side--left"
+    [class.player-hud__side--collapsed]="leftCollapsed"
+  >
+    <!--
+      Contenu du panneau gauche.
+
+      Solo :
+      - joueur affiché
+      - inventaire masqué
+      - messages masqués
+
+      1v1 :
+      - joueur affiché
+      - inventaire affiché
+      - messages affichés
+    -->
+    @if (mode === 'solo') {
+      <app-player-sidebar
+        side="left"
+        [showPlayer]="true"
+        [showInventory]="false"
+        [showMessage]="false"
+      />
+    } @else {
+      <app-player-sidebar
+        side="left"
+        [showPlayer]="true"
+        [showInventory]="true"
+        [showMessage]="true"
+      />
+    }
+
+    <!-- Replier / déplier le panneau gauche -->
+    <button
+      class="player-hud__collapse-button player-hud__collapse-button--left"
+      type="button"
+      [attr.aria-label]="
+        leftCollapsed
+          ? 'Déplier le panneau du joueur'
+          : 'Replier le panneau du joueur'
+      "
+      (click)="toggleLeft()"
+    >
+      {{ leftCollapsed ? '›' : '‹' }}
+    </button>
+  </aside>
+
+
+  <!-- =====================================================
+       JOUEUR DROIT
+       ===================================================== -->
+
+  <aside
+    class="player-hud__side player-hud__side--right"
+    [class.player-hud__side--collapsed]="rightCollapsed"
+  >
+    <!--
+      Contenu du panneau droit.
+
+      Solo :
+      - joueur masqué
+      - inventaire affiché
+      - messages affichés
+
+      1v1 :
+      - joueur affiché
+      - inventaire affiché
+      - messages affichés
+    -->
+    @if (mode === 'solo') {
+      <app-player-sidebar
+        side="right"
+        [showPlayer]="false"
+        [showInventory]="true"
+        [showMessage]="true"
+      />
+    } @else {
+      <app-player-sidebar
+        side="right"
+        [showPlayer]="true"
+        [showInventory]="true"
+        [showMessage]="true"
+      />
+    }
+
+    <!-- Replier / déplier le panneau droit -->
+    <button
+      class="player-hud__collapse-button player-hud__collapse-button--right"
+      type="button"
+      [attr.aria-label]="
+        rightCollapsed
+          ? 'Déplier le panneau du joueur'
+          : 'Replier le panneau du joueur'
+      "
+      (click)="toggleRight()"
+    >
+      {{ rightCollapsed ? '‹' : '›' }}
+    </button>
+  </aside>
+
+
+  <!-- =====================================================
+       COMPTEUR DE MOUVEMENTS DU TOUR
+       ===================================================== -->
+
+  <div class="player-hud__movements">
+    <app-movement-counter />
+  </div>
+
+</div>

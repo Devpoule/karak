@@ -1,24 +1,73 @@
 import { ASSET_PATHS } from '../constants/asset-paths.constants';
 import { TileDefinition } from '../models/tile';
 
+
 /**
- * Catalogue des tuiles du jeu de base Karak.
+ * Catalogue des définitions de tuiles du jeu de base Karak.
  *
- * `openings` décrit toujours les ouvertures visibles sur l'asset
- * dans son orientation originale (rotation 0°).
+ * Une TileDefinition décrit uniquement les propriétés
+ * intrinsèques nécessaires à la représentation géométrique
+ * actuelle d'une tuile :
  *
- * La position, la rotation en jeu et le nombre d'exemplaires
- * appartiennent respectivement au donjon et à la pioche.
+ * - son identifiant ;
+ * - son asset graphique ;
+ * - ses ouvertures à 0°.
+ *
+ * CONVENTION DU MOTEUR :
+ *
+ * `openings` correspond toujours aux ouvertures visibles sur
+ * l'asset dans son orientation originale, avec une rotation de 0°.
+ *
+ * Exemple :
+ *
+ * openings: ['east', 'west']
+ *
+ * signifie :
+ *
+ *          ┌───────────┐
+ * west  ←──│           │──→ east
+ *          └───────────┘
+ *
+ * La rotation réellement appliquée pendant une partie appartient
+ * au PlacedTile et n'est donc jamais enregistrée ici.
+ *
+ * SÉPARATION DES RESPONSABILITÉS :
+ *
+ * TILE_DEFINITIONS
+ *   → propriétés intrinsèques et géométrie des types de tuiles.
+ *
+ * TILE_DECK_COMPOSITION
+ *   → nombre d'exemplaires physiques dans la pioche.
+ *
+ * DungeonService
+ *   → position et rotation des tuiles placées.
+ *
+ * Les effets spéciaux tels que les téléporteurs ou les fontaines
+ * de guérison seront également modélisés séparément de cette
+ * géométrie lorsqu'ils seront implémentés.
  */
 export const TILE_DEFINITIONS: TileDefinition[] = [
-  // Tuile de départ
+
+  // ==========================================================
+  // TUILE DE DÉPART
+  // ==========================================================
+
   {
     id: 'start',
     image: `${ASSET_PATHS.tiles}/start_tile.jpg`,
     openings: ['north', 'east', 'south', 'west'],
   },
 
-  // Couloirs droits
+
+  // ==========================================================
+  // COULOIRS DROITS
+  // ==========================================================
+  //
+  // Orientation originale :
+  //
+  // west ←────────────→ east
+  //
+
   {
     id: 'length-01',
     image: `${ASSET_PATHS.tiles}/length_01.jpg`,
@@ -40,8 +89,19 @@ export const TILE_DEFINITIONS: TileDefinition[] = [
     openings: ['east', 'west'],
   },
 
-  // Téléporteurs
-  // Leur effet sera modélisé séparément de leur géométrie.
+
+  // ==========================================================
+  // TÉLÉPORTEURS
+  // ==========================================================
+  //
+  // Leur géométrie actuelle est celle d'un couloir droit.
+  //
+  // IMPORTANT :
+  // leur effet de téléportation n'est volontairement pas
+  // représenté par TileDefinition. Il sera traité séparément
+  // lorsque cette mécanique sera implémentée.
+  //
+
   {
     id: 'teleporter-length-01',
     image: `${ASSET_PATHS.tiles}/teleporter_length_01.jpg`,
@@ -63,19 +123,53 @@ export const TILE_DEFINITIONS: TileDefinition[] = [
     openings: ['east', 'west'],
   },
 
-  // Salles
+
+  // ==========================================================
+  // SALLES
+  // ==========================================================
+
+  /*
+   * Salle possédant trois ouvertures dans son orientation
+   * originale :
+   *
+   *             north
+   *               ↑
+   *               │
+   *      west ← [ salle ]
+   *               │
+   *               ↓
+   *             south
+   */
   {
     id: 'intersection-room',
     image: `${ASSET_PATHS.tiles}/intersection_room.jpg`,
     openings: ['north', 'south', 'west'],
   },
+
+
+  /*
+   * Salle traversante nord / sud.
+   */
   {
     id: 'length-room',
     image: `${ASSET_PATHS.tiles}/length_room.jpg`,
     openings: ['north', 'south'],
   },
 
-  // Couloirs en angle
+
+  // ==========================================================
+  // COULOIRS EN ANGLE
+  // ==========================================================
+  //
+  // Les quatre assets numérotés possèdent la même géométrie
+  // logique dans leur orientation originale :
+  //
+  //              [ tuile ] ──→ east
+  //                  │
+  //                  ↓
+  //                south
+  //
+
   {
     id: 'corner-01',
     image: `${ASSET_PATHS.tiles}/corner_01.jpg`,
@@ -96,21 +190,54 @@ export const TILE_DEFINITIONS: TileDefinition[] = [
     image: `${ASSET_PATHS.tiles}/corner_04.jpg`,
     openings: ['east', 'south'],
   },
+
+
+  /*
+   * Variante avec salle.
+   *
+   * Orientation originale :
+   *
+   *                north
+   *                  ↑
+   *                  │
+   *        west ← [ salle ]
+   */
   {
     id: 'corner-room',
     image: `${ASSET_PATHS.tiles}/corner_room.jpg`,
     openings: ['north', 'west'],
   },
 
-  // Fontaine de guérison
-  // Son effet de soin sera modélisé séparément de sa géométrie.
+
+  // ==========================================================
+  // FONTAINE DE GUÉRISON
+  // ==========================================================
+  //
+  // TileDefinition ne représente actuellement que sa géométrie.
+  //
+  // Son effet de soin sera implémenté séparément afin de ne pas
+  // mélanger circulation dans le donjon et effets de gameplay.
+  //
+
   {
     id: 'healing-corner',
     image: `${ASSET_PATHS.tiles}/healing_corner.jpg`,
     openings: ['west', 'south'],
   },
 
-  // Intersections en T
+
+  // ==========================================================
+  // INTERSECTIONS EN T
+  // ==========================================================
+  //
+  // Orientation originale :
+  //
+  //        west ←────┬────→ east
+  //                  │
+  //                  ↓
+  //                south
+  //
+
   {
     id: 'intersection-01',
     image: `${ASSET_PATHS.tiles}/intersection_01.jpg`,
@@ -137,7 +264,24 @@ export const TILE_DEFINITIONS: TileDefinition[] = [
     openings: ['east', 'south', 'west'],
   },
 
-  // Quatre ouvertures
+
+  // ==========================================================
+  // QUATRE OUVERTURES
+  // ==========================================================
+  //
+  // Ces tuiles communiquent avec les quatre directions.
+  //
+  // Leur géométrie est donc inchangée par une rotation :
+  //
+  //                north
+  //                  ↑
+  //                  │
+  //        west ← [ tuile ] → east
+  //                  │
+  //                  ↓
+  //                south
+  //
+
   {
     id: 'cross-room',
     image: `${ASSET_PATHS.tiles}/cross_room.jpg`,

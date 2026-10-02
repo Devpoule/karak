@@ -1,19 +1,46 @@
 /**
- * Directions utilisées dans tout le moteur.
+ * Représente les quatre directions utilisées par le moteur
+ * pour décrire les ouvertures et les connexions des tuiles.
  *
- * Convention :
+ * CONVENTION DU MOTEUR :
  *
  *              north
  *                ↑
+ *                │
  *       west ← tuile → east
+ *                │
  *                ↓
  *              south
  *
- * L'ordre horaire north → east → south → west
- * est également utilisé pour calculer les rotations.
+ * L'ordre horaire est :
+ *
+ * north → east → south → west
+ *
+ * Cet ordre est important car il sert également au calcul
+ * des rotations.
  */
-export type Direction = 'north' | 'east' | 'south' | 'west';
+export type Direction =
+  | 'north'
+  | 'east'
+  | 'south'
+  | 'west';
 
+
+/**
+ * Liste ordonnée des directions du moteur.
+ *
+ * CHOIX D'IMPLÉMENTATION :
+ *
+ * l'ordre suit le sens horaire afin qu'un déplacement dans
+ * cette liste corresponde directement à une rotation de 90°.
+ *
+ * Exemple :
+ *
+ * north + 90°  → east
+ * east  + 90°  → south
+ * south + 90°  → west
+ * west  + 90°  → north
+ */
 export const DIRECTIONS: Direction[] = [
   'north',
   'east',
@@ -21,72 +48,201 @@ export const DIRECTIONS: Direction[] = [
   'west',
 ];
 
+
+// ==========================================================
+// MODÈLES DES TUILES
+// ==========================================================
+
 /**
  * Décrit les propriétés intrinsèques d'un type de tuile.
  *
- * Les ouvertures correspondent toujours à l'orientation
- * originale de l'asset, avec une rotation de 0°.
+ * Une TileDefinition décrit ce qu'est une tuile,
+ * indépendamment de son utilisation dans une partie.
+ *
+ * Elle ne contient donc ni coordonnées ni rotation de placement.
  */
 export interface TileDefinition {
+
+  /**
+   * Identifiant unique du type de tuile.
+   *
+   * Exemple :
+   * 'start'
+   * 'length-01'
+   * 'corner-room'
+   */
   id: string;
+
+  /**
+   * Chemin vers l'asset graphique représentant la tuile.
+   */
   image: string;
+
+  /**
+   * Ouvertures présentes sur l'asset dans son orientation
+   * originale, c'est-à-dire avec une rotation de 0°.
+   *
+   * IMPORTANT :
+   *
+   * cette liste n'est pas modifiée lorsqu'une occurrence de
+   * la tuile est tournée sur le plateau.
+   *
+   * Les ouvertures réellement orientées sont calculées à partir
+   * de cette valeur et de la rotation du PlacedTile.
+   */
   openings: Direction[];
 }
 
+
 /**
- * Représente une tuile effectivement placée dans le donjon.
+ * Représente une occurrence d'une tuile effectivement placée
+ * dans le donjon.
  *
- * Convention des coordonnées :
- * - x augmente vers l'est ;
- * - y augmente vers le sud.
+ * TileDefinition
+ *   → décrit ce qu'est la tuile.
+ *
+ * PlacedTile
+ *   → décrit où et comment elle est placée.
+ *
+ * CONVENTION DU MOTEUR :
+ *
+ *              y - 1
+ *                ↑
+ *                │
+ *       x - 1 ← (x,y) → x + 1
+ *                │
+ *                ↓
+ *              y + 1
+ *
+ * x augmente vers l'est.
+ * y augmente vers le sud.
  */
 export interface PlacedTile {
+
+  /**
+   * Identifiant de la TileDefinition utilisée.
+   *
+   * Cela évite de recopier toutes les propriétés de la
+   * définition dans chaque tuile placée.
+   */
   definitionId: string;
+
+  /**
+   * Coordonnée horizontale dans le donjon.
+   */
   x: number;
+
+  /**
+   * Coordonnée verticale dans le donjon.
+   */
   y: number;
+
+  /**
+   * Rotation horaire appliquée à l'orientation originale.
+   *
+   * Le moteur utilise actuellement :
+   *
+   * 0° → 90° → 180° → 270°
+   */
   rotation: number;
 }
+
+
+// ==========================================================
+// ROTATION DES DIRECTIONS
+// ==========================================================
 
 /**
  * Applique une rotation horaire à une direction.
  *
- * Les rotations utilisées sont 0°, 90°, 180° et 270°.
+ * CHOIX D'IMPLÉMENTATION :
+ *
+ * DIRECTIONS étant ordonné dans le sens horaire,
+ * chaque quart de tour correspond à un déplacement
+ * d'une position dans le tableau.
+ *
+ * Exemple :
+ *
+ * rotateDirection('north', 90)
+ * → 'east'
+ *
+ * rotateDirection('north', 180)
+ * → 'south'
  */
 export function rotateDirection(
   direction: Direction,
   rotation: number,
 ): Direction {
-  const directions: Direction[] = [
-    'north',
-    'east',
-    'south',
-    'west',
-  ];
-
-  const currentIndex = directions.indexOf(direction);
+  const currentIndex = DIRECTIONS.indexOf(direction);
   const quarterTurns = rotation / 90;
-  const newIndex = (currentIndex + quarterTurns) % directions.length;
 
-  return directions[newIndex];
+  const newIndex =
+    (currentIndex + quarterTurns) % DIRECTIONS.length;
+
+  return DIRECTIONS[newIndex];
 }
 
+
+/**
+ * Calcule les ouvertures réelles d'une tuile après rotation.
+ *
+ * Les ouvertures originales de TileDefinition restent intactes.
+ * Une nouvelle liste est produite pour l'orientation demandée.
+ *
+ * Exemple :
+ *
+ * openings = ['north', 'south']
+ * rotation = 90
+ *
+ * résultat = ['east', 'west']
+ */
 export function getRotatedOpenings(
   openings: Direction[],
   rotation: number,
 ): Direction[] {
-  return openings.map((direction) =>
-    rotateDirection(direction, rotation),
+  return openings.map(
+    (direction) => rotateDirection(direction, rotation),
   );
 }
 
+
+/**
+ * Vérifie si une tuile possède une ouverture dans une direction
+ * donnée après application de sa rotation.
+ *
+ * Exemple :
+ *
+ * openings = ['north']
+ * rotation = 90
+ * direction = 'east'
+ *
+ * → true
+ */
 export function hasOpening(
   openings: Direction[],
   rotation: number,
   direction: Direction,
 ): boolean {
-  return getRotatedOpenings(openings, rotation).includes(direction);
+  return getRotatedOpenings(
+    openings,
+    rotation,
+  ).includes(direction);
 }
 
+
+// ==========================================================
+// DIRECTIONS OPPOSÉES
+// ==========================================================
+
+/**
+ * Retourne la direction opposée.
+ *
+ * north ↔ south
+ * east  ↔ west
+ *
+ * Cette opération est notamment nécessaire pour vérifier
+ * les connexions entre deux tuiles voisines.
+ */
 export function getOppositeDirection(
   direction: Direction,
 ): Direction {
@@ -100,11 +256,38 @@ export function getOppositeDirection(
   return opposites[direction];
 }
 
+
+// ==========================================================
+// CONNEXION ENTRE DEUX TUILES
+// ==========================================================
+
 /**
- * Vérifie qu'un passage relie deux tuiles voisines.
+ * Vérifie si un passage géométrique relie deux tuiles voisines.
  *
- * `direction` indique la position de la seconde tuile
- * par rapport à la première. Les rotations sont prises en compte.
+ * `direction` représente la position de la seconde tuile
+ * par rapport à la première.
+ *
+ * Exemple :
+ *
+ * direction = east
+ *
+ *       EAST                 WEST
+ *        ──────── passage ────────
+ *   [ première ]          [ seconde ]
+ *
+ * Pour que les deux tuiles communiquent :
+ *
+ * - la première doit être ouverte vers east ;
+ * - la seconde doit être ouverte vers west.
+ *
+ * Les rotations respectives des deux tuiles sont prises
+ * en compte avant d'effectuer cette vérification.
+ *
+ * IMPORTANT :
+ *
+ * cette fonction vérifie uniquement une connexion géométrique.
+ * Elle ne décide pas si un héros a le droit d'effectuer
+ * un déplacement dans le contexte d'un tour de jeu.
  */
 export function areConnected(
   firstOpenings: Direction[],
@@ -114,7 +297,11 @@ export function areConnected(
   direction: Direction,
 ): boolean {
   return (
-    hasOpening(firstOpenings, firstRotation, direction) &&
+    hasOpening(
+      firstOpenings,
+      firstRotation,
+      direction,
+    ) &&
     hasOpening(
       secondOpenings,
       secondRotation,

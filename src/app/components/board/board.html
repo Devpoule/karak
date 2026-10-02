@@ -1,3 +1,16 @@
+<!-- =========================================================
+     PLATEAU DE JEU
+     =========================================================
+
+     Le plateau joue le rôle de caméra.
+
+     Les PointerEvents permettent :
+     - de déplacer la vue par glisser-déposer ;
+     - de distinguer un déplacement d'un clic sur une tuile ;
+     - de sélectionner une tuile pour les contrôles temporaires
+       d'exploration.
+     ========================================================= -->
+
 <section
   class="board"
   (pointerdown)="startDragging($event)"
@@ -5,12 +18,37 @@
   (pointerup)="stopDragging($event)"
   (pointercancel)="stopDragging($event)"
 >
+
+
+  <!-- =====================================================
+       MONDE DU DONJON
+       =====================================================
+
+       Le monde est volontairement beaucoup plus grand que
+       la zone visible à l'écran.
+
+       La caméra ne déplace pas les tuiles individuellement :
+       elle déplace l'ensemble du monde via worldTransform.
+       ===================================================== -->
+
   <div
     class="board__world"
     [style.width.px]="mapSizeInPixels"
     [style.height.px]="mapSizeInPixels"
     [style.transform]="worldTransform"
   >
+
+
+    <!-- ===================================================
+         TUILES POSÉES
+         ===================================================
+
+         Chaque tuile possède des coordonnées logiques x/y.
+
+         Ces coordonnées sont converties ici en pixels à partir
+         du centre physique de la carte et de tileSize.
+         =================================================== -->
+
     @for (tile of tiles; track $index) {
       <div
         class="board__tile"
@@ -27,6 +65,19 @@
       </div>
     }
 
+
+    <!-- ===================================================
+         TUILE EN COURS D'EXPLORATION
+         ===================================================
+
+         Une tuile piochée n'est pas immédiatement ajoutée
+         au donjon.
+
+         Elle reste temporairement en attente afin que le
+         joueur puisse choisir son orientation puis confirmer
+         son placement.
+         =================================================== -->
+
     @if (pendingTile; as pending) {
       @if (getPendingTilePosition(); as position) {
         <div
@@ -42,6 +93,9 @@
             draggable="false"
           />
 
+
+          <!-- Rotation de la tuile en attente -->
+
           <button
             type="button"
             class="board__rotate"
@@ -50,6 +104,9 @@
           >
             ↻
           </button>
+
+
+          <!-- Confirmation du placement -->
 
           <button
             type="button"
@@ -64,7 +121,22 @@
       }
     }
 
-    <!-- Contrôles temporaires de développement du moteur. -->
+
+    <!-- ===================================================
+         CONTRÔLES TEMPORAIRES DE DÉVELOPPEMENT
+         ===================================================
+
+         Ces contrôles servent actuellement à tester le moteur
+         de déplacement et d'exploration sans héros.
+
+         ✓ = déplacement possible vers une tuile existante
+         ? = exploration possible
+         × = direction inaccessible
+
+         Ils ont vocation à disparaître lorsque les interactions
+         définitives du héros seront implémentées.
+         =================================================== -->
+
     @if (selectedTile && !pendingTile) {
       <div
         class="board__debug"
@@ -104,7 +176,25 @@
         </span>
       </div>
     }
+
   </div>
+
+
+  <!-- =====================================================
+       COUVERTURE DU DONJON
+       =====================================================
+
+       Écran de présentation affiché avant l'entrée dans
+       le donjon.
+
+       Cette couverture est purement visuelle :
+       elle ne modifie aucun état du moteur de jeu.
+
+       Pendant son affichage, les PointerEvents sont arrêtés
+       afin qu'aucune interaction n'atteigne le plateau situé
+       derrière.
+       ===================================================== -->
+
   @if (!isBoardRevealed) {
     <button
       type="button"
@@ -116,9 +206,16 @@
       (click)="revealBoard()"
       aria-label="Révéler le donjon"
     >
-      <img src="/assets/board/karak_cover.jpg" alt="" draggable="false" />
+      <img
+        src="/assets/board/karak_cover.jpg"
+        alt=""
+        draggable="false"
+      />
 
-      <span class="board__cover-action"> Entrer dans le donjon </span>
+      <span class="board__cover-action">
+        Entrer dans le donjon
+      </span>
     </button>
   }
+
 </section>

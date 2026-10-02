@@ -1,0 +1,48 @@
+:host {
+  display: block;
+
+  width: 100%;
+}
+
+
+/* ==========================================================
+   FICHE JOUEUR
+   ========================================================== */
+
+.player-sidebar {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+
+  /*
+   * Les différents panneaux forment visuellement
+   * une seule fiche continue.
+   *
+   * Aucun espace n'est donc ajouté entre eux.
+   */
+  gap: 0;
+}
+
+
+/* ==========================================================
+   PANNEAUX DE LA FICHE
+   ========================================================== */
+
+/*
+ * Tous les panneaux occupent exactement la même largeur
+ * et conservent leur propre hauteur.
+ *
+ * flex: 0 0 auto empêche Flexbox de les étirer
+ * ou de les compresser pour remplir la sidebar.
+ */
+.player-sidebar app-life-panel,
+.player-sidebar app-hero-panel,
+.player-sidebar app-inventory-panel,
+.player-sidebar app-message-panel {
+  display: block;
+
+  width: 100%;
+
+  flex: 0 0 auto;
+}

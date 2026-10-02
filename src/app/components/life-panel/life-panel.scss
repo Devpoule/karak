@@ -1,0 +1,40 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+
+/* ==========================================================
+   PLATEAU DE VIE
+   ========================================================== */
+
+.life-panel {
+  width: 100%;
+}
+
+
+/* ==========================================================
+   ASSET DU PLATEAU
+   ========================================================== */
+
+.life-panel__board {
+  display: block;
+
+  /*
+   * L'asset conserve son ratio original afin de ne jamais
+   * déformer le plateau lorsque la sidebar change de largeur.
+   */
+  width: 100%;
+  height: auto;
+
+  /*
+   * Le plateau est actuellement purement visuel :
+   * il ne doit ni être sélectionnable ni intercepter
+   * les interactions utilisateur.
+   */
+  user-select: none;
+  pointer-events: none;
+
+  filter:
+    drop-shadow(0 5px 5px rgba(0, 0, 0, 0.55));
+}

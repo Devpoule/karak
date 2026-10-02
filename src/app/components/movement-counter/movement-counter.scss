@@ -1,0 +1,63 @@
+:host {
+  display: block;
+}
+
+
+/* ==========================================================
+   COMPTEUR
+   ========================================================== */
+
+.movement-counter {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+
+  padding: 0.65rem 1rem;
+
+  color: var(--karak-text-dark);
+
+  background:
+    linear-gradient(
+      180deg,
+      var(--karak-parchment-light),
+      var(--karak-parchment)
+    );
+
+  border: 6px solid var(--karak-stone);
+  border-radius: 3px;
+
+  box-shadow:
+    inset 0 0 0 2px var(--karak-stone-deep),
+    inset 0 0 10px rgba(83, 57, 34, 0.2),
+    0 5px 8px rgba(0, 0, 0, 0.6);
+}
+
+
+/* ==========================================================
+   LIBELLÉ
+   ========================================================== */
+
+.movement-counter__label {
+  font-size: 0.72rem;
+  font-weight: 800;
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+
+/* ==========================================================
+   POINTS DE MOUVEMENT
+   ========================================================== */
+
+.movement-counter__points {
+  display: flex;
+  gap: 0.45rem;
+
+  color: var(--karak-red);
+
+  font-size: 1rem;
+
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.5);
+}

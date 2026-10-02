@@ -1,0 +1,187 @@
+:host {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+}
+
+
+/* ==========================================================
+   HUD
+   ========================================================== */
+
+.player-hud {
+  /*
+   * Largeur commune des fiches joueurs.
+   *
+   * Elle dépend en partie de la hauteur de l'écran car les
+   * images des panneaux conservent leur ratio.
+   */
+  --sidebar-width: clamp(200px, 23vh, 320px);
+
+  /*
+   * Distance entre une fiche joueur et le bord de l'écran.
+   */
+  --sidebar-edge: 1.25rem;
+
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+}
+
+
+/* ==========================================================
+   PANNEAUX JOUEURS — comportement commun
+   ========================================================== */
+
+.player-hud__side {
+  position: absolute;
+
+  top: 0;
+  bottom: 1rem;
+
+  width: var(--sidebar-width);
+
+  box-sizing: border-box;
+
+  /*
+   * Animation utilisée lors du repli et du dépliement.
+   */
+  transition: transform 250ms ease;
+}
+
+
+/* ==========================================================
+   PANNEAU GAUCHE
+   ========================================================== */
+
+/*
+ * État normal : panneau gauche déplié.
+ */
+.player-hud__side--left {
+  left: var(--sidebar-edge);
+}
+
+/*
+ * État replié :
+ * le panneau sort de l'écran vers la gauche.
+ *
+ * La languette dépasse encore du panneau et reste donc
+ * accessible pour pouvoir le déplier.
+ */
+.player-hud__side--left.player-hud__side--collapsed {
+  transform: translateX(
+    calc(-100% - var(--sidebar-edge))
+  );
+}
+
+
+/* ==========================================================
+   PANNEAU DROIT
+   ========================================================== */
+
+/*
+ * État normal : panneau droit déplié.
+ */
+.player-hud__side--right {
+  right: var(--sidebar-edge);
+}
+
+/*
+ * État replié :
+ * comportement miroir du panneau gauche.
+ */
+.player-hud__side--right.player-hud__side--collapsed {
+  transform: translateX(
+    calc(100% + var(--sidebar-edge))
+  );
+}
+
+
+/* ==========================================================
+   BOUTONS DE REPLI / DÉPLI
+   ========================================================== */
+
+/*
+ * Style commun aux deux languettes.
+ *
+ * Le HUD global utilise pointer-events: none afin de laisser
+ * le plateau interactif.
+ *
+ * On réactive donc explicitement les clics uniquement sur
+ * ces boutons.
+ */
+.player-hud__collapse-button {
+  position: absolute;
+  z-index: 2;
+
+  pointer-events: auto;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 56px;
+
+  padding: 0;
+
+  color: var(--karak-text-light);
+
+  font-size: 1.6rem;
+  line-height: 1;
+
+  background:
+    linear-gradient(
+      180deg,
+      var(--karak-stone-light),
+      var(--karak-stone),
+      var(--karak-stone-dark)
+    );
+
+  border: 2px solid var(--karak-stone-highlight);
+
+  box-shadow:
+    inset 0 0 0 2px var(--karak-stone-deep),
+    0 4px 6px rgba(0, 0, 0, 0.55);
+}
+
+
+/*
+ * Languette du panneau gauche.
+ * Placée sur son bord intérieur, côté donjon.
+ */
+.player-hud__collapse-button--left {
+  top: 50%;
+  right: -28px;
+
+  transform: translateY(-50%);
+}
+
+
+/*
+ * Languette du panneau droit.
+ * Même principe, en miroir.
+ */
+.player-hud__collapse-button--right {
+  top: 50%;
+  left: -28px;
+
+  transform: translateY(-50%);
+}
+
+
+/* ==========================================================
+   COMPTEUR DE MOUVEMENTS
+   ========================================================== */
+
+.player-hud__movements {
+  position: absolute;
+
+  left: 50%;
+  bottom: 1.5rem;
+
+  transform: translateX(-50%);
+}

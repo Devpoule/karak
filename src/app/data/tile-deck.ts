@@ -1,51 +1,118 @@
 import { GAME_CONSTANTS } from '../constants/game.constants';
 
+
+/**
+ * Décrit une catégorie de tuiles présente dans la pioche.
+ *
+ * Plusieurs tuiles physiques peuvent partager la même définition.
+ *
+ * Exemple :
+ *
+ * {
+ *   definitionId: 'corner-room',
+ *   count: 13,
+ * }
+ *
+ * signifie que 13 occurrences de cette définition doivent
+ * être présentes dans la pioche.
+ */
 export interface TileDeckEntry {
+
+  /**
+   * Identifiant de la TileDefinition correspondante.
+   */
   definitionId: string;
+
+  /**
+   * Nombre d'exemplaires physiques présents dans la pioche.
+   */
   count: number;
 }
+
+
+// ==========================================================
+// COMPOSITION DE LA PIOCHE
+// ==========================================================
 
 /**
  * Composition physique de la pioche du jeu de base Karak.
  *
- * La tuile de départ n'en fait pas partie : elle est placée
- * directement au centre du donjon.
+ * RÈGLE OFFICIELLE KARAK :
  *
- * Les assets numérotés représentent des tuiles physiques uniques.
- * Les autres définitions peuvent exister en plusieurs exemplaires.
+ * le jeu contient 80 tuiles de catacombes au total.
+ * La tuile de départ est placée directement au centre du donjon
+ * et ne fait donc pas partie de la pioche.
+ *
+ * La pioche contient ainsi 79 tuiles.
+ *
+ * CHOIX D'IMPLÉMENTATION :
+ *
+ * les assets numérotés correspondent à des tuiles physiques
+ * représentées individuellement.
+ *
+ * Les définitions communes peuvent, elles, apparaître plusieurs
+ * fois grâce à la propriété `count`.
  */
 export const TILE_DECK_COMPOSITION: TileDeckEntry[] = [
-  // Couloirs droits
+
+  // ----------------------------------------------------------
+  // COULOIRS DROITS
+  // ----------------------------------------------------------
+
   { definitionId: 'length-01', count: 1 },
   { definitionId: 'length-02', count: 1 },
   { definitionId: 'length-03', count: 1 },
   { definitionId: 'length-04', count: 1 },
 
-  // Couloirs en angle
+
+  // ----------------------------------------------------------
+  // COULOIRS EN ANGLE
+  // ----------------------------------------------------------
+
   { definitionId: 'corner-01', count: 1 },
   { definitionId: 'corner-02', count: 1 },
   { definitionId: 'corner-03', count: 1 },
   { definitionId: 'corner-04', count: 1 },
 
-  // Salles
+
+  // ----------------------------------------------------------
+  // SALLES
+  // ----------------------------------------------------------
+
   { definitionId: 'corner-room', count: 13 },
   { definitionId: 'cross-room', count: 14 },
   { definitionId: 'intersection-room', count: 13 },
   { definitionId: 'length-room', count: 13 },
 
-  // Croisements
+
+  // ----------------------------------------------------------
+  // CROISEMENTS
+  // ----------------------------------------------------------
+
   { definitionId: 'cross', count: 7 },
 
-  // Téléporteurs
+
+  // ----------------------------------------------------------
+  // TÉLÉPORTEURS
+  // ----------------------------------------------------------
+
   { definitionId: 'teleporter-length-01', count: 1 },
   { definitionId: 'teleporter-length-02', count: 1 },
   { definitionId: 'teleporter-length-03', count: 1 },
   { definitionId: 'teleporter-length-04', count: 1 },
 
-  // Fontaines de guérison
+
+  // ----------------------------------------------------------
+  // FONTAINES DE GUÉRISON
+  // ----------------------------------------------------------
+
   { definitionId: 'healing-corner', count: 2 },
 
-  // Intersections en T
+
+  // ----------------------------------------------------------
+  // INTERSECTIONS EN T
+  // ----------------------------------------------------------
+
   { definitionId: 'intersection-01', count: 1 },
   { definitionId: 'intersection-02', count: 1 },
   { definitionId: 'intersection-03', count: 1 },
@@ -53,14 +120,31 @@ export const TILE_DECK_COMPOSITION: TileDeckEntry[] = [
   { definitionId: 'intersection-05', count: 1 },
 ];
 
+
+// ==========================================================
+// CONTRÔLE DE LA COMPOSITION
+// ==========================================================
+
+/**
+ * Nombre réel de tuiles déclaré par TILE_DECK_COMPOSITION.
+ *
+ * Cette valeur est calculée plutôt que renseignée manuellement
+ * afin d'éviter une seconde source de vérité.
+ */
 export const TILE_DECK_SIZE = TILE_DECK_COMPOSITION.reduce(
   (total, entry) => total + entry.count,
   0,
 );
 
+
 /**
- * Garde-fou : la composition déclarée doit toujours correspondre
- * au nombre attendu de tuiles dans la pioche.
+ * Garde-fou de cohérence.
+ *
+ * La somme des exemplaires déclarés dans TILE_DECK_COMPOSITION
+ * doit correspondre au nombre de tuiles attendu dans la pioche.
+ *
+ * Une modification accidentelle de la composition provoquera
+ * ainsi immédiatement une erreur explicite.
  */
 if (TILE_DECK_SIZE !== GAME_CONSTANTS.tiles.deck) {
   throw new Error(
@@ -69,22 +153,74 @@ if (TILE_DECK_SIZE !== GAME_CONSTANTS.tiles.deck) {
   );
 }
 
+
+// ==========================================================
+// CRÉATION DE LA PIOCHE
+// ==========================================================
+
+/**
+ * Construit la pioche complète à partir de sa composition.
+ *
+ * Chaque TileDeckEntry est développé selon son nombre
+ * d'exemplaires.
+ *
+ * Exemple :
+ *
+ * {
+ *   definitionId: 'example',
+ *   count: 3,
+ * }
+ *
+ * devient :
+ *
+ * [
+ *   'example',
+ *   'example',
+ *   'example',
+ * ]
+ *
+ * La pioche produite ici n'est pas encore mélangée.
+ */
 export function createTileDeck(): string[] {
-  return TILE_DECK_COMPOSITION.flatMap((entry) =>
-    Array(entry.count).fill(entry.definitionId),
+  return TILE_DECK_COMPOSITION.flatMap(
+    (entry) =>
+      Array(entry.count).fill(entry.definitionId),
   );
 }
 
+
+// ==========================================================
+// MÉLANGE
+// ==========================================================
+
 /**
- * Mélange Fisher-Yates sans modifier le tableau reçu.
+ * Mélange une pioche avec l'algorithme de Fisher-Yates.
+ *
+ * CHOIX D'IMPLÉMENTATION :
+ *
+ * le tableau reçu n'est jamais modifié directement.
+ * Une copie est créée avant le mélange.
+ *
+ * Cette propriété permet d'utiliser la fonction sans provoquer
+ * d'effet de bord sur le tableau d'origine.
  */
-export function shuffleTileDeck(deck: string[]): string[] {
+export function shuffleTileDeck(
+  deck: string[],
+): string[] {
   const shuffledDeck = [...deck];
 
-  for (let i = shuffledDeck.length - 1; i > 0; i--) {
-    const randomIndex = Math.floor(Math.random() * (i + 1));
+  for (
+    let i = shuffledDeck.length - 1;
+    i > 0;
+    i--
+  ) {
+    const randomIndex =
+      Math.floor(Math.random() * (i + 1));
 
-    [shuffledDeck[i], shuffledDeck[randomIndex]] = [
+    [
+      shuffledDeck[i],
+      shuffledDeck[randomIndex],
+    ] = [
       shuffledDeck[randomIndex],
       shuffledDeck[i],
     ];
@@ -93,6 +229,19 @@ export function shuffleTileDeck(deck: string[]): string[] {
   return shuffledDeck;
 }
 
+
+// ==========================================================
+// CRÉATION D'UNE PIOCHE PRÊTE À JOUER
+// ==========================================================
+
+/**
+ * Construit une nouvelle pioche complète puis la mélange.
+ *
+ * C'est le point d'entrée utilisé par TileDeckService
+ * lorsqu'une nouvelle pioche doit être initialisée.
+ */
 export function createShuffledTileDeck(): string[] {
-  return shuffleTileDeck(createTileDeck());
+  return shuffleTileDeck(
+    createTileDeck(),
+  );
 }

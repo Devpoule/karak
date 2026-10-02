@@ -1,0 +1,17 @@
+<section
+  class="movement-counter"
+  aria-label="Mouvements disponibles"
+>
+  <span class="movement-counter__label">
+    Mouvements
+  </span>
+
+  <div
+    class="movement-counter__points"
+    aria-hidden="true"
+  >
+    @for (point of movementPoints; track $index) {
+      <span class="movement-counter__point">●</span>
+    }
+  </div>
+</section>
