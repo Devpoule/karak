@@ -28,7 +28,9 @@ export const ASSET_PATHS = {
   /**
    * Assets graphiques des héros.
    */
-  heroes: '/assets/heroes',
+  characters: {
+    pawns: '/assets/characters/pawns',
+  },
 
   /**
    * Assets graphiques des monstres.

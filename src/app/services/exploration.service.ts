@@ -324,32 +324,34 @@ export class ExplorationService {
    *
    * L'exploration en attente est alors terminée.
    *
-   * @returns true lorsque la tuile a été placée,
-   * false lorsque la confirmation a été refusée.
+   * @returns la tuile placée lorsque la confirmation réussit,
+   * ou null lorsque la confirmation est refusée.
    */
-  confirmPlacement(): boolean {
+  confirmPlacement(): PlacedTile | null {
     if (
       !this.pendingTile ||
       !this.isPendingTilePlacementValid()
     ) {
-      return false;
+      return null;
     }
 
     const position = this.getPendingTilePosition();
 
     if (!position) {
-      return false;
+      return null;
     }
 
-    this.dungeonService.placeTile({
+    const placedTile: PlacedTile = {
       definitionId: this.pendingTile.definition.id,
       x: position.x,
       y: position.y,
       rotation: this.pendingTile.rotation,
-    });
+    };
+
+    this.dungeonService.placeTile(placedTile);
 
     this.pendingTile = null;
 
-    return true;
+    return placedTile;
   }
 }

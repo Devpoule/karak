@@ -195,6 +195,63 @@
 }
 
 
+  /* ==========================================================
+    HÉROS
+    ========================================================== */
+
+  /*
+  * Le conteneur du héros occupe exactement la surface logique
+  * d'une tuile.
+  *
+  * L'image du pion est ensuite centrée à l'intérieur de cette
+  * surface sans modifier ses proportions.
+  */
+  .board__hero {
+    position: absolute;
+    z-index: 5;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: var(--tile-size);
+    height: var(--tile-size);
+
+    /*
+    * Le pion est actuellement purement visuel.
+    * Les interactions restent donc destinées au plateau.
+    */
+    pointer-events: none;
+
+    transition:
+      left 220ms ease-out,
+      top 220ms ease-out;
+
+    img {
+      display: block;
+
+      /*
+      * Le personnage doit rester suffisamment petit pour que
+      * la géométrie de la tuile reste lisible autour de lui.
+      */
+      height: 92%;
+      width: auto;
+      max-width: 92%;
+
+      object-fit: contain;
+
+      user-select: none;
+
+      filter:
+        drop-shadow(1px 0 1px rgba(0, 0, 0, 0.95))
+        drop-shadow(-1px 0 1px rgba(0, 0, 0, 0.95))
+        drop-shadow(0 1px 1px rgba(0, 0, 0, 0.95))
+        drop-shadow(0 -1px 1px rgba(0, 0, 0, 0.95))
+        drop-shadow(0 4px 3px rgba(0, 0, 0, 0.75));
+    }
+  }
+
+
 /* ==========================================================
    TUILE EN COURS D'EXPLORATION
    ========================================================== */

@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
-
+import { HERO_DEFINITIONS } from '../../data/hero-definitions';
+import { HeroDefinition } from '../../models/hero';
+import { PlayerService } from '../../services/player.service';
 import { DungeonService } from '../../services/dungeon.service';
 import {
   ExplorationService,
@@ -39,6 +41,7 @@ export class Board {
   constructor(
     private readonly dungeonService: DungeonService,
     private readonly explorationService: ExplorationService,
+    private readonly playerService: PlayerService,
   ) {}
 
 
@@ -147,6 +150,40 @@ export class Board {
 
 
   // ==========================================================
+  // JOUEUR AFFICHÉ
+  // ==========================================================
+
+  /**
+   * État actuel du joueur.
+   *
+   * PlayerService reste la source de vérité de cet état.
+   */
+  get player() {
+    return this.playerService.player;
+  }
+
+
+  /**
+   * Définition statique du héros actuellement utilisé
+   * par le joueur.
+   */
+  get heroDefinition(): HeroDefinition | undefined {
+    return HERO_DEFINITIONS.find(
+      (hero) => hero.id === this.player.heroId,
+    );
+  }
+
+
+  /**
+   * Asset du pion correspondant à l'orientation actuelle
+   * du héros.
+   */
+  get heroPawnImage(): string | undefined {
+    return this.heroDefinition?.pawn[this.player.facing];
+  }
+
+
+  // ==========================================================
   // CAMÉRA
   // ==========================================================
 
@@ -163,7 +200,6 @@ export class Board {
    * État interne du glisser-déposer de la caméra.
    */
   private isDragging = false;
-  private hasDragged = false;
 
   private lastMouseX = 0;
   private lastMouseY = 0;
@@ -189,7 +225,6 @@ export class Board {
    */
   startDragging(event: PointerEvent): void {
     this.isDragging = true;
-    this.hasDragged = false;
 
     this.lastMouseX = event.clientX;
     this.lastMouseY = event.clientY;
@@ -208,10 +243,6 @@ export class Board {
     const deltaX = event.clientX - this.lastMouseX;
     const deltaY = event.clientY - this.lastMouseY;
 
-    if (deltaX !== 0 || deltaY !== 0) {
-      this.hasDragged = true;
-    }
-
     this.offsetX += deltaX;
     this.offsetY += deltaY;
 
@@ -221,19 +252,9 @@ export class Board {
 
   /**
    * Termine le déplacement de la caméra.
-   *
-   * Si aucun déplacement n'a réellement eu lieu, l'interaction
-   * est interprétée comme un clic et la tuile pressée devient
-   * la tuile sélectionnée.
    */
   stopDragging(event: PointerEvent): void {
     this.isDragging = false;
-
-    if (!this.hasDragged && this.pressedTile) {
-      this.selectedTile = this.pressedTile;
-    }
-
-    this.pressedTile = null;
 
     const board = event.currentTarget as HTMLElement;
 
@@ -242,32 +263,88 @@ export class Board {
     }
   }
 
-
   // ==========================================================
-  // SÉLECTION D'UNE TUILE
+  // DÉPLACEMENT DU JOUEUR
   // ==========================================================
 
   /**
-   * Tuile actuellement sélectionnée.
+   * Tente de déplacer le joueur dans la direction demandée.
    *
-   * Cette sélection sert pour le moment aux contrôles temporaires
-   * de développement du moteur.
+   * Le déplacement n'est effectué que si une tuile existante
+   * est physiquement connectée à la position actuelle du joueur.
    */
-  selectedTile: PlacedTile | null = null;
+  movePlayer(direction: Direction): void {
+    const currentTile = this.dungeonService.getTileAt(
+      this.player.position.x,
+      this.player.position.y,
+    );
+
+    if (!currentTile) {
+      return;
+    }
+
+    if (!this.dungeonService.canMoveTo(currentTile, direction)) {
+      return;
+    }
+
+    const destination = this.dungeonService.getNeighborPosition(
+      currentTile,
+      direction,
+    );
+
+    this.playerService.moveTo(
+      destination.x,
+      destination.y,
+      direction,
+    );
+  }
 
   /**
-   * Tuile sur laquelle le PointerEvent a commencé.
+   * Exécute l'action disponible dans une direction depuis
+   * la tuile actuellement occupée par le joueur.
    *
-   * Elle n'est considérée comme réellement sélectionnée que si
-   * l'utilisateur relâche le pointeur sans avoir déplacé la caméra.
+   * - une tuile connectée existe : déplacement ;
+   * - aucune tuile n'existe mais l'exploration est possible :
+   *   démarrage d'une exploration.
    */
-  private pressedTile: PlacedTile | null = null;
+  handlePlayerDirection(direction: Direction): void {
+    const currentTile = this.dungeonService.getTileAt(
+      this.player.position.x,
+      this.player.position.y,
+    );
+
+    if (!currentTile) {
+      return;
+    }
+
+    if (this.dungeonService.canMoveTo(currentTile, direction)) {
+      const destination = this.dungeonService.getNeighborPosition(
+        currentTile,
+        direction,
+      );
+
+      this.playerService.moveTo(
+        destination.x,
+        destination.y,
+        direction,
+      );
+
+      return;
+    }
+
+    if (this.explorationService.canExplore(currentTile, direction)) {
+      this.explorationService.start(currentTile, direction);
+    }
+  }
 
   /**
-   * Mémorise la tuile sur laquelle commence une interaction.
+   * Tuile actuellement occupée par le joueur.
    */
-  prepareTileSelection(tile: PlacedTile): void {
-    this.pressedTile = tile;
+  get playerTile(): PlacedTile | undefined {
+    return this.dungeonService.getTileAt(
+      this.player.position.x,
+      this.player.position.y,
+    );
   }
 
 
@@ -326,10 +403,38 @@ export class Board {
   }
 
   /**
-   * Confirme définitivement le placement de la tuile en attente.
+   * Confirme le placement de la tuile explorée puis déplace
+   * le joueur sur cette nouvelle tuile.
+   *
+   * RÈGLE OFFICIELLE KARAK :
+   *
+   * lorsqu'un héros explore un secteur inexploré, il entre
+   * sur la nouvelle tuile après son placement.
    */
   confirmPendingTile(): void {
-    this.explorationService.confirmPlacement();
+    const pending = this.explorationService.pendingTile;
+
+    if (!pending) {
+      return;
+    }
+
+    /*
+    * La direction doit être conservée avant la confirmation,
+    * car celle-ci termine l'exploration et remet pendingTile à null.
+    */
+    const direction = pending.direction;
+
+    const placedTile = this.explorationService.confirmPlacement();
+
+    if (!placedTile) {
+      return;
+    }
+
+    this.playerService.moveTo(
+      placedTile.x,
+      placedTile.y,
+      direction,
+    );
   }
 
 
