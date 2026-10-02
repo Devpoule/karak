@@ -3,16 +3,35 @@
   width: 100%;
 }
 
+
+/* ==========================================================
+   INVENTAIRE
+   ========================================================== */
+
 .inventory-panel {
   width: 100%;
 }
 
+
+/* ==========================================================
+   ASSET DU PLATEAU
+   ========================================================== */
+
 .inventory-panel__board {
   display: block;
 
+  /*
+   * L'asset conserve son ratio original lorsque la largeur
+   * de la fiche joueur évolue.
+   */
   width: 100%;
   height: auto;
 
+  /*
+   * Le plateau est actuellement purement visuel :
+   * il ne doit ni être sélectionnable ni intercepter
+   * les interactions utilisateur.
+   */
   user-select: none;
   pointer-events: none;
 

@@ -1,4 +1,5 @@
 import { GAME_CONSTANTS } from '../constants/game.constants';
+import { TILE_DEFINITIONS } from './tile-definitions';
 
 
 /**
@@ -150,6 +151,32 @@ if (TILE_DECK_SIZE !== GAME_CONSTANTS.tiles.deck) {
   throw new Error(
     `Composition de la pioche invalide : ${TILE_DECK_SIZE} tuiles ` +
       `au lieu de ${GAME_CONSTANTS.tiles.deck}.`,
+  );
+}
+
+
+/**
+ * Garde-fou de cohérence entre la composition de la pioche
+ * et le catalogue des définitions.
+ *
+ * Chaque definitionId utilisé dans TILE_DECK_COMPOSITION
+ * doit correspondre à une TileDefinition existante.
+ *
+ * Cela permet de détecter immédiatement une faute de frappe
+ * ou une référence vers une définition supprimée.
+ */
+const tileDefinitionIds = new Set(
+  TILE_DEFINITIONS.map((definition) => definition.id),
+);
+
+const unknownDefinitionIds = TILE_DECK_COMPOSITION
+  .map((entry) => entry.definitionId)
+  .filter((definitionId) => !tileDefinitionIds.has(definitionId));
+
+if (unknownDefinitionIds.length > 0) {
+  throw new Error(
+    `Définition de tuile inconnue dans la pioche : ` +
+      unknownDefinitionIds.join(', '),
   );
 }
 

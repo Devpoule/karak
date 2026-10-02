@@ -101,8 +101,8 @@
     );
 
   background-size:
-    120px 120px,
-    120px 120px,
+    var(--tile-size) var(--tile-size),
+    var(--tile-size) var(--tile-size),
     100% 100%;
 }
 
@@ -118,8 +118,8 @@
    * La taille doit rester cohérente avec tileSize
    * défini dans Board.
    */
-  width: 120px;
-  height: 120px;
+  width: var(--tile-size);
+  height: var(--tile-size);
 
   /*
    * Chaque tuile possède son propre contexte d'empilement.
@@ -151,7 +151,7 @@
      * Le halo dépasse approximativement d'une case
      * autour de la tuile.
      */
-    inset: -120px;
+    inset: calc(-1 * var(--tile-size));
 
     border-radius: 50%;
 
@@ -291,8 +291,8 @@
 .board__debug {
   position: absolute;
 
-  width: 120px;
-  height: 120px;
+  width: var(--tile-size);
+  height: var(--tile-size);
 
   transform: translate(-50%, -50%);
 

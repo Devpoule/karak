@@ -3,6 +3,11 @@
   width: 100%;
 }
 
+
+/* ==========================================================
+   PANNEAU DE MESSAGES
+   ========================================================== */
+
 .message-panel {
   position: relative;
 
@@ -28,6 +33,13 @@
     inset 0 0 0 5px rgba(184, 155, 119, 0.4),
     0 6px 8px rgba(0, 0, 0, 0.6);
 
+
+  /*
+   * Surface intérieure en parchemin.
+   *
+   * Le pseudo-élément permet de conserver la bordure de pierre
+   * indépendante de la future zone de texte.
+   */
   &::before {
     content: '';
 
@@ -53,7 +65,16 @@
   }
 }
 
+
+/* ==========================================================
+   CONTENU DU MESSAGE
+   ========================================================== */
+
 .message-panel__text {
+  /*
+   * Le texte doit rester au-dessus du parchemin créé
+   * par ::before.
+   */
   position: relative;
   z-index: 1;
 

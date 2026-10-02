@@ -13,6 +13,7 @@
 
 <section
   class="board"
+  [style.--tile-size.px]="tileSize"
   (pointerdown)="startDragging($event)"
   (pointermove)="drag($event)"
   (pointerup)="stopDragging($event)"
