@@ -1,0 +1,281 @@
+:host {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  min-height: 0;
+}
+
+/* ==========================================================
+   PRÉPARATION DE LA PARTIE
+   ========================================================== */
+
+.game-setup {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+
+  background: #1c1822;
+}
+
+/* ==========================================================
+   ILLUSTRATION
+   ========================================================== */
+
+.game-setup__background {
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ==========================================================
+   CONTENU DU SETUP
+   ========================================================== */
+
+/*
+ * Le contenu est regroupé dans un panneau sombre et légèrement
+ * translucide afin de rester lisible quelle que soit la zone
+ * de l'illustration située derrière.
+ */
+.game-setup__content {
+  position: absolute;
+  z-index: 1;
+
+  top: 50%;
+  left: 50%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  min-width: 420px;
+
+  padding: 1.75rem 2.5rem 2rem;
+
+  transform: translate(-50%, -50%);
+
+  border: 1px solid rgba(224, 177, 93, 0.5);
+  border-radius: 6px;
+
+  background: linear-gradient(180deg, rgba(38, 29, 31, 0.72), rgba(25, 20, 24, 0.78));
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  color: #fff8e8;
+
+  text-align: center;
+
+  h1 {
+    margin: 0 0 0.8rem;
+
+    color: #f0cf8a;
+
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.1;
+
+    letter-spacing: 0.03em;
+
+    text-shadow:
+      0 2px 2px rgba(0, 0, 0, 0.9),
+      0 0 8px rgba(0, 0, 0, 0.65);
+  }
+
+  p {
+    margin: 0;
+
+    color: #f4ead6;
+
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.5;
+
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  }
+}
+
+/* ==========================================================
+   CHOIX DU NOMBRE DE JOUEURS
+   ========================================================== */
+
+/*
+ * Les différentes valeurs sont présentées comme un choix
+ * unique au centre de l'écran de préparation.
+ */
+.game-setup__player-counts {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.75rem;
+
+  margin-top: 1rem;
+}
+
+/*
+ * Bouton représentant un nombre de joueurs possible.
+ *
+ * L'apparence reprend volontairement les tons sombres et dorés
+ * utilisés par l'interface du donjon.
+ */
+.game-setup__player-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 48px;
+  height: 48px;
+
+  padding: 0;
+
+  border: 1px solid rgba(224, 177, 93, 0.65);
+  border-radius: 4px;
+
+  background: rgba(35, 27, 30, 0.88);
+
+  color: #fff8e8;
+
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+
+  transition:
+    transform 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+
+  &:hover {
+    transform: translateY(-2px);
+
+    border-color: rgba(238, 195, 112, 0.9);
+
+    background: rgba(69, 42, 39, 0.94);
+  }
+}
+
+/* ==========================================================
+   VALIDATION DU NOMBRE DE JOUEURS
+   ========================================================== */
+
+.game-setup__continue {
+  margin-top: 1.25rem;
+
+  padding: 0.7rem 1.5rem;
+
+  border: 1px solid rgba(224, 177, 93, 0.65);
+  border-radius: 4px;
+
+  background: rgba(86, 34, 31, 0.88);
+
+  color: #fff8e8;
+
+  font: inherit;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease,
+    background 150ms ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    background: rgba(105, 40, 36, 0.94);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+/* ==========================================================
+   JOUEURS SÉLECTIONNÉS
+   ========================================================== */
+
+/*
+ * Une seule valeur peut être sélectionnée.
+ *
+ * La distinction reste suffisamment marquée pour que le choix
+ * soit immédiatement identifiable sans rompre l'ambiance
+ * visuelle de la couverture.
+ */
+.game-setup__player-count--selected {
+  transform: translateY(-2px);
+
+  border-color: rgba(245, 205, 123, 1);
+
+  background: rgba(112, 50, 43, 0.96);
+
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.45),
+    0 0 12px rgba(224, 177, 93, 0.35);
+
+  &:hover {
+    transform: translateY(-2px);
+
+    background: rgba(112, 50, 43, 0.96);
+  }
+}
+
+/* ==========================================================
+   CARTES HÉROS FACE CACHÉE
+   ========================================================== */
+
+.game-setup__hero-cards {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1rem;
+
+  margin-top: 1.5rem;
+}
+
+.game-setup__hero-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+
+  img {
+    display: block;
+
+    width: 110px;
+    height: auto;
+
+    border-radius: 4px;
+
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.45);
+  }
+
+  span {
+    color: #f4ead6;
+
+    font-size: 0.9rem;
+    font-weight: 600;
+
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  }
+}

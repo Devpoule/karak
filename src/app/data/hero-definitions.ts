@@ -1,6 +1,14 @@
 import { ASSET_PATHS } from '../constants/asset-paths.constants';
 import { HeroDefinition, HeroId } from '../models/hero';
 
+/**
+ * Dos commun aux cartes Héros.
+ *
+ * Il est utilisé pendant la préparation de la partie,
+ * avant la révélation des héros attribués aux joueurs.
+ */
+export const HERO_CARD_BACK =
+  `${ASSET_PATHS.characters.cards}/hero_card_back.jpg`;
 
 /**
  * Catalogue des héros disponibles dans le jeu de base.

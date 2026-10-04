@@ -1,15 +1,8 @@
 import { Injectable } from '@angular/core';
 
-import {
-  Direction,
-  PlacedTile,
-  TileDefinition,
-  areConnected,
-  hasOpening,
-} from '../models/tile';
+import { Direction, PlacedTile, TileDefinition, areConnected, hasOpening } from '../models/tile';
 
 import { TILE_DEFINITIONS } from '../data/tile-definitions';
-
 
 /**
  * Gère la structure physique du donjon.
@@ -41,8 +34,6 @@ import { TILE_DEFINITIONS } from '../data/tile-definitions';
   providedIn: 'root',
 })
 export class DungeonService {
-
-
   // ==========================================================
   // ÉTAT DU DONJON
   // ==========================================================
@@ -73,15 +64,7 @@ export class DungeonService {
    * (0,  1) = sud
    * (-1, 0) = ouest
    */
-  readonly tiles: PlacedTile[] = [
-    {
-      definitionId: 'start',
-      x: 0,
-      y: 0,
-      rotation: 0,
-    },
-  ];
-
+  readonly tiles: PlacedTile[] = [];
 
   // ==========================================================
   // RECHERCHE DANS LE DONJON
@@ -93,15 +76,9 @@ export class DungeonService {
    * @returns la tuile trouvée ou undefined lorsque la case
    * est actuellement vide.
    */
-  getTileAt(
-    x: number,
-    y: number,
-  ): PlacedTile | undefined {
-    return this.tiles.find(
-      (tile) => tile.x === x && tile.y === y,
-    );
+  getTileAt(x: number, y: number): PlacedTile | undefined {
+    return this.tiles.find((tile) => tile.x === x && tile.y === y);
   }
-
 
   /**
    * Retrouve la définition correspondant à une tuile placée.
@@ -112,14 +89,9 @@ export class DungeonService {
    * Les propriétés intrinsèques de la tuile restent centralisées
    * dans TILE_DEFINITIONS.
    */
-  getTileDefinition(
-    tile: PlacedTile,
-  ): TileDefinition | undefined {
-    return TILE_DEFINITIONS.find(
-      (definition) => definition.id === tile.definitionId,
-    );
+  getTileDefinition(tile: PlacedTile): TileDefinition | undefined {
+    return TILE_DEFINITIONS.find((definition) => definition.id === tile.definitionId);
   }
-
 
   // ==========================================================
   // VOISINAGE
@@ -139,10 +111,7 @@ export class DungeonService {
    *
    * résultat = (1, 0)
    */
-  getNeighborPosition(
-    tile: PlacedTile,
-    direction: Direction,
-  ): { x: number; y: number } {
+  getNeighborPosition(tile: PlacedTile, direction: Direction): { x: number; y: number } {
     switch (direction) {
       case 'north':
         return {
@@ -170,7 +139,6 @@ export class DungeonService {
     }
   }
 
-
   /**
    * Recherche la tuile voisine dans une direction donnée.
    *
@@ -181,21 +149,11 @@ export class DungeonService {
    *
    * @returns la tuile voisine ou undefined si la case est vide.
    */
-  getNeighbor(
-    tile: PlacedTile,
-    direction: Direction,
-  ): PlacedTile | undefined {
-    const position = this.getNeighborPosition(
-      tile,
-      direction,
-    );
+  getNeighbor(tile: PlacedTile, direction: Direction): PlacedTile | undefined {
+    const position = this.getNeighborPosition(tile, direction);
 
-    return this.getTileAt(
-      position.x,
-      position.y,
-    );
+    return this.getTileAt(position.x, position.y);
   }
-
 
   // ==========================================================
   // OUVERTURES DES TUILES
@@ -212,23 +170,15 @@ export class DungeonService {
    * une définition peut posséder une ouverture north à 0°,
    * mais cette ouverture devient east après une rotation de 90°.
    */
-  hasTileOpening(
-    tile: PlacedTile,
-    direction: Direction,
-  ): boolean {
+  hasTileOpening(tile: PlacedTile, direction: Direction): boolean {
     const definition = this.getTileDefinition(tile);
 
     if (!definition) {
       return false;
     }
 
-    return hasOpening(
-      definition.openings,
-      tile.rotation,
-      direction,
-    );
+    return hasOpening(definition.openings, tile.rotation, direction);
   }
-
 
   // ==========================================================
   // CONNEXION ENTRE DEUX TUILES
@@ -266,24 +216,16 @@ export class DungeonService {
    * - les combats ;
    * - les autres règles du tour.
    */
-  canMoveTo(
-    tile: PlacedTile,
-    direction: Direction,
-  ): boolean {
-    const neighbor = this.getNeighbor(
-      tile,
-      direction,
-    );
+  canMoveTo(tile: PlacedTile, direction: Direction): boolean {
+    const neighbor = this.getNeighbor(tile, direction);
 
     if (!neighbor) {
       return false;
     }
 
-    const tileDefinition =
-      this.getTileDefinition(tile);
+    const tileDefinition = this.getTileDefinition(tile);
 
-    const neighborDefinition =
-      this.getTileDefinition(neighbor);
+    const neighborDefinition = this.getTileDefinition(neighbor);
 
     if (!tileDefinition || !neighborDefinition) {
       return false;
@@ -297,7 +239,6 @@ export class DungeonService {
       direction,
     );
   }
-
 
   // ==========================================================
   // MODIFICATION DU DONJON
@@ -335,5 +276,32 @@ export class DungeonService {
    */
   placeTile(tile: PlacedTile): void {
     this.tiles.push(tile);
+  }
+
+  /**
+   * Initialise le donjon pour une nouvelle partie.
+   *
+   * RÈGLE OFFICIELLE KARAK :
+   *
+   * la préparation du jeu commence par le placement de la
+   * tuile de départ au centre de la zone de jeu.
+   *
+   * CHOIX D'IMPLÉMENTATION :
+   *
+   * les coordonnées logiques (0, 0) représentent le centre
+   * initial du donjon.
+   *
+   * Cette méthode vide d'abord le donjon afin de garantir
+   * qu'une nouvelle partie reparte toujours d'un état propre.
+   */
+  initialize(): void {
+    this.tiles.length = 0;
+
+    this.tiles.push({
+      definitionId: 'start',
+      x: 0,
+      y: 0,
+      rotation: 0,
+    });
   }
 }

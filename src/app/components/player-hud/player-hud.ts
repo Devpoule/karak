@@ -1,8 +1,11 @@
 import { Component } from '@angular/core';
-import { PlayerSidebar } from '../player-sidebar/player-sidebar';
-import { MovementCounter } from '../movement-counter/movement-counter';
 
-export type HudMode = 'solo' | '1v1';
+import { MovementCounter } from '../movement-counter/movement-counter';
+import { PlayerSidebar } from '../player-sidebar/player-sidebar';
+
+
+export type HudMode = 'solo' | 'vs-computer' | '1v1';
+
 
 @Component({
   selector: 'app-player-hud',
@@ -22,21 +25,30 @@ export class PlayerHud {
    *
    * Tant que la configuration d'une partie n'est pas encore
    * modélisée, le mode est défini localement afin de permettre
-   * le développement et la validation des deux dispositions
-   * du HUD.
+   * le développement des différentes dispositions du HUD.
+   *
+   * Le mode par défaut représente actuellement une partie
+   * opposant le joueur à un adversaire contrôlé par l'ordinateur.
    *
    * À terme, cette valeur sera fournie par l'état de la partie.
    */
-  readonly mode: HudMode = '1v1';
+  readonly mode: HudMode = 'vs-computer';
+
 
   /**
    * État d'ouverture des panneaux joueurs.
    *
    * false = panneau déplié
    * true  = panneau replié
+   *
+   * CHOIX D'IMPLÉMENTATION :
+   *
+   * les panneaux sont repliés au lancement afin de laisser
+   * un maximum d'espace disponible au plateau.
    */
-  leftCollapsed = false;
-  rightCollapsed = false;
+  leftCollapsed = true;
+  rightCollapsed = true;
+
 
   /**
    * Déplie ou replie le panneau du joueur gauche.
@@ -44,6 +56,7 @@ export class PlayerHud {
   toggleLeft(): void {
     this.leftCollapsed = !this.leftCollapsed;
   }
+
 
   /**
    * Déplie ou replie le panneau du joueur droit.

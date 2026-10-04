@@ -1,0 +1,135 @@
+<!-- =========================================================
+     PRÉPARATION DE LA PARTIE
+     =========================================================
+
+     Cet écran accompagne le joueur pendant les différentes
+     étapes du SETUP avant son entrée dans le donjon.
+
+     GameService reste la source de vérité concernant
+     l'étape actuellement en cours.
+     ========================================================= -->
+
+<section class="game-setup">
+  <img
+    class="game-setup__background"
+    src="/assets/board/karak_cover.jpg"
+    alt=""
+    draggable="false"
+  />
+
+  <!-- =======================================================
+       NOMBRE DE JOUEURS
+       ======================================================= -->
+
+  @if (gameService.setupStep() === 'player-count') {
+    <div class="game-setup__content">
+      <h1>Nouvelle partie</h1>
+
+      <p>Combien d'aventuriers entrent dans le donjon ?</p>
+
+      <div class="game-setup__player-counts">
+        @for (playerCount of playerCounts; track playerCount) {
+          <button
+            type="button"
+            class="game-setup__player-count"
+            [class.game-setup__player-count--selected]="selectedPlayerCount === playerCount"
+            (click)="selectPlayerCount(playerCount)"
+          >
+            {{ playerCount }}
+          </button>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="game-setup__continue"
+        [disabled]="selectedPlayerCount === null"
+        (click)="confirmPlayerCount()"
+      >
+        Continuer
+      </button>
+    </div>
+  }
+
+  <!-- =======================================================
+       TIRAGE DES HÉROS
+       ======================================================= -->
+
+  @if (gameService.setupStep() === 'hero-draw') {
+    <div class="game-setup__content">
+      <h1>Tirage des héros</h1>
+
+      <p>
+        Les aventuriers vont maintenant découvrir le héros
+        qui les accompagnera dans le donjon.
+      </p>
+
+      <div class="game-setup__hero-cards">
+        @for (
+          playerIndex of [].constructor(gameService.playerCount);
+          track $index
+        ) {
+          <div class="game-setup__hero-card">
+            <img
+              [src]="getHeroCard($index)"
+              alt="Carte Héros"
+              draggable="false"
+            />
+
+            <span>Joueur {{ $index + 1 }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- ===================================================
+           ACTION DU TIRAGE
+           =================================================== -->
+
+      @if (heroDrawState() === 'hidden') {
+        <button
+          type="button"
+          class="game-setup__continue"
+          (click)="drawHeroes()"
+        >
+          Tirage au sort des héros
+        </button>
+      }
+
+      <!-- ===================================================
+           TIRAGE TERMINÉ
+           =================================================== -->
+
+      @if (heroDrawState() === 'revealed') {
+        <button
+          type="button"
+          class="game-setup__continue"
+          (click)="placeHeroesOnStart()"
+        >
+          Continuer
+        </button>
+      }
+    </div>
+  }
+
+  <!-- =======================================================
+       PLACEMENT DES HÉROS
+       ======================================================= -->
+
+  @if (gameService.setupStep() === 'hero-placement') {
+    <div class="game-setup__content">
+      <h1>Les héros sont prêts</h1>
+
+      <p>
+        Tous les aventuriers prennent place
+        sur la tuile Départ.
+      </p>
+
+      <button
+        type="button"
+        class="game-setup__continue"
+      >
+        Déterminer le premier joueur
+      </button>
+    </div>
+  }
+</section>

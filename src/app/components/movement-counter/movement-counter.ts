@@ -1,25 +1,17 @@
 import { Component } from '@angular/core';
 
-import { GAME_CONSTANTS } from '../../constants/game.constants';
+import { TurnService } from '../../services/turn.service';
 
 
 /**
- * Affiche le nombre de mouvements disponibles pour le joueur.
+ * Affiche le nombre de mouvements encore disponibles
+ * pendant le tour courant.
  *
- * ÉTAT ACTUEL :
+ * TurnService reste la source de vérité de cet état.
  *
- * Le composant représente uniquement la valeur initiale définie
- * par les règles du jeu.
- *
- * Il ne gère pas encore :
- *
- * - le joueur actif ;
- * - la consommation d'un mouvement ;
- * - la remise à zéro en début de tour ;
- * - les éventuelles règles modifiant les déplacements.
- *
- * Ces responsabilités seront ajoutées avec la gestion réelle
- * des tours et des joueurs.
+ * Le composant ne contient aucune logique de tour :
+ * il se contente de représenter visuellement l'état fourni
+ * par le service.
  */
 @Component({
   imports: [],
@@ -29,20 +21,24 @@ import { GAME_CONSTANTS } from '../../constants/game.constants';
 })
 export class MovementCounter {
 
+  constructor(
+    private readonly turnService: TurnService,
+  ) {}
+
+
   /**
-   * RÈGLE OFFICIELLE KARAK :
+   * Indicateurs correspondant aux mouvements encore disponibles.
    *
-   * un héros dispose de 4 mouvements pendant son tour.
+   * Le tableau est reconstruit depuis l'état courant du tour afin
+   * que le template puisse conserver son affichage sous forme
+   * de points.
    *
-   * CHOIX D'IMPLÉMENTATION :
-   *
-   * on génère les indicateurs visuels depuis GAME_CONSTANTS
-   * plutôt que de coder quatre éléments directement dans le HTML.
-   *
-   * Cette valeur représente pour l'instant les mouvements
-   * initiaux, pas encore leur état dynamique pendant un tour.
+   * remainingMovements est un Signal Angular :
+   * l'appel avec () permet d'en lire la valeur actuelle.
    */
-  readonly movementPoints = Array.from(
-    { length: GAME_CONSTANTS.movement.perTurn },
-  );
+  get movementPoints(): unknown[] {
+    return Array.from({
+      length: this.turnService.remainingMovements(),
+    });
+  }
 }

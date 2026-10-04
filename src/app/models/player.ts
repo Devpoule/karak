@@ -17,28 +17,41 @@ export interface PlayerPosition {
 
 
 /**
- * État minimal d'un joueur pendant une partie.
+ * État d'un joueur pendant une partie.
  *
- * Contrairement à HeroDefinition, qui décrit les propriétés
- * statiques d'un héros, Player contient les informations qui
- * peuvent évoluer au cours de la partie.
- *
- * Ce modèle sera enrichi progressivement lorsque les mécaniques
- * correspondantes seront réellement introduites.
+ * Le joueur existe dès la préparation de la partie.
+ * Son héros et sa position ne sont connus qu'aux étapes
+ * suivantes du SETUP.
  */
 export interface Player {
-  heroId: HeroId;
-
-  position: PlayerPosition;
 
   /**
-   * Direction vers laquelle le héros est actuellement orienté.
+   * Points de vie actuels du joueur.
    *
-   * CHOIX D'IMPLÉMENTATION :
+   * RÈGLE OFFICIELLE KARAK :
    *
-   * cette information permet de sélectionner directement
-   * l'asset graphique correspondant parmi les quatre
-   * orientations disponibles pour chaque pion.
+   * chaque joueur commence la partie avec 5 points de vie.
    */
-  facing: Direction;
+  lives: number;
+
+  /**
+   * Héros attribué au joueur.
+   *
+   * Indéfini tant que le tirage des héros n'a pas eu lieu.
+   */
+  heroId?: HeroId;
+
+  /**
+   * Position du héros dans le donjon.
+   *
+   * Indéfinie tant que son pion n'a pas été placé.
+   */
+  position?: PlayerPosition;
+
+  /**
+   * Orientation graphique du pion.
+   *
+   * Indéfinie tant que le héros n'a pas été placé.
+   */
+  facing?: Direction;
 }

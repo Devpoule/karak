@@ -3,17 +3,10 @@ import { HERO_DEFINITIONS } from '../../data/hero-definitions';
 import { HeroDefinition } from '../../models/hero';
 import { PlayerService } from '../../services/player.service';
 import { DungeonService } from '../../services/dungeon.service';
-import {
-  ExplorationService,
-  PendingTilePlacement,
-} from '../../services/exploration.service';
+import { TurnService } from '../../services/turn.service';
+import { ExplorationService, PendingTilePlacement } from '../../services/exploration.service';
 
-import {
-  Direction,
-  PlacedTile,
-  TileDefinition,
-} from '../../models/tile';
-
+import { Direction, PlacedTile, TileDefinition } from '../../models/tile';
 
 /**
  * Plateau principal du jeu.
@@ -37,13 +30,12 @@ import {
   styleUrl: './board.scss',
 })
 export class Board {
-
   constructor(
     private readonly dungeonService: DungeonService,
     private readonly explorationService: ExplorationService,
     private readonly playerService: PlayerService,
+    private readonly turnService: TurnService,
   ) {}
-
 
   // ==========================================================
   // PRÉSENTATION DU DONJON
@@ -82,7 +74,6 @@ export class Board {
       this.isBoardRevealed = true;
     }, 1300);
   }
-
 
   // ==========================================================
   // GÉOMÉTRIE DE LA CARTE
@@ -125,7 +116,6 @@ export class Board {
    */
   readonly mapCenterInPixels = this.mapSizeInPixels / 2;
 
-
   // ==========================================================
   // DONJON AFFICHÉ
   // ==========================================================
@@ -148,7 +138,6 @@ export class Board {
     return this.dungeonService.getTileDefinition(tile);
   }
 
-
   // ==========================================================
   // JOUEUR AFFICHÉ
   // ==========================================================
@@ -162,26 +151,27 @@ export class Board {
     return this.playerService.player;
   }
 
-
   /**
    * Définition statique du héros actuellement utilisé
    * par le joueur.
    */
   get heroDefinition(): HeroDefinition | undefined {
-    return HERO_DEFINITIONS.find(
-      (hero) => hero.id === this.player.heroId,
-    );
+    return HERO_DEFINITIONS.find((hero) => hero.id === this.player.heroId);
   }
-
 
   /**
    * Asset du pion correspondant à l'orientation actuelle
    * du héros.
    */
   get heroPawnImage(): string | undefined {
-    return this.heroDefinition?.pawn[this.player.facing];
-  }
+    const facing = this.player.facing;
 
+    if (!facing) {
+      return undefined;
+    }
+
+    return this.heroDefinition?.pawn[facing];
+  }
 
   // ==========================================================
   // CAMÉRA
@@ -274,10 +264,13 @@ export class Board {
    * est physiquement connectée à la position actuelle du joueur.
    */
   movePlayer(direction: Direction): void {
-    const currentTile = this.dungeonService.getTileAt(
-      this.player.position.x,
-      this.player.position.y,
-    );
+    const position = this.player.position;
+
+    if (!position) {
+      return;
+    }
+
+    const currentTile = this.dungeonService.getTileAt(position.x, position.y);
 
     if (!currentTile) {
       return;
@@ -287,47 +280,50 @@ export class Board {
       return;
     }
 
-    const destination = this.dungeonService.getNeighborPosition(
-      currentTile,
-      direction,
-    );
+    const destination = this.dungeonService.getNeighborPosition(currentTile, direction);
 
-    this.playerService.moveTo(
-      destination.x,
-      destination.y,
-      direction,
-    );
+    this.playerService.moveTo(destination.x, destination.y, direction);
   }
 
   /**
    * Exécute l'action disponible dans une direction depuis
    * la tuile actuellement occupée par le joueur.
    *
-   * - une tuile connectée existe : déplacement ;
-   * - aucune tuile n'existe mais l'exploration est possible :
-   *   démarrage d'une exploration.
+   * Sans tuile piochée :
+   *
+   * - une tuile connectée existe : déplacement normal ;
+   * - une sortie inexplorée existe : aucune exploration n'est
+   *   déclenchée automatiquement.
+   *
+   * Avec une tuile piochée :
+   *
+   * - une sortie explorable sélectionne l'emplacement envisagé
+   *   pour cette tuile ;
+   * - le joueur peut changer cette sélection librement avant
+   *   la confirmation définitive.
+   *
+   * CHOIX D'IMPLÉMENTATION :
+   *
+   * la sélection d'une direction et la pioche sont désormais
+   * deux actions indépendantes.
    */
   handlePlayerDirection(direction: Direction): void {
-    const currentTile = this.dungeonService.getTileAt(
-      this.player.position.x,
-      this.player.position.y,
-    );
+    const position = this.player.position;
+
+    if (!position) {
+      return;
+    }
+
+    const currentTile = this.dungeonService.getTileAt(position.x, position.y);
 
     if (!currentTile) {
       return;
     }
 
     if (this.dungeonService.canMoveTo(currentTile, direction)) {
-      const destination = this.dungeonService.getNeighborPosition(
-        currentTile,
-        direction,
-      );
+      const destination = this.dungeonService.getNeighborPosition(currentTile, direction);
 
-      this.playerService.moveTo(
-        destination.x,
-        destination.y,
-        direction,
-      );
+      this.playerService.moveTo(destination.x, destination.y, direction);
 
       return;
     }
@@ -341,12 +337,14 @@ export class Board {
    * Tuile actuellement occupée par le joueur.
    */
   get playerTile(): PlacedTile | undefined {
-    return this.dungeonService.getTileAt(
-      this.player.position.x,
-      this.player.position.y,
-    );
-  }
+    const position = this.player.position;
 
+    if (!position) {
+      return undefined;
+    }
+
+    return this.dungeonService.getTileAt(position.x, position.y);
+  }
 
   // ==========================================================
   // EXPLORATION
@@ -410,6 +408,9 @@ export class Board {
    *
    * lorsqu'un héros explore un secteur inexploré, il entre
    * sur la nouvelle tuile après son placement.
+   *
+   * Cette entrée constitue un déplacement et consomme donc
+   * un mouvement du tour.
    */
   confirmPendingTile(): void {
     const pending = this.explorationService.pendingTile;
@@ -419,9 +420,9 @@ export class Board {
     }
 
     /*
-    * La direction doit être conservée avant la confirmation,
-    * car celle-ci termine l'exploration et remet pendingTile à null.
-    */
+     * La direction doit être conservée avant la confirmation,
+     * car celle-ci termine l'exploration et remet pendingTile à null.
+     */
     const direction = pending.direction;
 
     const placedTile = this.explorationService.confirmPlacement();
@@ -430,13 +431,31 @@ export class Board {
       return;
     }
 
-    this.playerService.moveTo(
-      placedTile.x,
-      placedTile.y,
-      direction,
-    );
+    this.playerService.moveTo(placedTile.x, placedTile.y, direction);
+
+    this.turnService.consumeMovement();
   }
 
+  /**
+   * Replace le héros face au joueur lorsque son animation
+   * de déplacement est terminée.
+   *
+   * CHOIX D'IMPLÉMENTATION :
+   *
+   * l'orientation de repos n'est appliquée qu'à la fin de la
+   * transition visuelle afin que le héros reste orienté dans
+   * le sens de son déplacement pendant celui-ci.
+   *
+   * Le moteur de jeu ne dépend ainsi pas de la durée définie
+   * dans le CSS.
+   */
+  onHeroMovementEnd(event: TransitionEvent): void {
+    if (event.propertyName !== 'left' && event.propertyName !== 'top') {
+      return;
+    }
+
+    this.playerService.face('south');
+  }
 
   // ==========================================================
   // ACCÈS AU DONJON
@@ -454,10 +473,7 @@ export class Board {
     return this.dungeonService.hasTileOpening(tile, direction);
   }
 
-  getNeighborPosition(
-    tile: PlacedTile,
-    direction: Direction,
-  ): { x: number; y: number } {
+  getNeighborPosition(tile: PlacedTile, direction: Direction): { x: number; y: number } {
     return this.dungeonService.getNeighborPosition(tile, direction);
   }
 
@@ -465,17 +481,13 @@ export class Board {
     return this.dungeonService.getTileAt(x, y);
   }
 
-  getNeighbor(
-    tile: PlacedTile,
-    direction: Direction,
-  ): PlacedTile | undefined {
+  getNeighbor(tile: PlacedTile, direction: Direction): PlacedTile | undefined {
     return this.dungeonService.getNeighbor(tile, direction);
   }
 
   canMoveTo(tile: PlacedTile, direction: Direction): boolean {
     return this.dungeonService.canMoveTo(tile, direction);
   }
-
 
   // ==========================================================
   // OUTILS TEMPORAIRES DE DÉVELOPPEMENT

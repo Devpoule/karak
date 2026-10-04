@@ -7,8 +7,8 @@
      - l'en-tête ;
      - la zone de jeu.
 
-     Le HUD est superposé au plateau afin de conserver toute
-     la surface disponible pour l'affichage du donjon.
+     La zone de jeu affiche soit la préparation de la partie,
+     soit le donjon et son HUD selon la phase courante.
      ========================================================= -->
 
 <section class="game">
@@ -17,11 +17,38 @@
 
   <div class="game__play-area">
 
-    <!-- Plateau / caméra du donjon -->
-    <app-board />
+    <!-- =====================================================
+         PRÉPARATION DE LA PARTIE
+         =====================================================
 
-    <!-- Interface superposée des joueurs -->
-    <app-player-hud />
+         Tant que la partie est en phase SETUP, le joueur
+         reste sur l'écran de préparation.
+
+         GameService détermine ensuite les différentes étapes
+         affichées à l'intérieur de GameSetup.
+         ===================================================== -->
+
+    @if (gameService.phase() === 'setup') {
+      <app-game-setup />
+    }
+
+    <!-- =====================================================
+         PARTIE EN COURS
+         =====================================================
+
+         Le plateau et le HUD ne deviennent accessibles
+         qu'une fois toute la préparation terminée.
+         ===================================================== -->
+
+    @if (gameService.phase() === 'playing') {
+
+      <!-- Plateau / caméra du donjon -->
+      <app-board />
+
+      <!-- Interface superposée des joueurs -->
+      <app-player-hud />
+
+    }
 
   </div>
 

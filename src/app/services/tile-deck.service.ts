@@ -4,7 +4,6 @@ import { TileDefinition } from '../models/tile';
 import { TILE_DEFINITIONS } from '../data/tile-definitions';
 import { createShuffledTileDeck } from '../data/tile-deck';
 
-
 /**
  * Gère l'état de la pioche de tuiles pendant une partie.
  *
@@ -31,7 +30,6 @@ import { createShuffledTileDeck } from '../data/tile-deck';
   providedIn: 'root',
 })
 export class TileDeckService {
-
   // ==========================================================
   // ÉTAT DE LA PIOCHE
   // ==========================================================
@@ -47,8 +45,7 @@ export class TileDeckService {
    * Les propriétés complètes des tuiles restent centralisées
    * dans TILE_DEFINITIONS.
    */
-  private deck: string[] = createShuffledTileDeck();
-
+  private deck: string[] = [];
 
   /**
    * Nombre de tuiles encore disponibles dans la pioche.
@@ -56,7 +53,6 @@ export class TileDeckService {
   get remainingTiles(): number {
     return this.deck.length;
   }
-
 
   // ==========================================================
   // PIOCHE
@@ -87,25 +83,28 @@ export class TileDeckService {
       return undefined;
     }
 
-    return TILE_DEFINITIONS.find(
-      (definition) => definition.id === definitionId,
-    );
+    return TILE_DEFINITIONS.find((definition) => definition.id === definitionId);
   }
-
 
   // ==========================================================
   // RÉINITIALISATION
   // ==========================================================
 
   /**
-   * Reconstruit intégralement la pioche et la mélange.
+   * Prépare la pioche pour une nouvelle partie.
+   *
+   * RÈGLE OFFICIELLE KARAK :
+   *
+   * les 79 tuiles de catacombes restantes sont mélangées
+   * face cachée après la mise en place de la tuile de départ.
    *
    * CHOIX D'IMPLÉMENTATION :
    *
-   * cette méthode permettra notamment de réinitialiser
-   * l'état de la pioche lors du démarrage d'une nouvelle partie.
+   * createShuffledTileDeck() construit la réserve complète
+   * sans la tuile de départ et en mélange immédiatement
+   * son contenu.
    */
-  reset(): void {
+  initialize(): void {
     this.deck = createShuffledTileDeck();
   }
 }

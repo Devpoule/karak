@@ -6,7 +6,6 @@
   min-height: 0;
 }
 
-
 /* ==========================================================
    PLATEAU / CAMÉRA
    ========================================================== */
@@ -31,16 +30,8 @@
   user-select: none;
 
   background:
-    radial-gradient(
-      circle at 50% 35%,
-      rgba(105, 88, 70, 0.12),
-      transparent 45%
-    ),
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.018) 25%,
-      transparent 25%
-    ),
+    radial-gradient(circle at 50% 35%, rgba(105, 88, 70, 0.12), transparent 45%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.018) 25%, transparent 25%),
     var(--karak-dungeon-deep);
 
   /*
@@ -50,7 +41,6 @@
     cursor: grabbing;
   }
 }
-
 
 /* ==========================================================
    MONDE DU DONJON
@@ -85,27 +75,15 @@
    * lumineuse au fond du donjon.
    */
   background-image:
-    linear-gradient(
-      var(--karak-grid) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      var(--karak-grid) 1px,
-      transparent 1px
-    ),
-    radial-gradient(
-      circle at center,
-      rgba(122, 101, 80, 0.09),
-      transparent 55%
-    );
+    linear-gradient(var(--karak-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--karak-grid) 1px, transparent 1px),
+    radial-gradient(circle at center, rgba(122, 101, 80, 0.09), transparent 55%);
 
   background-size:
     var(--tile-size) var(--tile-size),
     var(--tile-size) var(--tile-size),
     100% 100%;
 }
-
 
 /* ==========================================================
    TUILES POSÉES
@@ -127,7 +105,6 @@
    * l'envoyer derrière l'ensemble du monde.
    */
   isolation: isolate;
-
 
   /* ----------------------------------------------------------
      HALO D'EXPLORATION
@@ -155,14 +132,13 @@
 
     border-radius: 50%;
 
-    background:
-      radial-gradient(
-        circle,
-        rgba(143, 119, 153, 0.24) 0%,
-        rgba(111, 88, 124, 0.18) 28%,
-        rgba(77, 61, 89, 0.10) 50%,
-        transparent 72%
-      );
+    background: radial-gradient(
+      circle,
+      rgba(143, 119, 153, 0.24) 0%,
+      rgba(111, 88, 124, 0.18) 28%,
+      rgba(77, 61, 89, 0.1) 50%,
+      transparent 72%
+    );
 
     /*
      * Le halo ne doit jamais intercepter une interaction
@@ -172,7 +148,6 @@
 
     z-index: -1;
   }
-
 
   /* ----------------------------------------------------------
      IMAGE DE LA TUILE
@@ -194,63 +169,200 @@
   }
 }
 
-
-  /* ==========================================================
+/* ==========================================================
     HÉROS
     ========================================================== */
 
-  /*
+/*
   * Le conteneur du héros occupe exactement la surface logique
   * d'une tuile.
   *
   * L'image du pion est ensuite centrée à l'intérieur de cette
   * surface sans modifier ses proportions.
   */
-  .board__hero {
-    position: absolute;
-    z-index: 5;
+.board__hero {
+  position: absolute;
+  z-index: 5;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    width: var(--tile-size);
-    height: var(--tile-size);
+  width: var(--tile-size);
+  height: var(--tile-size);
 
-    /*
+  /*
     * Le pion est actuellement purement visuel.
     * Les interactions restent donc destinées au plateau.
     */
-    pointer-events: none;
+  pointer-events: none;
 
-    transition:
-      left 220ms ease-out,
-      top 220ms ease-out;
+  transition:
+    left 500ms ease-in-out,
+    top 500ms ease-in-out;
 
-    img {
-      display: block;
+  img {
+    display: block;
 
-      /*
+    /*
       * Le personnage doit rester suffisamment petit pour que
       * la géométrie de la tuile reste lisible autour de lui.
       */
-      height: 92%;
-      width: auto;
-      max-width: 92%;
+    height: 92%;
+    width: auto;
+    max-width: 92%;
 
-      object-fit: contain;
+    object-fit: contain;
 
-      user-select: none;
+    user-select: none;
 
-      filter:
-        drop-shadow(1px 0 1px rgba(0, 0, 0, 0.95))
-        drop-shadow(-1px 0 1px rgba(0, 0, 0, 0.95))
-        drop-shadow(0 1px 1px rgba(0, 0, 0, 0.95))
-        drop-shadow(0 -1px 1px rgba(0, 0, 0, 0.95))
-        drop-shadow(0 4px 3px rgba(0, 0, 0, 0.75));
-    }
+    filter: drop-shadow(1px 0 1px rgba(0, 0, 0, 0.95)) drop-shadow(-1px 0 1px rgba(0, 0, 0, 0.95))
+      drop-shadow(0 1px 1px rgba(0, 0, 0, 0.95)) drop-shadow(0 -1px 1px rgba(0, 0, 0, 0.95))
+      drop-shadow(0 4px 3px rgba(0, 0, 0, 0.75));
   }
+}
 
+/* ==========================================================
+   CONTRÔLES DE DÉPLACEMENT
+   ========================================================== */
+
+/*
+ * Les contrôles sont centrés sur la position logique du héros.
+ *
+ * Le conteneur lui-même n'intercepte pas les clics afin de
+ * ne pas gêner les interactions avec le plateau.
+ */
+.board__movement-controls {
+  position: absolute;
+  z-index: 20;
+
+  width: var(--tile-size);
+  height: var(--tile-size);
+
+  transform: translate(-50%, -50%);
+
+  pointer-events: none;
+}
+
+/*
+ * Bouton directionnel commun.
+ *
+ * Chaque bouton réactive individuellement les événements
+ * du pointeur.
+ */
+.board__movement-control {
+  position: absolute;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  padding: 0;
+
+  border: 1px solid rgba(220, 200, 160, 0.75);
+  border-radius: 50%;
+
+  background: radial-gradient(circle at 35% 30%, rgba(105, 93, 75, 0.95), rgba(37, 32, 27, 0.95));
+
+  color: #eee1c5;
+
+  font-size: 17px;
+  line-height: 1;
+
+  cursor: pointer;
+  pointer-events: auto;
+
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.8),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+
+  transition:
+    transform 120ms ease,
+    filter 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover {
+    filter: brightness(1.25);
+
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.9),
+      0 0 8px rgba(220, 200, 160, 0.35),
+      inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Nord */
+
+.board__movement-control--north {
+  top: 0;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  &:hover {
+    transform: translate(-50%, -50%) scale(1.12);
+  }
+}
+
+/* Est */
+
+.board__movement-control--east {
+  top: 50%;
+  right: 0;
+
+  transform: translate(50%, -50%);
+
+  &:hover {
+    transform: translate(50%, -50%) scale(1.12);
+  }
+}
+
+/* Sud */
+
+.board__movement-control--south {
+  bottom: 0;
+  left: 50%;
+
+  transform: translate(-50%, 50%);
+
+  &:hover {
+    transform: translate(-50%, 50%) scale(1.12);
+  }
+}
+
+/* Ouest */
+
+.board__movement-control--west {
+  top: 50%;
+  left: 0;
+
+  transform: translate(-50%, -50%);
+
+  &:hover {
+    transform: translate(-50%, -50%) scale(1.12);
+  }
+}
+
+/*
+ * Une sortie menant vers une zone encore inexplorée
+ * reçoit une légère mise en évidence.
+ *
+ * Il s'agit uniquement d'une distinction visuelle :
+ * la règle d'exploration reste gérée par ExplorationService.
+ */
+.board__movement-control--explore {
+  border-color: rgba(224, 187, 104, 0.95);
+
+  color: #f5d58a;
+
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.8),
+    0 0 9px rgba(218, 170, 72, 0.45),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+}
 
 /* ==========================================================
    TUILE EN COURS D'EXPLORATION
@@ -278,7 +390,6 @@
   }
 }
 
-
 /* ==========================================================
    CONTRÔLES DE LA TUILE EN ATTENTE
    ========================================================== */
@@ -305,7 +416,6 @@
   line-height: 1;
 }
 
-
 /*
  * Rotation de la tuile.
  */
@@ -314,7 +424,6 @@
 
   font-size: 20px;
 }
-
 
 /*
  * Confirmation du placement.
@@ -332,7 +441,6 @@
     opacity: 0.35;
   }
 }
-
 
 /* ==========================================================
    CONTRÔLES TEMPORAIRES DE DÉVELOPPEMENT
@@ -360,7 +468,6 @@
   }
 }
 
-
 /*
  * Direction nord.
  */
@@ -370,7 +477,6 @@
 
   transform: translateX(-50%);
 }
-
 
 /*
  * Direction est.
@@ -382,7 +488,6 @@
   transform: translateY(-50%);
 }
 
-
 /*
  * Direction sud.
  */
@@ -393,7 +498,6 @@
   transform: translateX(-50%);
 }
 
-
 /*
  * Direction ouest.
  */
@@ -403,7 +507,6 @@
 
   transform: translateY(-50%);
 }
-
 
 /* ==========================================================
    COUVERTURE DU DONJON
@@ -442,7 +545,6 @@
     opacity 1300ms ease,
     filter 1300ms ease;
 
-
   /* ----------------------------------------------------------
      ILLUSTRATION DE COUVERTURE
      ---------------------------------------------------------- */
@@ -464,7 +566,6 @@
       filter 1300ms ease;
   }
 
-
   /*
    * Léger mouvement avant l'entrée dans le donjon.
    */
@@ -474,7 +575,6 @@
     filter: brightness(0.85);
   }
 }
-
 
 /* ==========================================================
    RÉVÉLATION DU DONJON
@@ -511,7 +611,6 @@
   }
 }
 
-
 /* ==========================================================
    ACTION D'ENTRÉE DANS LE DONJON
    ========================================================== */
@@ -532,8 +631,7 @@
   border: 1px solid rgba(224, 177, 93, 0.65);
   border-radius: 4px;
 
-  box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 
   opacity: 0.92;
 
@@ -541,7 +639,6 @@
     opacity 500ms ease,
     transform 500ms ease;
 }
-
 
 /* ==========================================================
    ANIMATIONS
@@ -554,8 +651,7 @@
 @keyframes pending-tile-glow {
   0%,
   100% {
-    box-shadow:
-      0 0 4px rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.35);
   }
 
   50% {
@@ -565,7 +661,6 @@
   }
 }
 
-
 /*
  * Placement impossible :
  * pulsation rouge plus marquée.
@@ -573,8 +668,7 @@
 @keyframes invalid-tile-glow {
   0%,
   100% {
-    box-shadow:
-      0 0 5px rgba(220, 40, 40, 0.55);
+    box-shadow: 0 0 5px rgba(220, 40, 40, 0.55);
   }
 
   50% {

@@ -16,11 +16,14 @@ import { TileDeckService } from './tile-deck.service';
  * Représente une exploration commencée mais dont la nouvelle
  * tuile n'a pas encore été définitivement placée.
  *
- * CHOIX D'IMPLÉMENTATION :
+ * RÈGLE OFFICIELLE KARAK :
  *
- * Le tirage et le placement sont volontairement séparés afin
- * de laisser au joueur le temps d'orienter la tuile avant
- * de confirmer son placement.
+ * le joueur choisit d'abord le passage qu'il souhaite emprunter.
+ * Une tuile est ensuite piochée et placée de manière à permettre
+ * au héros d'y entrer depuis la tuile qu'il quitte.
+ *
+ * La direction choisie appartient donc à l'exploration dès
+ * son déclenchement.
  */
 export interface PendingTilePlacement {
 
@@ -30,26 +33,26 @@ export interface PendingTilePlacement {
   sourceTile: PlacedTile;
 
   /**
-   * Direction suivie depuis la tuile source vers la nouvelle case.
+   * Direction choisie avant le tirage de la nouvelle tuile.
    *
-   * Exemple :
+   * Elle représente :
    *
-   * source → east → nouvelle tuile
+   * sourceTile → nouvelle tuile
    */
   direction: Direction;
 
   /**
    * Définition de la tuile retirée de la pioche.
    *
-   * Elle n'appartient pas encore au donjon tant que son placement
-   * n'a pas été confirmé.
+   * Elle n'appartient pas encore au donjon tant que son
+   * placement n'a pas été confirmé.
    */
   definition: TileDefinition;
 
   /**
-   * Orientation actuellement choisie par le joueur.
+   * Orientation actuellement choisie pour la nouvelle tuile.
    *
-   * Valeurs possibles dans l'implémentation actuelle :
+   * Valeurs possibles :
    *
    * 0° → 90° → 180° → 270°
    */
@@ -60,36 +63,31 @@ export interface PendingTilePlacement {
 /**
  * Orchestre le processus d'exploration du donjon.
  *
- * Une exploration suit actuellement ce cycle :
+ * RÈGLE OFFICIELLE KARAK :
  *
- *   tuile source
- *        │
- *        ▼
- *   direction explorable ?
- *        │
- *        ▼
+ *   choix du passage
+ *          │
+ *          ▼
  *   tirage d'une tuile
- *        │
- *        ▼
- *   pendingTile
- *        │
- *        ├── rotation
- *        │
- *        ├── validation
- *        │
- *        ▼
- *   placement dans le donjon
+ *          │
+ *          ▼
+ *   orientation
+ *          │
+ *          ▼
+ *   placement
+ *          │
+ *          ▼
+ *   entrée du héros
  *
  * RESPONSABILITÉS :
  *
- * - déterminer si une exploration peut commencer ;
+ * - déterminer si une direction peut être explorée ;
+ * - déclencher l'exploration dans cette direction ;
  * - demander une tuile à la pioche ;
- * - conserver le placement en attente ;
- * - gérer son orientation ;
+ * - conserver la tuile et la direction choisie ;
+ * - gérer l'orientation de la tuile ;
  * - vérifier son raccordement à la tuile source ;
  * - confirmer son placement.
- *
- * Le service ne possède ni le donjon ni la pioche :
  *
  * DungeonService
  *   → source de vérité du donjon.
@@ -116,20 +114,17 @@ export class ExplorationService {
    * Exploration actuellement en attente de confirmation.
    *
    * null signifie qu'aucune exploration n'est en cours.
-   *
-   * CHOIX D'IMPLÉMENTATION :
-   * une seule exploration peut être préparée à la fois.
    */
   pendingTile: PendingTilePlacement | null = null;
 
 
   // ==========================================================
-  // DÉCLENCHEMENT D'UNE EXPLORATION
+  // POSSIBILITÉS D'EXPLORATION
   // ==========================================================
 
   /**
-   * Indique si une exploration peut commencer depuis une tuile
-   * dans une direction donnée.
+   * Indique si une direction peut être explorée depuis
+   * une tuile donnée.
    *
    * Une direction est explorable lorsque :
    *
@@ -152,27 +147,27 @@ export class ExplorationService {
   }
 
 
+  // ==========================================================
+  // DÉCLENCHEMENT DE L'EXPLORATION
+  // ==========================================================
+
   /**
    * Commence l'exploration d'un secteur encore inexploré.
    *
    * RÈGLE OFFICIELLE KARAK :
    *
-   * lorsqu'un héros entre dans un secteur inexploré, une nouvelle
-   * tuile de catacombes est tirée et intégrée au donjon de manière
-   * à permettre au héros d'y entrer depuis la tuile qu'il quitte.
-   *
-   * CHOIX D'IMPLÉMENTATION :
-   *
-   * nous séparons volontairement le tirage et le placement.
+   * le passage est choisi avant que la nouvelle tuile soit
+   * révélée.
    *
    * Cette méthode :
    *
    * 1. vérifie que la direction peut être explorée ;
-   * 2. vérifie qu'aucune autre exploration n'est en attente ;
+   * 2. vérifie qu'aucune exploration n'est déjà en cours ;
    * 3. retire une tuile de la pioche ;
-   * 4. crée un PendingTilePlacement.
+   * 4. mémorise la tuile source et la direction choisie.
    *
-   * La tuile ne rejoint le donjon qu'après confirmation.
+   * La tuile ne rejoint le donjon qu'après confirmation
+   * de son orientation.
    */
   start(
     tile: PlacedTile,
@@ -198,18 +193,15 @@ export class ExplorationService {
 
 
   // ==========================================================
-  // POSITION DU PLACEMENT EN ATTENTE
+  // POSITION DU PLACEMENT
   // ==========================================================
 
   /**
    * Retourne la position logique destinée à recevoir
    * la nouvelle tuile.
    *
-   * Elle correspond à la case voisine de sourceTile dans
-   * la direction choisie lors du début de l'exploration.
-   *
-   * @returns les coordonnées logiques de la nouvelle case,
-   * ou null lorsqu'aucune exploration n'est en cours.
+   * La position est déterminée par le passage choisi avant
+   * le tirage et ne peut donc pas être changée après celui-ci.
    */
   getPendingTilePosition(): { x: number; y: number } | null {
     if (!this.pendingTile) {
@@ -233,10 +225,6 @@ export class ExplorationService {
    * Cycle :
    *
    * 0° → 90° → 180° → 270° → 0°
-   *
-   * CHOIX D'IMPLÉMENTATION :
-   * le joueur choisit manuellement l'orientation avant
-   * de confirmer le placement.
    */
   rotatePendingTile(): void {
     if (!this.pendingTile) {
@@ -249,44 +237,20 @@ export class ExplorationService {
 
 
   // ==========================================================
-  // VALIDATION DU RACCORDEMENT
+  // VALIDATION DU PLACEMENT
   // ==========================================================
 
   /**
-   * Vérifie si l'orientation actuelle permet de raccorder
-   * la nouvelle tuile à la tuile source.
+   * Vérifie si l'orientation actuelle permet au héros
+   * d'entrer sur la nouvelle tuile depuis la tuile source.
    *
-   * ========================================================
-   * RÈGLE OFFICIELLE KARAK
-   * ========================================================
+   * RÈGLE OFFICIELLE KARAK :
    *
-   * La nouvelle tuile doit permettre au héros d'y entrer
-   * depuis la tuile qu'il occupe actuellement.
+   * la nouvelle tuile doit être raccordée au passage par
+   * lequel le héros l'explore.
    *
-   * Les autres côtés ne constituent pas des contraintes
-   * supplémentaires de raccordement pour ce placement.
-   *
-   * ========================================================
-   * CHOIX D'IMPLÉMENTATION
-   * ========================================================
-   *
-   * pendingTile.direction représente :
-   *
-   *     source → nouvelle tuile
-   *
-   * L'ouverture recherchée sur la nouvelle tuile est donc
-   * située dans la direction opposée.
-   *
-   * Exemple :
-   *
-   *                 exploration EAST
-   *
-   *     SOURCE  ───────────────────►  NOUVELLE TUILE
-   *                                      ouverture
-   *                                        WEST
-   *
-   * On ne vérifie volontairement PAS ici la compatibilité
-   * avec les éventuels autres voisins.
+   * Les éventuels autres voisins ne constituent pas une
+   * contrainte supplémentaire pour ce placement.
    */
   isPendingTilePlacementValid(): boolean {
     if (!this.pendingTile) {
@@ -310,19 +274,16 @@ export class ExplorationService {
   // ==========================================================
 
   /**
-   * Place définitivement la tuile en attente dans le donjon.
+   * Place définitivement la tuile explorée dans le donjon.
    *
    * Le placement est refusé lorsque :
    *
    * - aucune exploration n'est en cours ;
-   * - l'orientation choisie n'est pas valide ;
-   * - la position du placement ne peut pas être déterminée.
+   * - l'orientation choisie ne permet pas l'entrée du héros ;
+   * - la position ne peut pas être déterminée.
    *
-   * Une fois le placement effectué :
-   *
-   * pendingTile = null
-   *
-   * L'exploration en attente est alors terminée.
+   * Une fois le placement effectué, l'exploration en attente
+   * est libérée.
    *
    * @returns la tuile placée lorsque la confirmation réussit,
    * ou null lorsque la confirmation est refusée.
