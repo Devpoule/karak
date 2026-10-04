@@ -6,30 +6,51 @@
     draggable="false"
   />
 
-  <div class="game-setup__content">
-    <!-- =========================================================
-     ACCUEIL
+  <!-- =========================================================
+       ACCUEIL
 
-     L'écran d'accueil utilise exactement le même panneau
-     que le parcours de préparation.
+       L'accueil est volontairement dépouillé.
 
-     Il n'existe donc aucun changement de page ni aucun
-     changement de décor lorsque le joueur clique sur "Jouer".
+       Contrairement aux étapes de préparation, aucun panneau
+       n'encadre le bouton "Jouer".
 
-     Seul le contenu intérieur du panneau évolue.
-     ========================================================= -->
+       Le joueur voit donc directement :
+       - l'illustration de fond ;
+       - l'action principale "Jouer".
 
-    @if (setupView() === 'welcome') {
-      <div class="game-setup__welcome">
-        <button type="button" class="game-setup__play" (click)="startNewGame()">Jouer</button>
-      </div>
-    }
+       Le panneau de préparation n'apparaît qu'après le clic.
+       ========================================================= -->
 
-    @if (setupView() === 'setup') {
+  @if (setupView() === 'welcome') {
+    <div class="game-setup__welcome">
+      <button
+        type="button"
+        class="game-setup__play"
+        (click)="startNewGame()"
+      >
+        Jouer
+      </button>
+    </div>
+  }
+
+  <!-- =========================================================
+       PANNEAU DE PRÉPARATION
+
+       Le panneau principal n'existe visuellement qu'à partir
+       de l'écran "Nouvelle partie".
+
+       Cela permet de distinguer clairement :
+       - l'accueil du jeu ;
+       - le parcours de préparation.
+       ========================================================= -->
+
+  @if (setupView() === 'setup') {
+    <div class="game-setup__content">
       <div class="game-setup__setup">
+
         <!-- =====================================================
-         PROGRESSION DU SETUP
-         ===================================================== -->
+             PROGRESSION DU SETUP
+             ===================================================== -->
 
         <div class="game-setup__progress">
           <div
@@ -81,28 +102,28 @@
             class="game-setup__progress-step"
             [class.game-setup__progress-step--current]="gameService.firstPlayerIndex() !== null"
           >
-            <span class="game-setup__progress-marker"> ○ </span>
+            <span class="game-setup__progress-marker">○</span>
 
             <span>Aventure</span>
           </div>
         </div>
 
         <!-- =====================================================
-         ÉTAPE 1 — COMPOSITION DE LA PARTIE
+             ÉTAPE 1 — COMPOSITION DE LA PARTIE
 
-         Règle par défaut :
+             Règle par défaut :
 
-         J1 = humain.
-         Tous les autres participants = IA.
+             J1 = humain.
+             Tous les autres participants = IA.
 
-         Deux participants sont sélectionnés dès l'ouverture :
+             Deux participants sont sélectionnés dès l'ouverture :
 
-         J1 humain contre J2 IA.
+             J1 humain contre J2 IA.
 
-         Le multijoueur local permet de remplacer certaines IA
-         par des humains sans ajouter une étape supplémentaire
-         au parcours de préparation.
-         ===================================================== -->
+             Le multijoueur local permet de remplacer certaines IA
+             par des humains sans ajouter une étape supplémentaire
+             au parcours de préparation.
+             ===================================================== -->
 
         @if (gameService.setupStep() === 'player-count') {
           <div class="game-setup__stage">
@@ -114,13 +135,15 @@
 
             <div class="game-setup__stage-main">
               <div class="game-setup__new-game">
-                <!--
-              Nombre TOTAL de participants.
 
-              Le sélecteur commence à 2 :
-              une partie comporte toujours au minimum
-              un humain et un adversaire.
-            -->
+                <!--
+                  Nombre TOTAL de participants.
+
+                  Le sélecteur commence à 2 :
+                  une partie comporte toujours au minimum
+                  un humain et un adversaire.
+                -->
+
                 <div class="game-setup__player-counts">
                   @for (playerCount of playerCounts; track playerCount) {
                     <button
@@ -137,11 +160,12 @@
                 </div>
 
                 <!--
-              Option secondaire.
+                  Option secondaire.
 
-              Le parcours solo contre l'IA ne nécessite
-              aucune configuration supplémentaire.
-            -->
+                  Le parcours solo contre l'IA ne nécessite
+                  aucune configuration supplémentaire.
+                -->
+
                 <button
                   type="button"
                   class="game-setup__local-multiplayer-toggle"
@@ -153,12 +177,13 @@
                 </button>
 
                 <!--
-              Cette zone n'apparaît que lorsque
-              le multijoueur local est demandé.
+                  Cette zone n'apparaît que lorsque
+                  le multijoueur local est demandé.
 
-              Les nombres proposés ne peuvent jamais
-              dépasser le nombre total de participants.
-            -->
+                  Les nombres proposés ne peuvent jamais
+                  dépasser le nombre total de participants.
+                -->
+
                 @if (localMultiplayerOpen) {
                   <div class="game-setup__local-multiplayer">
                     <span class="game-setup__local-multiplayer-label">
@@ -187,15 +212,20 @@
             </div>
 
             <!--
-          Résumé immédiatement compréhensible
-          de la composition de la partie.
-        -->
+              Résumé immédiatement compréhensible
+              de la composition de la partie.
+            -->
+
             <div class="game-setup__stage-feedback">
               @if (humanPlayerCount === 1) {
                 <p>
                   Vous ·
                   {{ selectedPlayerCount - 1 }}
-                  {{ selectedPlayerCount - 1 === 1 ? 'adversaire IA' : 'adversaires IA' }}
+                  {{
+                    selectedPlayerCount - 1 === 1
+                      ? 'adversaire IA'
+                      : 'adversaires IA'
+                  }}
                 </p>
               } @else {
                 <p>
@@ -216,7 +246,11 @@
             </div>
 
             <div class="game-setup__stage-action">
-              <button type="button" class="game-setup__continue" (click)="confirmPlayerCount()">
+              <button
+                type="button"
+                class="game-setup__continue"
+                (click)="confirmPlayerCount()"
+              >
                 Continuer
               </button>
             </div>
@@ -224,8 +258,8 @@
         }
 
         <!-- =====================================================
-         ÉTAPE 2 — TIRAGE DES HÉROS
-         ===================================================== -->
+             ÉTAPE 2 — TIRAGE DES HÉROS
+             ===================================================== -->
 
         @if (gameService.setupStep() === 'hero-draw') {
           <div class="game-setup__stage game-setup__stage--player-cards">
@@ -233,7 +267,9 @@
               <h1>Tirage des héros</h1>
 
               @if (heroDrawState() === 'hidden') {
-                <p>Découvrez les héros qui accompagneront les aventuriers dans le donjon.</p>
+                <p>
+                  Découvrez les héros qui accompagneront les aventuriers dans le donjon.
+                </p>
               }
 
               @if (heroDrawState() === 'drawing') {
@@ -254,7 +290,11 @@
                     </strong>
 
                     <div class="game-setup__player-roll-hero">
-                      <img [src]="getHeroCard(playerIndex)" alt="Carte Héros" draggable="false" />
+                      <img
+                        [src]="getHeroCard(playerIndex)"
+                        alt="Carte Héros"
+                        draggable="false"
+                      />
                     </div>
                   </div>
                 }
@@ -281,19 +321,40 @@
               }
 
               @if (heroDrawState() === 'drawing') {
-                <div class="game-setup__drawing-indicator" aria-label="Tirage en cours">⟳</div>
+                <div
+                  class="game-setup__drawing-indicator"
+                  aria-label="Tirage en cours"
+                >
+                  ⟳
+                </div>
               }
             </div>
           </div>
         }
 
         <!-- =====================================================
-         ÉTAPE 3 — DÉTERMINATION DU PREMIER JOUEUR
+             ÉTAPE 3 — DÉTERMINATION DU PREMIER JOUEUR
 
-         Un humain déclenche son lancer manuellement.
+             Un humain déclenche son lancer manuellement.
 
-         Une IA lance automatiquement après un court délai.
-         ===================================================== -->
+             Une IA lance automatiquement après un court délai.
+
+             IMPORTANT :
+
+             Le bouton de lancer n'est plus placé sur la carte.
+
+             Pour un joueur humain, l'interface présente désormais :
+
+             "Joueur X, à vous de lancer les dés."
+                         ↓
+                    bouton de dés
+
+             L'action est donc directement associée à la consigne,
+             sans masquer ou surcharger la carte du héros.
+
+             Les résultats de dés restent quant à eux superposés
+             à la partie basse des cartes.
+             ===================================================== -->
 
         @if (gameService.setupStep() === 'first-player-roll') {
           <div class="game-setup__stage game-setup__stage--player-cards">
@@ -301,13 +362,31 @@
               <h1>Qui commence ?</h1>
 
               @if (firstPlayerResolutionState() === 'tie') {
-                <p>Égalité ! Les aventuriers concernés doivent relancer les dés.</p>
+                <p>
+                  Égalité ! Les aventuriers concernés doivent relancer les dés.
+                </p>
               } @else if (firstPlayerResolutionState() === 'winner') {
                 <p>Le premier aventurier est désigné.</p>
               } @else {
-                <p>Lancez les dés dans l'ordre. Le total le plus élevé commence.</p>
+                <p>
+                  Lancez les dés dans l'ordre. Le total le plus élevé commence.
+                </p>
               }
             </div>
+
+            <!-- =================================================
+                 CARTES DES JOUEURS
+
+                 Les cartes ne contiennent désormais plus
+                 l'action manuelle de lancer.
+
+                 Elles restent responsables uniquement de :
+                 - l'identité du joueur ;
+                 - son héros ;
+                 - l'animation des dés ;
+                 - son résultat ;
+                 - son état gagnant / éliminé / en attente.
+                 ================================================= -->
 
             <div class="game-setup__stage-main">
               <div class="game-setup__player-rolls">
@@ -317,12 +396,21 @@
                     [class.game-setup__player-roll--revealed]="
                       hasPlayerRollBeenRevealed(playerIndex)
                     "
-                    [class.game-setup__player-roll--eliminated]="isPlayerEliminated(playerIndex)"
-                    [class.game-setup__player-roll--winner]="isFirstPlayerWinner(playerIndex)"
-                    [class.game-setup__player-roll--awaiting]="isPlayerTurnToRoll(playerIndex)"
+                    [class.game-setup__player-roll--eliminated]="
+                      isPlayerEliminated(playerIndex)
+                    "
+                    [class.game-setup__player-roll--winner]="
+                      isFirstPlayerWinner(playerIndex)
+                    "
+                    [class.game-setup__player-roll--awaiting]="
+                      isPlayerTurnToRoll(playerIndex)
+                    "
                   >
                     @if (isFirstPlayerWinner(playerIndex)) {
-                      <div class="game-setup__sparkles" aria-hidden="true">
+                      <div
+                        class="game-setup__sparkles"
+                        aria-hidden="true"
+                      >
                         <span>✦</span>
                         <span>✧</span>
                         <span>✦</span>
@@ -344,40 +432,11 @@
                       />
 
                       <!--
-                    Le bouton n'existe que pour un humain.
+                        Animation temporaire du lancer.
 
-                    Une IA utilise le même mécanisme de lancer
-                    mais celui-ci est déclenché automatiquement
-                    par game-setup.ts.
-                  -->
-                      @if (canHumanPlayerRoll(playerIndex)) {
-                        <button
-                          type="button"
-                          class="game-setup__roll-trigger game-setup__roll-trigger--active"
-                          [class.game-setup__roll-trigger--reroll]="
-                            firstPlayerResolutionState() === 'tie'
-                          "
-                          [attr.aria-label]="
-                            firstPlayerResolutionState() === 'tie'
-                              ? 'Relancer les dés du joueur ' + (playerIndex + 1)
-                              : 'Lancer les dés du joueur ' + (playerIndex + 1)
-                          "
-                          [attr.title]="
-                            firstPlayerResolutionState() === 'tie'
-                              ? 'Relancer les dés'
-                              : 'Lancer les dés'
-                          "
-                          (click)="rollPlayer(playerIndex)"
-                        >
-                          <span class="game-setup__roll-trigger-icon" aria-hidden="true"> ⚄ </span>
-
-                          @if (firstPlayerResolutionState() === 'tie') {
-                            <span class="game-setup__roll-trigger-retry" aria-hidden="true">
-                              ↻
-                            </span>
-                          }
-                        </button>
-                      }
+                        Cette superposition reste volontairement
+                        attachée à la carte du joueur concerné.
+                      -->
 
                       @if (isPlayerRolling(playerIndex)) {
                         <div class="game-setup__roll-overlay">
@@ -396,6 +455,14 @@
                           </div>
                         </div>
                       }
+
+                      <!--
+                        Résultat définitif du joueur.
+
+                        Le résultat reste affiché sur la carte
+                        afin de permettre une comparaison visuelle
+                        immédiate entre tous les participants.
+                      -->
 
                       @if (getRevealedRoll(playerIndex); as roll) {
                         <div class="game-setup__roll-overlay">
@@ -430,17 +497,26 @@
               </div>
             </div>
 
-            <!--
-          L'instruction dépend maintenant du contrôleur.
+            <!-- =================================================
+                 CONSIGNE DU TOUR
 
-          Humain :
-          "à vous de lancer les dés"
+                 La consigne reste immédiatement sous les cartes.
 
-          IA :
-          "lance les dés..."
-        -->
+                 Humain :
+                 "Joueur X, à vous de lancer les dés."
+
+                 IA :
+                 "Joueur X lance les dés..."
+
+                 Le bouton humain se trouve dans la zone d'action
+                 juste en dessous de cette consigne.
+                 ================================================= -->
+
             <div class="game-setup__stage-feedback">
-              @if (firstPlayerResolutionState() !== 'winner' && getNextPlayerToRoll() !== null) {
+              @if (
+                firstPlayerResolutionState() !== 'winner' &&
+                getNextPlayerToRoll() !== null
+              ) {
                 @if (isAiWaitingToRoll(getNextPlayerToRoll()!)) {
                   <p class="game-setup__turn-hint">
                     Joueur
@@ -450,7 +526,8 @@
                 } @else {
                   <p class="game-setup__turn-hint">
                     Joueur
-                    {{ getNextPlayerToRoll()! + 1 }}, à vous de lancer les dés.
+                    {{ getNextPlayerToRoll()! + 1 }},
+                    à vous de lancer les dés.
                   </p>
                 }
               }
@@ -464,14 +541,76 @@
               }
             </div>
 
+            <!-- =================================================
+                 ACTION DU TOUR
+
+                 Le bouton de lancer se trouve désormais ici,
+                 immédiatement sous la consigne.
+
+                 Seul un joueur humain autorisé à lancer obtient
+                 ce bouton.
+
+                 Une IA ne reçoit aucun bouton : son lancer reste
+                 automatiquement déclenché par game-setup.ts.
+
+                 En cas d'égalité, le même bouton devient
+                 naturellement l'action de relance.
+                 ================================================= -->
+
             <div class="game-setup__stage-action">
+              @if (
+                firstPlayerResolutionState() !== 'winner' &&
+                getNextPlayerToRoll() !== null &&
+                canHumanPlayerRoll(getNextPlayerToRoll()!)
+              ) {
+                <button
+                  type="button"
+                  class="game-setup__roll-trigger game-setup__roll-trigger--active"
+                  [class.game-setup__roll-trigger--reroll]="
+                    firstPlayerResolutionState() === 'tie'
+                  "
+                  [attr.aria-label]="
+                    firstPlayerResolutionState() === 'tie'
+                      ? 'Relancer les dés du joueur ' + (getNextPlayerToRoll()! + 1)
+                      : 'Lancer les dés du joueur ' + (getNextPlayerToRoll()! + 1)
+                  "
+                  [attr.title]="
+                    firstPlayerResolutionState() === 'tie'
+                      ? 'Relancer les dés'
+                      : 'Lancer les dés'
+                  "
+                  (click)="rollPlayer(getNextPlayerToRoll()!)"
+                >
+                  <span
+                    class="game-setup__roll-trigger-icon"
+                    aria-hidden="true"
+                  >
+                    ⚄
+                  </span>
+
+                  @if (firstPlayerResolutionState() === 'tie') {
+                    <span
+                      class="game-setup__roll-trigger-retry"
+                      aria-hidden="true"
+                    >
+                      ↻
+                    </span>
+                  }
+                </button>
+              }
+
               @if (firstPlayerResolutionState() === 'winner') {
-                <button type="button" class="game-setup__continue">Commencer l'aventure</button>
+                <button
+                  type="button"
+                  class="game-setup__continue"
+                >
+                  Commencer l'aventure
+                </button>
               }
             </div>
           </div>
         }
       </div>
-    }
-  </div>
+    </div>
+  }
 </section>

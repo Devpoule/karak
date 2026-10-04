@@ -2,9 +2,7 @@
   display: block;
 
   width: 100%;
-
   height: 100%;
-
   min-height: 0;
 }
 
@@ -12,7 +10,6 @@
   position: relative;
 
   width: 100%;
-
   height: 100%;
 
   overflow: hidden;
@@ -26,16 +23,271 @@
   inset: 0;
 
   width: 100%;
-
   height: 100%;
 
   object-fit: cover;
 
   user-select: none;
-
   pointer-events: none;
 }
 
+// ============================================================
+// ACCUEIL
+// ============================================================
+
+/**
+ * L'accueil est volontairement indépendant du panneau de setup.
+ *
+ * Le bouton "Jouer" apparaît donc directement au-dessus
+ * de l'illustration de fond.
+ *
+ * Aucun cadre, fond translucide ou bordure du setup
+ * n'est affiché à cette étape.
+ */
+.game-setup__welcome {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transform: translate(-50%, -50%);
+
+  animation: game-setup-welcome-in 500ms ease-out both;
+}
+
+/**
+ * Action principale de l'accueil.
+ *
+ * Le bouton reçoit un scintillement doré discret afin
+ * d'attirer naturellement le regard et de renforcer
+ * l'ambiance mystérieuse de l'entrée dans le donjon.
+ */
+.game-setup__play {
+  position: relative;
+
+  min-width: 180px;
+  min-height: 52px;
+
+  padding: 0.8rem 2.5rem;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(240, 207, 138, 0.78);
+  border-radius: 4px;
+
+  background: linear-gradient(180deg, rgba(137, 47, 35, 0.96), rgba(91, 28, 23, 0.98));
+
+  color: #f7ead0;
+
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.4),
+    0 0 10px rgba(224, 177, 93, 0.18);
+
+  animation: game-setup-play-glow 2.8s ease-in-out infinite;
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+/**
+ * Reflet lumineux traversant périodiquement le bouton.
+ *
+ * Il reste volontairement fin et transparent pour évoquer
+ * un éclat métallique plutôt qu'un effet publicitaire.
+ */
+.game-setup__play::before {
+  content: '';
+
+  position: absolute;
+
+  top: -40%;
+  bottom: -40%;
+  left: -45%;
+
+  width: 24%;
+
+  transform: rotate(18deg);
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 235, 181, 0.08),
+    rgba(255, 235, 181, 0.62),
+    rgba(255, 235, 181, 0.08),
+    transparent
+  );
+
+  filter: blur(1px);
+
+  pointer-events: none;
+
+  animation: game-setup-play-shimmer 3.6s ease-in-out infinite;
+}
+
+/**
+ * Petit éclat ponctuel sur le contour supérieur droit.
+ *
+ * Cet élément donne davantage l'impression d'un scintillement
+ * que d'une simple pulsation lumineuse.
+ */
+.game-setup__play::after {
+  content: '✦';
+
+  position: absolute;
+
+  top: -7px;
+  right: 8px;
+
+  color: #ffe6a6;
+
+  font-size: 0.8rem;
+  line-height: 1;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  text-shadow:
+    0 0 4px rgba(255, 230, 166, 0.95),
+    0 0 10px rgba(240, 207, 138, 0.8);
+
+  animation: game-setup-play-sparkle 2.8s ease-in-out infinite;
+}
+
+.game-setup__play:hover {
+  transform: translateY(-2px) scale(1.025);
+
+  border-color: rgba(255, 222, 151, 1);
+
+  box-shadow:
+    0 11px 28px rgba(0, 0, 0, 0.48),
+    0 0 14px rgba(255, 224, 157, 0.55),
+    0 0 30px rgba(224, 177, 93, 0.28);
+}
+
+.game-setup__play:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.game-setup__play:focus-visible {
+  outline: 2px solid rgba(255, 222, 151, 0.9);
+  outline-offset: 4px;
+}
+
+/**
+ * Respiration lumineuse lente du bouton.
+ *
+ * Le centre du cycle produit un bref éclat doré,
+ * puis le bouton retrouve son état sombre.
+ */
+@keyframes game-setup-play-glow {
+  0%,
+  100% {
+    border-color: rgba(240, 207, 138, 0.68);
+
+    box-shadow:
+      0 8px 22px rgba(0, 0, 0, 0.4),
+      0 0 8px rgba(224, 177, 93, 0.14);
+  }
+
+  45% {
+    border-color: rgba(255, 224, 157, 0.95);
+
+    box-shadow:
+      0 8px 22px rgba(0, 0, 0, 0.42),
+      0 0 13px rgba(255, 224, 157, 0.48),
+      0 0 28px rgba(224, 177, 93, 0.22);
+  }
+
+  60% {
+    border-color: rgba(240, 207, 138, 0.76);
+
+    box-shadow:
+      0 8px 22px rgba(0, 0, 0, 0.4),
+      0 0 9px rgba(224, 177, 93, 0.2);
+  }
+}
+
+/**
+ * Passage du reflet métallique.
+ *
+ * Une longue pause est volontairement conservée entre
+ * deux passages pour que l'effet reste immersif.
+ */
+@keyframes game-setup-play-shimmer {
+  0%,
+  18% {
+    left: -45%;
+    opacity: 0;
+  }
+
+  24% {
+    opacity: 1;
+  }
+
+  42% {
+    left: 125%;
+    opacity: 0.85;
+  }
+
+  48%,
+  100% {
+    left: 125%;
+    opacity: 0;
+  }
+}
+
+/**
+ * Éclat ponctuel.
+ */
+@keyframes game-setup-play-sparkle {
+  0%,
+  30%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4) rotate(0deg);
+  }
+
+  39% {
+    opacity: 1;
+    transform: scale(1.15) rotate(25deg);
+  }
+
+  48% {
+    opacity: 0;
+    transform: scale(1.6) rotate(55deg);
+  }
+}
+
+// ============================================================
+// PANNEAU PRINCIPAL DU SETUP
+// ============================================================
+
+/**
+ * Le panneau n'existe visuellement qu'après le clic
+ * sur "Jouer".
+ *
+ * Il contient :
+ * - la progression ;
+ * - la composition de la partie ;
+ * - le tirage des héros ;
+ * - la détermination du premier joueur.
+ */
 .game-setup__content {
   position: absolute;
   z-index: 1;
@@ -47,22 +299,15 @@
 
   box-sizing: border-box;
 
-  /*
-   * Le panneau conserve une largeur stable entre les étapes,
-   * mais sa hauteur dépend désormais réellement du contenu.
-   *
-   * Cela évite l'immense zone vide visible sur l'écran "Jouer"
-   * et réduit également l'encombrement général du SETUP.
-   */
   width: min(1120px, calc(100vw - 4rem));
   height: auto;
 
   min-width: 720px;
   min-height: 0;
 
-  /*
-   * Une étape chargée (par exemple 5 héros) ne doit jamais
-   * dépasser la hauteur réellement disponible dans la fenêtre.
+  /**
+   * Une étape chargée, par exemple cinq héros,
+   * ne doit jamais dépasser la hauteur disponible.
    */
   max-height: calc(100vh - 4rem);
 
@@ -82,214 +327,81 @@
 
   color: #fff8e8;
 
-  /*
-   * La hauteur du panneau peut évoluer entre l'accueil,
-   * Nouvelle partie et les étapes avec cartes.
-   * La transition rend cette évolution plus naturelle.
-   */
-  transition:
-    width 300ms ease,
-    height 300ms ease,
-    max-height 300ms ease;
-}
-
-// ============================================================
-
-// ACCUEIL / TRANSITION VERS LE SETUP
-
-// ============================================================
-
-/**
-
- * État d'accueil du panneau.
-
- *
-
- * Le panneau conserve exactement les mêmes dimensions
-
- * que pendant la préparation de la partie.
-
- *
-
- * Cela évite tout redimensionnement ou déplacement
-
- * lorsque le joueur clique sur "Jouer".
-
- */
-
-.game-setup__welcome {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 100%;
-  min-width: 0;
-
-  /*
-   * L'accueil n'occupe plus artificiellement toute la hauteur
-   * du panneau. Le bouton dispose simplement d'un espace
-   * confortable autour de lui.
-   */
-  padding: 3.5rem 2rem;
-
-  animation: game-setup-welcome-in 500ms ease-out both;
+  animation: game-setup-panel-in 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /**
-
- * Action principale de l'écran d'accueil.
-
- *
-
- * On reprend volontairement l'identité visuelle
-
- * des actions principales du SETUP afin que l'accueil
-
- * appartienne clairement au même jeu et au même panneau.
-
+ * Conteneur de l'intégralité du parcours de préparation.
  */
-
-.game-setup__play {
-  min-width: 180px;
-
-  min-height: 52px;
-
-  padding: 0.8rem 2.5rem;
-
-  border: 1px solid rgba(240, 207, 138, 0.7);
-
-  border-radius: 4px;
-
-  background: linear-gradient(180deg, rgba(137, 47, 35, 0.96), rgba(91, 28, 23, 0.98));
-
-  color: #f7ead0;
-
-  font: inherit;
-
-  font-size: 1rem;
-
-  font-weight: 700;
-
-  letter-spacing: 0.08em;
-
-  text-transform: uppercase;
-
-  cursor: pointer;
-
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
-
-  transition:
-    transform 160ms ease,
-    box-shadow 160ms ease,
-    border-color 160ms ease;
-}
-
-.game-setup__play:hover {
-  transform: translateY(-2px);
-
-  border-color: rgba(255, 222, 151, 0.95);
-
-  box-shadow: 0 11px 28px rgba(0, 0, 0, 0.34);
-}
-
-.game-setup__play:active {
-  transform: translateY(0);
-}
-
-.game-setup__play:focus-visible {
-  outline: 2px solid rgba(255, 222, 151, 0.9);
-
-  outline-offset: 4px;
-}
-
-/**
-
- * Conteneur de l'intégralité du SETUP.
-
- *
-
- * Lorsqu'il est créé après le clic sur "Jouer",
-
- * il apparaît progressivement sans modifier
-
- * la géométrie du panneau.
-
- *
-
- * Le déplacement vertical est volontairement très faible :
-
- * le fondu doit rester l'effet dominant.
-
- */
-
 .game-setup__setup {
   display: flex;
   flex-direction: column;
 
   width: 100%;
+
   min-width: 0;
   min-height: 0;
 
-  /*
-   * Aucune hauteur fixe :
-   * chaque étape détermine la hauteur nécessaire.
-   */
   animation: game-setup-content-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/**
-
- * Apparition initiale du bouton Jouer.
-
- */
+// ============================================================
+// ANIMATIONS D'ENTRÉE
+// ============================================================
 
 @keyframes game-setup-welcome-in {
   from {
     opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
   }
 
   to {
     opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
 /**
-
- * Apparition du parcours Nouvelle partie.
-
+ * Le panneau apparaît seulement après "Jouer".
  *
-
- * Le panneau lui-même ne bouge jamais.
-
- * Seul son contenu apparaît.
-
+ * L'animation reste discrète afin de ne pas donner
+ * l'impression d'un changement de page.
  */
+@keyframes game-setup-panel-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 8px)) scale(0.99);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
 
 @keyframes game-setup-content-in {
   from {
     opacity: 0;
-
     transform: translateY(8px);
   }
 
   to {
     opacity: 1;
-
     transform: translateY(0);
   }
 }
 
 /**
-
  * Respect des préférences système concernant
-
  * la réduction des animations.
-
  */
-
 @media (prefers-reduced-motion: reduce) {
   .game-setup__welcome,
-  .game-setup__setup {
+  .game-setup__content,
+  .game-setup__setup,
+  .game-setup__play,
+  .game-setup__play::before,
+  .game-setup__play::after {
     animation: none;
   }
 
@@ -298,15 +410,17 @@
   }
 }
 
+// ============================================================
+// PROGRESSION
+// ============================================================
+
 .game-setup__progress {
   box-sizing: border-box;
 
   display: flex;
-
   flex: 0 0 62px;
 
   align-items: center;
-
   justify-content: center;
 
   gap: 0.55rem;
@@ -334,7 +448,6 @@
   color: rgba(244, 234, 214, 0.42);
 
   font-size: 0.82rem;
-
   font-weight: 600;
 
   white-space: nowrap;
@@ -349,27 +462,22 @@
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   width: 22px;
-
   height: 22px;
 
   border: 1px solid rgba(224, 177, 93, 0.28);
-
   border-radius: 50%;
 
   background: rgba(12, 10, 12, 0.35);
 
   font-size: 0.75rem;
-
   font-weight: 800;
 }
 
 .game-setup__progress-line {
   width: 44px;
-
   height: 2px;
 
   border-radius: 1px;
@@ -409,24 +517,24 @@
   }
 }
 
-/*
+// ============================================================
+// STRUCTURE DES ÉTAPES
+// ============================================================
 
- * Structure fixe de l'étape.
-
+/**
+ * Structure commune d'une étape.
  *
-
- * Les emplacements de la consigne et de l'action
-
- * restent réservés en permanence.
-
+ * Quatre zones sont conservées :
  *
-
- * Leur apparition ne modifie donc plus la position
-
- * des cartes et ne provoque plus de sursaut.
-
+ * 1. titre / explication ;
+ * 2. contenu principal ;
+ * 3. feedback / instruction ;
+ * 4. action.
+ *
+ * Les deux dernières zones conservent une hauteur minimale,
+ * ce qui évite les déplacements brutaux des cartes lorsque
+ * leur contenu change.
  */
-
 .game-setup__stage {
   box-sizing: border-box;
 
@@ -437,7 +545,6 @@
   width: calc(100% - 3rem);
 
   min-width: 0;
-
   min-height: 0;
 
   margin: 0.85rem auto;
@@ -457,7 +564,6 @@
   overflow: hidden;
 
   border: 1px solid rgba(224, 177, 93, 0.38);
-
   border-radius: 7px;
 
   background: linear-gradient(180deg, rgba(24, 18, 22, 0.36), rgba(12, 10, 13, 0.22));
@@ -469,6 +575,13 @@
   text-align: center;
 }
 
+/**
+ * Les étapes contenant les cartes utilisent volontairement
+ * la même grille.
+ *
+ * Le déplacement du bouton de dés hors des cartes ne modifie
+ * donc pas leur géométrie.
+ */
 .game-setup__stage--player-cards {
   grid-template-rows:
     auto
@@ -483,15 +596,12 @@
   box-sizing: border-box;
 
   display: flex;
-
   flex-direction: column;
 
   align-items: center;
-
   justify-content: center;
 
   min-width: 0;
-
   min-height: 0;
 
   padding: 0 1rem 0.35rem;
@@ -502,7 +612,6 @@
     color: #f0cf8a;
 
     font-size: 1.9rem;
-
     line-height: 1.1;
 
     letter-spacing: 0.03em;
@@ -520,9 +629,7 @@
     color: #f4ead6;
 
     font-size: 0.95rem;
-
     font-weight: 500;
-
     line-height: 1.35;
 
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
@@ -533,29 +640,32 @@
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   width: 100%;
 
   min-width: 0;
-
   min-height: 0;
 
   padding: 0.35rem 0;
 }
 
+/**
+ * Zone réservée aux messages contextuels.
+ *
+ * À l'étape du premier joueur, elle contient notamment :
+ *
+ * "Joueur 1, à vous de lancer les dés."
+ */
 .game-setup__stage-feedback {
   box-sizing: border-box;
 
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   min-width: 0;
-
   min-height: 32px;
 
   padding: 0 1rem;
@@ -568,36 +678,42 @@
     color: #f4ead6;
 
     font-size: 0.92rem;
-
     font-weight: 600;
-
     line-height: 1.3;
 
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
   }
 }
 
+/**
+ * Zone réservée à l'action directement associée
+ * à l'instruction précédente.
+ *
+ * Le bouton de lancer des dés humain est désormais
+ * placé ici au lieu d'être superposé à la carte.
+ */
 .game-setup__stage-action {
   box-sizing: border-box;
 
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   min-width: 0;
-
   min-height: 48px;
 
   padding: 0 1rem;
 }
 
+// ============================================================
+// CONFIGURATION DES JOUEURS
+// ============================================================
+
 .game-setup__player-counts {
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   gap: 0.9rem;
@@ -607,7 +723,6 @@
   padding: 1.5rem 2rem;
 
   border: 1px solid rgba(224, 177, 93, 0.22);
-
   border-radius: 7px;
 
   background: rgba(15, 12, 15, 0.18);
@@ -617,19 +732,16 @@
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   box-sizing: border-box;
 
   width: 56px;
-
   height: 56px;
 
   padding: 0;
 
   border: 1px solid rgba(224, 177, 93, 0.65);
-
   border-radius: 5px;
 
   background: rgba(35, 27, 30, 0.88);
@@ -637,9 +749,7 @@
   color: #fff8e8;
 
   font: inherit;
-
   font-size: 1.05rem;
-
   font-weight: 700;
 
   cursor: pointer;
@@ -673,53 +783,25 @@
     0 0 12px rgba(224, 177, 93, 0.35);
 }
 
-/*
-
+/**
  * ============================================================
-
  * CONFIGURATION D'UNE NOUVELLE PARTIE
-
  * ============================================================
-
  *
-
  * Le parcours principal reste volontairement minimal.
-
  *
-
  * Par défaut :
-
  *
-
  * - J1 est humain ;
-
  * - les autres aventuriers sont contrôlés par l'IA.
-
  *
-
  * Le multijoueur local constitue une option secondaire.
-
- * Sa configuration n'apparaît que lorsque l'utilisateur
-
- * demande explicitement à jouer à plusieurs sur l'appareil.
-
- *
-
- * Cette organisation évite d'imposer des paramètres inutiles
-
- * au joueur solo tout en gardant le multijoueur local
-
- * facilement découvrable.
-
  */
-
 .game-setup__new-game {
   display: flex;
-
   flex-direction: column;
 
   align-items: center;
-
   justify-content: center;
 
   gap: 0.8rem;
@@ -729,20 +811,10 @@
   min-width: 0;
 }
 
-/*
-
- * Action secondaire permettant d'ouvrir la configuration
-
- * du multijoueur local.
-
- *
-
- * Le traitement visuel reste volontairement plus discret
-
- * que le bouton principal "Continuer".
-
+/**
+ * Action secondaire permettant d'ouvrir
+ * la configuration du multijoueur local.
  */
-
 .game-setup__local-multiplayer-toggle {
   padding: 0.2rem 0.4rem;
 
@@ -753,15 +825,11 @@
   color: rgba(244, 234, 214, 0.72);
 
   font: inherit;
-
   font-size: 0.82rem;
-
   font-weight: 600;
 
   text-decoration: underline;
-
   text-decoration-color: rgba(224, 177, 93, 0.38);
-
   text-underline-offset: 4px;
 
   cursor: pointer;
@@ -780,108 +848,58 @@
 
   &:focus-visible {
     outline: 1px solid rgba(240, 207, 138, 0.7);
-
     outline-offset: 4px;
   }
 }
 
-/*
-
+/**
  * Configuration du nombre d'humains.
-
- *
-
- * Le bloc reste compact afin de ne pas modifier sensiblement
-
- * la géométrie générale de l'écran Nouvelle partie.
-
  */
-
 .game-setup__local-multiplayer {
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   gap: 0.75rem;
 
   min-width: 0;
-
   min-height: 34px;
 }
-
-/*
-
- * Libellé de la configuration locale.
-
- */
 
 .game-setup__local-multiplayer-label {
   color: #f4ead6;
 
   font-size: 0.82rem;
-
   font-weight: 600;
-
   line-height: 1.2;
 
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 }
 
-/*
-
- * Liste des nombres possibles de joueurs humains.
-
- *
-
- * Seules les valeurs compatibles avec le nombre total
-
- * d'aventuriers sont générées dans le template.
-
- */
-
 .game-setup__human-counts {
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   gap: 0.4rem;
 }
 
-/*
-
- * Petit sélecteur numérique réservé au nombre d'humains.
-
- *
-
- * Il est volontairement plus petit que le sélecteur principal
-
- * du nombre total d'aventuriers afin de conserver la hiérarchie
-
- * visuelle de l'écran.
-
- */
-
 .game-setup__human-count {
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   box-sizing: border-box;
 
   width: 32px;
-
   height: 32px;
 
   padding: 0;
 
   border: 1px solid rgba(224, 177, 93, 0.48);
-
   border-radius: 4px;
 
   background: rgba(35, 27, 30, 0.78);
@@ -889,9 +907,7 @@
   color: #fff8e8;
 
   font: inherit;
-
   font-size: 0.82rem;
-
   font-weight: 700;
 
   cursor: pointer;
@@ -914,16 +930,9 @@
 
   &:focus-visible {
     outline: 1px solid rgba(240, 207, 138, 0.8);
-
     outline-offset: 3px;
   }
 }
-
-/*
-
- * Nombre de joueurs humains actuellement sélectionné.
-
- */
 
 .game-setup__human-count--selected {
   transform: translateY(-1px);
@@ -937,6 +946,10 @@
     0 0 8px rgba(224, 177, 93, 0.28);
 }
 
+// ============================================================
+// ACTION PRINCIPALE
+// ============================================================
+
 .game-setup__continue {
   box-sizing: border-box;
 
@@ -945,7 +958,6 @@
   padding: 0.68rem 1.45rem;
 
   border: 1px solid rgba(224, 177, 93, 0.65);
-
   border-radius: 4px;
 
   background: rgba(86, 34, 31, 0.88);
@@ -953,7 +965,6 @@
   color: #fff8e8;
 
   font: inherit;
-
   font-weight: 700;
 
   white-space: nowrap;
@@ -985,29 +996,23 @@
   }
 }
 
-/*
+// ============================================================
+// CARTES JOUEURS
+// ============================================================
 
- * Cartes joueurs.
-
- *
-
+/**
  * Une géométrie unique est utilisée pour le tirage
-
- * des héros et le lancer des dés.
-
+ * des héros et la détermination du premier joueur.
  */
-
 .game-setup__player-rolls {
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   gap: clamp(0.55rem, 1.15vw, 1.15rem);
 
   width: 100%;
-
   max-width: 1180px;
 
   min-width: 0;
@@ -1025,7 +1030,6 @@
   flex: 0 1 clamp(160px, 15vw, 194px);
 
   width: clamp(160px, 15vw, 194px);
-
   height: clamp(256px, 36vh, 310px);
 
   min-width: 0;
@@ -1041,7 +1045,6 @@
   overflow: visible;
 
   border: 1px solid rgba(224, 177, 93, 0.3);
-
   border-radius: 7px;
 
   background: linear-gradient(180deg, rgba(30, 23, 27, 0.5), rgba(17, 13, 16, 0.42));
@@ -1059,17 +1062,14 @@
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   width: 100%;
-
   height: 30px;
 
   color: #f0cf8a;
 
   font-size: 0.9rem;
-
   line-height: 1.2;
 
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
@@ -1083,15 +1083,12 @@
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   width: 100%;
-
   height: 100%;
 
   min-width: 0;
-
   min-height: 0;
 
   padding: 3px 0 5px;
@@ -1100,11 +1097,9 @@
     display: block;
 
     width: auto;
-
     height: 100%;
 
     max-width: 100%;
-
     max-height: 100%;
 
     object-fit: contain;
@@ -1139,46 +1134,45 @@
   animation: game-setup-card-awaiting 1.7s ease-in-out infinite;
 }
 
-/*
+// ============================================================
+// BOUTON DE LANCER DES DÉS
+// ============================================================
 
- * Bouton de lancer centré en bas de la carte.
-
+/**
+ * IMPORTANT :
+ *
+ * Le bouton n'est plus positionné en absolute sur une carte.
+ *
+ * Il appartient maintenant à .game-setup__stage-action,
+ * directement sous la phrase :
+ *
+ * "Joueur X, à vous de lancer les dés."
+ *
+ * Cette règle simplifie également le responsive :
+ * aucune translation horizontale n'est nécessaire.
  */
-
 .game-setup__roll-trigger {
-  position: absolute;
+  position: relative;
 
   z-index: 7;
-
-  right: auto;
-
-  bottom: 9px;
-
-  left: 50%;
 
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   box-sizing: border-box;
 
   width: 42px;
-
   height: 42px;
 
   padding: 0;
 
-  transform: translateX(-50%);
-
   border: 1px solid rgba(240, 207, 138, 0.92);
-
   border-radius: 50%;
 
   background: radial-gradient(
     circle at 35% 30%,
-
     rgba(119, 63, 48, 0.98),
     rgba(68, 30, 29, 0.98) 72%
   );
@@ -1201,7 +1195,7 @@
     opacity 150ms ease;
 
   &:hover {
-    transform: translateX(-50%) translateY(-2px) scale(1.08);
+    transform: translateY(-2px) scale(1.08);
 
     border-color: #ffe1a0;
 
@@ -1212,10 +1206,14 @@
   }
 
   &:active {
-    transform: translateX(-50%) scale(0.96);
+    transform: scale(0.96);
   }
 }
 
+/**
+ * Attire discrètement l'attention sur l'action
+ * lorsqu'un joueur humain doit lancer.
+ */
 .game-setup__roll-trigger--active {
   animation: game-setup-roll-invitation 1.25s ease-in-out infinite;
 }
@@ -1224,7 +1222,6 @@
   display: block;
 
   font-size: 1.45rem;
-
   line-height: 1;
 
   transform: translateY(-1px);
@@ -1232,25 +1229,25 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
+/**
+ * Petit indicateur de relance utilisé lorsqu'une égalité
+ * impose un nouveau lancer.
+ */
 .game-setup__roll-trigger-retry {
   position: absolute;
 
   top: -6px;
-
   right: -5px;
 
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   width: 17px;
-
   height: 17px;
 
   border: 1px solid rgba(240, 207, 138, 0.9);
-
   border-radius: 50%;
 
   background: #3d2221;
@@ -1258,35 +1255,35 @@
   color: #f0cf8a;
 
   font-size: 0.75rem;
-
   font-weight: 900;
-
   line-height: 1;
 
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.65);
 }
 
-/*
+// ============================================================
+// RÉSULTAT DES DÉS SUR LES CARTES
+// ============================================================
 
- * Résultat des dés superposé au bas de la carte.
-
+/**
+ * Contrairement au bouton d'action, le résultat des dés
+ * reste superposé à la carte concernée.
+ *
+ * Cette disposition permet de comparer immédiatement
+ * les résultats de tous les participants.
  */
-
 .game-setup__roll-overlay {
   position: absolute;
 
   z-index: 6;
 
   right: 7px;
-
   bottom: 8px;
-
   left: 7px;
 
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   box-sizing: border-box;
@@ -1296,7 +1293,6 @@
   padding: 7px 5px 6px;
 
   border: 1px solid rgba(224, 177, 93, 0.55);
-
   border-radius: 7px;
 
   background: linear-gradient(180deg, rgba(23, 17, 19, 0.9), rgba(12, 10, 12, 0.97));
@@ -1313,7 +1309,6 @@
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   gap: 0.42rem;
@@ -1325,15 +1320,12 @@
   flex: 0 0 40px;
 
   width: 40px;
-
   height: 40px;
 
   border: 2px solid rgba(224, 177, 93, 0.88);
-
   border-radius: 8px;
 
   background-color: #f6eedc;
-
   background-repeat: no-repeat;
 
   box-shadow:
@@ -1393,11 +1385,9 @@
 
 .game-setup__roll-result {
   display: flex;
-
   flex-direction: column;
 
   align-items: center;
-
   justify-content: center;
 
   gap: 0.25rem;
@@ -1409,7 +1399,6 @@
   display: flex;
 
   align-items: baseline;
-
   justify-content: center;
 
   gap: 0.25rem;
@@ -1417,7 +1406,6 @@
   color: #f4ead6;
 
   font-size: 0.78rem;
-
   font-weight: 700;
 
   white-space: nowrap;
@@ -1431,23 +1419,19 @@
   }
 }
 
-/*
-
- * Bouton iconique du tirage des héros.
-
- */
+// ============================================================
+// TIRAGE DES HÉROS
+// ============================================================
 
 .game-setup__icon-action {
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   box-sizing: border-box;
 
   width: 48px;
-
   height: 48px;
 
   margin-top: 0;
@@ -1455,12 +1439,10 @@
   padding: 0;
 
   border: 1px solid rgba(240, 207, 138, 0.92);
-
   border-radius: 50%;
 
   background: radial-gradient(
     circle at 35% 30%,
-
     rgba(119, 63, 48, 0.98),
     rgba(68, 30, 29, 0.98) 72%
   );
@@ -1468,11 +1450,8 @@
   color: #fff4d7;
 
   font: inherit;
-
   font-size: 1.75rem;
-
   font-weight: 800;
-
   line-height: 1;
 
   cursor: pointer;
@@ -1515,11 +1494,9 @@
   display: flex;
 
   align-items: center;
-
   justify-content: center;
 
   width: 48px;
-
   height: 48px;
 
   margin-top: 0;
@@ -1527,13 +1504,16 @@
   color: #f0cf8a;
 
   font-size: 1.75rem;
-
   line-height: 1;
 
   text-shadow: 0 0 12px rgba(240, 207, 138, 0.55);
 
   animation: game-setup-drawing-spin 800ms linear infinite;
 }
+
+// ============================================================
+// ÉTAT DU TOUR / VAINQUEUR
+// ============================================================
 
 .game-setup__turn-hint {
   margin: 0;
@@ -1566,7 +1546,6 @@
   color: #f0cf8a;
 
   font-size: 1rem;
-
   font-weight: 800;
 
   text-shadow: 0 0 10px rgba(224, 177, 93, 0.5);
@@ -1599,7 +1578,6 @@
 
   span:nth-child(1) {
     top: 8%;
-
     left: 12%;
 
     animation-delay: 0ms;
@@ -1607,7 +1585,6 @@
 
   span:nth-child(2) {
     top: 4%;
-
     left: 50%;
 
     animation-delay: 220ms;
@@ -1615,7 +1592,6 @@
 
   span:nth-child(3) {
     top: 12%;
-
     right: 8%;
 
     animation-delay: 440ms;
@@ -1623,7 +1599,6 @@
 
   span:nth-child(4) {
     right: 7%;
-
     bottom: 18%;
 
     animation-delay: 660ms;
@@ -1631,7 +1606,6 @@
 
   span:nth-child(5) {
     bottom: 10%;
-
     left: 48%;
 
     animation-delay: 880ms;
@@ -1639,12 +1613,15 @@
 
   span:nth-child(6) {
     bottom: 22%;
-
     left: 5%;
 
     animation-delay: 1100ms;
   }
 }
+
+// ============================================================
+// ANIMATIONS DES DÉS ET ÉTATS
+// ============================================================
 
 @keyframes game-setup-die-roll {
   from {
@@ -1656,18 +1633,16 @@
   }
 }
 
-/*
-
- * Le translateX(-50%) doit rester présent dans
-
- * toute l'animation pour conserver le bouton centré.
-
+/**
+ * Invitation à cliquer sur le bouton de lancer.
+ *
+ * Le bouton n'étant plus positionné avec translateX(-50%),
+ * l'animation utilise maintenant uniquement scale().
  */
-
 @keyframes game-setup-roll-invitation {
   0%,
   100% {
-    transform: translateX(-50%) scale(1);
+    transform: scale(1);
 
     box-shadow:
       0 4px 12px rgba(0, 0, 0, 0.65),
@@ -1676,7 +1651,7 @@
   }
 
   50% {
-    transform: translateX(-50%) scale(1.12);
+    transform: scale(1.12);
 
     box-shadow:
       0 5px 16px rgba(0, 0, 0, 0.72),
@@ -1783,6 +1758,10 @@
   }
 }
 
+// ============================================================
+// RESPONSIVE — ÉCRANS INTERMÉDIAIRES
+// ============================================================
+
 @media (max-width: 1100px) {
   .game-setup__content {
     width: calc(100% - 2rem);
@@ -1821,10 +1800,13 @@
     flex-basis: clamp(140px, 16vw, 170px);
 
     width: clamp(140px, 16vw, 170px);
-
     height: clamp(230px, 34vh, 280px);
   }
 }
+
+// ============================================================
+// RESPONSIVE — PETITS ÉCRANS
+// ============================================================
 
 @media (max-width: 760px) {
   .game-setup__content {
@@ -1835,6 +1817,15 @@
     min-height: 0;
 
     max-height: calc(100% - 1rem);
+  }
+
+  .game-setup__play {
+    min-width: 150px;
+    min-height: 48px;
+
+    padding: 0.7rem 2rem;
+
+    font-size: 0.9rem;
   }
 
   .game-setup__progress {
@@ -1910,7 +1901,6 @@
     flex-basis: 124px;
 
     width: 124px;
-
     height: 210px;
 
     grid-template-rows:
@@ -1930,15 +1920,14 @@
     padding: 2px 0 4px;
   }
 
+  /**
+   * Le bouton reste dans le flux de la zone d'action.
+   *
+   * Aucun left / right / bottom n'est nécessaire,
+   * contrairement à l'ancienne version superposée à la carte.
+   */
   .game-setup__roll-trigger {
-    right: auto;
-
-    bottom: 7px;
-
-    left: 50%;
-
     width: 35px;
-
     height: 35px;
   }
 
@@ -1948,9 +1937,7 @@
 
   .game-setup__roll-overlay {
     right: 3px;
-
     bottom: 5px;
-
     left: 3px;
 
     min-height: 64px;
@@ -1962,7 +1949,6 @@
     flex-basis: 34px;
 
     width: 34px;
-
     height: 34px;
   }
 
@@ -1988,18 +1974,15 @@
   .game-setup__icon-action,
   .game-setup__drawing-indicator {
     width: 42px;
-
     height: 42px;
 
     font-size: 1.5rem;
   }
 
-  /*
-
- * Configuration locale compacte sur petits écrans.
-
- */
-
+  /**
+   * Configuration locale compacte
+   * sur les petits écrans.
+   */
   .game-setup__new-game {
     gap: 0.55rem;
   }
@@ -2028,7 +2011,6 @@
 
   .game-setup__human-count {
     width: 29px;
-
     height: 29px;
 
     font-size: 0.75rem;
