@@ -54,12 +54,7 @@
   border: 2px solid rgba(224, 177, 93, 0.72);
   border-radius: 7px;
 
-  background:
-    linear-gradient(
-      180deg,
-      rgba(38, 29, 31, 0.8),
-      rgba(25, 20, 24, 0.86)
-    );
+  background: linear-gradient(180deg, rgba(38, 29, 31, 0.8), rgba(25, 20, 24, 0.86));
 
   box-shadow:
     0 12px 34px rgba(0, 0, 0, 0.62),
@@ -85,12 +80,7 @@
 
   border-bottom: 2px solid rgba(224, 177, 93, 0.52);
 
-  background:
-    linear-gradient(
-      180deg,
-      rgba(56, 41, 37, 0.96),
-      rgba(28, 21, 24, 0.94)
-    );
+  background: linear-gradient(180deg, rgba(56, 41, 37, 0.96), rgba(28, 21, 24, 0.94));
 
   box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.32),
@@ -161,16 +151,14 @@
 
   font-weight: 800;
 
-  text-shadow:
-    0 0 8px rgba(224, 177, 93, 0.32);
+  text-shadow: 0 0 8px rgba(224, 177, 93, 0.32);
 
   .game-setup__progress-marker {
     border-color: #f0cf8a;
 
     background: rgba(112, 50, 43, 0.92);
 
-    box-shadow:
-      0 0 8px rgba(224, 177, 93, 0.38);
+    box-shadow: 0 0 8px rgba(224, 177, 93, 0.38);
 
     color: #fff8e8;
   }
@@ -216,12 +204,7 @@
   border: 1px solid rgba(224, 177, 93, 0.38);
   border-radius: 7px;
 
-  background:
-    linear-gradient(
-      180deg,
-      rgba(24, 18, 22, 0.36),
-      rgba(12, 10, 13, 0.22)
-    );
+  background: linear-gradient(180deg, rgba(24, 18, 22, 0.36), rgba(12, 10, 13, 0.22));
 
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.035),
@@ -279,8 +262,7 @@
     font-weight: 500;
     line-height: 1.35;
 
-    text-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.9);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
   }
 }
 
@@ -320,8 +302,7 @@
     font-weight: 600;
     line-height: 1.3;
 
-    text-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.9);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
   }
 }
 
@@ -380,8 +361,7 @@
 
   cursor: pointer;
 
-  box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 
   transition:
     transform 150ms ease,
@@ -410,6 +390,199 @@
     0 0 12px rgba(224, 177, 93, 0.35);
 }
 
+/*
+ * ============================================================
+ * CONFIGURATION D'UNE NOUVELLE PARTIE
+ * ============================================================
+ *
+ * Le parcours principal reste volontairement minimal.
+ *
+ * Par défaut :
+ *
+ * - J1 est humain ;
+ * - les autres aventuriers sont contrôlés par l'IA.
+ *
+ * Le multijoueur local constitue une option secondaire.
+ * Sa configuration n'apparaît que lorsque l'utilisateur
+ * demande explicitement à jouer à plusieurs sur l'appareil.
+ *
+ * Cette organisation évite d'imposer des paramètres inutiles
+ * au joueur solo tout en gardant le multijoueur local
+ * facilement découvrable.
+ */
+
+.game-setup__new-game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.8rem;
+
+  width: 100%;
+  min-width: 0;
+}
+
+/*
+ * Action secondaire permettant d'ouvrir la configuration
+ * du multijoueur local.
+ *
+ * Le traitement visuel reste volontairement plus discret
+ * que le bouton principal "Continuer".
+ */
+.game-setup__local-multiplayer-toggle {
+  padding: 0.2rem 0.4rem;
+
+  border: 0;
+
+  background: transparent;
+
+  color: rgba(244, 234, 214, 0.72);
+
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  text-decoration: underline;
+  text-decoration-color: rgba(224, 177, 93, 0.38);
+  text-underline-offset: 4px;
+
+  cursor: pointer;
+
+  transition:
+    color 150ms ease,
+    text-decoration-color 150ms ease;
+
+  &:hover,
+  &:focus-visible,
+  &--active {
+    color: #f0cf8a;
+
+    text-decoration-color: #f0cf8a;
+  }
+
+  &:focus-visible {
+    outline: 1px solid rgba(240, 207, 138, 0.7);
+
+    outline-offset: 4px;
+  }
+}
+
+/*
+ * Configuration du nombre d'humains.
+ *
+ * Le bloc reste compact afin de ne pas modifier sensiblement
+ * la géométrie générale de l'écran Nouvelle partie.
+ */
+.game-setup__local-multiplayer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.75rem;
+
+  min-width: 0;
+  min-height: 34px;
+}
+
+/*
+ * Libellé de la configuration locale.
+ */
+.game-setup__local-multiplayer-label {
+  color: #f4ead6;
+
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.2;
+
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+/*
+ * Liste des nombres possibles de joueurs humains.
+ *
+ * Seules les valeurs compatibles avec le nombre total
+ * d'aventuriers sont générées dans le template.
+ */
+.game-setup__human-counts {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.4rem;
+}
+
+/*
+ * Petit sélecteur numérique réservé au nombre d'humains.
+ *
+ * Il est volontairement plus petit que le sélecteur principal
+ * du nombre total d'aventuriers afin de conserver la hiérarchie
+ * visuelle de l'écran.
+ */
+.game-setup__human-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  width: 32px;
+  height: 32px;
+
+  padding: 0;
+
+  border: 1px solid rgba(224, 177, 93, 0.48);
+
+  border-radius: 4px;
+
+  background: rgba(35, 27, 30, 0.78);
+
+  color: #fff8e8;
+
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+
+  transition:
+    transform 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+
+  &:hover {
+    transform: translateY(-1px);
+
+    border-color: rgba(238, 195, 112, 0.9);
+
+    background: rgba(69, 42, 39, 0.94);
+  }
+
+  &:focus-visible {
+    outline: 1px solid rgba(240, 207, 138, 0.8);
+
+    outline-offset: 3px;
+  }
+}
+
+/*
+ * Nombre de joueurs humains actuellement sélectionné.
+ */
+.game-setup__human-count--selected {
+  transform: translateY(-1px);
+
+  border-color: #f0cf8a;
+
+  background: rgba(112, 50, 43, 0.96);
+
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.38),
+    0 0 8px rgba(224, 177, 93, 0.28);
+}
+
 .game-setup__continue {
   box-sizing: border-box;
 
@@ -431,8 +604,7 @@
 
   cursor: pointer;
 
-  box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 
   transition:
     opacity 150ms ease,
@@ -486,9 +658,7 @@
 
   display: grid;
 
-  flex:
-    0 1
-    clamp(160px, 15vw, 194px);
+  flex: 0 1 clamp(160px, 15vw, 194px);
 
   width: clamp(160px, 15vw, 194px);
   height: clamp(256px, 36vh, 310px);
@@ -508,15 +678,9 @@
   border: 1px solid rgba(224, 177, 93, 0.3);
   border-radius: 7px;
 
-  background:
-    linear-gradient(
-      180deg,
-      rgba(30, 23, 27, 0.5),
-      rgba(17, 13, 16, 0.42)
-    );
+  background: linear-gradient(180deg, rgba(30, 23, 27, 0.5), rgba(17, 13, 16, 0.42));
 
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
 
   transition:
     opacity 250ms ease,
@@ -538,8 +702,7 @@
   font-size: 0.9rem;
   line-height: 1.2;
 
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 }
 
 .game-setup__player-roll-hero {
@@ -572,8 +735,7 @@
 
     border-radius: 5px;
 
-    box-shadow:
-      0 8px 18px rgba(0, 0, 0, 0.52);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.52);
 
     transition:
       filter 250ms ease,
@@ -589,9 +751,7 @@
   opacity: 0.42;
 
   .game-setup__player-roll-hero img {
-    filter:
-      saturate(0.45)
-      brightness(0.72);
+    filter: saturate(0.45) brightness(0.72);
   }
 }
 
@@ -600,11 +760,7 @@
 
   border-color: rgba(240, 207, 138, 0.8);
 
-  animation:
-    game-setup-card-awaiting
-    1.7s
-    ease-in-out
-    infinite;
+  animation: game-setup-card-awaiting 1.7s ease-in-out infinite;
 }
 
 /*
@@ -635,12 +791,11 @@
   border: 1px solid rgba(240, 207, 138, 0.92);
   border-radius: 50%;
 
-  background:
-    radial-gradient(
-      circle at 35% 30%,
-      rgba(119, 63, 48, 0.98),
-      rgba(68, 30, 29, 0.98) 72%
-    );
+  background: radial-gradient(
+    circle at 35% 30%,
+    rgba(119, 63, 48, 0.98),
+    rgba(68, 30, 29, 0.98) 72%
+  );
 
   color: #fff4d7;
 
@@ -660,10 +815,7 @@
     opacity 150ms ease;
 
   &:hover {
-    transform:
-      translateX(-50%)
-      translateY(-2px)
-      scale(1.08);
+    transform: translateX(-50%) translateY(-2px) scale(1.08);
 
     border-color: #ffe1a0;
 
@@ -674,18 +826,12 @@
   }
 
   &:active {
-    transform:
-      translateX(-50%)
-      scale(0.96);
+    transform: translateX(-50%) scale(0.96);
   }
 }
 
 .game-setup__roll-trigger--active {
-  animation:
-    game-setup-roll-invitation
-    1.25s
-    ease-in-out
-    infinite;
+  animation: game-setup-roll-invitation 1.25s ease-in-out infinite;
 }
 
 .game-setup__roll-trigger-icon {
@@ -696,8 +842,7 @@
 
   transform: translateY(-1px);
 
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 .game-setup__roll-trigger-retry {
@@ -724,8 +869,7 @@
   font-weight: 900;
   line-height: 1;
 
-  box-shadow:
-    0 2px 5px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.65);
 }
 
 /*
@@ -753,12 +897,7 @@
   border: 1px solid rgba(224, 177, 93, 0.55);
   border-radius: 7px;
 
-  background:
-    linear-gradient(
-      180deg,
-      rgba(23, 17, 19, 0.9),
-      rgba(12, 10, 12, 0.97)
-    );
+  background: linear-gradient(180deg, rgba(23, 17, 19, 0.9), rgba(12, 10, 12, 0.97));
 
   box-shadow:
     0 5px 16px rgba(0, 0, 0, 0.68),
@@ -794,141 +933,51 @@
     0 5px 12px rgba(0, 0, 0, 0.5),
     inset 0 1px 2px rgba(255, 255, 255, 0.95);
 
-  animation:
-    game-setup-die-roll
-    145ms
-    ease-in-out
-    infinite
-    alternate;
+  animation: game-setup-die-roll 145ms ease-in-out infinite alternate;
 }
 
 .game-setup__die[data-value='1'] {
-  background-image:
-    radial-gradient(
-      circle at 50% 50%,
-      #20191a 0 3.5px,
-      transparent 4px
-    );
+  background-image: radial-gradient(circle at 50% 50%, #20191a 0 3.5px, transparent 4px);
 }
 
 .game-setup__die[data-value='2'] {
   background-image:
-    radial-gradient(
-      circle at 28% 28%,
-      #20191a 0 3.5px,
-      transparent 4px
-    ),
-    radial-gradient(
-      circle at 72% 72%,
-      #20191a 0 3.5px,
-      transparent 4px
-    );
+    radial-gradient(circle at 28% 28%, #20191a 0 3.5px, transparent 4px),
+    radial-gradient(circle at 72% 72%, #20191a 0 3.5px, transparent 4px);
 }
 
 .game-setup__die[data-value='3'] {
   background-image:
-    radial-gradient(
-      circle at 27% 27%,
-      #20191a 0 3.5px,
-      transparent 4px
-    ),
-    radial-gradient(
-      circle at 50% 50%,
-      #20191a 0 3.5px,
-      transparent 4px
-    ),
-    radial-gradient(
-      circle at 73% 73%,
-      #20191a 0 3.5px,
-      transparent 4px
-    );
+    radial-gradient(circle at 27% 27%, #20191a 0 3.5px, transparent 4px),
+    radial-gradient(circle at 50% 50%, #20191a 0 3.5px, transparent 4px),
+    radial-gradient(circle at 73% 73%, #20191a 0 3.5px, transparent 4px);
 }
 
 .game-setup__die[data-value='4'] {
   background-image:
-    radial-gradient(
-      circle at 28% 28%,
-      #20191a 0 3.5px,
-      transparent 4px
-    ),
-    radial-gradient(
-      circle at 72% 28%,
-      #20191a 0 3.5px,
-      transparent 4px
-    ),
-    radial-gradient(
-      circle at 28% 72%,
-      #20191a 0 3.5px,
-      transparent 4px
-    ),
-    radial-gradient(
-      circle at 72% 72%,
-      #20191a 0 3.5px,
-      transparent 4px
-    );
+    radial-gradient(circle at 28% 28%, #20191a 0 3.5px, transparent 4px),
+    radial-gradient(circle at 72% 28%, #20191a 0 3.5px, transparent 4px),
+    radial-gradient(circle at 28% 72%, #20191a 0 3.5px, transparent 4px),
+    radial-gradient(circle at 72% 72%, #20191a 0 3.5px, transparent 4px);
 }
 
 .game-setup__die[data-value='5'] {
   background-image:
-    radial-gradient(
-      circle at 27% 27%,
-      #20191a 0 3.5px,
-      transparent 4px
-    ),
-    radial-gradient(
-      circle at 73% 27%,
-      #20191a 0 3.5px,
-      transparent 4px
-    ),
-    radial-gradient(
-      circle at 50% 50%,
-      #20191a 0 3.5px,
-      transparent 4px
-    ),
-    radial-gradient(
-      circle at 27% 73%,
-      #20191a 0 3.5px,
-      transparent 4px
-    ),
-    radial-gradient(
-      circle at 73% 73%,
-      #20191a 0 3.5px,
-      transparent 4px
-    );
+    radial-gradient(circle at 27% 27%, #20191a 0 3.5px, transparent 4px),
+    radial-gradient(circle at 73% 27%, #20191a 0 3.5px, transparent 4px),
+    radial-gradient(circle at 50% 50%, #20191a 0 3.5px, transparent 4px),
+    radial-gradient(circle at 27% 73%, #20191a 0 3.5px, transparent 4px),
+    radial-gradient(circle at 73% 73%, #20191a 0 3.5px, transparent 4px);
 }
 
 .game-setup__die[data-value='6'] {
   background-image:
-    radial-gradient(
-      circle at 28% 24%,
-      #20191a 0 3.5px,
-      transparent 4px
-    ),
-    radial-gradient(
-      circle at 72% 24%,
-      #20191a 0 3.5px,
-      transparent 4px
-    ),
-    radial-gradient(
-      circle at 28% 50%,
-      #20191a 0 3.5px,
-      transparent 4px
-    ),
-    radial-gradient(
-      circle at 72% 50%,
-      #20191a 0 3.5px,
-      transparent 4px
-    ),
-    radial-gradient(
-      circle at 28% 76%,
-      #20191a 0 3.5px,
-      transparent 4px
-    ),
-    radial-gradient(
-      circle at 72% 76%,
-      #20191a 0 3.5px,
-      transparent 4px
-    );
+    radial-gradient(circle at 28% 24%, #20191a 0 3.5px, transparent 4px),
+    radial-gradient(circle at 72% 24%, #20191a 0 3.5px, transparent 4px),
+    radial-gradient(circle at 28% 50%, #20191a 0 3.5px, transparent 4px),
+    radial-gradient(circle at 72% 50%, #20191a 0 3.5px, transparent 4px),
+    radial-gradient(circle at 28% 76%, #20191a 0 3.5px, transparent 4px),
+    radial-gradient(circle at 72% 76%, #20191a 0 3.5px, transparent 4px);
 }
 
 .game-setup__die--stopped {
@@ -960,8 +1009,7 @@
 
   white-space: nowrap;
 
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 
   strong {
     color: #f0cf8a;
@@ -991,12 +1039,11 @@
   border: 1px solid rgba(240, 207, 138, 0.92);
   border-radius: 50%;
 
-  background:
-    radial-gradient(
-      circle at 35% 30%,
-      rgba(119, 63, 48, 0.98),
-      rgba(68, 30, 29, 0.98) 72%
-    );
+  background: radial-gradient(
+    circle at 35% 30%,
+    rgba(119, 63, 48, 0.98),
+    rgba(68, 30, 29, 0.98) 72%
+  );
 
   color: #fff4d7;
 
@@ -1018,9 +1065,7 @@
     border-color 150ms ease;
 
   &:hover {
-    transform:
-      translateY(-2px)
-      scale(1.08);
+    transform: translateY(-2px) scale(1.08);
 
     border-color: #ffe1a0;
 
@@ -1040,11 +1085,7 @@
 }
 
 .game-setup__icon-action--attention {
-  animation:
-    game-setup-action-invitation
-    1.45s
-    ease-in-out
-    infinite;
+  animation: game-setup-action-invitation 1.45s ease-in-out infinite;
 }
 
 .game-setup__drawing-indicator {
@@ -1062,14 +1103,9 @@
   font-size: 1.75rem;
   line-height: 1;
 
-  text-shadow:
-    0 0 12px rgba(240, 207, 138, 0.55);
+  text-shadow: 0 0 12px rgba(240, 207, 138, 0.55);
 
-  animation:
-    game-setup-drawing-spin
-    800ms
-    linear
-    infinite;
+  animation: game-setup-drawing-spin 800ms linear infinite;
 }
 
 .game-setup__turn-hint {
@@ -1079,8 +1115,7 @@
 
   font-weight: 700 !important;
 
-  text-shadow:
-    0 0 8px rgba(224, 177, 93, 0.32) !important;
+  text-shadow: 0 0 8px rgba(224, 177, 93, 0.32) !important;
 }
 
 .game-setup__player-roll--winner {
@@ -1088,16 +1123,10 @@
 
   border-color: #f0cf8a;
 
-  animation:
-    game-setup-winner-glow
-    1.2s
-    ease-in-out
-    infinite
-    alternate;
+  animation: game-setup-winner-glow 1.2s ease-in-out infinite alternate;
 }
 
-.game-setup__player-roll--winner
-.game-setup__player-roll-hero img {
+.game-setup__player-roll--winner .game-setup__player-roll-hero img {
   box-shadow:
     0 0 12px rgba(240, 207, 138, 0.72),
     0 0 30px rgba(224, 177, 93, 0.42),
@@ -1112,14 +1141,9 @@
   font-size: 1rem;
   font-weight: 800;
 
-  text-shadow:
-    0 0 10px rgba(224, 177, 93, 0.5);
+  text-shadow: 0 0 10px rgba(224, 177, 93, 0.5);
 
-  animation:
-    game-setup-winner-label
-    600ms
-    ease-out
-    both;
+  animation: game-setup-winner-label 600ms ease-out both;
 }
 
 .game-setup__sparkles {
@@ -1137,16 +1161,11 @@
 
     font-size: 1.25rem;
 
-    text-shadow:
-      0 0 8px rgba(255, 218, 122, 0.9);
+    text-shadow: 0 0 8px rgba(255, 218, 122, 0.9);
 
     opacity: 0;
 
-    animation:
-      game-setup-sparkle
-      1.4s
-      ease-out
-      infinite;
+    animation: game-setup-sparkle 1.4s ease-out infinite;
   }
 
   span:nth-child(1) {
@@ -1194,17 +1213,11 @@
 
 @keyframes game-setup-die-roll {
   from {
-    transform:
-      translateY(-3px)
-      rotate(-6deg)
-      scale(0.96);
+    transform: translateY(-3px) rotate(-6deg) scale(0.96);
   }
 
   to {
-    transform:
-      translateY(3px)
-      rotate(6deg)
-      scale(1.04);
+    transform: translateY(3px) rotate(6deg) scale(1.04);
   }
 }
 
@@ -1216,9 +1229,7 @@
 @keyframes game-setup-roll-invitation {
   0%,
   100% {
-    transform:
-      translateX(-50%)
-      scale(1);
+    transform: translateX(-50%) scale(1);
 
     box-shadow:
       0 4px 12px rgba(0, 0, 0, 0.65),
@@ -1227,9 +1238,7 @@
   }
 
   50% {
-    transform:
-      translateX(-50%)
-      scale(1.12);
+    transform: translateX(-50%) scale(1.12);
 
     box-shadow:
       0 5px 16px rgba(0, 0, 0, 0.72),
@@ -1294,9 +1303,7 @@
   0% {
     opacity: 0;
 
-    transform:
-      scale(0.3)
-      rotate(0deg);
+    transform: scale(0.3) rotate(0deg);
   }
 
   35% {
@@ -1306,9 +1313,7 @@
   100% {
     opacity: 0;
 
-    transform:
-      scale(1.5)
-      rotate(90deg);
+    transform: scale(1.5) rotate(90deg);
   }
 }
 
@@ -1330,17 +1335,13 @@
   from {
     opacity: 0;
 
-    transform:
-      translateY(5px)
-      scale(0.94);
+    transform: translateY(5px) scale(0.94);
   }
 
   to {
     opacity: 1;
 
-    transform:
-      translateY(0)
-      scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -1431,10 +1432,7 @@
   }
 
   .game-setup__stage-header {
-    padding:
-      0
-      0.5rem
-      0.2rem;
+    padding: 0 0.5rem 0.2rem;
 
     h1 {
       margin-bottom: 0.35rem;
@@ -1545,5 +1543,41 @@
     height: 42px;
 
     font-size: 1.5rem;
+  }
+
+  /*
+ * Configuration locale compacte sur petits écrans.
+ */
+  .game-setup__new-game {
+    gap: 0.55rem;
+  }
+
+  .game-setup__local-multiplayer-toggle {
+    font-size: 0.75rem;
+  }
+
+  .game-setup__local-multiplayer {
+    flex-wrap: wrap;
+
+    gap: 0.45rem;
+
+    min-height: 30px;
+  }
+
+  .game-setup__local-multiplayer-label {
+    width: 100%;
+
+    font-size: 0.74rem;
+  }
+
+  .game-setup__human-counts {
+    gap: 0.3rem;
+  }
+
+  .game-setup__human-count {
+    width: 29px;
+    height: 29px;
+
+    font-size: 0.75rem;
   }
 }

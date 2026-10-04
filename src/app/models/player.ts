@@ -1,6 +1,21 @@
 import { HeroId } from './hero';
 import { Direction } from './tile';
 
+/**
+ * Type de contrôleur associé à un joueur.
+ *
+ * - human : joueur humain utilisant l'appareil ;
+ * - ai    : joueur contrôlé automatiquement par le jeu.
+ *
+ * CHOIX D'IMPLÉMENTATION :
+ *
+ * le type de contrôleur appartient au joueur et non au héros.
+ * Un même héros peut donc être attribué aussi bien à un humain
+ * qu'à une IA.
+ */
+export type PlayerController =
+  | 'human'
+  | 'ai';
 
 /**
  * Position d'un joueur dans le donjon.
@@ -15,7 +30,6 @@ export interface PlayerPosition {
   y: number;
 }
 
-
 /**
  * État d'un joueur pendant une partie.
  *
@@ -24,6 +38,25 @@ export interface PlayerPosition {
  * suivantes du SETUP.
  */
 export interface Player {
+  /**
+   * Type de contrôleur du joueur.
+   *
+   * RÈGLE DE SETUP :
+   *
+   * le joueur 1 est toujours humain.
+   *
+   * Par défaut, tous les joueurs suivants sont contrôlés
+   * par l'IA.
+   *
+   * Lorsqu'une partie locale à plusieurs humains est choisie,
+   * les humains supplémentaires sont attribués dans l'ordre :
+   *
+   * J1 → J2 → J3 → J4 → J5.
+   *
+   * Les places restantes sont automatiquement occupées
+   * par des joueurs IA.
+   */
+  controller: PlayerController;
 
   /**
    * Points de vie actuels du joueur.

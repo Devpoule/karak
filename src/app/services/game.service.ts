@@ -67,6 +67,8 @@ export class GameService {
 
   /**
    * Commence la préparation d'une nouvelle partie.
+   *
+   * Tous les états propres au SETUP sont réinitialisés.
    */
   initialize(): void {
     this.phase.set('setup');
@@ -87,12 +89,40 @@ export class GameService {
    *
    * chaque joueur reçoit un plateau d'inventaire et commence
    * la partie avec 5 jetons de vie face cœur.
+   *
+   * CHOIX D'IMPLÉMENTATION :
+   *
+   * Karak peut être joué dans l'application par des joueurs
+   * humains et des joueurs contrôlés par l'IA.
+   *
+   * Une nouvelle partie contient un seul joueur humain
+   * par défaut.
+   *
+   * Lorsque plusieurs humains jouent sur le même appareil,
+   * humanPlayerCount indique combien de premières positions
+   * doivent leur être attribuées.
+   *
+   * Exemple :
+   *
+   * initializePlayers(5, 2)
+   *
+   * J1 humain
+   * J2 humain
+   * J3 IA
+   * J4 IA
+   * J5 IA
    */
-  initializePlayers(playerCount: number): void {
+  initializePlayers(
+    playerCount: number,
+    humanPlayerCount = 1,
+  ): void {
     if (this.phase() !== 'setup') return;
     if (this.setupStep() !== 'player-count') return;
 
-    this.playerService.initialize(playerCount);
+    this.playerService.initialize(
+      playerCount,
+      humanPlayerCount,
+    );
 
     this.setupStep.set('hero-draw');
   }
@@ -132,20 +162,26 @@ export class GameService {
   /**
    * Lance les deux dés d'un joueur encore en lice.
    */
-  rollPlayerForFirstPlayer(playerIndex: number): void {
+  rollPlayerForFirstPlayer(
+    playerIndex: number,
+  ): void {
     if (this.phase() !== 'setup') return;
     if (this.setupStep() !== 'first-player-roll') return;
     if (this.firstPlayerIndex() !== null) return;
 
     if (
-      !this.firstPlayerContenders().includes(playerIndex)
+      !this.firstPlayerContenders().includes(
+        playerIndex,
+      )
     ) {
       return;
     }
 
-    const alreadyRolled = this.firstPlayerRolls().some(
-      (roll) => roll.playerIndex === playerIndex,
-    );
+    const alreadyRolled =
+      this.firstPlayerRolls().some(
+        (roll) =>
+          roll.playerIndex === playerIndex,
+      );
 
     if (alreadyRolled) {
       return;
@@ -175,7 +211,8 @@ export class GameService {
     return this.firstPlayerContenders().every(
       (playerIndex) =>
         this.firstPlayerRolls().some(
-          (roll) => roll.playerIndex === playerIndex,
+          (roll) =>
+            roll.playerIndex === playerIndex,
         ),
     );
   }
@@ -194,9 +231,10 @@ export class GameService {
    * relancent les dés jusqu'à obtenir un maximum unique.
    *
    * Retour :
+   *
    * - winner : un joueur est définitivement désigné ;
-   * - tie    : plusieurs joueurs doivent relancer ;
-   * - pending: tous les lancers nécessaires ne sont pas faits.
+   * - tie : plusieurs joueurs doivent relancer ;
+   * - pending : tous les lancers nécessaires ne sont pas faits.
    */
   resolveFirstPlayerRoll():
     | 'winner'
@@ -215,12 +253,16 @@ export class GameService {
       );
 
     const highestTotal = Math.max(
-      ...contenderRolls.map((roll) => roll.total),
+      ...contenderRolls.map(
+        (roll) => roll.total,
+      ),
     );
 
-    const leaders = contenderRolls.filter(
-      (roll) => roll.total === highestTotal,
-    );
+    const leaders =
+      contenderRolls.filter(
+        (roll) =>
+          roll.total === highestTotal,
+      );
 
     if (leaders.length === 1) {
       this.firstPlayerIndex.set(
@@ -230,15 +272,16 @@ export class GameService {
       return 'winner';
     }
 
-    const tiedPlayerIndexes = leaders.map(
-      (roll) => roll.playerIndex,
-    );
+    const tiedPlayerIndexes =
+      leaders.map(
+        (roll) => roll.playerIndex,
+      );
 
     this.firstPlayerContenders.set(
       tiedPlayerIndexes,
     );
 
-    /*
+    /**
      * Les résultats des joueurs à égalité sont retirés afin
      * de leur permettre d'effectuer leur nouveau lancer.
      *
@@ -274,7 +317,9 @@ export class GameService {
    * Retourne la valeur d'un dé classique à six faces.
    */
   private rollDie(): number {
-    return Math.floor(Math.random() * 6) + 1;
+    return Math.floor(
+      Math.random() * 6,
+    ) + 1;
   }
 
   /**
@@ -294,6 +339,8 @@ export class GameService {
 
   /**
    * Nombre de joueurs actuellement préparés.
+   *
+   * Ce nombre comprend les joueurs humains et les IA.
    */
   get playerCount(): number {
     return this.playerService.players.length;
@@ -301,6 +348,9 @@ export class GameService {
 
   /**
    * Joueurs actuellement préparés.
+   *
+   * Chaque joueur expose notamment son type de contrôleur
+   * via Player.controller.
    */
   get players(): readonly Player[] {
     return this.playerService.players;
