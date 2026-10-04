@@ -1,14 +1,3 @@
-<!-- =========================================================
-     PRÉPARATION DE LA PARTIE
-     =========================================================
-
-     Cet écran accompagne le joueur pendant les différentes
-     étapes du SETUP avant son entrée dans le donjon.
-
-     GameService reste la source de vérité concernant
-     l'étape actuellement en cours.
-     ========================================================= -->
-
 <section class="game-setup">
   <img
     class="game-setup__background"
@@ -17,119 +6,353 @@
     draggable="false"
   />
 
-  <!-- =======================================================
-       NOMBRE DE JOUEURS
-       ======================================================= -->
+  <div class="game-setup__content">
+    <div class="game-setup__progress">
+      <div
+        class="game-setup__progress-step"
+        [class.game-setup__progress-step--completed]="isSetupStepCompleted('players')"
+        [class.game-setup__progress-step--current]="gameService.setupStep() === 'player-count'"
+      >
+        <span class="game-setup__progress-marker">
+          {{ isSetupStepCompleted('players') ? '✓' : '○' }}
+        </span>
+        <span>Joueurs</span>
+      </div>
 
-  @if (gameService.setupStep() === 'player-count') {
-    <div class="game-setup__content">
-      <h1>Nouvelle partie</h1>
+      <span class="game-setup__progress-line"></span>
 
-      <p>Combien d'aventuriers entrent dans le donjon ?</p>
+      <div
+        class="game-setup__progress-step"
+        [class.game-setup__progress-step--completed]="isSetupStepCompleted('heroes')"
+        [class.game-setup__progress-step--current]="gameService.setupStep() === 'hero-draw'"
+      >
+        <span class="game-setup__progress-marker">
+          {{ isSetupStepCompleted('heroes') ? '✓' : '○' }}
+        </span>
+        <span>Héros</span>
+      </div>
 
-      <div class="game-setup__player-counts">
-        @for (playerCount of playerCounts; track playerCount) {
+      <span class="game-setup__progress-line"></span>
+
+      <div
+        class="game-setup__progress-step"
+        [class.game-setup__progress-step--completed]="isSetupStepCompleted('first-player')"
+        [class.game-setup__progress-step--current]="
+          gameService.setupStep() === 'first-player-roll'
+          && gameService.firstPlayerIndex() === null
+        "
+      >
+        <span class="game-setup__progress-marker">
+          {{ isSetupStepCompleted('first-player') ? '✓' : '○' }}
+        </span>
+        <span>Premier joueur</span>
+      </div>
+
+      <span class="game-setup__progress-line"></span>
+
+      <div
+        class="game-setup__progress-step"
+        [class.game-setup__progress-step--current]="gameService.firstPlayerIndex() !== null"
+      >
+        <span class="game-setup__progress-marker">○</span>
+        <span>Aventure</span>
+      </div>
+    </div>
+
+    @if (gameService.setupStep() === 'player-count') {
+      <div class="game-setup__stage">
+        <div class="game-setup__stage-header">
+          <h1>Nouvelle partie</h1>
+          <p>
+            Combien d'aventuriers entrent dans le donjon ?
+          </p>
+        </div>
+
+        <div class="game-setup__stage-main">
+          <div class="game-setup__player-counts">
+            @for (playerCount of playerCounts; track playerCount) {
+              <button
+                type="button"
+                class="game-setup__player-count"
+                [class.game-setup__player-count--selected]="selectedPlayerCount === playerCount"
+                (click)="selectPlayerCount(playerCount)"
+              >
+                {{ playerCount }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="game-setup__stage-feedback"></div>
+
+        <div class="game-setup__stage-action">
           <button
             type="button"
-            class="game-setup__player-count"
-            [class.game-setup__player-count--selected]="selectedPlayerCount === playerCount"
-            (click)="selectPlayerCount(playerCount)"
+            class="game-setup__continue"
+            [disabled]="selectedPlayerCount === null"
+            (click)="confirmPlayerCount()"
           >
-            {{ playerCount }}
+            Continuer
           </button>
-        }
+        </div>
       </div>
+    }
 
-      <button
-        type="button"
-        class="game-setup__continue"
-        [disabled]="selectedPlayerCount === null"
-        (click)="confirmPlayerCount()"
-      >
-        Continuer
-      </button>
-    </div>
-  }
+    @if (gameService.setupStep() === 'hero-draw') {
+      <div class="game-setup__stage game-setup__stage--player-cards">
+        <div class="game-setup__stage-header">
+          <h1>Tirage des héros</h1>
 
-  <!-- =======================================================
-       TIRAGE DES HÉROS
-       ======================================================= -->
+          @if (heroDrawState() === 'hidden') {
+            <p>
+              Découvrez les héros qui accompagneront les aventuriers dans le donjon.
+            </p>
+          }
 
-  @if (gameService.setupStep() === 'hero-draw') {
-    <div class="game-setup__content">
-      <h1>Tirage des héros</h1>
+          @if (heroDrawState() === 'drawing') {
+            <p>
+              Le destin choisit les héros...
+            </p>
+          }
 
-      <p>
-        Les aventuriers vont maintenant découvrir le héros
-        qui les accompagnera dans le donjon.
-      </p>
+          @if (heroDrawState() === 'revealed') {
+            <p>
+              Les héros sont désignés.
+            </p>
+          }
+        </div>
 
-      <div class="game-setup__hero-cards">
-        @for (
-          playerIndex of [].constructor(gameService.playerCount);
-          track $index
-        ) {
-          <div class="game-setup__hero-card">
-            <img
-              [src]="getHeroCard($index)"
-              alt="Carte Héros"
-              draggable="false"
-            />
+        <div class="game-setup__stage-main">
+          <div class="game-setup__player-rolls">
+            @for (
+              player of gameService.players;
+              track $index;
+              let playerIndex = $index
+            ) {
+              <div class="game-setup__player-roll">
+                <strong class="game-setup__player-roll-title">
+                  Joueur {{ playerIndex + 1 }}
+                </strong>
 
-            <span>Joueur {{ $index + 1 }}</span>
+                <div class="game-setup__player-roll-hero">
+                  <img
+                    [src]="getHeroCard(playerIndex)"
+                    alt="Carte Héros"
+                    draggable="false"
+                  />
+                </div>
+              </div>
+            }
           </div>
-        }
+        </div>
+
+        <div class="game-setup__stage-feedback">
+          @if (heroDrawState() === 'hidden') {
+            <p>
+              Lancez le tirage pour révéler les héros.
+            </p>
+          }
+        </div>
+
+        <div class="game-setup__stage-action">
+          @if (heroDrawState() === 'hidden') {
+            <button
+              type="button"
+              class="game-setup__icon-action game-setup__icon-action--attention"
+              aria-label="Tirer les héros"
+              title="Tirer les héros"
+              (click)="drawHeroes()"
+            >
+              <span aria-hidden="true">⟳</span>
+            </button>
+          }
+
+          @if (heroDrawState() === 'drawing') {
+            <div
+              class="game-setup__drawing-indicator"
+              aria-label="Tirage en cours"
+            >
+              ⟳
+            </div>
+          }
+        </div>
       </div>
+    }
 
-      <!-- ===================================================
-           ACTION DU TIRAGE
-           =================================================== -->
+    @if (gameService.setupStep() === 'first-player-roll') {
+      <div class="game-setup__stage game-setup__stage--player-cards">
+        <div class="game-setup__stage-header">
+          <h1>Qui commence ?</h1>
 
-      @if (heroDrawState() === 'hidden') {
-        <button
-          type="button"
-          class="game-setup__continue"
-          (click)="drawHeroes()"
-        >
-          Tirage au sort des héros
-        </button>
-      }
+          @if (firstPlayerResolutionState() === 'tie') {
+            <p>
+              Égalité ! Les aventuriers concernés doivent relancer les dés.
+            </p>
+          } @else if (firstPlayerResolutionState() === 'winner') {
+            <p>
+              Le premier aventurier est désigné.
+            </p>
+          } @else {
+            <p>
+              Lancez les dés dans l'ordre. Le total le plus élevé commence.
+            </p>
+          }
+        </div>
 
-      <!-- ===================================================
-           TIRAGE TERMINÉ
-           =================================================== -->
+        <div class="game-setup__stage-main">
+          <div class="game-setup__player-rolls">
+            @for (
+              player of gameService.players;
+              track $index;
+              let playerIndex = $index
+            ) {
+              <div
+                class="game-setup__player-roll"
+                [class.game-setup__player-roll--revealed]="hasPlayerRollBeenRevealed(playerIndex)"
+                [class.game-setup__player-roll--eliminated]="isPlayerEliminated(playerIndex)"
+                [class.game-setup__player-roll--winner]="isFirstPlayerWinner(playerIndex)"
+                [class.game-setup__player-roll--awaiting]="isPlayerTurnToRoll(playerIndex)"
+              >
+                @if (isFirstPlayerWinner(playerIndex)) {
+                  <div
+                    class="game-setup__sparkles"
+                    aria-hidden="true"
+                  >
+                    <span>✦</span>
+                    <span>✧</span>
+                    <span>✦</span>
+                    <span>✧</span>
+                    <span>✦</span>
+                    <span>✧</span>
+                  </div>
+                }
 
-      @if (heroDrawState() === 'revealed') {
-        <button
-          type="button"
-          class="game-setup__continue"
-          (click)="placeHeroesOnStart()"
-        >
-          Continuer
-        </button>
-      }
-    </div>
-  }
+                <strong class="game-setup__player-roll-title">
+                  Joueur {{ playerIndex + 1 }}
+                </strong>
 
-  <!-- =======================================================
-       PLACEMENT DES HÉROS
-       ======================================================= -->
+                <div class="game-setup__player-roll-hero">
+                  <img
+                    [src]="getHeroCard(playerIndex)"
+                    alt="Héros du joueur"
+                    draggable="false"
+                  />
 
-  @if (gameService.setupStep() === 'hero-placement') {
-    <div class="game-setup__content">
-      <h1>Les héros sont prêts</h1>
+                  @if (canPlayerRoll(playerIndex)) {
+                    <button
+                      type="button"
+                      class="game-setup__roll-trigger game-setup__roll-trigger--active"
+                      [class.game-setup__roll-trigger--reroll]="firstPlayerResolutionState() === 'tie'"
+                      [attr.aria-label]="
+                        firstPlayerResolutionState() === 'tie'
+                          ? 'Relancer les dés du joueur ' + (playerIndex + 1)
+                          : 'Lancer les dés du joueur ' + (playerIndex + 1)
+                      "
+                      [attr.title]="
+                        firstPlayerResolutionState() === 'tie'
+                          ? 'Relancer les dés'
+                          : 'Lancer les dés'
+                      "
+                      (click)="rollPlayer(playerIndex)"
+                    >
+                      <span
+                        class="game-setup__roll-trigger-icon"
+                        aria-hidden="true"
+                      >
+                        ⚄
+                      </span>
 
-      <p>
-        Tous les aventuriers prennent place
-        sur la tuile Départ.
-      </p>
+                      @if (firstPlayerResolutionState() === 'tie') {
+                        <span
+                          class="game-setup__roll-trigger-retry"
+                          aria-hidden="true"
+                        >
+                          ↻
+                        </span>
+                      }
+                    </button>
+                  }
 
-      <button
-        type="button"
-        class="game-setup__continue"
-      >
-        Déterminer le premier joueur
-      </button>
-    </div>
-  }
+                  @if (isPlayerRolling(playerIndex)) {
+                    <div class="game-setup__roll-overlay">
+                      <div class="game-setup__dice">
+                        <div
+                          class="game-setup__die"
+                          [attr.data-value]="getDisplayedDice(playerIndex)?.[0]"
+                          aria-hidden="true"
+                        ></div>
+
+                        <div
+                          class="game-setup__die"
+                          [attr.data-value]="getDisplayedDice(playerIndex)?.[1]"
+                          aria-hidden="true"
+                        ></div>
+                      </div>
+                    </div>
+                  }
+
+                  @if (getRevealedRoll(playerIndex); as roll) {
+                    <div class="game-setup__roll-overlay">
+                      <div class="game-setup__roll-result">
+                        <div class="game-setup__roll-dice">
+                          <div
+                            class="game-setup__die game-setup__die--stopped"
+                            [attr.data-value]="roll.die1"
+                            [attr.aria-label]="'Dé : ' + roll.die1"
+                          ></div>
+
+                          <div
+                            class="game-setup__die game-setup__die--stopped"
+                            [attr.data-value]="roll.die2"
+                            [attr.aria-label]="'Dé : ' + roll.die2"
+                          ></div>
+                        </div>
+
+                        <div class="game-setup__roll-equation">
+                          <span>{{ roll.die1 }}</span>
+                          <span>+</span>
+                          <span>{{ roll.die2 }}</span>
+                          <span>=</span>
+                          <strong>{{ roll.total }}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="game-setup__stage-feedback">
+          @if (
+            firstPlayerResolutionState() !== 'winner'
+            && getNextPlayerToRoll() !== null
+          ) {
+            <p class="game-setup__turn-hint">
+              Joueur {{ getNextPlayerToRoll()! + 1 }}, à vous de lancer les dés.
+            </p>
+          }
+
+          @if (firstPlayerResolutionState() === 'winner') {
+            <div class="game-setup__winner-message">
+              Joueur {{ gameService.firstPlayerIndex()! + 1 }}
+              commence l'aventure !
+            </div>
+          }
+        </div>
+
+        <div class="game-setup__stage-action">
+          @if (firstPlayerResolutionState() === 'winner') {
+            <button
+              type="button"
+              class="game-setup__continue"
+            >
+              Commencer l'aventure
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
 </section>

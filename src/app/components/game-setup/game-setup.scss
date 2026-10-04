@@ -3,13 +3,8 @@
 
   width: 100%;
   height: 100%;
-
   min-height: 0;
 }
-
-/* ==========================================================
-   PRÉPARATION DE LA PARTIE
-   ========================================================== */
 
 .game-setup {
   position: relative;
@@ -22,13 +17,8 @@
   background: #1c1822;
 }
 
-/* ==========================================================
-   ILLUSTRATION
-   ========================================================== */
-
 .game-setup__background {
   position: absolute;
-
   inset: 0;
 
   width: 100%;
@@ -40,52 +30,235 @@
   pointer-events: none;
 }
 
-/* ==========================================================
-   CONTENU DU SETUP
-   ========================================================== */
-
-/*
- * Le contenu est regroupé dans un panneau sombre et légèrement
- * translucide afin de rester lisible quelle que soit la zone
- * de l'illustration située derrière.
- */
 .game-setup__content {
   position: absolute;
   z-index: 1;
-
   top: 50%;
   left: 50%;
 
   display: flex;
   flex-direction: column;
-  align-items: center;
 
-  min-width: 420px;
+  box-sizing: border-box;
 
-  padding: 1.75rem 2.5rem 2rem;
+  width: min(1260px, calc(100vw - 4rem));
+  height: min(760px, calc(100vh - 4rem));
+
+  min-width: 760px;
+  min-height: 600px;
+
+  overflow: hidden;
 
   transform: translate(-50%, -50%);
 
-  border: 1px solid rgba(224, 177, 93, 0.5);
-  border-radius: 6px;
+  border: 2px solid rgba(224, 177, 93, 0.72);
+  border-radius: 7px;
 
-  background: linear-gradient(180deg, rgba(38, 29, 31, 0.72), rgba(25, 20, 24, 0.78));
+  background:
+    linear-gradient(
+      180deg,
+      rgba(38, 29, 31, 0.8),
+      rgba(25, 20, 24, 0.86)
+    );
 
   box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 12px 34px rgba(0, 0, 0, 0.62),
+    0 0 18px rgba(224, 177, 93, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
   color: #fff8e8;
+}
+
+.game-setup__progress {
+  box-sizing: border-box;
+
+  display: flex;
+  flex: 0 0 62px;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.55rem;
+
+  width: 100%;
+
+  padding: 0 1.5rem;
+
+  border-bottom: 2px solid rgba(224, 177, 93, 0.52);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(56, 41, 37, 0.96),
+      rgba(28, 21, 24, 0.94)
+    );
+
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.32),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.game-setup__progress-step {
+  display: flex;
+  align-items: center;
+
+  gap: 0.4rem;
+
+  color: rgba(244, 234, 214, 0.42);
+
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  transition:
+    color 180ms ease,
+    transform 180ms ease,
+    text-shadow 180ms ease;
+}
+
+.game-setup__progress-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 22px;
+  height: 22px;
+
+  border: 1px solid rgba(224, 177, 93, 0.28);
+  border-radius: 50%;
+
+  background: rgba(12, 10, 12, 0.35);
+
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.game-setup__progress-line {
+  width: 44px;
+  height: 2px;
+
+  border-radius: 1px;
+
+  background: rgba(224, 177, 93, 0.24);
+}
+
+.game-setup__progress-step--completed {
+  color: #f4ead6;
+
+  .game-setup__progress-marker {
+    border-color: rgba(224, 177, 93, 0.7);
+
+    background: rgba(86, 55, 38, 0.65);
+
+    color: #f0cf8a;
+  }
+}
+
+.game-setup__progress-step--current {
+  transform: translateY(-1px);
+
+  color: #f0cf8a;
+
+  font-weight: 800;
+
+  text-shadow:
+    0 0 8px rgba(224, 177, 93, 0.32);
+
+  .game-setup__progress-marker {
+    border-color: #f0cf8a;
+
+    background: rgba(112, 50, 43, 0.92);
+
+    box-shadow:
+      0 0 8px rgba(224, 177, 93, 0.38);
+
+    color: #fff8e8;
+  }
+}
+
+/*
+ * Structure fixe de l'étape.
+ *
+ * Les emplacements de la consigne et de l'action
+ * restent réservés en permanence.
+ *
+ * Leur apparition ne modifie donc plus la position
+ * des cartes et ne provoque plus de sursaut.
+ */
+
+.game-setup__stage {
+  box-sizing: border-box;
+
+  display: grid;
+  flex: 1;
+
+  width: calc(100% - 3rem);
+
+  min-width: 0;
+  min-height: 0;
+
+  margin: 0.85rem auto;
+
+  grid-template-rows:
+    auto
+    auto
+    32px
+    48px;
+
+  align-content: center;
+
+  row-gap: 0.7rem;
+
+  padding: 0.8rem 1.4rem;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(224, 177, 93, 0.38);
+  border-radius: 7px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(24, 18, 22, 0.36),
+      rgba(12, 10, 13, 0.22)
+    );
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 8px 22px rgba(0, 0, 0, 0.16);
 
   text-align: center;
+}
+
+.game-setup__stage--player-cards {
+  grid-template-rows:
+    auto
+    auto
+    32px
+    48px;
+
+  align-content: center;
+}
+
+.game-setup__stage-header {
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+  min-height: 0;
+
+  padding: 0 1rem 0.35rem;
 
   h1 {
-    margin: 0 0 0.8rem;
+    margin: 0 0 0.55rem;
 
     color: #f0cf8a;
 
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: 1.9rem;
     line-height: 1.1;
 
     letter-spacing: 0.03em;
@@ -96,66 +269,119 @@
   }
 
   p {
+    max-width: 820px;
+
     margin: 0;
 
     color: #f4ead6;
 
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 500;
-    line-height: 1.5;
+    line-height: 1.35;
 
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+    text-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.9);
   }
 }
 
-/* ==========================================================
-   CHOIX DU NOMBRE DE JOUEURS
-   ========================================================== */
+.game-setup__stage-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-/*
- * Les différentes valeurs sont présentées comme un choix
- * unique au centre de l'écran de préparation.
- */
+  width: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
+  padding: 0.35rem 0;
+}
+
+.game-setup__stage-feedback {
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+  min-height: 32px;
+
+  padding: 0 1rem;
+
+  p {
+    max-width: 760px;
+
+    margin: 0;
+
+    color: #f4ead6;
+
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1.3;
+
+    text-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.9);
+  }
+}
+
+.game-setup__stage-action {
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+  min-height: 48px;
+
+  padding: 0 1rem;
+}
+
 .game-setup__player-counts {
   display: flex;
   align-items: center;
   justify-content: center;
 
-  gap: 0.75rem;
+  gap: 0.9rem;
 
-  margin-top: 1rem;
+  margin: 0;
+
+  padding: 1.5rem 2rem;
+
+  border: 1px solid rgba(224, 177, 93, 0.22);
+  border-radius: 7px;
+
+  background: rgba(15, 12, 15, 0.18);
 }
 
-/*
- * Bouton représentant un nombre de joueurs possible.
- *
- * L'apparence reprend volontairement les tons sombres et dorés
- * utilisés par l'interface du donjon.
- */
 .game-setup__player-count {
   display: flex;
   align-items: center;
   justify-content: center;
 
-  width: 48px;
-  height: 48px;
+  box-sizing: border-box;
+
+  width: 56px;
+  height: 56px;
 
   padding: 0;
 
   border: 1px solid rgba(224, 177, 93, 0.65);
-  border-radius: 4px;
+  border-radius: 5px;
 
   background: rgba(35, 27, 30, 0.88);
 
   color: #fff8e8;
 
   font: inherit;
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
 
   cursor: pointer;
 
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.35);
 
   transition:
     transform 150ms ease,
@@ -172,14 +398,24 @@
   }
 }
 
-/* ==========================================================
-   VALIDATION DU NOMBRE DE JOUEURS
-   ========================================================== */
+.game-setup__player-count--selected {
+  transform: translateY(-2px);
+
+  border-color: #f0cf8a;
+
+  background: rgba(112, 50, 43, 0.96);
+
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.45),
+    0 0 12px rgba(224, 177, 93, 0.35);
+}
 
 .game-setup__continue {
-  margin-top: 1.25rem;
+  box-sizing: border-box;
 
-  padding: 0.7rem 1.5rem;
+  min-width: 150px;
+
+  padding: 0.68rem 1.45rem;
 
   border: 1px solid rgba(224, 177, 93, 0.65);
   border-radius: 4px;
@@ -191,91 +427,1123 @@
   font: inherit;
   font-weight: 700;
 
+  white-space: nowrap;
+
   cursor: pointer;
 
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.35);
 
   transition:
     opacity 150ms ease,
     transform 150ms ease,
-    background 150ms ease;
+    background 150ms ease,
+    box-shadow 150ms ease;
 
   &:hover:not(:disabled) {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+
     background: rgba(105, 40, 36, 0.94);
+
+    box-shadow:
+      0 6px 18px rgba(0, 0, 0, 0.42),
+      0 0 8px rgba(224, 177, 93, 0.12);
   }
 
   &:disabled {
-    opacity: 0.4;
+    opacity: 0.48;
+
     cursor: not-allowed;
   }
 }
 
-/* ==========================================================
-   JOUEURS SÉLECTIONNÉS
-   ========================================================== */
-
 /*
- * Une seule valeur peut être sélectionnée.
+ * Cartes joueurs.
  *
- * La distinction reste suffisamment marquée pour que le choix
- * soit immédiatement identifiable sans rompre l'ambiance
- * visuelle de la couverture.
+ * Une géométrie unique est utilisée pour le tirage
+ * des héros et le lancer des dés.
  */
-.game-setup__player-count--selected {
-  transform: translateY(-2px);
 
-  border-color: rgba(245, 205, 123, 1);
+.game-setup__player-rolls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  background: rgba(112, 50, 43, 0.96);
+  gap: clamp(0.55rem, 1.15vw, 1.15rem);
+
+  width: 100%;
+  max-width: 1180px;
+
+  min-width: 0;
+
+  margin: 0 auto;
+}
+
+.game-setup__player-roll {
+  position: relative;
+
+  box-sizing: border-box;
+
+  display: grid;
+
+  flex:
+    0 1
+    clamp(160px, 15vw, 194px);
+
+  width: clamp(160px, 15vw, 194px);
+  height: clamp(256px, 36vh, 310px);
+
+  min-width: 0;
+
+  grid-template-rows:
+    30px
+    minmax(0, 1fr);
+
+  align-items: center;
+
+  padding: 8px;
+
+  overflow: visible;
+
+  border: 1px solid rgba(224, 177, 93, 0.3);
+  border-radius: 7px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(30, 23, 27, 0.5),
+      rgba(17, 13, 16, 0.42)
+    );
 
   box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.45),
-    0 0 12px rgba(224, 177, 93, 0.35);
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
 
-  &:hover {
-    transform: translateY(-2px);
-
-    background: rgba(112, 50, 43, 0.96);
-  }
+  transition:
+    opacity 250ms ease,
+    border-color 250ms ease,
+    box-shadow 250ms ease,
+    transform 250ms ease;
 }
 
-/* ==========================================================
-   CARTES HÉROS FACE CACHÉE
-   ========================================================== */
-
-.game-setup__hero-cards {
+.game-setup__player-roll-title {
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 1rem;
-
-  margin-top: 1.5rem;
-}
-
-.game-setup__hero-card {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+
+  width: 100%;
+  height: 30px;
+
+  color: #f0cf8a;
+
+  font-size: 0.9rem;
+  line-height: 1.2;
+
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.game-setup__player-roll-hero {
+  position: relative;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
+  padding: 3px 0 5px;
 
   img {
     display: block;
 
-    width: 110px;
-    height: auto;
+    width: auto;
+    height: 100%;
 
-    border-radius: 4px;
+    max-width: 100%;
+    max-height: 100%;
 
-    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.45);
+    object-fit: contain;
+
+    border-radius: 5px;
+
+    box-shadow:
+      0 8px 18px rgba(0, 0, 0, 0.52);
+
+    transition:
+      filter 250ms ease,
+      box-shadow 250ms ease;
+  }
+}
+
+.game-setup__player-roll--revealed {
+  border-color: rgba(224, 177, 93, 0.55);
+}
+
+.game-setup__player-roll--eliminated {
+  opacity: 0.42;
+
+  .game-setup__player-roll-hero img {
+    filter:
+      saturate(0.45)
+      brightness(0.72);
+  }
+}
+
+.game-setup__player-roll--awaiting {
+  z-index: 2;
+
+  border-color: rgba(240, 207, 138, 0.8);
+
+  animation:
+    game-setup-card-awaiting
+    1.7s
+    ease-in-out
+    infinite;
+}
+
+/*
+ * Bouton de lancer centré en bas de la carte.
+ */
+
+.game-setup__roll-trigger {
+  position: absolute;
+  z-index: 7;
+
+  right: auto;
+  bottom: 9px;
+  left: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  width: 42px;
+  height: 42px;
+
+  padding: 0;
+
+  transform: translateX(-50%);
+
+  border: 1px solid rgba(240, 207, 138, 0.92);
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle at 35% 30%,
+      rgba(119, 63, 48, 0.98),
+      rgba(68, 30, 29, 0.98) 72%
+    );
+
+  color: #fff4d7;
+
+  font: inherit;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.65),
+    0 0 8px rgba(224, 177, 93, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    opacity 150ms ease;
+
+  &:hover {
+    transform:
+      translateX(-50%)
+      translateY(-2px)
+      scale(1.08);
+
+    border-color: #ffe1a0;
+
+    box-shadow:
+      0 6px 16px rgba(0, 0, 0, 0.7),
+      0 0 18px rgba(240, 207, 138, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  &:active {
+    transform:
+      translateX(-50%)
+      scale(0.96);
+  }
+}
+
+.game-setup__roll-trigger--active {
+  animation:
+    game-setup-roll-invitation
+    1.25s
+    ease-in-out
+    infinite;
+}
+
+.game-setup__roll-trigger-icon {
+  display: block;
+
+  font-size: 1.45rem;
+  line-height: 1;
+
+  transform: translateY(-1px);
+
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.game-setup__roll-trigger-retry {
+  position: absolute;
+
+  top: -6px;
+  right: -5px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 17px;
+  height: 17px;
+
+  border: 1px solid rgba(240, 207, 138, 0.9);
+  border-radius: 50%;
+
+  background: #3d2221;
+
+  color: #f0cf8a;
+
+  font-size: 0.75rem;
+  font-weight: 900;
+  line-height: 1;
+
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.65);
+}
+
+/*
+ * Résultat des dés superposé au bas de la carte.
+ */
+
+.game-setup__roll-overlay {
+  position: absolute;
+  z-index: 6;
+
+  right: 7px;
+  bottom: 8px;
+  left: 7px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  min-height: 78px;
+
+  padding: 7px 5px 6px;
+
+  border: 1px solid rgba(224, 177, 93, 0.55);
+  border-radius: 7px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(23, 17, 19, 0.9),
+      rgba(12, 10, 12, 0.97)
+    );
+
+  box-shadow:
+    0 5px 16px rgba(0, 0, 0, 0.68),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  backdrop-filter: blur(2px);
+}
+
+.game-setup__dice,
+.game-setup__roll-dice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.42rem;
+}
+
+.game-setup__die {
+  box-sizing: border-box;
+
+  flex: 0 0 40px;
+
+  width: 40px;
+  height: 40px;
+
+  border: 2px solid rgba(224, 177, 93, 0.88);
+  border-radius: 8px;
+
+  background-color: #f6eedc;
+  background-repeat: no-repeat;
+
+  box-shadow:
+    0 5px 12px rgba(0, 0, 0, 0.5),
+    inset 0 1px 2px rgba(255, 255, 255, 0.95);
+
+  animation:
+    game-setup-die-roll
+    145ms
+    ease-in-out
+    infinite
+    alternate;
+}
+
+.game-setup__die[data-value='1'] {
+  background-image:
+    radial-gradient(
+      circle at 50% 50%,
+      #20191a 0 3.5px,
+      transparent 4px
+    );
+}
+
+.game-setup__die[data-value='2'] {
+  background-image:
+    radial-gradient(
+      circle at 28% 28%,
+      #20191a 0 3.5px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 72% 72%,
+      #20191a 0 3.5px,
+      transparent 4px
+    );
+}
+
+.game-setup__die[data-value='3'] {
+  background-image:
+    radial-gradient(
+      circle at 27% 27%,
+      #20191a 0 3.5px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      #20191a 0 3.5px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 73% 73%,
+      #20191a 0 3.5px,
+      transparent 4px
+    );
+}
+
+.game-setup__die[data-value='4'] {
+  background-image:
+    radial-gradient(
+      circle at 28% 28%,
+      #20191a 0 3.5px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 72% 28%,
+      #20191a 0 3.5px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 28% 72%,
+      #20191a 0 3.5px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 72% 72%,
+      #20191a 0 3.5px,
+      transparent 4px
+    );
+}
+
+.game-setup__die[data-value='5'] {
+  background-image:
+    radial-gradient(
+      circle at 27% 27%,
+      #20191a 0 3.5px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 73% 27%,
+      #20191a 0 3.5px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      #20191a 0 3.5px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 27% 73%,
+      #20191a 0 3.5px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 73% 73%,
+      #20191a 0 3.5px,
+      transparent 4px
+    );
+}
+
+.game-setup__die[data-value='6'] {
+  background-image:
+    radial-gradient(
+      circle at 28% 24%,
+      #20191a 0 3.5px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 72% 24%,
+      #20191a 0 3.5px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 28% 50%,
+      #20191a 0 3.5px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 72% 50%,
+      #20191a 0 3.5px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 28% 76%,
+      #20191a 0 3.5px,
+      transparent 4px
+    ),
+    radial-gradient(
+      circle at 72% 76%,
+      #20191a 0 3.5px,
+      transparent 4px
+    );
+}
+
+.game-setup__die--stopped {
+  animation: none;
+}
+
+.game-setup__roll-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.25rem;
+
+  width: 100%;
+}
+
+.game-setup__roll-equation {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+
+  gap: 0.25rem;
+
+  color: #f4ead6;
+
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  white-space: nowrap;
+
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9);
+
+  strong {
+    color: #f0cf8a;
+
+    font-size: 0.92rem;
+  }
+}
+
+/*
+ * Bouton iconique du tirage des héros.
+ */
+
+.game-setup__icon-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  width: 48px;
+  height: 48px;
+
+  margin-top: 0;
+
+  padding: 0;
+
+  border: 1px solid rgba(240, 207, 138, 0.92);
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle at 35% 30%,
+      rgba(119, 63, 48, 0.98),
+      rgba(68, 30, 29, 0.98) 72%
+    );
+
+  color: #fff4d7;
+
+  font: inherit;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 5px 15px rgba(0, 0, 0, 0.58),
+    0 0 10px rgba(224, 177, 93, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+
+  &:hover {
+    transform:
+      translateY(-2px)
+      scale(1.08);
+
+    border-color: #ffe1a0;
+
+    box-shadow:
+      0 7px 18px rgba(0, 0, 0, 0.65),
+      0 0 20px rgba(240, 207, 138, 0.52),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  &:active {
+    transform: scale(0.96);
   }
 
   span {
-    color: #f4ead6;
+    display: block;
+  }
+}
 
-    font-size: 0.9rem;
-    font-weight: 600;
+.game-setup__icon-action--attention {
+  animation:
+    game-setup-action-invitation
+    1.45s
+    ease-in-out
+    infinite;
+}
 
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+.game-setup__drawing-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 48px;
+  height: 48px;
+
+  margin-top: 0;
+
+  color: #f0cf8a;
+
+  font-size: 1.75rem;
+  line-height: 1;
+
+  text-shadow:
+    0 0 12px rgba(240, 207, 138, 0.55);
+
+  animation:
+    game-setup-drawing-spin
+    800ms
+    linear
+    infinite;
+}
+
+.game-setup__turn-hint {
+  margin: 0;
+
+  color: #f0cf8a !important;
+
+  font-weight: 700 !important;
+
+  text-shadow:
+    0 0 8px rgba(224, 177, 93, 0.32) !important;
+}
+
+.game-setup__player-roll--winner {
+  z-index: 3;
+
+  border-color: #f0cf8a;
+
+  animation:
+    game-setup-winner-glow
+    1.2s
+    ease-in-out
+    infinite
+    alternate;
+}
+
+.game-setup__player-roll--winner
+.game-setup__player-roll-hero img {
+  box-shadow:
+    0 0 12px rgba(240, 207, 138, 0.72),
+    0 0 30px rgba(224, 177, 93, 0.42),
+    0 9px 20px rgba(0, 0, 0, 0.52);
+}
+
+.game-setup__winner-message {
+  margin: 0;
+
+  color: #f0cf8a;
+
+  font-size: 1rem;
+  font-weight: 800;
+
+  text-shadow:
+    0 0 10px rgba(224, 177, 93, 0.5);
+
+  animation:
+    game-setup-winner-label
+    600ms
+    ease-out
+    both;
+}
+
+.game-setup__sparkles {
+  position: absolute;
+  z-index: 8;
+
+  inset: -8px;
+
+  pointer-events: none;
+
+  span {
+    position: absolute;
+
+    color: #f6d784;
+
+    font-size: 1.25rem;
+
+    text-shadow:
+      0 0 8px rgba(255, 218, 122, 0.9);
+
+    opacity: 0;
+
+    animation:
+      game-setup-sparkle
+      1.4s
+      ease-out
+      infinite;
+  }
+
+  span:nth-child(1) {
+    top: 8%;
+    left: 12%;
+
+    animation-delay: 0ms;
+  }
+
+  span:nth-child(2) {
+    top: 4%;
+    left: 50%;
+
+    animation-delay: 220ms;
+  }
+
+  span:nth-child(3) {
+    top: 12%;
+    right: 8%;
+
+    animation-delay: 440ms;
+  }
+
+  span:nth-child(4) {
+    right: 7%;
+    bottom: 18%;
+
+    animation-delay: 660ms;
+  }
+
+  span:nth-child(5) {
+    bottom: 10%;
+    left: 48%;
+
+    animation-delay: 880ms;
+  }
+
+  span:nth-child(6) {
+    bottom: 22%;
+    left: 5%;
+
+    animation-delay: 1100ms;
+  }
+}
+
+@keyframes game-setup-die-roll {
+  from {
+    transform:
+      translateY(-3px)
+      rotate(-6deg)
+      scale(0.96);
+  }
+
+  to {
+    transform:
+      translateY(3px)
+      rotate(6deg)
+      scale(1.04);
+  }
+}
+
+/*
+ * Le translateX(-50%) doit rester présent dans
+ * toute l'animation pour conserver le bouton centré.
+ */
+
+@keyframes game-setup-roll-invitation {
+  0%,
+  100% {
+    transform:
+      translateX(-50%)
+      scale(1);
+
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.65),
+      0 0 7px rgba(240, 207, 138, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+
+  50% {
+    transform:
+      translateX(-50%)
+      scale(1.12);
+
+    box-shadow:
+      0 5px 16px rgba(0, 0, 0, 0.72),
+      0 0 10px rgba(255, 224, 157, 0.95),
+      0 0 24px rgba(224, 177, 93, 0.72),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+}
+
+@keyframes game-setup-card-awaiting {
+  0%,
+  100% {
+    border-color: rgba(240, 207, 138, 0.48);
+
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.025),
+      0 0 0 rgba(224, 177, 93, 0);
+  }
+
+  50% {
+    border-color: rgba(240, 207, 138, 0.92);
+
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 0 13px rgba(224, 177, 93, 0.35);
+  }
+}
+
+@keyframes game-setup-action-invitation {
+  0%,
+  100% {
+    transform: scale(1);
+
+    box-shadow:
+      0 5px 15px rgba(0, 0, 0, 0.58),
+      0 0 8px rgba(224, 177, 93, 0.24),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+
+  50% {
+    transform: scale(1.1);
+
+    box-shadow:
+      0 6px 18px rgba(0, 0, 0, 0.65),
+      0 0 12px rgba(255, 224, 157, 0.9),
+      0 0 28px rgba(224, 177, 93, 0.58),
+      inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  }
+}
+
+@keyframes game-setup-drawing-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes game-setup-sparkle {
+  0% {
+    opacity: 0;
+
+    transform:
+      scale(0.3)
+      rotate(0deg);
+  }
+
+  35% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+
+    transform:
+      scale(1.5)
+      rotate(90deg);
+  }
+}
+
+@keyframes game-setup-winner-glow {
+  from {
+    box-shadow:
+      0 0 8px rgba(240, 207, 138, 0.4),
+      0 0 20px rgba(224, 177, 93, 0.2);
+  }
+
+  to {
+    box-shadow:
+      0 0 16px rgba(240, 207, 138, 0.75),
+      0 0 36px rgba(224, 177, 93, 0.45);
+  }
+}
+
+@keyframes game-setup-winner-label {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(5px)
+      scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@media (max-width: 1100px) {
+  .game-setup__content {
+    width: calc(100% - 2rem);
+  }
+
+  .game-setup__stage,
+  .game-setup__stage--player-cards {
+    grid-template-rows:
+      auto
+      auto
+      32px
+      48px;
+
+    row-gap: 0.6rem;
+  }
+
+  .game-setup__stage {
+    width: calc(100% - 2rem);
+
+    padding-inline: 1rem;
+  }
+
+  .game-setup__stage-header {
+    padding-bottom: 0.25rem;
+  }
+
+  .game-setup__stage-main {
+    padding-block: 0.25rem;
+  }
+
+  .game-setup__player-rolls {
+    gap: 0.5rem;
+  }
+
+  .game-setup__player-roll {
+    flex-basis: clamp(140px, 16vw, 170px);
+
+    width: clamp(140px, 16vw, 170px);
+    height: clamp(230px, 34vh, 280px);
+  }
+}
+
+@media (max-width: 760px) {
+  .game-setup__content {
+    width: calc(100% - 1rem);
+    height: calc(100% - 1rem);
+
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .game-setup__progress {
+    flex-basis: 54px;
+
+    gap: 0.25rem;
+
+    padding-inline: 0.5rem;
+  }
+
+  .game-setup__progress-step {
+    font-size: 0.68rem;
+  }
+
+  .game-setup__progress-line {
+    width: 12px;
+  }
+
+  .game-setup__stage,
+  .game-setup__stage--player-cards {
+    width: calc(100% - 1rem);
+
+    margin: 0.45rem auto;
+
+    grid-template-rows:
+      auto
+      auto
+      28px
+      44px;
+
+    align-content: center;
+
+    row-gap: 0.45rem;
+
+    padding: 0.6rem;
+  }
+
+  .game-setup__stage-header {
+    padding:
+      0
+      0.5rem
+      0.2rem;
+
+    h1 {
+      margin-bottom: 0.35rem;
+
+      font-size: 1.45rem;
+    }
+
+    p {
+      font-size: 0.8rem;
+    }
+  }
+
+  .game-setup__stage-main {
+    padding-block: 0.15rem;
+  }
+
+  .game-setup__stage-feedback {
+    min-height: 28px;
+
+    padding-inline: 0.5rem;
+  }
+
+  .game-setup__stage-action {
+    min-height: 44px;
+
+    padding-inline: 0.5rem;
+  }
+
+  .game-setup__player-rolls {
+    gap: 0.35rem;
+  }
+
+  .game-setup__player-roll {
+    flex-basis: 124px;
+
+    width: 124px;
+    height: 210px;
+
+    grid-template-rows:
+      25px
+      minmax(0, 1fr);
+
+    padding: 6px;
+  }
+
+  .game-setup__player-roll-title {
+    height: 25px;
+
+    font-size: 0.78rem;
+  }
+
+  .game-setup__player-roll-hero {
+    padding: 2px 0 4px;
+  }
+
+  .game-setup__roll-trigger {
+    right: auto;
+    bottom: 7px;
+    left: 50%;
+
+    width: 35px;
+    height: 35px;
+  }
+
+  .game-setup__roll-trigger-icon {
+    font-size: 1.18rem;
+  }
+
+  .game-setup__roll-overlay {
+    right: 3px;
+    bottom: 5px;
+    left: 3px;
+
+    min-height: 64px;
+
+    padding: 5px 3px;
+  }
+
+  .game-setup__die {
+    flex-basis: 34px;
+
+    width: 34px;
+    height: 34px;
+  }
+
+  .game-setup__dice,
+  .game-setup__roll-dice {
+    gap: 0.3rem;
+  }
+
+  .game-setup__roll-equation {
+    font-size: 0.72rem;
+
+    strong {
+      font-size: 0.85rem;
+    }
+  }
+
+  .game-setup__continue {
+    padding: 0.58rem 1rem;
+
+    font-size: 0.82rem;
+  }
+
+  .game-setup__icon-action,
+  .game-setup__drawing-indicator {
+    width: 42px;
+    height: 42px;
+
+    font-size: 1.5rem;
   }
 }

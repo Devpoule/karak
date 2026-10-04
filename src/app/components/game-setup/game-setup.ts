@@ -5,25 +5,24 @@ import {
   HERO_CARD_BACK,
   HERO_DEFINITIONS,
 } from '../../data/hero-definitions';
-import { GameService } from '../../services/game.service';
+
+import {
+  FirstPlayerRoll,
+  GameService,
+} from '../../services/game.service';
+
 import { MAX_PLAYER_COUNT } from '../../services/player.service';
 
-/**
- * États visuels du tirage des héros.
- *
- * CHOIX D'IMPLÉMENTATION :
- *
- * - hidden   : les cartes sont encore face cachée ;
- * - drawing  : le tirage est en cours de mise en scène ;
- * - revealed : les héros attribués sont définitivement révélés.
- *
- * Cet état concerne uniquement la présentation du tirage.
- * L'attribution réelle des héros reste gérée par le moteur.
- */
 type HeroDrawState =
   | 'hidden'
   | 'drawing'
   | 'revealed';
+
+type FirstPlayerResolutionState =
+  | 'rolling'
+  | 'tie'
+  | 'winner'
+  | 'waiting';
 
 @Component({
   selector: 'app-game-setup',
@@ -32,81 +31,41 @@ type HeroDrawState =
   styleUrl: './game-setup.scss',
 })
 export class GameSetup {
-  /**
-   * Nombres de joueurs proposés par l'interface.
-   *
-   * Le maximum correspond aux 5 plateaux d'inventaire
-   * disponibles dans le jeu.
-   */
   readonly playerCounts = Array.from(
     { length: MAX_PLAYER_COUNT },
     (_, index) => index + 1,
   );
 
-  /**
-   * Nombre de joueurs actuellement sélectionné.
-   *
-   * Aucune valeur n'est présélectionnée afin que le joueur
-   * effectue explicitement son choix.
-   */
   selectedPlayerCount: number | null = null;
 
-  /**
-   * Ressource graphique utilisée pour représenter
-   * une carte Héros encore face cachée.
-   */
   readonly heroCardBack = HERO_CARD_BACK;
 
-  /**
-   * État visuel actuel du tirage des héros.
-   *
-   * CHOIX D'IMPLÉMENTATION :
-   *
-   * un signal est utilisé afin que les changements produits
-   * pendant l'animation soient immédiatement répercutés
-   * dans le template Angular.
-   */
   readonly heroDrawState =
     signal<HeroDrawState>('hidden');
 
-  /**
-   * Cartes temporairement affichées pendant l'animation
-   * du tirage.
-   *
-   * Ces cartes n'ont aucune incidence sur le résultat réel :
-   * elles servent uniquement à créer l'effet de défilement.
-   *
-   * CHOIX D'IMPLÉMENTATION :
-   *
-   * cette collection est également représentée par un signal
-   * afin que chaque étape asynchrone de l'animation soit
-   * immédiatement répercutée dans le template.
-   */
   readonly drawingHeroCards =
     signal<string[]>([]);
+
+  readonly rollingPlayerIndex =
+    signal<number | null>(null);
+
+  readonly displayedDice =
+    signal<Record<number, [number, number]>>({});
+
+  readonly revealedPlayerIndexes =
+    signal<number[]>([]);
+
+  readonly firstPlayerResolutionState =
+    signal<FirstPlayerResolutionState>('waiting');
 
   constructor(
     readonly gameService: GameService,
   ) {}
 
-  /**
-   * Sélectionne le nombre de joueurs qui participeront
-   * à la partie.
-   *
-   * Cette action ne prépare pas encore les joueurs :
-   * elle représente uniquement le choix effectué dans l'UI.
-   */
   selectPlayerCount(playerCount: number): void {
     this.selectedPlayerCount = playerCount;
   }
 
-  /**
-   * Confirme le nombre de joueurs sélectionné.
-   *
-   * GameSetup ne crée pas directement les joueurs :
-   * cette responsabilité est déléguée à GameService,
-   * qui orchestre la préparation de la partie.
-   */
   confirmPlayerCount(): void {
     if (this.selectedPlayerCount === null) {
       return;
@@ -117,22 +76,13 @@ export class GameSetup {
     );
   }
 
-  /**
-   * Effectue le tirage puis anime les cartes avant
-   * d'afficher les héros réellement attribués.
-   *
-   * Le résultat définitif est déterminé immédiatement
-   * par le moteur. L'animation est uniquement visuelle.
-   */
   drawHeroes(): void {
     if (this.heroDrawState() !== 'hidden') {
       return;
     }
 
-    // Le moteur détermine immédiatement le résultat réel.
     this.gameService.drawHeroes();
 
-    // L'interface entre dans l'état d'animation.
     this.heroDrawState.set('drawing');
 
     const speeds = [
@@ -150,18 +100,22 @@ export class GameSetup {
     let step = 0;
 
     const animate = (): void => {
-      // Lorsque toutes les étapes ont été jouées,
-      // l'animation prend fin et les véritables héros
-      // attribués par le moteur sont révélés.
       if (step >= speeds.length) {
         this.drawingHeroCards.set([]);
         this.heroDrawState.set('revealed');
 
+        /*
+         * Le tirage terminé, on passe directement
+         * à la détermination du premier joueur.
+         */
+        window.setTimeout(
+          () => this.placeHeroesOnStart(),
+          650,
+        );
+
         return;
       }
 
-      // Toutes les cartes affichées pendant une étape
-      // sont différentes les unes des autres.
       this.drawingHeroCards.set(
         this.getRandomUniqueHeroCards(),
       );
@@ -179,26 +133,289 @@ export class GameSetup {
     animate();
   }
 
-  /**
-   * Poursuit la préparation après la révélation des héros
-   * et déclenche leur placement sur la tuile Départ.
-   */
   placeHeroesOnStart(): void {
     if (this.heroDrawState() !== 'revealed') {
       return;
     }
 
     this.gameService.placeHeroesOnStart();
+
+    this.displayedDice.set({});
+    this.revealedPlayerIndexes.set([]);
+    this.rollingPlayerIndex.set(null);
+    this.firstPlayerResolutionState.set('waiting');
+  }
+
+  rollPlayer(playerIndex: number): void {
+    if (!this.canPlayerRoll(playerIndex)) {
+      return;
+    }
+
+    this.gameService.rollPlayerForFirstPlayer(
+      playerIndex,
+    );
+
+    const finalRoll =
+      this.gameService.firstPlayerRolls().find(
+        (roll) => roll.playerIndex === playerIndex,
+      );
+
+    if (!finalRoll) {
+      return;
+    }
+
+    this.rollingPlayerIndex.set(playerIndex);
+    this.firstPlayerResolutionState.set('rolling');
+
+    const speeds = [
+      70,
+      70,
+      80,
+      90,
+      105,
+      125,
+      150,
+      180,
+      215,
+      260,
+      315,
+    ];
+
+    let step = 0;
+
+    const animate = (): void => {
+      if (step >= speeds.length) {
+        this.setDisplayedDice(
+          playerIndex,
+          finalRoll.die1,
+          finalRoll.die2,
+        );
+
+        this.revealedPlayerIndexes.update(
+          (indexes) => [
+            ...indexes,
+            playerIndex,
+          ],
+        );
+
+        this.rollingPlayerIndex.set(null);
+
+        this.resolveFirstPlayerIfPossible();
+
+        return;
+      }
+
+      this.setDisplayedDice(
+        playerIndex,
+        this.randomDie(),
+        this.randomDie(),
+      );
+
+      const delay = speeds[step];
+
+      step++;
+
+      window.setTimeout(
+        animate,
+        delay,
+      );
+    };
+
+    animate();
+  }
+
+  private resolveFirstPlayerIfPossible(): void {
+    const contenders =
+      this.gameService.firstPlayerContenders();
+
+    const allContendersRevealed =
+      contenders.every(
+        (playerIndex) =>
+          this.revealedPlayerIndexes().includes(
+            playerIndex,
+          ),
+      );
+
+    if (!allContendersRevealed) {
+      this.firstPlayerResolutionState.set(
+        'waiting',
+      );
+
+      return;
+    }
+
+    const result =
+      this.gameService.resolveFirstPlayerRoll();
+
+    if (result === 'winner') {
+      this.firstPlayerResolutionState.set(
+        'winner',
+      );
+
+      return;
+    }
+
+    if (result === 'tie') {
+      const tiedPlayers =
+        this.gameService.firstPlayerContenders();
+
+      this.revealedPlayerIndexes.update(
+        (indexes) =>
+          indexes.filter(
+            (playerIndex) =>
+              !tiedPlayers.includes(playerIndex),
+          ),
+      );
+
+      this.displayedDice.update(
+        (dice) => {
+          const nextDice = { ...dice };
+
+          for (const playerIndex of tiedPlayers) {
+            delete nextDice[playerIndex];
+          }
+
+          return nextDice;
+        },
+      );
+
+      this.firstPlayerResolutionState.set('tie');
+
+      return;
+    }
+
+    this.firstPlayerResolutionState.set(
+      'waiting',
+    );
   }
 
   /**
-   * Retourne la carte actuellement visible pour un joueur.
+   * Retourne le prochain joueur qui doit lancer.
    *
-   * - hidden   : dos de carte ;
-   * - drawing  : carte temporaire de l'animation ;
-   * - revealed : héros réellement attribué.
+   * L'ordre est toujours croissant :
+   * Joueur 1 → Joueur 2 → Joueur 3...
+   *
+   * En cas d'égalité, seuls les joueurs encore
+   * concernés sont pris en compte, toujours
+   * dans l'ordre croissant.
    */
-  getHeroCard(playerIndex: number): string {
+  getNextPlayerToRoll(): number | null {
+    if (this.gameService.firstPlayerIndex() !== null) {
+      return null;
+    }
+
+    const contenders = [
+      ...this.gameService.firstPlayerContenders(),
+    ].sort(
+      (a, b) => a - b,
+    );
+
+    return (
+      contenders.find(
+        (playerIndex) =>
+          !this.hasPlayerRollBeenRevealed(
+            playerIndex,
+          ),
+      )
+      ?? null
+    );
+  }
+
+  isPlayerTurnToRoll(
+    playerIndex: number,
+  ): boolean {
+    return (
+      this.getNextPlayerToRoll() === playerIndex
+    );
+  }
+
+  isAnyPlayerRolling(): boolean {
+    return this.rollingPlayerIndex() !== null;
+  }
+
+  canPlayerRoll(playerIndex: number): boolean {
+    return (
+      this.gameService.firstPlayerIndex() === null
+      && this.rollingPlayerIndex() === null
+      && this.gameService.isFirstPlayerContender(
+        playerIndex,
+      )
+      && !this.hasPlayerRollBeenRevealed(
+        playerIndex,
+      )
+      && this.isPlayerTurnToRoll(
+        playerIndex,
+      )
+    );
+  }
+
+  hasPlayerRollBeenRevealed(
+    playerIndex: number,
+  ): boolean {
+    return this.revealedPlayerIndexes().includes(
+      playerIndex,
+    );
+  }
+
+  isPlayerRolling(
+    playerIndex: number,
+  ): boolean {
+    return (
+      this.rollingPlayerIndex() === playerIndex
+    );
+  }
+
+  isPlayerEliminated(
+    playerIndex: number,
+  ): boolean {
+    return (
+      this.firstPlayerResolutionState() !== 'winner'
+      && !this.gameService.isFirstPlayerContender(
+        playerIndex,
+      )
+    );
+  }
+
+  getDisplayedDice(
+    playerIndex: number,
+  ): [number, number] | null {
+    return (
+      this.displayedDice()[playerIndex]
+      ?? null
+    );
+  }
+
+  getRevealedRoll(
+    playerIndex: number,
+  ): FirstPlayerRoll | null {
+    if (
+      !this.hasPlayerRollBeenRevealed(
+        playerIndex,
+      )
+    ) {
+      return null;
+    }
+
+    return (
+      this.gameService.firstPlayerRolls().find(
+        (roll) => roll.playerIndex === playerIndex,
+      )
+      ?? null
+    );
+  }
+
+  isFirstPlayerWinner(
+    playerIndex: number,
+  ): boolean {
+    return (
+      this.gameService.firstPlayerIndex()
+      === playerIndex
+    );
+  }
+
+  getHeroCard(
+    playerIndex: number,
+  ): string {
     if (this.heroDrawState() === 'hidden') {
       return this.heroCardBack;
     }
@@ -223,23 +440,33 @@ export class GameSetup {
     );
   }
 
-  /**
-   * Produit une combinaison aléatoire de cartes Héros
-   * sans doublon.
-   *
-   * CHOIX D'IMPLÉMENTATION :
-   *
-   * cette méthode concerne uniquement l'animation visuelle.
-   * Elle reproduit néanmoins la contrainte du tirage réel :
-   * un même héros ne peut pas apparaître simultanément
-   * pour plusieurs joueurs.
-   */
-  private getRandomUniqueHeroCards(): string[] {
-    const availableCards = HERO_DEFINITIONS.map(
-      (hero) => hero.card,
-    );
+  isSetupStepCompleted(
+    step: 'players' | 'heroes' | 'first-player',
+  ): boolean {
+    switch (step) {
+      case 'players':
+        return this.gameService.playerCount > 0;
 
-    // Mélange de Fisher-Yates.
+      case 'heroes':
+        return (
+          this.gameService.setupStep()
+          === 'first-player-roll'
+        );
+
+      case 'first-player':
+        return (
+          this.gameService.firstPlayerIndex()
+          !== null
+        );
+    }
+  }
+
+  private getRandomUniqueHeroCards(): string[] {
+    const availableCards =
+      HERO_DEFINITIONS.map(
+        (hero) => hero.card,
+      );
+
     for (
       let i = availableCards.length - 1;
       i > 0;
@@ -262,5 +489,24 @@ export class GameSetup {
       0,
       this.gameService.playerCount,
     );
+  }
+
+  private setDisplayedDice(
+    playerIndex: number,
+    die1: number,
+    die2: number,
+  ): void {
+    this.displayedDice.update(
+      (dice) => ({
+        ...dice,
+        [playerIndex]: [die1, die2],
+      }),
+    );
+  }
+
+  private randomDie(): number {
+    return Math.floor(
+      Math.random() * 6,
+    ) + 1;
   }
 }

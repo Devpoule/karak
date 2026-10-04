@@ -10,9 +10,8 @@
  * CHOIX D'IMPLÉMENTATION :
  *
  * ces trois états représentent uniquement le cycle global
- * de la partie. Les étapes internes d'un tour (exploration,
- * combat, résolution d'un objet, etc.) ne doivent pas être
- * ajoutées ici.
+ * de la partie. Les étapes internes d'un tour ne doivent pas
+ * être ajoutées ici.
  */
 export type GamePhase =
   | 'setup'
@@ -20,19 +19,16 @@ export type GamePhase =
   | 'game-over';
 
 /**
- * Étapes successives de la préparation d'une partie.
+ * Étapes interactives de la préparation d'une partie.
  *
- * Elles suivent l'ordre de mise en place du jeu officiel.
+ * Les opérations purement automatiques ne nécessitent pas
+ * nécessairement leur propre état d'interface.
  *
- * Les premières opérations sont automatiques :
- *
- * - préparation du donjon ;
- * - préparation de la pioche.
- *
- * Les étapes interactives sont ajoutées progressivement
- * à mesure de leur implémentation.
+ * Le placement des héros sur la tuile Départ est notamment
+ * effectué automatiquement entre le tirage des héros
+ * et la détermination du premier joueur.
  */
 export type SetupStep =
   | 'player-count'
   | 'hero-draw'
-  | 'hero-placement';
+  | 'first-player-roll';
