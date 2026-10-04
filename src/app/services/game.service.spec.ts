@@ -122,4 +122,22 @@ describe('GameService', () => {
     expect(service.phase()).toBe('playing');
     expect(service.activePlayerIndex()).toBe(4);
   });
+
+  it('retourne un ordre de tour cyclique depuis le joueur actif', () => {
+    prepareSetup(5, 2);
+    service.startAdventure();
+
+    expect(
+      service.getTurnOrderFrom(),
+    ).toEqual([2, 3, 4, 0, 1]);
+  });
+
+  it('fait suivre J5 par J1 dans l ordre de tour', () => {
+    prepareSetup(5, 4);
+    service.startAdventure();
+
+    expect(
+      service.getTurnOrderFrom(),
+    ).toEqual([4, 0, 1, 2, 3]);
+  });
 });

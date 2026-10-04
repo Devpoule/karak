@@ -72,24 +72,36 @@
      naturellement les déplacements de la caméra.
      =================================================== -->
 
-    @for (player of players; track $index; let playerIndex = $index) {
-      @if (player.position; as position) {
-        @if (getHeroPawnImage(player); as pawnImage) {
-          @let offset = getPlayerTileOffset(playerIndex);
-          @let hero = getHeroDefinition(player);
+    @for (occupancy of tileOccupancies; track occupancy.key) {
+      @if (getHeroPawnImage(occupancy.primary.player); as pawnImage) {
+        @let hero = getHeroDefinition(occupancy.primary.player);
 
         <div
           class="board__hero"
-          [class.board__hero--active]="isActivePlayer(playerIndex)"
-          [style.left.px]="mapCenterInPixels + position.x * tileSize - tileSize / 2"
-          [style.top.px]="mapCenterInPixels + position.y * tileSize - tileSize / 2"
-          [style.--hero-offset-x.px]="offset.x"
-          [style.--hero-offset-y.px]="offset.y"
+          [class.board__hero--active]="isActivePlayer(occupancy.primary.playerIndex)"
+          [style.left.px]="mapCenterInPixels + occupancy.x * tileSize - tileSize / 2"
+          [style.top.px]="mapCenterInPixels + occupancy.y * tileSize - tileSize / 2"
+          [style.--player-color]="occupancy.primary.color"
           (transitionend)="onHeroMovementEnd($event)"
         >
           <img [src]="pawnImage" [alt]="hero?.name ?? 'Héros'" draggable="false" />
+
+          @for (marker of occupancy.markers; track marker.playerIndex; let markerIndex = $index) {
+            @let markerPosition = getMarkerPosition(markerIndex, occupancy.markers.length);
+
+            <span
+              class="board__player-marker"
+              [style.--marker-color]="marker.color"
+              [style.left.%]="markerPosition.x"
+              [style.top.%]="markerPosition.y"
+            >
+              <span class="board__player-marker-line" aria-hidden="true"></span>
+              <span class="board__player-marker-label">
+                {{ marker.label }}
+              </span>
+            </span>
+          }
         </div>
-        }
       }
     }
 

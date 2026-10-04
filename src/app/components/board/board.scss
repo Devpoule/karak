@@ -201,17 +201,6 @@
     left 500ms ease-in-out,
     top 500ms ease-in-out;
 
-  /*
-   * Plusieurs joueurs peuvent occuper la même tuile métier.
-   * Le décalage ci-dessous est uniquement visuel : il permet
-   * de distinguer les pions sans modifier leurs coordonnées
-   * dans le donjon.
-   */
-  transform: translate(
-    var(--hero-offset-x, 0),
-    var(--hero-offset-y, 0)
-  );
-
   img {
     display: block;
 
@@ -247,15 +236,71 @@
     position: absolute;
     inset: 14%;
 
-    border: 2px solid rgba(245, 213, 138, 0.95);
+    border: 2px solid var(--player-color, rgba(245, 213, 138, 0.95));
     border-radius: 50%;
 
     box-shadow:
-      0 0 8px rgba(245, 213, 138, 0.75),
-      0 0 18px rgba(190, 117, 55, 0.55);
+      0 0 8px var(--player-color, rgba(245, 213, 138, 0.75)),
+      0 0 18px rgba(255, 255, 255, 0.35);
 
     pointer-events: none;
   }
+}
+
+/*
+ * Marqueurs des joueurs partageant la tuile du pion principal.
+ *
+ * Ils restent volontairement légers : un trait fin relie la tuile
+ * au libellé Jx, coloré avec l'identité visuelle stable du joueur.
+ */
+.board__player-marker {
+  position: absolute;
+  z-index: 6;
+
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  transform: translate(-50%, -50%);
+
+  pointer-events: none;
+}
+
+.board__player-marker-line {
+  display: block;
+
+  width: 13px;
+  height: 1px;
+
+  background: var(--marker-color);
+
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+}
+
+.board__player-marker-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 22px;
+  height: 18px;
+
+  padding: 0 4px;
+
+  border: 1px solid var(--marker-color);
+  border-radius: 999px;
+
+  background: rgba(20, 17, 15, 0.78);
+
+  color: #fff8e8;
+
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.85),
+    0 0 5px color-mix(in srgb, var(--marker-color) 50%, transparent);
 }
 
 /* ==========================================================

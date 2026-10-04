@@ -451,4 +451,40 @@ export class GameService {
       ?? null
     );
   }
+
+  /**
+   * Retourne l'ordre cyclique des joueurs à partir d'un index.
+   *
+   * Le lancer initial détermine uniquement le premier joueur.
+   * Ensuite, la rotation suit toujours l'ordre naturel des index :
+   *
+   * J1 → J2 → J3 → J4 → J5 → J1
+   *
+   * Cette méthode ne trie donc jamais les joueurs par score de dés.
+   */
+  getTurnOrderFrom(
+    startPlayerIndex: number | null =
+      this.activePlayerIndex(),
+  ): number[] {
+    const playerCount =
+      this.playerService.players.length;
+
+    if (
+      playerCount === 0
+      || startPlayerIndex === null
+      || startPlayerIndex < 0
+      || startPlayerIndex >= playerCount
+    ) {
+      return [];
+    }
+
+    return Array.from(
+      {
+        length: playerCount,
+      },
+      (_, offset) =>
+        (startPlayerIndex + offset)
+        % playerCount,
+    );
+  }
 }

@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { getPlayerUiConfig } from '../../constants/player-ui.constants';
 import { getHeroDefinition } from '../../data/hero-definitions';
 import { HeroDefinition } from '../../models/hero';
 import { Player } from '../../models/player';
@@ -9,6 +10,39 @@ import { ExplorationService, PendingTilePlacement } from '../../services/explora
 import { GameService } from '../../services/game.service';
 
 import { Direction, PlacedTile, TileDefinition } from '../../models/tile';
+
+/**
+ * Joueur prêt à être représenté sur le plateau.
+ */
+interface BoardPlayerView {
+  player: Player;
+  playerIndex: number;
+  label: string;
+  color: string;
+}
+
+/**
+ * Représentation visuelle d'une tuile occupée.
+ *
+ * Les coordonnées restent celles du donjon. Lorsqu'une tuile contient
+ * plusieurs joueurs, un seul pion est affiché et les autres joueurs
+ * deviennent des marqueurs légers.
+ */
+interface TileOccupancyView {
+  key: string;
+  x: number;
+  y: number;
+  primary: BoardPlayerView;
+  markers: BoardPlayerView[];
+}
+
+/**
+ * Position visuelle d'un marqueur autour d'une tuile.
+ */
+interface PlayerMarkerPosition {
+  x: number;
+  y: number;
+}
 
 /**
  * Plateau principal du jeu.
@@ -186,6 +220,79 @@ export class Board {
   }
 
   /**
+   * Regroupe les joueurs visibles par coordonnées de tuile.
+   *
+   * La représentation est recalculée depuis PlayerService.players
+   * et GameService.activePlayerIndex à chaque lecture Angular :
+   * un changement d'occupants ou de joueur actif modifie donc
+   * automatiquement le pion principal et les marqueurs.
+   */
+  get tileOccupancies(): TileOccupancyView[] {
+    const groups =
+      new Map<string, BoardPlayerView[]>();
+
+    for (
+      let playerIndex = 0;
+      playerIndex < this.players.length;
+      playerIndex++
+    ) {
+      const player =
+        this.players[playerIndex];
+
+      if (
+        !player.heroId
+        || !player.position
+      ) {
+        continue;
+      }
+
+      const playerUi =
+        getPlayerUiConfig(playerIndex);
+
+      const view: BoardPlayerView = {
+        player,
+        playerIndex,
+        label: playerUi.label,
+        color: playerUi.color,
+      };
+
+      const key =
+        this.getTileKey(
+          player.position.x,
+          player.position.y,
+        );
+
+      const group =
+        groups.get(key) ?? [];
+
+      group.push(view);
+      groups.set(key, group);
+    }
+
+    return Array.from(
+      groups.entries(),
+    ).map(([key, occupants]) => {
+      const primary =
+        this.getPrimaryOccupant(
+          occupants,
+        );
+
+      return {
+        key,
+        x: primary.player.position!.x,
+        y: primary.player.position!.y,
+        primary,
+        markers:
+          occupants.filter(
+            (occupant) =>
+              occupant.playerIndex
+              !== primary.playerIndex,
+          ),
+      };
+    });
+  }
+
+  /**
    * Définition statique du héros attribué au joueur.
    */
   getHeroDefinition(
@@ -228,83 +335,118 @@ export class Board {
   }
 
   /**
-   * Calcule la position visuelle d'un pion au sein de sa tuile.
+   * Retourne la position visuelle du marqueur autour de la tuile.
    *
-   * Les coordonnées métier du joueur ne sont jamais modifiées :
-   * plusieurs joueurs peuvent tous conserver position = { x: 0, y: 0 }.
-   *
-   * Le décalage retourné sert uniquement au rendu afin que 2 à 5
-   * héros présents sur la même tuile restent identifiables.
+   * Le marqueur peut légèrement dépasser de la tuile, mais ne modifie
+   * jamais la position métier du joueur. Les positions sont distribuées
+   * autour de la case pour rester lisibles lorsque plusieurs joueurs
+   * partagent la même tuile.
    */
-  getPlayerTileOffset(
-    playerIndex: number,
-  ): { x: number; y: number } {
-    const player =
-      this.players[playerIndex];
-
-    const position = player?.position;
-
-    if (!position) {
-      return {
-        x: 0,
-        y: 0,
-      };
-    }
-
-    const playersOnSameTile =
-      this.players
-        .map((candidate, index) => ({
-          candidate,
-          index,
-        }))
-        .filter(({ candidate }) =>
-          candidate.position?.x === position.x
-          && candidate.position?.y === position.y
-          && Boolean(candidate.heroId),
-        );
-
-    const localIndex =
-      playersOnSameTile.findIndex(
-        ({ index }) =>
-          index === playerIndex,
-      );
-
-    const offsetsByCount: Record<
+  getMarkerPosition(
+    markerIndex: number,
+    markerCount: number,
+  ): PlayerMarkerPosition {
+    const positionsByCount: Record<
       number,
-      { x: number; y: number }[]
+      PlayerMarkerPosition[]
     > = {
       1: [
-        { x: 0, y: 0 },
+        { x: 82, y: 18 },
       ],
       2: [
-        { x: -18, y: 0 },
-        { x: 18, y: 0 },
+        { x: 82, y: 18 },
+        { x: 18, y: 82 },
       ],
       3: [
-        { x: 0, y: -18 },
-        { x: -20, y: 16 },
-        { x: 20, y: 16 },
+        { x: 82, y: 18 },
+        { x: 90, y: 72 },
+        { x: 18, y: 82 },
       ],
       4: [
-        { x: -20, y: -18 },
-        { x: 20, y: -18 },
-        { x: -20, y: 18 },
-        { x: 20, y: 18 },
-      ],
-      5: [
-        { x: 0, y: -22 },
-        { x: -22, y: -6 },
-        { x: 22, y: -6 },
-        { x: -15, y: 20 },
-        { x: 15, y: 20 },
+        { x: 82, y: 18 },
+        { x: 90, y: 72 },
+        { x: 18, y: 82 },
+        { x: 10, y: 28 },
       ],
     };
 
     return (
-      offsetsByCount[
-        playersOnSameTile.length
-      ]?.[localIndex]
-      ?? { x: 0, y: 0 }
+      positionsByCount[markerCount]?.[
+        markerIndex
+      ]
+      ?? { x: 82, y: 18 }
+    );
+  }
+
+  /**
+   * Retourne le joueur dont le pion doit être affiché pour une tuile.
+   *
+   * Règle validée :
+   *
+   * - si le joueur actif est présent sur la tuile, son pion est affiché ;
+   * - sinon, on parcourt virtuellement la rotation des prochains tours ;
+   * - le premier occupant rencontré dans cette rotation porte le pion.
+   */
+  private getPrimaryOccupant(
+    occupants: BoardPlayerView[],
+  ): BoardPlayerView {
+    const occupantIndexes =
+      new Set(
+        occupants.map(
+          (occupant) =>
+            occupant.playerIndex,
+        ),
+      );
+
+    const turnOrder =
+      this.gameService.getTurnOrderFrom();
+
+    const primaryPlayerIndex =
+      turnOrder.find(
+        (playerIndex) =>
+          occupantIndexes.has(playerIndex),
+      );
+
+    if (
+      primaryPlayerIndex !== undefined
+    ) {
+      return occupants.find(
+        (occupant) =>
+          occupant.playerIndex
+          === primaryPlayerIndex,
+      )!;
+    }
+
+    return occupants[0];
+  }
+
+  /**
+   * Construit une clé stable à partir des coordonnées métier.
+   */
+  private getTileKey(
+    x: number,
+    y: number,
+  ): string {
+    return `${x}:${y}`;
+  }
+
+  /**
+   * Modifie uniquement la position du joueur prototype.
+   *
+   * Les déplacements réels des joueurs préparés par le SETUP
+   * seront introduits dans une tranche dédiée. Tant que les
+   * contrôles restent désactivés, cette méthode ne peut pas
+   * modifier les coordonnées métier de PlayerService.players.
+   */
+  private movePrototypePlayerTo(
+    x: number,
+    y: number,
+    direction: Direction,
+  ): void {
+    this.playerService.moveTo(
+      x,
+      y,
+      direction,
     );
   }
 
@@ -424,7 +566,7 @@ export class Board {
 
     const destination = this.dungeonService.getNeighborPosition(currentTile, direction);
 
-    this.playerService.moveTo(destination.x, destination.y, direction);
+    this.movePrototypePlayerTo(destination.x, destination.y, direction);
   }
 
   /**
@@ -472,7 +614,7 @@ export class Board {
     if (this.dungeonService.canMoveTo(currentTile, direction)) {
       const destination = this.dungeonService.getNeighborPosition(currentTile, direction);
 
-      this.playerService.moveTo(destination.x, destination.y, direction);
+      this.movePrototypePlayerTo(destination.x, destination.y, direction);
 
       return;
     }
@@ -583,7 +725,7 @@ export class Board {
       return;
     }
 
-    this.playerService.moveTo(placedTile.x, placedTile.y, direction);
+    this.movePrototypePlayerTo(placedTile.x, placedTile.y, direction);
 
     this.turnService.consumeMovement();
   }
