@@ -2,7 +2,9 @@
   display: block;
 
   width: 100%;
+
   height: 100%;
+
   min-height: 0;
 }
 
@@ -10,6 +12,7 @@
   position: relative;
 
   width: 100%;
+
   height: 100%;
 
   overflow: hidden;
@@ -19,14 +22,17 @@
 
 .game-setup__background {
   position: absolute;
+
   inset: 0;
 
   width: 100%;
+
   height: 100%;
 
   object-fit: cover;
 
   user-select: none;
+
   pointer-events: none;
 }
 
@@ -41,11 +47,24 @@
 
   box-sizing: border-box;
 
-  width: min(1260px, calc(100vw - 4rem));
-  height: min(760px, calc(100vh - 4rem));
+  /*
+   * Le panneau conserve une largeur stable entre les étapes,
+   * mais sa hauteur dépend désormais réellement du contenu.
+   *
+   * Cela évite l'immense zone vide visible sur l'écran "Jouer"
+   * et réduit également l'encombrement général du SETUP.
+   */
+  width: min(1120px, calc(100vw - 4rem));
+  height: auto;
 
-  min-width: 760px;
-  min-height: 600px;
+  min-width: 720px;
+  min-height: 0;
+
+  /*
+   * Une étape chargée (par exemple 5 héros) ne doit jamais
+   * dépasser la hauteur réellement disponible dans la fenêtre.
+   */
+  max-height: calc(100vh - 4rem);
 
   overflow: hidden;
 
@@ -62,14 +81,232 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
   color: #fff8e8;
+
+  /*
+   * La hauteur du panneau peut évoluer entre l'accueil,
+   * Nouvelle partie et les étapes avec cartes.
+   * La transition rend cette évolution plus naturelle.
+   */
+  transition:
+    width 300ms ease,
+    height 300ms ease,
+    max-height 300ms ease;
+}
+
+// ============================================================
+
+// ACCUEIL / TRANSITION VERS LE SETUP
+
+// ============================================================
+
+/**
+
+ * État d'accueil du panneau.
+
+ *
+
+ * Le panneau conserve exactement les mêmes dimensions
+
+ * que pendant la préparation de la partie.
+
+ *
+
+ * Cela évite tout redimensionnement ou déplacement
+
+ * lorsque le joueur clique sur "Jouer".
+
+ */
+
+.game-setup__welcome {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-width: 0;
+
+  /*
+   * L'accueil n'occupe plus artificiellement toute la hauteur
+   * du panneau. Le bouton dispose simplement d'un espace
+   * confortable autour de lui.
+   */
+  padding: 3.5rem 2rem;
+
+  animation: game-setup-welcome-in 500ms ease-out both;
+}
+
+/**
+
+ * Action principale de l'écran d'accueil.
+
+ *
+
+ * On reprend volontairement l'identité visuelle
+
+ * des actions principales du SETUP afin que l'accueil
+
+ * appartienne clairement au même jeu et au même panneau.
+
+ */
+
+.game-setup__play {
+  min-width: 180px;
+
+  min-height: 52px;
+
+  padding: 0.8rem 2.5rem;
+
+  border: 1px solid rgba(240, 207, 138, 0.7);
+
+  border-radius: 4px;
+
+  background: linear-gradient(180deg, rgba(137, 47, 35, 0.96), rgba(91, 28, 23, 0.98));
+
+  color: #f7ead0;
+
+  font: inherit;
+
+  font-size: 1rem;
+
+  font-weight: 700;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.game-setup__play:hover {
+  transform: translateY(-2px);
+
+  border-color: rgba(255, 222, 151, 0.95);
+
+  box-shadow: 0 11px 28px rgba(0, 0, 0, 0.34);
+}
+
+.game-setup__play:active {
+  transform: translateY(0);
+}
+
+.game-setup__play:focus-visible {
+  outline: 2px solid rgba(255, 222, 151, 0.9);
+
+  outline-offset: 4px;
+}
+
+/**
+
+ * Conteneur de l'intégralité du SETUP.
+
+ *
+
+ * Lorsqu'il est créé après le clic sur "Jouer",
+
+ * il apparaît progressivement sans modifier
+
+ * la géométrie du panneau.
+
+ *
+
+ * Le déplacement vertical est volontairement très faible :
+
+ * le fondu doit rester l'effet dominant.
+
+ */
+
+.game-setup__setup {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+
+  /*
+   * Aucune hauteur fixe :
+   * chaque étape détermine la hauteur nécessaire.
+   */
+  animation: game-setup-content-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/**
+
+ * Apparition initiale du bouton Jouer.
+
+ */
+
+@keyframes game-setup-welcome-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/**
+
+ * Apparition du parcours Nouvelle partie.
+
+ *
+
+ * Le panneau lui-même ne bouge jamais.
+
+ * Seul son contenu apparaît.
+
+ */
+
+@keyframes game-setup-content-in {
+  from {
+    opacity: 0;
+
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+}
+
+/**
+
+ * Respect des préférences système concernant
+
+ * la réduction des animations.
+
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  .game-setup__welcome,
+  .game-setup__setup {
+    animation: none;
+  }
+
+  .game-setup__play {
+    transition: none;
+  }
 }
 
 .game-setup__progress {
   box-sizing: border-box;
 
   display: flex;
+
   flex: 0 0 62px;
+
   align-items: center;
+
   justify-content: center;
 
   gap: 0.55rem;
@@ -89,6 +326,7 @@
 
 .game-setup__progress-step {
   display: flex;
+
   align-items: center;
 
   gap: 0.4rem;
@@ -96,6 +334,7 @@
   color: rgba(244, 234, 214, 0.42);
 
   font-size: 0.82rem;
+
   font-weight: 600;
 
   white-space: nowrap;
@@ -108,23 +347,29 @@
 
 .game-setup__progress-marker {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   width: 22px;
+
   height: 22px;
 
   border: 1px solid rgba(224, 177, 93, 0.28);
+
   border-radius: 50%;
 
   background: rgba(12, 10, 12, 0.35);
 
   font-size: 0.75rem;
+
   font-weight: 800;
 }
 
 .game-setup__progress-line {
   width: 44px;
+
   height: 2px;
 
   border-radius: 1px;
@@ -165,24 +410,34 @@
 }
 
 /*
+
  * Structure fixe de l'étape.
+
  *
+
  * Les emplacements de la consigne et de l'action
+
  * restent réservés en permanence.
+
  *
+
  * Leur apparition ne modifie donc plus la position
+
  * des cartes et ne provoque plus de sursaut.
+
  */
 
 .game-setup__stage {
   box-sizing: border-box;
 
   display: grid;
+
   flex: 1;
 
   width: calc(100% - 3rem);
 
   min-width: 0;
+
   min-height: 0;
 
   margin: 0.85rem auto;
@@ -202,6 +457,7 @@
   overflow: hidden;
 
   border: 1px solid rgba(224, 177, 93, 0.38);
+
   border-radius: 7px;
 
   background: linear-gradient(180deg, rgba(24, 18, 22, 0.36), rgba(12, 10, 13, 0.22));
@@ -227,11 +483,15 @@
   box-sizing: border-box;
 
   display: flex;
+
   flex-direction: column;
+
   align-items: center;
+
   justify-content: center;
 
   min-width: 0;
+
   min-height: 0;
 
   padding: 0 1rem 0.35rem;
@@ -242,6 +502,7 @@
     color: #f0cf8a;
 
     font-size: 1.9rem;
+
     line-height: 1.1;
 
     letter-spacing: 0.03em;
@@ -259,7 +520,9 @@
     color: #f4ead6;
 
     font-size: 0.95rem;
+
     font-weight: 500;
+
     line-height: 1.35;
 
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
@@ -268,12 +531,15 @@
 
 .game-setup__stage-main {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   width: 100%;
 
   min-width: 0;
+
   min-height: 0;
 
   padding: 0.35rem 0;
@@ -283,10 +549,13 @@
   box-sizing: border-box;
 
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   min-width: 0;
+
   min-height: 32px;
 
   padding: 0 1rem;
@@ -299,7 +568,9 @@
     color: #f4ead6;
 
     font-size: 0.92rem;
+
     font-weight: 600;
+
     line-height: 1.3;
 
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
@@ -310,10 +581,13 @@
   box-sizing: border-box;
 
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   min-width: 0;
+
   min-height: 48px;
 
   padding: 0 1rem;
@@ -321,7 +595,9 @@
 
 .game-setup__player-counts {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   gap: 0.9rem;
@@ -331,6 +607,7 @@
   padding: 1.5rem 2rem;
 
   border: 1px solid rgba(224, 177, 93, 0.22);
+
   border-radius: 7px;
 
   background: rgba(15, 12, 15, 0.18);
@@ -338,17 +615,21 @@
 
 .game-setup__player-count {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   box-sizing: border-box;
 
   width: 56px;
+
   height: 56px;
 
   padding: 0;
 
   border: 1px solid rgba(224, 177, 93, 0.65);
+
   border-radius: 5px;
 
   background: rgba(35, 27, 30, 0.88);
@@ -356,7 +637,9 @@
   color: #fff8e8;
 
   font: inherit;
+
   font-size: 1.05rem;
+
   font-weight: 700;
 
   cursor: pointer;
@@ -391,45 +674,75 @@
 }
 
 /*
+
  * ============================================================
+
  * CONFIGURATION D'UNE NOUVELLE PARTIE
+
  * ============================================================
+
  *
+
  * Le parcours principal reste volontairement minimal.
+
  *
+
  * Par défaut :
+
  *
+
  * - J1 est humain ;
+
  * - les autres aventuriers sont contrôlés par l'IA.
+
  *
+
  * Le multijoueur local constitue une option secondaire.
+
  * Sa configuration n'apparaît que lorsque l'utilisateur
+
  * demande explicitement à jouer à plusieurs sur l'appareil.
+
  *
+
  * Cette organisation évite d'imposer des paramètres inutiles
+
  * au joueur solo tout en gardant le multijoueur local
+
  * facilement découvrable.
+
  */
 
 .game-setup__new-game {
   display: flex;
+
   flex-direction: column;
+
   align-items: center;
+
   justify-content: center;
 
   gap: 0.8rem;
 
   width: 100%;
+
   min-width: 0;
 }
 
 /*
+
  * Action secondaire permettant d'ouvrir la configuration
+
  * du multijoueur local.
+
  *
+
  * Le traitement visuel reste volontairement plus discret
+
  * que le bouton principal "Continuer".
+
  */
+
 .game-setup__local-multiplayer-toggle {
   padding: 0.2rem 0.4rem;
 
@@ -440,11 +753,15 @@
   color: rgba(244, 234, 214, 0.72);
 
   font: inherit;
+
   font-size: 0.82rem;
+
   font-weight: 600;
 
   text-decoration: underline;
+
   text-decoration-color: rgba(224, 177, 93, 0.38);
+
   text-underline-offset: 4px;
 
   cursor: pointer;
@@ -469,64 +786,96 @@
 }
 
 /*
+
  * Configuration du nombre d'humains.
+
  *
+
  * Le bloc reste compact afin de ne pas modifier sensiblement
+
  * la géométrie générale de l'écran Nouvelle partie.
+
  */
+
 .game-setup__local-multiplayer {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   gap: 0.75rem;
 
   min-width: 0;
+
   min-height: 34px;
 }
 
 /*
+
  * Libellé de la configuration locale.
+
  */
+
 .game-setup__local-multiplayer-label {
   color: #f4ead6;
 
   font-size: 0.82rem;
+
   font-weight: 600;
+
   line-height: 1.2;
 
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 }
 
 /*
+
  * Liste des nombres possibles de joueurs humains.
+
  *
+
  * Seules les valeurs compatibles avec le nombre total
+
  * d'aventuriers sont générées dans le template.
+
  */
+
 .game-setup__human-counts {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   gap: 0.4rem;
 }
 
 /*
+
  * Petit sélecteur numérique réservé au nombre d'humains.
+
  *
+
  * Il est volontairement plus petit que le sélecteur principal
+
  * du nombre total d'aventuriers afin de conserver la hiérarchie
+
  * visuelle de l'écran.
+
  */
+
 .game-setup__human-count {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   box-sizing: border-box;
 
   width: 32px;
+
   height: 32px;
 
   padding: 0;
@@ -540,7 +889,9 @@
   color: #fff8e8;
 
   font: inherit;
+
   font-size: 0.82rem;
+
   font-weight: 700;
 
   cursor: pointer;
@@ -569,8 +920,11 @@
 }
 
 /*
+
  * Nombre de joueurs humains actuellement sélectionné.
+
  */
+
 .game-setup__human-count--selected {
   transform: translateY(-1px);
 
@@ -591,6 +945,7 @@
   padding: 0.68rem 1.45rem;
 
   border: 1px solid rgba(224, 177, 93, 0.65);
+
   border-radius: 4px;
 
   background: rgba(86, 34, 31, 0.88);
@@ -598,6 +953,7 @@
   color: #fff8e8;
 
   font: inherit;
+
   font-weight: 700;
 
   white-space: nowrap;
@@ -630,20 +986,28 @@
 }
 
 /*
+
  * Cartes joueurs.
+
  *
+
  * Une géométrie unique est utilisée pour le tirage
+
  * des héros et le lancer des dés.
+
  */
 
 .game-setup__player-rolls {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   gap: clamp(0.55rem, 1.15vw, 1.15rem);
 
   width: 100%;
+
   max-width: 1180px;
 
   min-width: 0;
@@ -661,6 +1025,7 @@
   flex: 0 1 clamp(160px, 15vw, 194px);
 
   width: clamp(160px, 15vw, 194px);
+
   height: clamp(256px, 36vh, 310px);
 
   min-width: 0;
@@ -676,6 +1041,7 @@
   overflow: visible;
 
   border: 1px solid rgba(224, 177, 93, 0.3);
+
   border-radius: 7px;
 
   background: linear-gradient(180deg, rgba(30, 23, 27, 0.5), rgba(17, 13, 16, 0.42));
@@ -691,15 +1057,19 @@
 
 .game-setup__player-roll-title {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   width: 100%;
+
   height: 30px;
 
   color: #f0cf8a;
 
   font-size: 0.9rem;
+
   line-height: 1.2;
 
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
@@ -711,13 +1081,17 @@
   box-sizing: border-box;
 
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   width: 100%;
+
   height: 100%;
 
   min-width: 0;
+
   min-height: 0;
 
   padding: 3px 0 5px;
@@ -726,9 +1100,11 @@
     display: block;
 
     width: auto;
+
     height: 100%;
 
     max-width: 100%;
+
     max-height: 100%;
 
     object-fit: contain;
@@ -764,24 +1140,32 @@
 }
 
 /*
+
  * Bouton de lancer centré en bas de la carte.
+
  */
 
 .game-setup__roll-trigger {
   position: absolute;
+
   z-index: 7;
 
   right: auto;
+
   bottom: 9px;
+
   left: 50%;
 
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   box-sizing: border-box;
 
   width: 42px;
+
   height: 42px;
 
   padding: 0;
@@ -789,10 +1173,12 @@
   transform: translateX(-50%);
 
   border: 1px solid rgba(240, 207, 138, 0.92);
+
   border-radius: 50%;
 
   background: radial-gradient(
     circle at 35% 30%,
+
     rgba(119, 63, 48, 0.98),
     rgba(68, 30, 29, 0.98) 72%
   );
@@ -838,6 +1224,7 @@
   display: block;
 
   font-size: 1.45rem;
+
   line-height: 1;
 
   transform: translateY(-1px);
@@ -849,16 +1236,21 @@
   position: absolute;
 
   top: -6px;
+
   right: -5px;
 
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   width: 17px;
+
   height: 17px;
 
   border: 1px solid rgba(240, 207, 138, 0.9);
+
   border-radius: 50%;
 
   background: #3d2221;
@@ -866,26 +1258,35 @@
   color: #f0cf8a;
 
   font-size: 0.75rem;
+
   font-weight: 900;
+
   line-height: 1;
 
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.65);
 }
 
 /*
+
  * Résultat des dés superposé au bas de la carte.
+
  */
 
 .game-setup__roll-overlay {
   position: absolute;
+
   z-index: 6;
 
   right: 7px;
+
   bottom: 8px;
+
   left: 7px;
 
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   box-sizing: border-box;
@@ -895,6 +1296,7 @@
   padding: 7px 5px 6px;
 
   border: 1px solid rgba(224, 177, 93, 0.55);
+
   border-radius: 7px;
 
   background: linear-gradient(180deg, rgba(23, 17, 19, 0.9), rgba(12, 10, 12, 0.97));
@@ -909,7 +1311,9 @@
 .game-setup__dice,
 .game-setup__roll-dice {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   gap: 0.42rem;
@@ -921,12 +1325,15 @@
   flex: 0 0 40px;
 
   width: 40px;
+
   height: 40px;
 
   border: 2px solid rgba(224, 177, 93, 0.88);
+
   border-radius: 8px;
 
   background-color: #f6eedc;
+
   background-repeat: no-repeat;
 
   box-shadow:
@@ -986,8 +1393,11 @@
 
 .game-setup__roll-result {
   display: flex;
+
   flex-direction: column;
+
   align-items: center;
+
   justify-content: center;
 
   gap: 0.25rem;
@@ -997,7 +1407,9 @@
 
 .game-setup__roll-equation {
   display: flex;
+
   align-items: baseline;
+
   justify-content: center;
 
   gap: 0.25rem;
@@ -1005,6 +1417,7 @@
   color: #f4ead6;
 
   font-size: 0.78rem;
+
   font-weight: 700;
 
   white-space: nowrap;
@@ -1019,17 +1432,22 @@
 }
 
 /*
+
  * Bouton iconique du tirage des héros.
+
  */
 
 .game-setup__icon-action {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   box-sizing: border-box;
 
   width: 48px;
+
   height: 48px;
 
   margin-top: 0;
@@ -1037,10 +1455,12 @@
   padding: 0;
 
   border: 1px solid rgba(240, 207, 138, 0.92);
+
   border-radius: 50%;
 
   background: radial-gradient(
     circle at 35% 30%,
+
     rgba(119, 63, 48, 0.98),
     rgba(68, 30, 29, 0.98) 72%
   );
@@ -1048,8 +1468,11 @@
   color: #fff4d7;
 
   font: inherit;
+
   font-size: 1.75rem;
+
   font-weight: 800;
+
   line-height: 1;
 
   cursor: pointer;
@@ -1090,10 +1513,13 @@
 
 .game-setup__drawing-indicator {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   width: 48px;
+
   height: 48px;
 
   margin-top: 0;
@@ -1101,6 +1527,7 @@
   color: #f0cf8a;
 
   font-size: 1.75rem;
+
   line-height: 1;
 
   text-shadow: 0 0 12px rgba(240, 207, 138, 0.55);
@@ -1139,6 +1566,7 @@
   color: #f0cf8a;
 
   font-size: 1rem;
+
   font-weight: 800;
 
   text-shadow: 0 0 10px rgba(224, 177, 93, 0.5);
@@ -1148,6 +1576,7 @@
 
 .game-setup__sparkles {
   position: absolute;
+
   z-index: 8;
 
   inset: -8px;
@@ -1170,6 +1599,7 @@
 
   span:nth-child(1) {
     top: 8%;
+
     left: 12%;
 
     animation-delay: 0ms;
@@ -1177,6 +1607,7 @@
 
   span:nth-child(2) {
     top: 4%;
+
     left: 50%;
 
     animation-delay: 220ms;
@@ -1184,6 +1615,7 @@
 
   span:nth-child(3) {
     top: 12%;
+
     right: 8%;
 
     animation-delay: 440ms;
@@ -1191,6 +1623,7 @@
 
   span:nth-child(4) {
     right: 7%;
+
     bottom: 18%;
 
     animation-delay: 660ms;
@@ -1198,6 +1631,7 @@
 
   span:nth-child(5) {
     bottom: 10%;
+
     left: 48%;
 
     animation-delay: 880ms;
@@ -1205,6 +1639,7 @@
 
   span:nth-child(6) {
     bottom: 22%;
+
     left: 5%;
 
     animation-delay: 1100ms;
@@ -1222,8 +1657,11 @@
 }
 
 /*
+
  * Le translateX(-50%) doit rester présent dans
+
  * toute l'animation pour conserver le bouton centré.
+
  */
 
 @keyframes game-setup-roll-invitation {
@@ -1383,6 +1821,7 @@
     flex-basis: clamp(140px, 16vw, 170px);
 
     width: clamp(140px, 16vw, 170px);
+
     height: clamp(230px, 34vh, 280px);
   }
 }
@@ -1390,10 +1829,12 @@
 @media (max-width: 760px) {
   .game-setup__content {
     width: calc(100% - 1rem);
-    height: calc(100% - 1rem);
+    height: auto;
 
     min-width: 0;
     min-height: 0;
+
+    max-height: calc(100% - 1rem);
   }
 
   .game-setup__progress {
@@ -1469,6 +1910,7 @@
     flex-basis: 124px;
 
     width: 124px;
+
     height: 210px;
 
     grid-template-rows:
@@ -1490,10 +1932,13 @@
 
   .game-setup__roll-trigger {
     right: auto;
+
     bottom: 7px;
+
     left: 50%;
 
     width: 35px;
+
     height: 35px;
   }
 
@@ -1503,7 +1948,9 @@
 
   .game-setup__roll-overlay {
     right: 3px;
+
     bottom: 5px;
+
     left: 3px;
 
     min-height: 64px;
@@ -1515,6 +1962,7 @@
     flex-basis: 34px;
 
     width: 34px;
+
     height: 34px;
   }
 
@@ -1540,14 +1988,18 @@
   .game-setup__icon-action,
   .game-setup__drawing-indicator {
     width: 42px;
+
     height: 42px;
 
     font-size: 1.5rem;
   }
 
   /*
+
  * Configuration locale compacte sur petits écrans.
+
  */
+
   .game-setup__new-game {
     gap: 0.55rem;
   }
@@ -1576,6 +2028,7 @@
 
   .game-setup__human-count {
     width: 29px;
+
     height: 29px;
 
     font-size: 0.75rem;

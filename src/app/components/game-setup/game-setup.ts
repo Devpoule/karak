@@ -21,6 +21,20 @@ import {
 } from '../../services/player.service';
 
 /**
+ * Vue actuellement affichée dans le panneau principal.
+ *
+ * welcome :
+ * écran d'accueil minimal présentant uniquement
+ * l'action permettant de démarrer une partie.
+ *
+ * setup :
+ * parcours complet de préparation de la partie.
+ */
+type SetupView =
+  | 'welcome'
+  | 'setup';
+
+/**
  * États visuels du tirage des héros.
  */
 type HeroDrawState =
@@ -45,6 +59,30 @@ type FirstPlayerResolutionState =
   styleUrl: './game-setup.scss',
 })
 export class GameSetup {
+  /**
+   * Vue initiale du jeu.
+   *
+   * Le panneau principal existe dès l'arrivée sur l'application,
+   * mais son contenu de préparation reste volontairement masqué.
+   *
+   * Le joueur découvre d'abord uniquement l'action "Jouer".
+   */
+  readonly setupView =
+    signal<SetupView>('welcome');
+
+  /**
+   * Ouvre la préparation d'une nouvelle partie.
+   *
+   * Aucun changement de route n'est nécessaire :
+   * l'écran d'accueil et le SETUP appartiennent au même composant.
+   *
+   * Le passage de "welcome" à "setup" déclenche l'animation
+   * d'apparition définie dans game-setup.scss.
+   */
+  startNewGame(): void {
+    this.setupView.set('setup');
+  }
+
   // ==========================================================
   // CONFIGURATION DES JOUEURS
   // ==========================================================
