@@ -1,10 +1,12 @@
 import { Component } from '@angular/core';
-import { HERO_DEFINITIONS } from '../../data/hero-definitions';
+import { getHeroDefinition } from '../../data/hero-definitions';
 import { HeroDefinition } from '../../models/hero';
+import { Player } from '../../models/player';
 import { PlayerService } from '../../services/player.service';
 import { DungeonService } from '../../services/dungeon.service';
 import { TurnService } from '../../services/turn.service';
 import { ExplorationService, PendingTilePlacement } from '../../services/exploration.service';
+import { GameService } from '../../services/game.service';
 
 import { Direction, PlacedTile, TileDefinition } from '../../models/tile';
 
@@ -35,6 +37,7 @@ export class Board {
     private readonly explorationService: ExplorationService,
     private readonly playerService: PlayerService,
     private readonly turnService: TurnService,
+    readonly gameService: GameService,
   ) {}
 
   // ==========================================================
@@ -116,6 +119,17 @@ export class Board {
    */
   readonly mapCenterInPixels = this.mapSizeInPixels / 2;
 
+  /**
+   * Les contrôles de déplacement existent déjà dans le prototype
+   * du plateau, mais cette tranche doit uniquement stabiliser
+   * l'affichage initial de l'aventure.
+   *
+   * Le drapeau permet donc de neutraliser temporairement les clics
+   * de déplacement et d'exploration sans supprimer le code existant,
+   * qui sera repris dans la tranche dédiée aux mouvements.
+   */
+  readonly movementControlsEnabled = false;
+
   // ==========================================================
   // DONJON AFFICHÉ
   // ==========================================================
@@ -139,38 +153,159 @@ export class Board {
   }
 
   // ==========================================================
-  // JOUEUR AFFICHÉ
+  // JOUEURS AFFICHÉS
   // ==========================================================
 
   /**
-   * État actuel du joueur.
+   * Joueurs réels de la partie.
    *
-   * PlayerService reste la source de vérité de cet état.
+   * IMPORTANT :
+   *
+   * Board n'utilise plus PlayerService.player, qui reste un état
+   * temporaire du prototype. Le plateau représente désormais les
+   * participants préparés par le SETUP dans PlayerService.players.
    */
-  get player() {
-    return this.playerService.player;
+  get players(): readonly Player[] {
+    return this.playerService.players;
   }
 
   /**
-   * Définition statique du héros actuellement utilisé
-   * par le joueur.
+   * Joueurs pouvant être rendus sur le plateau.
+   *
+   * Un joueur devient visible lorsqu'il possède à la fois :
+   *
+   * - un héros tiré ;
+   * - une position métier dans le donjon.
    */
-  get heroDefinition(): HeroDefinition | undefined {
-    return HERO_DEFINITIONS.find((hero) => hero.id === this.player.heroId);
+  get boardPlayers(): readonly Player[] {
+    return this.players.filter(
+      (player) =>
+        Boolean(player.heroId)
+        && Boolean(player.position),
+    );
+  }
+
+  /**
+   * Définition statique du héros attribué au joueur.
+   */
+  getHeroDefinition(
+    player: Player,
+  ): HeroDefinition | undefined {
+    if (!player.heroId) {
+      return undefined;
+    }
+
+    return getHeroDefinition(
+      player.heroId,
+    );
   }
 
   /**
    * Asset du pion correspondant à l'orientation actuelle
-   * du héros.
+   * du héros du joueur.
    */
-  get heroPawnImage(): string | undefined {
-    const facing = this.player.facing;
-
-    if (!facing) {
+  getHeroPawnImage(
+    player: Player,
+  ): string | undefined {
+    if (!player.facing) {
       return undefined;
     }
 
-    return this.heroDefinition?.pawn[facing];
+    return this.getHeroDefinition(player)
+      ?.pawn[player.facing];
+  }
+
+  /**
+   * Indique si le joueur rendu est le joueur actif.
+   */
+  isActivePlayer(
+    playerIndex: number,
+  ): boolean {
+    return (
+      this.gameService.activePlayerIndex()
+      === playerIndex
+    );
+  }
+
+  /**
+   * Calcule la position visuelle d'un pion au sein de sa tuile.
+   *
+   * Les coordonnées métier du joueur ne sont jamais modifiées :
+   * plusieurs joueurs peuvent tous conserver position = { x: 0, y: 0 }.
+   *
+   * Le décalage retourné sert uniquement au rendu afin que 2 à 5
+   * héros présents sur la même tuile restent identifiables.
+   */
+  getPlayerTileOffset(
+    playerIndex: number,
+  ): { x: number; y: number } {
+    const player =
+      this.players[playerIndex];
+
+    const position = player?.position;
+
+    if (!position) {
+      return {
+        x: 0,
+        y: 0,
+      };
+    }
+
+    const playersOnSameTile =
+      this.players
+        .map((candidate, index) => ({
+          candidate,
+          index,
+        }))
+        .filter(({ candidate }) =>
+          candidate.position?.x === position.x
+          && candidate.position?.y === position.y
+          && Boolean(candidate.heroId),
+        );
+
+    const localIndex =
+      playersOnSameTile.findIndex(
+        ({ index }) =>
+          index === playerIndex,
+      );
+
+    const offsetsByCount: Record<
+      number,
+      { x: number; y: number }[]
+    > = {
+      1: [
+        { x: 0, y: 0 },
+      ],
+      2: [
+        { x: -18, y: 0 },
+        { x: 18, y: 0 },
+      ],
+      3: [
+        { x: 0, y: -18 },
+        { x: -20, y: 16 },
+        { x: 20, y: 16 },
+      ],
+      4: [
+        { x: -20, y: -18 },
+        { x: 20, y: -18 },
+        { x: -20, y: 18 },
+        { x: 20, y: 18 },
+      ],
+      5: [
+        { x: 0, y: -22 },
+        { x: -22, y: -6 },
+        { x: 22, y: -6 },
+        { x: -15, y: 20 },
+        { x: 15, y: 20 },
+      ],
+    };
+
+    return (
+      offsetsByCount[
+        playersOnSameTile.length
+      ]?.[localIndex]
+      ?? { x: 0, y: 0 }
+    );
   }
 
   // ==========================================================
@@ -264,7 +399,14 @@ export class Board {
    * est physiquement connectée à la position actuelle du joueur.
    */
   movePlayer(direction: Direction): void {
-    const position = this.player.position;
+    if (!this.movementControlsEnabled) {
+      return;
+    }
+
+    const player =
+      this.gameService.activePlayer;
+
+    const position = player?.position;
 
     if (!position) {
       return;
@@ -308,7 +450,14 @@ export class Board {
    * deux actions indépendantes.
    */
   handlePlayerDirection(direction: Direction): void {
-    const position = this.player.position;
+    if (!this.movementControlsEnabled) {
+      return;
+    }
+
+    const player =
+      this.gameService.activePlayer;
+
+    const position = player?.position;
 
     if (!position) {
       return;
@@ -337,7 +486,10 @@ export class Board {
    * Tuile actuellement occupée par le joueur.
    */
   get playerTile(): PlacedTile | undefined {
-    const position = this.player.position;
+    const player =
+      this.gameService.activePlayer;
+
+    const position = player?.position;
 
     if (!position) {
       return undefined;

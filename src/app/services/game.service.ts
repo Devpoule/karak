@@ -5,6 +5,7 @@ import { Player } from '../models/player';
 import { DungeonService } from './dungeon.service';
 import { PlayerService } from './player.service';
 import { TileDeckService } from './tile-deck.service';
+import { TurnService } from './turn.service';
 
 /**
  * Résultat du lancer effectué par un joueur
@@ -59,10 +60,25 @@ export class GameService {
   readonly firstPlayerIndex =
     signal<number | null>(null);
 
+  /**
+   * Index du joueur dont le tour est actuellement actif.
+   *
+   * Pendant le SETUP, aucun joueur ne joue encore réellement :
+   * la valeur reste donc null.
+   *
+   * Au démarrage de l'aventure, cette valeur reprend exactement
+   * le gagnant du lancer de dés conservé dans firstPlayerIndex.
+   * GameService devient ainsi la source de vérité de l'identité
+   * du joueur actif, sans recalculer le premier joueur.
+   */
+  readonly activePlayerIndex =
+    signal<number | null>(null);
+
   constructor(
     private readonly dungeonService: DungeonService,
     private readonly tileDeckService: TileDeckService,
     private readonly playerService: PlayerService,
+    private readonly turnService: TurnService,
   ) {}
 
   /**
@@ -77,6 +93,7 @@ export class GameService {
     this.firstPlayerRolls.set([]);
     this.firstPlayerContenders.set([]);
     this.firstPlayerIndex.set(null);
+    this.activePlayerIndex.set(null);
 
     this.initializeDungeon();
     this.initializeTileDeck();
@@ -314,6 +331,45 @@ export class GameService {
   }
 
   /**
+   * Démarre réellement l'aventure après la préparation.
+   *
+   * Cette transition est volontairement stricte :
+   *
+   * - la partie doit encore être en phase SETUP ;
+   * - le SETUP doit être arrivé à la détermination du premier joueur ;
+   * - un vainqueur doit déjà avoir été désigné.
+   *
+   * La méthode ne relance aucun dé et ne recalcule aucun ordre :
+   * elle transforme simplement le vainqueur du SETUP en joueur actif.
+   *
+   * Les héros sont replacés sur la tuile Départ afin de garantir
+   * un état initial stable même si l'interface appelle cette transition
+   * après une animation ou une future reprise d'état.
+   */
+  startAdventure(): void {
+    if (this.phase() !== 'setup') return;
+    if (this.setupStep() !== 'first-player-roll') return;
+
+    const firstPlayerIndex =
+      this.firstPlayerIndex();
+
+    if (firstPlayerIndex === null) {
+      return;
+    }
+
+    this.playerService.placeHeroesOnStart();
+    this.ensureStartTileExists();
+
+    this.activePlayerIndex.set(
+      firstPlayerIndex,
+    );
+
+    this.turnService.resetMovements();
+
+    this.phase.set('playing');
+  }
+
+  /**
    * Retourne la valeur d'un dé classique à six faces.
    */
   private rollDie(): number {
@@ -338,6 +394,27 @@ export class GameService {
   }
 
   /**
+   * Garantit que le donjon possède bien sa tuile de départ.
+   *
+   * DungeonService.initialize() est déjà appelé au début d'une
+   * nouvelle partie. On évite donc de le rappeler tant que la
+   * tuile Départ existe, car une réinitialisation complète
+   * détruirait les futures tuiles explorées.
+   */
+  private ensureStartTileExists(): void {
+    const startTile =
+      this.dungeonService.getTileAt(0, 0);
+
+    if (
+      startTile?.definitionId === 'start'
+    ) {
+      return;
+    }
+
+    this.dungeonService.initialize();
+  }
+
+  /**
    * Nombre de joueurs actuellement préparés.
    *
    * Ce nombre comprend les joueurs humains et les IA.
@@ -354,5 +431,24 @@ export class GameService {
    */
   get players(): readonly Player[] {
     return this.playerService.players;
+  }
+
+  /**
+   * Joueur actuellement actif, lorsqu'une aventure est en cours.
+   */
+  get activePlayer(): Player | null {
+    const activePlayerIndex =
+      this.activePlayerIndex();
+
+    if (activePlayerIndex === null) {
+      return null;
+    }
+
+    return (
+      this.playerService.players[
+        activePlayerIndex
+      ]
+      ?? null
+    );
   }
 }

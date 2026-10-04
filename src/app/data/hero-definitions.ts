@@ -54,10 +54,10 @@ export const HERO_DEFINITIONS: readonly HeroDefinition[] = [
     card: `${ASSET_PATHS.characters.cards}/horan.jpg`,
 
     pawn: {
-      north: `${ASSET_PATHS.characters.pawns}/horan_pawn_front.jpg`,
-      east: `${ASSET_PATHS.characters.pawns}/horan_pawn_right.jpg`,
-      south: `${ASSET_PATHS.characters.pawns}/horan_pawn_back.jpg`,
-      west: `${ASSET_PATHS.characters.pawns}/horan_pawn_left.jpg`,
+      north: `${ASSET_PATHS.characters.pawns}/horan_pawn_north.png`,
+      east: `${ASSET_PATHS.characters.pawns}/horan_pawn_east.png`,
+      south: `${ASSET_PATHS.characters.pawns}/horan_pawn_south.png`,
+      west: `${ASSET_PATHS.characters.pawns}/horan_pawn_west.png`,
     },
   },
   {
@@ -80,10 +80,10 @@ export const HERO_DEFINITIONS: readonly HeroDefinition[] = [
     card: `${ASSET_PATHS.characters.cards}/victorius.jpg`,
 
     pawn: {
-      north: `${ASSET_PATHS.characters.pawns}/victorius_pawn_front.jpg`,
-      east: `${ASSET_PATHS.characters.pawns}/victorius_pawn_right.jpg`,
-      south: `${ASSET_PATHS.characters.pawns}/victorius_pawn_back.jpg`,
-      west: `${ASSET_PATHS.characters.pawns}/victorius_pawn_left.jpg`,
+      north: `${ASSET_PATHS.characters.pawns}/victorius_pawn_north.png`,
+      east: `${ASSET_PATHS.characters.pawns}/victorius_pawn_east.png`,
+      south: `${ASSET_PATHS.characters.pawns}/victorius_pawn_south.png`,
+      west: `${ASSET_PATHS.characters.pawns}/victorius_pawn_west.png`,
     },
   },
   {

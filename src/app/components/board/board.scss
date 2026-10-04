@@ -201,6 +201,17 @@
     left 500ms ease-in-out,
     top 500ms ease-in-out;
 
+  /*
+   * Plusieurs joueurs peuvent occuper la même tuile métier.
+   * Le décalage ci-dessous est uniquement visuel : il permet
+   * de distinguer les pions sans modifier leurs coordonnées
+   * dans le donjon.
+   */
+  transform: translate(
+    var(--hero-offset-x, 0),
+    var(--hero-offset-y, 0)
+  );
+
   img {
     display: block;
 
@@ -219,6 +230,31 @@
     filter: drop-shadow(1px 0 1px rgba(0, 0, 0, 0.95)) drop-shadow(-1px 0 1px rgba(0, 0, 0, 0.95))
       drop-shadow(0 1px 1px rgba(0, 0, 0, 0.95)) drop-shadow(0 -1px 1px rgba(0, 0, 0, 0.95))
       drop-shadow(0 4px 3px rgba(0, 0, 0, 0.75));
+  }
+}
+
+/*
+ * Indicateur discret du joueur actif.
+ *
+ * GameService.activePlayerIndex reste la source de vérité ;
+ * le halo ne fait que rendre cette information lisible sur
+ * le plateau initial.
+ */
+.board__hero--active {
+  &::after {
+    content: '';
+
+    position: absolute;
+    inset: 14%;
+
+    border: 2px solid rgba(245, 213, 138, 0.95);
+    border-radius: 50%;
+
+    box-shadow:
+      0 0 8px rgba(245, 213, 138, 0.75),
+      0 0 18px rgba(190, 117, 55, 0.55);
+
+    pointer-events: none;
   }
 }
 
