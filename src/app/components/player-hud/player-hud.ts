@@ -9,35 +9,23 @@ import { PlayerSidebar } from '../player-sidebar/player-sidebar';
 
 
 /**
- * Représente un joueur secondaire accessible depuis les onglets
- * du panneau droit.
- *
- * `playerIndex` correspond à l'index réel du joueur dans
- * PlayerService.players :
- *
- * 0 = J1
- * 1 = J2
- * ...
- */
-interface OpponentTab {
-  player: Player;
-  playerIndex: number;
-}
-
-
-/**
  * HUD principal de la partie.
  *
- * RÈGLE D'AFFICHAGE :
+ * ORGANISATION :
  *
- * - le panneau gauche représente toujours J1 ;
- * - le panneau droit représente J2, J3, J4 ou J5 ;
- * - lorsqu'il existe plusieurs joueurs secondaires, ils sont
- *   accessibles individuellement grâce aux onglets du panneau droit ;
- * - le joueur actif ne détermine pas quel panneau est affiché.
+ * - J1 ouvre sa fiche sur le côté gauche ;
+ * - J2 à J5 partagent une fiche sur le côté droit ;
+ * - les commandes des joueurs sont regroupées autour
+ *   du compteur de mouvements ;
+ * - consulter une fiche ne modifie jamais le joueur actif.
  *
- * L'identité d'un panneau et le joueur dont c'est le tour sont
- * volontairement deux notions différentes.
+ * IMPORTANT :
+ *
+ * Le joueur affiché dans le panneau droit est mémorisé même
+ * lorsque le panneau est fermé.
+ *
+ * Cela permet de conserver son contenu pendant toute
+ * l'animation de repli.
  */
 @Component({
   selector: 'app-player-hud',
@@ -51,19 +39,29 @@ interface OpponentTab {
 export class PlayerHud {
 
   /**
-   * Index du joueur actuellement consulté dans le panneau droit.
-   *
-   * J2 est sélectionné par défaut.
+   * État d'ouverture de la fiche de J1.
    */
-  selectedOpponentIndex = 1;
+  leftPanelOpen = false;
 
 
   /**
-   * Les panneaux sont repliés au lancement afin de laisser
-   * un maximum d'espace au donjon.
+   * État d'ouverture du panneau droit.
+   *
+   * Cet état est volontairement indépendant du joueur
+   * actuellement mémorisé dans ce panneau.
    */
-  leftCollapsed = true;
-  rightCollapsed = true;
+  rightPanelOpen = false;
+
+
+  /**
+   * Joueur actuellement associé au panneau droit.
+   *
+   * J2 est mémorisé par défaut afin que le panneau dispose
+   * toujours d'un contenu lorsqu'il doit être animé.
+   *
+   * La présence réelle de J2 reste vérifiée avant affichage.
+   */
+  rightPlayerIndex = 1;
 
 
   constructor(
@@ -72,101 +70,124 @@ export class PlayerHud {
   ) {}
 
 
+  // ==========================================================
+  // JOUEURS
+  // ==========================================================
+
   /**
-   * J1 occupe toujours le panneau gauche.
+   * Tous les joueurs participant réellement à la partie.
    *
-   * Le panneau ne suit donc jamais activePlayer.
+   * 0 = J1
+   * 1 = J2
+   * 2 = J3
+   * 3 = J4
+   * 4 = J5
+   */
+  get players(): Player[] {
+    return this.playerService.players;
+  }
+
+
+  /**
+   * J1 possède toujours la fiche gauche.
    */
   get playerOne(): Player | null {
-    return this.playerService.players[0] ?? null;
+    return this.players[0] ?? null;
   }
 
 
   /**
-   * Joueurs disponibles dans le panneau droit.
+   * Joueur mémorisé dans la fiche droite.
    *
-   * J1 est volontairement exclu puisqu'il possède son propre
-   * panneau permanent à gauche.
+   * La fiche peut être fermée tout en conservant ce joueur,
+   * ce qui permet au contenu de rester visible pendant
+   * l'animation de repli.
    */
-  get opponents(): OpponentTab[] {
-    return this.playerService.players
-      .slice(1)
-      .map((player, index) => ({
-        player,
-        playerIndex: index + 1,
-      }));
-  }
-
-
-  /**
-   * Joueur actuellement présenté dans le panneau droit.
-   *
-   * Si l'index sélectionné n'existe plus pour une raison quelconque,
-   * le premier adversaire disponible est utilisé sans créer
-   * de nouvel état métier.
-   */
-  get selectedOpponent(): Player | null {
-    return (
-      this.playerService.players[this.selectedOpponentIndex]
-      ?? this.opponents[0]?.player
-      ?? null
-    );
-  }
-
-
-  /**
-   * Index réellement représenté dans le panneau droit.
-   *
-   * Ce helper permet de garder l'onglet correct sélectionné même
-   * lorsqu'un fallback vers le premier adversaire est nécessaire.
-   */
-  get displayedOpponentIndex(): number | null {
-    if (this.playerService.players[this.selectedOpponentIndex]) {
-      return this.selectedOpponentIndex;
-    }
-
-    return this.opponents[0]?.playerIndex ?? null;
+  get rightPlayer(): Player | null {
+    return this.players[this.rightPlayerIndex] ?? null;
   }
 
 
   /**
    * Index du joueur dont c'est actuellement le tour.
-   *
-   * Cette information sert uniquement à la mise en évidence visuelle.
    */
   get activePlayerIndex(): number | null {
     return this.gameService.activePlayerIndex();
   }
 
 
+  // ==========================================================
+  // FICHE GAUCHE
+  // ==========================================================
+
   /**
-   * Sélectionne le joueur affiché dans le panneau droit.
+   * Ouvre ou ferme la fiche de J1.
    */
-  selectOpponent(playerIndex: number): void {
-    if (!this.playerService.players[playerIndex]) {
+  togglePlayerOne(): void {
+    this.leftPanelOpen = !this.leftPanelOpen;
+  }
+
+
+  // ==========================================================
+  // FICHE DROITE
+  // ==========================================================
+
+  /**
+   * Ouvre, ferme ou change le joueur présenté dans
+   * le panneau droit.
+   *
+   * Cas 1 :
+   * le panneau est fermé.
+   * -> le joueur demandé est mémorisé puis le panneau s'ouvre.
+   *
+   * Cas 2 :
+   * le même joueur est déjà affiché.
+   * -> le panneau se ferme mais conserve son contenu afin que
+   *    l'animation de sortie reste entièrement visible.
+   *
+   * Cas 3 :
+   * un autre joueur est demandé pendant que le panneau est ouvert.
+   * -> le contenu change directement sans fermer le panneau.
+   */
+  toggleRightPlayer(playerIndex: number): void {
+    if (
+      playerIndex < 1
+      || playerIndex >= this.players.length
+    ) {
       return;
     }
 
-    this.selectedOpponentIndex = playerIndex;
+    if (
+      this.rightPanelOpen
+      && this.rightPlayerIndex === playerIndex
+    ) {
+      this.rightPanelOpen = false;
+      return;
+    }
 
-    /*
-     * Cliquer sur un onglet constitue également une intention
-     * explicite de consulter cette fiche.
-     */
-    this.rightCollapsed = false;
+    this.rightPlayerIndex = playerIndex;
+    this.rightPanelOpen = true;
   }
 
 
   /**
-   * Retourne la couleur UI stable associée à J1...J5.
-   *
-   * La configuration visuelle reste centralisée dans
-   * player-ui.constants.ts et n'est jamais stockée dans Player.
+   * Indique si la fiche correspondant au joueur est ouverte.
    */
-  getPlayerColor(playerIndex: number): string {
-    return getPlayerUiConfig(playerIndex).color;
+  isPlayerPanelOpen(playerIndex: number): boolean {
+    if (playerIndex === 0) {
+      return this.leftPanelOpen;
+    }
+
+    return (
+      this.rightPanelOpen
+      && this.rightPlayerIndex === playerIndex
+    );
   }
 
+
+  // ==========================================================
+  // ÉTAT DU TOUR
+  // ==========================================================
 
   /**
    * Indique si le joueur correspondant joue actuellement.
@@ -176,18 +197,14 @@ export class PlayerHud {
   }
 
 
-  /**
-   * Déplie ou replie le panneau de J1.
-   */
-  toggleLeft(): void {
-    this.leftCollapsed = !this.leftCollapsed;
-  }
-
+  // ==========================================================
+  // IDENTITÉ VISUELLE
+  // ==========================================================
 
   /**
-   * Déplie ou replie le panneau des autres joueurs.
+   * Retourne la couleur UI stable associée à J1...J5.
    */
-  toggleRight(): void {
-    this.rightCollapsed = !this.rightCollapsed;
+  getPlayerColor(playerIndex: number): string {
+    return getPlayerUiConfig(playerIndex).color;
   }
 }

@@ -250,31 +250,17 @@
 /*
  * Marqueurs des joueurs partageant la tuile du pion principal.
  *
- * Ils restent volontairement légers : un trait fin relie la tuile
- * au libellé Jx, coloré avec l'identité visuelle stable du joueur.
+ * Chaque joueur secondaire est représenté uniquement par son badge
+ * Jx et sa couleur d'identité afin de préserver la lisibilité
+ * visuelle de la tuile et du héros.
  */
 .board__player-marker {
   position: absolute;
   z-index: 6;
 
-  display: flex;
-  align-items: center;
-  gap: 3px;
-
   transform: translate(-50%, -50%);
 
   pointer-events: none;
-}
-
-.board__player-marker-line {
-  display: block;
-
-  width: 13px;
-  height: 1px;
-
-  background: var(--marker-color);
-
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
 }
 
 .board__player-marker-label {

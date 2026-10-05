@@ -1,21 +1,16 @@
 <div class="player-hud">
 
   <!-- =====================================================
-       JOUEUR 1 — PANNEAU GAUCHE
-       =====================================================
-
-       J1 possède toujours le panneau gauche.
-
-       Le contenu de cette fiche ne dépend pas du joueur actif.
-       Si J2 joue, J1 reste affiché ici.
+       FICHE GAUCHE — J1
        ===================================================== -->
 
-  <aside
-    class="player-hud__side player-hud__side--left"
-    [class.player-hud__side--collapsed]="leftCollapsed"
-    [class.player-hud__side--active]="isActivePlayer(0)"
-  >
-    @if (playerOne; as player) {
+  @if (playerOne; as player) {
+    <aside
+      class="player-hud__side player-hud__side--left"
+      [class.player-hud__side--open]="leftPanelOpen"
+      [class.player-hud__side--active]="isActivePlayer(0)"
+      [attr.aria-hidden]="!leftPanelOpen"
+    >
       <app-player-sidebar
         side="left"
         [player]="player"
@@ -23,94 +18,24 @@
         [showInventory]="true"
         [showMessage]="true"
       />
-    }
-
-    <!-- Identité permanente du panneau gauche -->
-    <div
-      class="player-hud__player-badge player-hud__player-badge--left"
-      [class.player-hud__player-badge--active]="isActivePlayer(0)"
-      [style.--player-color]="getPlayerColor(0)"
-      aria-label="Joueur 1"
-    >
-      J1
-    </div>
-
-    <!-- Replier / déplier J1 -->
-    <button
-      class="player-hud__collapse-button player-hud__collapse-button--left"
-      type="button"
-      [attr.aria-label]="
-        leftCollapsed
-          ? 'Déplier le panneau du joueur 1'
-          : 'Replier le panneau du joueur 1'
-      "
-      (click)="toggleLeft()"
-    >
-      {{ leftCollapsed ? '›' : '‹' }}
-    </button>
-  </aside>
+    </aside>
+  }
 
 
   <!-- =====================================================
-       JOUEURS 2 À 5 — PANNEAU DROIT
-       =====================================================
-
-       Un seul panneau complet est affiché.
-
-       Les onglets permettent de consulter individuellement
-       J2, J3, J4 et J5 lorsque ces joueurs existent.
+       FICHE DROITE — J2 À J5
        ===================================================== -->
 
-  @if (opponents.length > 0) {
+  @if (players.length > 1) {
     <aside
       class="player-hud__side player-hud__side--right"
-      [class.player-hud__side--collapsed]="rightCollapsed"
+      [class.player-hud__side--open]="rightPanelOpen"
       [class.player-hud__side--active]="
-        displayedOpponentIndex !== null
-        && isActivePlayer(displayedOpponentIndex)
+        isActivePlayer(rightPlayerIndex)
       "
+      [attr.aria-hidden]="!rightPanelOpen"
     >
-
-      <!-- =================================================
-           ONGLETS DES JOUEURS SECONDAIRES
-           ================================================= -->
-
-      <nav
-        class="player-hud__opponent-tabs"
-        aria-label="Autres joueurs"
-      >
-        @for (opponent of opponents; track opponent.playerIndex) {
-          <button
-            class="player-hud__opponent-tab"
-            type="button"
-            [class.player-hud__opponent-tab--selected]="
-              displayedOpponentIndex === opponent.playerIndex
-            "
-            [class.player-hud__opponent-tab--active]="
-              isActivePlayer(opponent.playerIndex)
-            "
-            [style.--player-color]="
-              getPlayerColor(opponent.playerIndex)
-            "
-            [attr.aria-label]="
-              'Afficher le joueur ' + (opponent.playerIndex + 1)
-            "
-            [attr.aria-pressed]="
-              displayedOpponentIndex === opponent.playerIndex
-            "
-            (click)="selectOpponent(opponent.playerIndex)"
-          >
-            J{{ opponent.playerIndex + 1 }}
-          </button>
-        }
-      </nav>
-
-
-      <!-- =================================================
-           FICHE DU JOUEUR SÉLECTIONNÉ
-           ================================================= -->
-
-      @if (selectedOpponent; as player) {
+      @if (rightPlayer; as player) {
         <app-player-sidebar
           side="right"
           [player]="player"
@@ -119,32 +44,117 @@
           [showMessage]="true"
         />
       }
-
-
-      <!-- Replier / déplier le panneau droit -->
-      <button
-        class="player-hud__collapse-button player-hud__collapse-button--right"
-        type="button"
-        [attr.aria-label]="
-          rightCollapsed
-            ? 'Déplier le panneau des autres joueurs'
-            : 'Replier le panneau des autres joueurs'
-        "
-        (click)="toggleRight()"
-      >
-        {{ rightCollapsed ? '‹' : '›' }}
-      </button>
-
     </aside>
   }
 
 
   <!-- =====================================================
-       MOUVEMENTS DU TOUR
+       COMMANDES DU TOUR
+       =====================================================
+
+       Chaque joueur est représenté par une seule languette
+       en pierre.
+
+       Le chevron indique l'état de sa fiche :
+       ▲ fiche fermée
+       ▼ fiche ouverte
+
+       La couleur du joueur reste présente sous la forme
+       d'un liseré discret.
        ===================================================== -->
 
-  <div class="player-hud__movements">
-    <app-movement-counter />
+  <div class="player-hud__turn-controls">
+
+    <!-- J1 -->
+
+    @if (playerOne) {
+      <button
+        class="player-hud__player-control"
+        type="button"
+        [class.player-hud__player-control--open]="
+          isPlayerPanelOpen(0)
+        "
+        [class.player-hud__player-control--active]="
+          isActivePlayer(0)
+        "
+        [style.--player-color]="getPlayerColor(0)"
+        [attr.aria-label]="
+          leftPanelOpen
+            ? 'Fermer la fiche du joueur 1'
+            : 'Afficher la fiche du joueur 1'
+        "
+        [attr.aria-pressed]="leftPanelOpen"
+        (click)="togglePlayerOne()"
+      >
+        <span
+          class="player-hud__player-chevron"
+          aria-hidden="true"
+        >
+          {{ leftPanelOpen ? '▼' : '▲' }}
+        </span>
+
+        <span class="player-hud__player-label">
+          J1
+        </span>
+      </button>
+    }
+
+
+    <!-- MOUVEMENTS -->
+
+    <div class="player-hud__movements">
+      <app-movement-counter />
+    </div>
+
+
+    <!-- J2 À J5 -->
+
+    <div class="player-hud__opponents">
+      @for (
+        player of players.slice(1);
+        track $index;
+        let playerIndex = $index
+      ) {
+        <button
+          class="player-hud__player-control"
+          type="button"
+          [class.player-hud__player-control--open]="
+            isPlayerPanelOpen(playerIndex + 1)
+          "
+          [class.player-hud__player-control--active]="
+            isActivePlayer(playerIndex + 1)
+          "
+          [style.--player-color]="
+            getPlayerColor(playerIndex + 1)
+          "
+          [attr.aria-label]="
+            isPlayerPanelOpen(playerIndex + 1)
+              ? 'Fermer la fiche du joueur ' + (playerIndex + 2)
+              : 'Afficher la fiche du joueur ' + (playerIndex + 2)
+          "
+          [attr.aria-pressed]="
+            isPlayerPanelOpen(playerIndex + 1)
+          "
+          (click)="toggleRightPlayer(playerIndex + 1)"
+        >
+          <span
+            class="player-hud__player-chevron"
+            aria-hidden="true"
+          >
+            {{
+              isPlayerPanelOpen(playerIndex + 1)
+                ? '▼'
+                : '▲'
+            }}
+          </span>
+
+          <span class="player-hud__player-label">
+            J{{ playerIndex + 2 }}
+          </span>
+        </button>
+      }
+    </div>
+
   </div>
 
 </div>
