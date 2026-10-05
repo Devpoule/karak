@@ -4,19 +4,35 @@ import { Player } from '../../models/player';
 
 
 /**
- * Affiche le plateau visuel des points de vie d'un joueur.
+ * Nombre maximal de points de vie d'un héros.
  *
- * Le composant conserve l'asset correspondant au plateau de vie,
- * mais la valeur affichée provient désormais du vrai joueur actif.
+ * Cette constante concerne uniquement la représentation actuelle
+ * du plateau de vie. La valeur courante reste stockée dans
+ * `Player.lives`, qui demeure l'unique source de vérité métier.
+ */
+const MAX_LIVES = 5;
+
+
+/**
+ * Représentation d'un emplacement du plateau de vie.
+ */
+interface LifeSlot {
+  index: number;
+  active: boolean;
+}
+
+
+/**
+ * Affiche les points de vie d'un joueur.
  *
- * Il ne gère pas encore :
+ * Le plateau physique de Karak comporte cinq emplacements.
+ * Chaque emplacement reçoit :
  *
- * - la perte de points de vie ;
- * - la guérison ;
- * - le positionnement des marqueurs de vie.
+ * - un marqueur de vie lorsque le PV est disponible ;
+ * - un marqueur de mort lorsque le PV est perdu.
  *
- * Ces éléments seront ajoutés lorsque l'état du joueur
- * et du héros sera implémenté.
+ * Le composant ne possède aucun état de vie indépendant :
+ * il traduit uniquement `Player.lives` en représentation visuelle.
  */
 @Component({
   imports: [],
@@ -25,14 +41,39 @@ import { Player } from '../../models/player';
   templateUrl: './life-panel.html',
 })
 export class LifePanel {
+
   /**
    * Joueur dont les points de vie sont représentés.
-   *
-   * Player.lives reste l'unique source de vérité métier.
    */
   @Input() player: Player | null = null;
 
+
+  /**
+   * Nombre actuel de points de vie.
+   *
+   * La valeur est bornée entre 0 et MAX_LIVES afin que le HUD
+   * reste robuste face à un état temporairement incohérent.
+   */
   get lives(): number {
-    return this.player?.lives ?? 0;
+    const lives = this.player?.lives ?? 0;
+
+    return Math.max(
+      0,
+      Math.min(MAX_LIVES, lives),
+    );
+  }
+
+
+  /**
+   * Les cinq emplacements physiques du plateau de vie.
+   */
+  get lifeSlots(): LifeSlot[] {
+    return Array.from(
+      { length: MAX_LIVES },
+      (_, index) => ({
+        index,
+        active: index < this.lives,
+      }),
+    );
   }
 }

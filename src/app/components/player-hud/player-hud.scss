@@ -5,7 +5,6 @@
   height: 100%;
 }
 
-
 /* ==========================================================
    HUD
    ========================================================== */
@@ -14,13 +13,21 @@
   /*
    * Largeur commune des fiches joueurs.
    *
-   * Elle dépend en partie de la hauteur de l'écran car les
-   * images des panneaux conservent leur ratio.
+   * Les assets du HUD conservent leur ratio ; la hauteur du
+   * viewport participe donc naturellement à la largeur utile.
    */
-  --sidebar-width: clamp(200px, 23vh, 320px);
 
   /*
-   * Distance entre une fiche joueur et le bord de l'écran.
+  * Les panneaux doivent rester secondaires par rapport au donjon.
+  *
+  * Leur largeur est principalement liée à la hauteur disponible afin
+  * de conserver les proportions des plateaux Karak, mais elle est
+  * volontairement plafonnée pour éviter qu'ils envahissent l'écran.
+  */
+  --sidebar-width: clamp(150px, 18vh, 220px);
+
+  /*
+   * Distance entre une fiche joueur et le bord du viewport.
    */
   --sidebar-edge: 1.25rem;
 
@@ -30,9 +37,8 @@
   height: 100%;
 }
 
-
 /* ==========================================================
-   PANNEAUX JOUEURS — comportement commun
+   PANNEAUX JOUEURS
    ========================================================== */
 
 .player-hud__side {
@@ -46,75 +52,225 @@
   box-sizing: border-box;
 
   /*
-   * Animation utilisée lors du repli et du dépliement.
+   * Le HUD parent laisse normalement passer les événements
+   * vers le plateau. Les panneaux eux-mêmes n'ont pas besoin
+   * de les intercepter en dehors de leurs contrôles.
    */
-  transition: transform 250ms ease;
+  pointer-events: none;
+
+  transition:
+    transform 250ms ease,
+    filter 180ms ease;
 }
 
+/*
+ * Lorsqu'un panneau correspond au joueur actif, une très légère
+ * lumière permet de le repérer sans changer son identité.
+ */
+.player-hud__side--active {
+  filter: drop-shadow(0 0 8px rgba(244, 205, 112, 0.22));
+}
 
 /* ==========================================================
-   PANNEAU GAUCHE
+   PANNEAU GAUCHE — J1
    ========================================================== */
 
-/*
- * État normal : panneau gauche déplié.
- */
 .player-hud__side--left {
   left: var(--sidebar-edge);
 }
 
-/*
- * État replié :
- * le panneau sort de l'écran vers la gauche.
- *
- * La languette dépasse encore du panneau et reste donc
- * accessible pour pouvoir le déplier.
- */
 .player-hud__side--left.player-hud__side--collapsed {
-  transform: translateX(
-    calc(-100% - var(--sidebar-edge))
-  );
+  transform: translateX(calc(-100% - var(--sidebar-edge)));
 }
 
-
 /* ==========================================================
-   PANNEAU DROIT
+   PANNEAU DROIT — J2 À J5
    ========================================================== */
 
-/*
- * État normal : panneau droit déplié.
- */
 .player-hud__side--right {
   right: var(--sidebar-edge);
 }
 
-/*
- * État replié :
- * comportement miroir du panneau gauche.
- */
 .player-hud__side--right.player-hud__side--collapsed {
-  transform: translateX(
-    calc(100% + var(--sidebar-edge))
-  );
+  transform: translateX(calc(100% + var(--sidebar-edge)));
 }
 
+/* ==========================================================
+   IDENTITÉ J1
+   ========================================================== */
+
+.player-hud__player-badge {
+  --player-color: #d8c39a;
+
+  position: absolute;
+
+  z-index: 5;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 36px;
+  height: 30px;
+
+  padding: 0 0.5rem;
+
+  box-sizing: border-box;
+
+  color: #fff7df;
+
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  line-height: 1;
+
+  background: linear-gradient(180deg, rgba(60, 48, 37, 0.98), rgba(28, 23, 19, 0.98));
+
+  border: 2px solid var(--player-color);
+
+  border-radius: 999px;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.65),
+    0 3px 6px rgba(0, 0, 0, 0.55);
+
+  pointer-events: none;
+}
+
+.player-hud__player-badge--left {
+  top: 0.4rem;
+  right: -0.3rem;
+}
+
+.player-hud__player-badge--active {
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.65),
+    0 0 8px var(--player-color),
+    0 3px 6px rgba(0, 0, 0, 0.55);
+}
+
+/* ==========================================================
+   ONGLETS J2 À J5
+   ========================================================== */
+
+/*
+ * Les onglets restent attachés au bord intérieur du panneau
+ * droit afin de ne pas consommer la largeur réservée au donjon.
+ *
+ * Ils sont indépendants du contenu du PlayerSidebar.
+ */
+.player-hud__opponent-tabs {
+  position: absolute;
+
+  top: 0.75rem;
+  left: -52px;
+
+  z-index: 6;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.45rem;
+
+  pointer-events: auto;
+}
+
+.player-hud__opponent-tab {
+  --player-color: #d8c39a;
+
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 34px;
+
+  padding: 0;
+
+  cursor: pointer;
+
+  color: #f8ecd1;
+
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  line-height: 1;
+
+  background: linear-gradient(180deg, rgba(65, 51, 39, 0.98), rgba(29, 23, 19, 0.98));
+
+  border: 2px solid color-mix(in srgb, var(--player-color) 68%, #5a4939);
+
+  border-radius: 7px 0 0 7px;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.7),
+    0 3px 6px rgba(0, 0, 0, 0.5);
+
+  transition:
+    transform 140ms ease,
+    filter 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.player-hud__opponent-tab:hover {
+  filter: brightness(1.16);
+
+  transform: translateX(-2px);
+}
+
+/*
+ * La sélection signifie :
+ * "c'est cette fiche que je consulte".
+ */
+.player-hud__opponent-tab--selected {
+  color: #fff;
+
+  border-color: var(--player-color);
+
+  transform: translateX(-4px);
+
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.72),
+    0 0 7px color-mix(in srgb, var(--player-color) 62%, transparent),
+    0 4px 7px rgba(0, 0, 0, 0.58);
+}
+
+/*
+ * L'activité et la sélection sont volontairement indépendantes.
+ *
+ * Ce petit point signifie uniquement :
+ * "c'est actuellement le tour de ce joueur".
+ */
+.player-hud__opponent-tab--active::after {
+  content: '';
+
+  position: absolute;
+
+  top: 4px;
+  right: 4px;
+
+  width: 6px;
+  height: 6px;
+
+  background: var(--player-color);
+
+  border-radius: 50%;
+
+  box-shadow: 0 0 6px var(--player-color);
+}
 
 /* ==========================================================
    BOUTONS DE REPLI / DÉPLI
    ========================================================== */
 
-/*
- * Style commun aux deux languettes.
- *
- * Le HUD global utilise pointer-events: none afin de laisser
- * le plateau interactif.
- *
- * On réactive donc explicitement les clics uniquement sur
- * ces boutons.
- */
 .player-hud__collapse-button {
   position: absolute;
-  z-index: 2;
+
+  z-index: 8;
 
   pointer-events: auto;
   cursor: pointer;
@@ -133,13 +289,12 @@
   font-size: 1.6rem;
   line-height: 1;
 
-  background:
-    linear-gradient(
-      180deg,
-      var(--karak-stone-light),
-      var(--karak-stone),
-      var(--karak-stone-dark)
-    );
+  background: linear-gradient(
+    180deg,
+    var(--karak-stone-light),
+    var(--karak-stone),
+    var(--karak-stone-dark)
+  );
 
   border: 2px solid var(--karak-stone-highlight);
 
@@ -148,10 +303,8 @@
     0 4px 6px rgba(0, 0, 0, 0.55);
 }
 
-
 /*
- * Languette du panneau gauche.
- * Placée sur son bord intérieur, côté donjon.
+ * Languette du panneau J1.
  */
 .player-hud__collapse-button--left {
   top: 50%;
@@ -160,10 +313,8 @@
   transform: translateY(-50%);
 }
 
-
 /*
- * Languette du panneau droit.
- * Même principe, en miroir.
+ * Languette du panneau J2...J5.
  */
 .player-hud__collapse-button--right {
   top: 50%;
@@ -171,7 +322,6 @@
 
   transform: translateY(-50%);
 }
-
 
 /* ==========================================================
    COMPTEUR DE MOUVEMENTS
@@ -184,4 +334,15 @@
   bottom: 1.5rem;
 
   transform: translateX(-50%);
+}
+
+/* ==========================================================
+   ACCESSIBILITÉ
+   ========================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .player-hud__side,
+  .player-hud__opponent-tab {
+    transition: none;
+  }
 }

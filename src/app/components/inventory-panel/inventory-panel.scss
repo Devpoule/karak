@@ -1,5 +1,6 @@
 :host {
   display: block;
+
   width: 100%;
 }
 
@@ -8,6 +9,13 @@
    INVENTAIRE
    ========================================================== */
 
+/*
+ * Le composant utilise board_03.jpg comme support graphique.
+ *
+ * Le support contient déjà visuellement les emplacements
+ * d'inventaire. Aucun marqueur supplémentaire ne doit donc
+ * apparaître lorsqu'un emplacement est vide.
+ */
 .inventory-panel {
   position: relative;
 
@@ -16,24 +24,15 @@
 
 
 /* ==========================================================
-   ASSET DU PLATEAU
+   SUPPORT
    ========================================================== */
 
 .inventory-panel__board {
   display: block;
 
-  /*
-   * L'asset conserve son ratio original lorsque la largeur
-   * de la fiche joueur évolue.
-   */
   width: 100%;
   height: auto;
 
-  /*
-   * Le plateau est actuellement purement visuel :
-   * il ne doit ni être sélectionnable ni intercepter
-   * les interactions utilisateur.
-   */
   user-select: none;
   pointer-events: none;
 
@@ -41,51 +40,86 @@
     drop-shadow(0 6px 6px rgba(0, 0, 0, 0.55));
 }
 
-.inventory-panel__slots {
-  position: absolute;
-  inset: 13% 10%;
 
-  display: grid;
-  grid-template-columns: 1fr 1fr 0.65fr;
-  align-items: center;
-  gap: 0.4rem;
+/* ==========================================================
+   CALQUE DES OBJETS
+   ========================================================== */
+
+/*
+ * Ce calque servira uniquement à afficher les véritables
+ * objets possédés par le joueur.
+ *
+ * Il est superposé au support et ne participe jamais à ses
+ * dimensions.
+ */
+.inventory-panel__items {
+  position: absolute;
+
+  inset: 0;
 
   pointer-events: none;
 }
 
+
+/* ==========================================================
+   GROUPES D'INVENTAIRE
+   ========================================================== */
+
+/*
+ * Les groupes sont conservés dès maintenant afin de disposer
+ * d'une structure prête à recevoir :
+ *
+ * - les deux armes ;
+ * - les trois sorts ;
+ * - la clé.
+ *
+ * Ils ne produisent aucun rendu tant que l'inventaire est vide.
+ */
 .inventory-panel__group {
+  position: absolute;
+
   display: flex;
-  gap: 0.24rem;
+
+  pointer-events: none;
+}
+
+
+/*
+ * Les coordonnées exactes de chaque groupe seront ajustées
+ * lorsque les premiers objets graphiques seront intégrés.
+ *
+ * Il est inutile de matérialiser artificiellement ces zones
+ * avant cette étape : board_03.jpg les montre déjà.
+ */
+.inventory-panel__group--weapons {
+  top: 0;
+  left: 0;
 }
 
 .inventory-panel__group--spells {
-  justify-content: center;
+  top: 0;
+  left: 0;
 }
 
 .inventory-panel__group--key {
-  justify-content: flex-end;
+  top: 0;
+  left: 0;
 }
 
-.inventory-panel__slot {
+
+/* ==========================================================
+   OBJET D'INVENTAIRE
+   ========================================================== */
+
+/*
+ * Un élément .inventory-panel__item n'existe que lorsqu'un
+ * véritable objet est présent dans le modèle PlayerInventory.
+ *
+ * Aucune forme générique n'est dessinée ici : l'apparence
+ * dépendra de l'asset réel de l'objet.
+ */
+.inventory-panel__item {
   display: block;
 
-  width: 18px;
-  height: 18px;
-
-  border: 1px solid rgba(224, 198, 142, 0.68);
-  border-radius: 3px;
-
-  background: rgba(23, 19, 16, 0.58);
-
-  box-shadow:
-    inset 0 1px 3px rgba(0, 0, 0, 0.75),
-    0 1px 3px rgba(0, 0, 0, 0.55);
-}
-
-.inventory-panel__slot--key {
-  border-radius: 50%;
-}
-
-.inventory-panel__slot--filled {
-  background: rgba(224, 198, 142, 0.85);
+  pointer-events: none;
 }

@@ -1,4 +1,11 @@
 <section class="hero-panel">
+  <!--
+    Support visuel du héros.
+
+    board_02.jpg constitue le cadre de pierre.
+    La carte du héros est superposée dans sa zone intérieure
+    sans modifier les dimensions générales du panneau.
+  -->
   <img
     class="hero-panel__board"
     src="/assets/board/board_02.jpg"
@@ -7,17 +14,16 @@
   />
 
   @if (heroDefinition; as hero) {
-    <div class="hero-panel__hero">
+    <div
+      class="hero-panel__hero"
+      [attr.aria-label]="hero.name"
+    >
       <img
         class="hero-panel__card"
         [src]="hero.card"
         [alt]="hero.name"
         draggable="false"
       />
-
-      <strong class="hero-panel__name">
-        {{ hero.name }}
-      </strong>
     </div>
   }
 </section>

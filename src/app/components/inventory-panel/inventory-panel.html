@@ -1,4 +1,16 @@
 <section class="inventory-panel">
+  <!--
+    Support visuel de l'inventaire.
+
+    board_03.jpg matérialise déjà graphiquement les emplacements
+    réservés aux armes, aux sorts et à la clé.
+
+    Un emplacement vide ne doit donc produire aucun élément
+    graphique supplémentaire.
+
+    Seuls les objets réellement possédés par le joueur seront
+    affichés par-dessus ce support.
+  -->
   <img
     class="inventory-panel__board"
     src="/assets/board/board_03.jpg"
@@ -6,25 +18,57 @@
     draggable="false"
   />
 
-  <div class="inventory-panel__slots" aria-label="Inventaire du joueur actif">
+  <div
+    class="inventory-panel__items"
+    aria-label="Inventaire du joueur"
+  >
+    <!-- =====================================================
+         ARMES
+         ===================================================== -->
+
     <div class="inventory-panel__group inventory-panel__group--weapons">
-      @for (slot of weaponSlots; track $index) {
-        <span class="inventory-panel__slot" title="Emplacement d'arme vide"></span>
+      @for (weapon of weaponSlots; track $index) {
+        @if (weapon) {
+          <div class="inventory-panel__item">
+            <!--
+              L'illustration de l'arme sera ajoutée lorsque
+              les objets du jeu disposeront de leurs assets.
+            -->
+          </div>
+        }
       }
     </div>
+
+    <!-- =====================================================
+         SORTS
+         ===================================================== -->
 
     <div class="inventory-panel__group inventory-panel__group--spells">
-      @for (slot of spellSlots; track $index) {
-        <span class="inventory-panel__slot" title="Emplacement de sort vide"></span>
+      @for (spell of spellSlots; track $index) {
+        @if (spell) {
+          <div class="inventory-panel__item">
+            <!--
+              L'illustration du sort sera ajoutée lorsque
+              les objets du jeu disposeront de leurs assets.
+            -->
+          </div>
+        }
       }
     </div>
 
+    <!-- =====================================================
+         CLÉ
+         ===================================================== -->
+
     <div class="inventory-panel__group inventory-panel__group--key">
-      <span
-        class="inventory-panel__slot inventory-panel__slot--key"
-        [class.inventory-panel__slot--filled]="hasKey"
-        title="Emplacement de clé vide"
-      ></span>
+      @if (hasKey) {
+        <div class="inventory-panel__item">
+          <!--
+            L'illustration de la clé sera ajoutée avec
+            l'implémentation des objets du donjon.
+          -->
+        </div>
+      }
     </div>
   </div>
 </section>

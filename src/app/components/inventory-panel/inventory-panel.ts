@@ -1,30 +1,30 @@
 import { Component, Input } from '@angular/core';
 
-import { PLAYER_INVENTORY_CAPACITY, PlayerInventory } from '../../models/inventory';
+import {
+  PLAYER_INVENTORY_CAPACITY,
+  PlayerInventory,
+} from '../../models/inventory';
+
 import { Player } from '../../models/player';
 
 
 /**
- * Affiche le plateau visuel réservé à l'inventaire d'un joueur.
+ * Affiche l'inventaire d'un joueur.
  *
- * RÈGLE OFFICIELLE KARAK :
+ * Le support board_03.jpg matérialise déjà graphiquement
+ * les différents emplacements de l'inventaire.
  *
- * L'inventaire d'un héros peut contenir :
+ * Les emplacements vides ne produisent donc aucun rendu
+ * supplémentaire.
  *
- * - jusqu'à 2 armes ;
- * - jusqu'à 3 sorts ;
+ * Seuls les objets réellement possédés par le joueur seront
+ * superposés au support.
+ *
+ * Capacités de l'inventaire :
+ *
+ * - 2 armes ;
+ * - 3 sorts ;
  * - 1 clé.
- *
- * Le composant conserve l'asset servant de support à l'inventaire,
- * mais ses emplacements proviennent désormais du vrai joueur actif.
- *
- * Il ne gère pas encore :
- *
- * - l'ajout ou le retrait d'un équipement ;
- * - l'utilisation d'un objet ou d'un sort.
- *
- * Ces responsabilités seront introduites avec le modèle
- * d'inventaire et l'état réel du joueur.
  */
 @Component({
   imports: [],
@@ -33,38 +33,73 @@ import { Player } from '../../models/player';
   templateUrl: './inventory-panel.html',
 })
 export class InventoryPanel {
+
   /**
-   * Joueur dont l'inventaire est représenté.
+   * Joueur dont l'inventaire est affiché.
    */
   @Input() player: Player | null = null;
 
+
+  /**
+   * Capacités maximales de l'inventaire.
+   */
   readonly capacity =
     PLAYER_INVENTORY_CAPACITY;
 
+
+  /**
+   * Inventaire réel du joueur.
+   */
   get inventory(): PlayerInventory | null {
     return this.player?.inventory ?? null;
   }
 
+
+  /**
+   * Deux emplacements d'armes.
+   *
+   * Une valeur null représente simplement un emplacement vide
+   * et ne doit produire aucun élément graphique.
+   */
   get weaponSlots(): unknown[] {
     return (
       this.inventory?.weapons
-      ?? Array.from({
-        length: this.capacity.weapons,
-      }, () => null)
+      ?? Array.from(
+        {
+          length: this.capacity.weapons,
+        },
+        () => null,
+      )
     );
   }
 
+
+  /**
+   * Trois emplacements de sorts.
+   *
+   * Une valeur null représente simplement un emplacement vide
+   * et ne doit produire aucun élément graphique.
+   */
   get spellSlots(): unknown[] {
     return (
       this.inventory?.spells
-      ?? Array.from({
-        length: this.capacity.spells,
-      }, () => null)
+      ?? Array.from(
+        {
+          length: this.capacity.spells,
+        },
+        () => null,
+      )
     );
   }
 
+
+  /**
+   * Indique si le joueur possède actuellement une clé.
+   */
   get hasKey(): boolean {
-    return this.inventory?.key !== null
-      && this.inventory?.key !== undefined;
+    return (
+      this.inventory?.key !== null
+      && this.inventory?.key !== undefined
+    );
   }
 }

@@ -1,12 +1,35 @@
-<section class="life-panel">
+<section
+  class="life-panel"
+  [attr.aria-label]="'Points de vie : ' + lives + ' sur 5'"
+>
+  <!--
+    Plateau de vie officiel.
+
+    Les marqueurs sont superposés aux cinq emplacements
+    déjà dessinés dans l'asset.
+  -->
   <img
     class="life-panel__board"
     src="/assets/board/board_01.jpg"
-    alt="Points de vie"
+    alt=""
     draggable="false"
   />
 
-  <div class="life-panel__value" aria-label="Points de vie actuels">
-    {{ lives }} PV
+  <div
+    class="life-panel__slots"
+    aria-hidden="true"
+  >
+    @for (slot of lifeSlots; track slot.index) {
+      <img
+        class="life-panel__point"
+        [src]="
+          slot.active
+            ? '/assets/tokens/life_point.png'
+            : '/assets/tokens/dead_point.png'
+        "
+        alt=""
+        draggable="false"
+      />
+    }
   </div>
 </section>

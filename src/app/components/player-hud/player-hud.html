@@ -1,52 +1,48 @@
 <div class="player-hud">
 
   <!-- =====================================================
-       JOUEUR GAUCHE
+       JOUEUR 1 — PANNEAU GAUCHE
+       =====================================================
+
+       J1 possède toujours le panneau gauche.
+
+       Le contenu de cette fiche ne dépend pas du joueur actif.
+       Si J2 joue, J1 reste affiché ici.
        ===================================================== -->
 
   <aside
     class="player-hud__side player-hud__side--left"
     [class.player-hud__side--collapsed]="leftCollapsed"
+    [class.player-hud__side--active]="isActivePlayer(0)"
   >
-    <!--
-      Contenu du panneau gauche.
-
-      Solo :
-      - joueur affiché
-      - inventaire masqué
-      - messages masqués
-
-      1 vs PC / 1v1 :
-      - joueur affiché
-      - inventaire affiché
-      - messages affichés
-    -->
-    @if (mode === 'solo') {
+    @if (playerOne; as player) {
       <app-player-sidebar
         side="left"
-        [player]="activePlayer"
-        [showPlayer]="true"
-        [showInventory]="false"
-        [showMessage]="false"
-      />
-    } @else {
-      <app-player-sidebar
-        side="left"
-        [player]="activePlayer"
+        [player]="player"
         [showPlayer]="true"
         [showInventory]="true"
         [showMessage]="true"
       />
     }
 
-    <!-- Replier / déplier le panneau gauche -->
+    <!-- Identité permanente du panneau gauche -->
+    <div
+      class="player-hud__player-badge player-hud__player-badge--left"
+      [class.player-hud__player-badge--active]="isActivePlayer(0)"
+      [style.--player-color]="getPlayerColor(0)"
+      aria-label="Joueur 1"
+    >
+      J1
+    </div>
+
+    <!-- Replier / déplier J1 -->
     <button
       class="player-hud__collapse-button player-hud__collapse-button--left"
       type="button"
       [attr.aria-label]="
         leftCollapsed
-          ? 'Déplier le panneau du joueur'
-          : 'Replier le panneau du joueur'
+          ? 'Déplier le panneau du joueur 1'
+          : 'Replier le panneau du joueur 1'
       "
       (click)="toggleLeft()"
     >
@@ -56,65 +52,95 @@
 
 
   <!-- =====================================================
-       JOUEUR DROIT
+       JOUEURS 2 À 5 — PANNEAU DROIT
+       =====================================================
+
+       Un seul panneau complet est affiché.
+
+       Les onglets permettent de consulter individuellement
+       J2, J3, J4 et J5 lorsque ces joueurs existent.
        ===================================================== -->
 
-  <aside
-    class="player-hud__side player-hud__side--right"
-    [class.player-hud__side--collapsed]="rightCollapsed"
-  >
-    <!--
-      Contenu du panneau droit.
-
-      Solo :
-      - joueur masqué
-      - inventaire affiché
-      - messages affichés
-
-      1 vs PC / 1v1 :
-      - joueur affiché
-      - inventaire affiché
-      - messages affichés
-
-      En mode vs-computer, ce panneau représentera à terme
-      le héros contrôlé par l'ordinateur.
-    -->
-    @if (mode === 'solo') {
-      <app-player-sidebar
-        side="right"
-        [player]="activePlayer"
-        [showPlayer]="false"
-        [showInventory]="true"
-        [showMessage]="true"
-      />
-    } @else {
-      <app-player-sidebar
-        side="right"
-        [player]="activePlayer"
-        [showPlayer]="true"
-        [showInventory]="true"
-        [showMessage]="true"
-      />
-    }
-
-    <!-- Replier / déplier le panneau droit -->
-    <button
-      class="player-hud__collapse-button player-hud__collapse-button--right"
-      type="button"
-      [attr.aria-label]="
-        rightCollapsed
-          ? 'Déplier le panneau du joueur'
-          : 'Replier le panneau du joueur'
+  @if (opponents.length > 0) {
+    <aside
+      class="player-hud__side player-hud__side--right"
+      [class.player-hud__side--collapsed]="rightCollapsed"
+      [class.player-hud__side--active]="
+        displayedOpponentIndex !== null
+        && isActivePlayer(displayedOpponentIndex)
       "
-      (click)="toggleRight()"
     >
-      {{ rightCollapsed ? '‹' : '›' }}
-    </button>
-  </aside>
+
+      <!-- =================================================
+           ONGLETS DES JOUEURS SECONDAIRES
+           ================================================= -->
+
+      <nav
+        class="player-hud__opponent-tabs"
+        aria-label="Autres joueurs"
+      >
+        @for (opponent of opponents; track opponent.playerIndex) {
+          <button
+            class="player-hud__opponent-tab"
+            type="button"
+            [class.player-hud__opponent-tab--selected]="
+              displayedOpponentIndex === opponent.playerIndex
+            "
+            [class.player-hud__opponent-tab--active]="
+              isActivePlayer(opponent.playerIndex)
+            "
+            [style.--player-color]="
+              getPlayerColor(opponent.playerIndex)
+            "
+            [attr.aria-label]="
+              'Afficher le joueur ' + (opponent.playerIndex + 1)
+            "
+            [attr.aria-pressed]="
+              displayedOpponentIndex === opponent.playerIndex
+            "
+            (click)="selectOpponent(opponent.playerIndex)"
+          >
+            J{{ opponent.playerIndex + 1 }}
+          </button>
+        }
+      </nav>
+
+
+      <!-- =================================================
+           FICHE DU JOUEUR SÉLECTIONNÉ
+           ================================================= -->
+
+      @if (selectedOpponent; as player) {
+        <app-player-sidebar
+          side="right"
+          [player]="player"
+          [showPlayer]="true"
+          [showInventory]="true"
+          [showMessage]="true"
+        />
+      }
+
+
+      <!-- Replier / déplier le panneau droit -->
+      <button
+        class="player-hud__collapse-button player-hud__collapse-button--right"
+        type="button"
+        [attr.aria-label]="
+          rightCollapsed
+            ? 'Déplier le panneau des autres joueurs'
+            : 'Replier le panneau des autres joueurs'
+        "
+        (click)="toggleRight()"
+      >
+        {{ rightCollapsed ? '‹' : '›' }}
+      </button>
+
+    </aside>
+  }
 
 
   <!-- =====================================================
-       COMPTEUR DE MOUVEMENTS DU TOUR
+       MOUVEMENTS DU TOUR
        ===================================================== -->
 
   <div class="player-hud__movements">

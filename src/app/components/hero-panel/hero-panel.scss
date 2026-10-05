@@ -1,5 +1,6 @@
 :host {
   display: block;
+
   width: 100%;
 }
 
@@ -8,6 +9,13 @@
    PANNEAU DU HÉROS
    ========================================================== */
 
+/*
+ * Le support board_02 définit à lui seul les proportions
+ * générales du panneau.
+ *
+ * La carte du héros est superposée dessus : elle ne participe
+ * donc jamais au calcul des dimensions du composant.
+ */
 .hero-panel {
   position: relative;
 
@@ -16,24 +24,15 @@
 
 
 /* ==========================================================
-   ASSET DU PLATEAU
+   SUPPORT
    ========================================================== */
 
 .hero-panel__board {
   display: block;
 
-  /*
-   * L'asset conserve son ratio original lorsque la largeur
-   * de la fiche joueur évolue.
-   */
   width: 100%;
   height: auto;
 
-  /*
-   * Le plateau est actuellement purement visuel :
-   * il ne doit ni être sélectionnable ni intercepter
-   * les interactions utilisateur.
-   */
   user-select: none;
   pointer-events: none;
 
@@ -41,34 +40,73 @@
     drop-shadow(0 6px 6px rgba(0, 0, 0, 0.55));
 }
 
+
+/* ==========================================================
+   ZONE INTÉRIEURE DU SUPPORT
+   ========================================================== */
+
+/*
+ * board_02.jpg contient déjà son propre cadre de pierre.
+ *
+ * Cette zone correspond à l'ouverture intérieure du support.
+ * Elle est volontairement plus grande que dans l'ancienne
+ * version : les marges du cadre sont déjà présentes dans
+ * l'image et ne doivent pas être ajoutées une seconde fois.
+ */
 .hero-panel__hero {
   position: absolute;
-  inset: 10% 10% 12%;
+
+  /*
+   * Le cadre extérieur de board_02 représente environ 5 %
+   * de la largeur du support.
+   *
+   * On conserve légèrement plus d'espace vertical afin que
+   * la carte ne recouvre jamais les pierres supérieure et
+   * inférieure.
+   */
+  top: 6.5%;
+  right: 5.5%;
+  bottom: 6.5%;
+  left: 5.5%;
 
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+
+  overflow: hidden;
 
   pointer-events: none;
 }
 
+
+/* ==========================================================
+   CARTE DU HÉROS
+   ========================================================== */
+
+/*
+ * La carte du héros possède sa propre géométrie.
+ *
+ * Le conteneur détermine uniquement sa position dans le socle.
+ * La carte utilise ensuite toute la largeur disponible et
+ * conserve automatiquement son ratio naturel.
+ */
 .hero-panel__card {
-  width: 28%;
-  max-height: 100%;
+  display: block;
 
-  object-fit: contain;
+  width: 90%;
+  height: 95%;
 
-  border: 1px solid rgba(226, 197, 134, 0.65);
-  border-radius: 3px;
+  max-width: none;
+  max-height: none;
 
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.75);
-}
+  margin: 0;
+  padding: 0;
 
-.hero-panel__name {
-  color: #fff0c8;
+  border: solid 2px #33210f;
+  border-radius: 6px;
 
-  font-size: 0.8rem;
-  line-height: 1;
+  box-shadow: none;
 
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  user-select: none;
+  pointer-events: none;
 }
