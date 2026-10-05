@@ -114,6 +114,25 @@ describe('Board', () => {
     ).toBe(1);
   });
 
+  it('affiche un marqueur pour l autre occupant lorsque le joueur actif est sur une tuile à deux joueurs', () => {
+    preparePlayers(2);
+    placePlayer(0, 0, 0);
+    placePlayer(1, 0, 0);
+    gameService.activePlayerIndex.set(0);
+
+    const occupancy =
+      getOccupancyAt(0, 0);
+
+    expect(
+      occupancy?.primary.playerIndex,
+    ).toBe(0);
+    expect(
+      occupancy?.markers.map(
+        (marker) => marker.label,
+      ),
+    ).toEqual(['J2']);
+  });
+
   it('affiche le prochain occupant selon la rotation lorsque le joueur actif est absent', () => {
     preparePlayers(5);
     placePlayer(0, 0, 0);
@@ -145,6 +164,51 @@ describe('Board', () => {
       getOccupancyAt(0, 0)
         ?.primary.playerIndex,
     ).toBe(0);
+  });
+
+  it('sélectionne J1 lorsque J5 est actif et que la tuile contient J1 et J3', () => {
+    preparePlayers(5);
+    placePlayer(0, 0, 0);
+    placePlayer(2, 0, 0);
+    placePlayer(4, 2, 0);
+    gameService.activePlayerIndex.set(4);
+
+    const occupancy =
+      getOccupancyAt(0, 0);
+
+    expect(
+      occupancy?.primary.playerIndex,
+    ).toBe(0);
+    expect(
+      occupancy?.markers.map(
+        (marker) => marker.label,
+      ),
+    ).toEqual(['J3']);
+  });
+
+  it('calcule indépendamment la représentation de plusieurs tuiles occupées', () => {
+    preparePlayers(5);
+    placePlayer(0, 0, 0);
+    placePlayer(1, 0, 0);
+    placePlayer(2, 1, 0);
+    placePlayer(3, 1, 0);
+    placePlayer(4, 2, 0);
+    gameService.activePlayerIndex.set(2);
+
+    expect(
+      getOccupancyAt(0, 0)
+        ?.primary.playerIndex,
+    ).toBe(0);
+
+    expect(
+      getOccupancyAt(1, 0)
+        ?.primary.playerIndex,
+    ).toBe(2);
+
+    expect(
+      getOccupancyAt(2, 0)
+        ?.markers,
+    ).toEqual([]);
   });
 
   it('représente les autres occupants sous forme de marqueurs Jx', () => {
