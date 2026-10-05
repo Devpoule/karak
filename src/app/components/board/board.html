@@ -238,36 +238,4 @@
       }
     }
   </div>
-
-  <!-- =====================================================
-       COUVERTURE DU DONJON
-       =====================================================
-
-       Écran de présentation affiché avant l'entrée dans
-       le donjon.
-
-       Cette couverture est purement visuelle :
-       elle ne modifie aucun état du moteur de jeu.
-
-       Pendant son affichage, les PointerEvents sont arrêtés
-       afin qu'aucune interaction n'atteigne le plateau situé
-       derrière.
-       ===================================================== -->
-
-  @if (!isBoardRevealed) {
-    <button
-      type="button"
-      class="board__cover"
-      [class.board__cover--revealing]="isBoardRevealing"
-      (pointerdown)="$event.stopPropagation()"
-      (pointermove)="$event.stopPropagation()"
-      (pointerup)="$event.stopPropagation()"
-      (click)="revealBoard()"
-      aria-label="Révéler le donjon"
-    >
-      <img src="/assets/board/karak_cover.jpg" alt="" draggable="false" />
-
-      <span class="board__cover-action"> Entrer dans le donjon </span>
-    </button>
-  }
 </section>

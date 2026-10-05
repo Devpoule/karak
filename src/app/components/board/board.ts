@@ -54,7 +54,6 @@ interface PlayerMarkerPosition {
  * - déplacement de la caméra ;
  * - sélection temporaire des tuiles ;
  * - interface d'exploration ;
- * - couverture d'entrée dans le donjon.
  *
  * Les règles du donjon et de l'exploration restent déléguées
  * respectivement à DungeonService et ExplorationService.
@@ -73,44 +72,6 @@ export class Board {
     private readonly turnService: TurnService,
     readonly gameService: GameService,
   ) {}
-
-  // ==========================================================
-  // PRÉSENTATION DU DONJON
-  // ==========================================================
-
-  /**
-   * État de la couverture affichée avant l'entrée dans le donjon.
-   *
-   * isBoardRevealing :
-   * l'animation de disparition est en cours.
-   *
-   * isBoardRevealed :
-   * l'animation est terminée et la couverture peut être retirée.
-   *
-   * CHOIX D'IMPLÉMENTATION :
-   * cette couverture est purement visuelle et ne modifie aucun
-   * état du moteur de jeu.
-   */
-  isBoardRevealed = false;
-  isBoardRevealing = false;
-
-  /**
-   * Lance l'animation d'entrée dans le donjon.
-   *
-   * La couverture reste présente pendant les 1300 ms de
-   * transition CSS avant d'être retirée du DOM.
-   */
-  revealBoard(): void {
-    if (this.isBoardRevealing) {
-      return;
-    }
-
-    this.isBoardRevealing = true;
-
-    window.setTimeout(() => {
-      this.isBoardRevealed = true;
-    }, 1300);
-  }
 
   // ==========================================================
   // GÉOMÉTRIE DE LA CARTE
