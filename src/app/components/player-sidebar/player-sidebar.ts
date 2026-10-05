@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 
+import { Player } from '../../models/player';
 import { LifePanel } from '../life-panel/life-panel';
 import { HeroPanel } from '../hero-panel/hero-panel';
 import { InventoryPanel } from '../inventory-panel/inventory-panel';
@@ -50,6 +51,15 @@ export class PlayerSidebar {
    * Côté occupé par le joueur dans l'interface.
    */
   @Input({ required: true }) side!: PlayerSide;
+
+  /**
+   * Joueur représenté par la fiche.
+   *
+   * La donnée provient du HUD, lui-même alimenté par
+   * GameService.activePlayer. Le composant ne choisit pas
+   * son propre joueur.
+   */
+  @Input() player: Player | null = null;
 
 
   // ==========================================================

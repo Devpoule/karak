@@ -1,4 +1,5 @@
 import { HeroId } from './hero';
+import { PlayerInventory } from './inventory';
 import { Direction } from './tile';
 
 /**
@@ -66,6 +67,15 @@ export interface Player {
    * chaque joueur commence la partie avec 5 points de vie.
    */
   lives: number;
+
+  /**
+   * Inventaire personnel du joueur.
+   *
+   * Les emplacements existent dès la création du joueur mais
+   * commencent vides : aucune arme, aucun sort et aucune clé
+   * ne sont attribués au début de partie.
+   */
+  inventory: PlayerInventory;
 
   /**
    * Héros attribué au joueur.

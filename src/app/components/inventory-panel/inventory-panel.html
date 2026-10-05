@@ -5,4 +5,26 @@
     alt="Armes, sorts et clé"
     draggable="false"
   />
+
+  <div class="inventory-panel__slots" aria-label="Inventaire du joueur actif">
+    <div class="inventory-panel__group inventory-panel__group--weapons">
+      @for (slot of weaponSlots; track $index) {
+        <span class="inventory-panel__slot" title="Emplacement d'arme vide"></span>
+      }
+    </div>
+
+    <div class="inventory-panel__group inventory-panel__group--spells">
+      @for (slot of spellSlots; track $index) {
+        <span class="inventory-panel__slot" title="Emplacement de sort vide"></span>
+      }
+    </div>
+
+    <div class="inventory-panel__group inventory-panel__group--key">
+      <span
+        class="inventory-panel__slot inventory-panel__slot--key"
+        [class.inventory-panel__slot--filled]="hasKey"
+        title="Emplacement de clé vide"
+      ></span>
+    </div>
+  </div>
 </section>

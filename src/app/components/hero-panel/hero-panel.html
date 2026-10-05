@@ -5,4 +5,19 @@
     alt=""
     draggable="false"
   />
+
+  @if (heroDefinition; as hero) {
+    <div class="hero-panel__hero">
+      <img
+        class="hero-panel__card"
+        [src]="hero.card"
+        [alt]="hero.name"
+        draggable="false"
+      />
+
+      <strong class="hero-panel__name">
+        {{ hero.name }}
+      </strong>
+    </div>
+  }
 </section>

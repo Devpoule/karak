@@ -3,6 +3,7 @@ import { Injectable, signal } from '@angular/core';
 import { GamePhase, SetupStep } from '../models/game';
 import { Player } from '../models/player';
 import { DungeonService } from './dungeon.service';
+import { ExplorationService } from './exploration.service';
 import { PlayerService } from './player.service';
 import { TileDeckService } from './tile-deck.service';
 import { TurnService } from './turn.service';
@@ -76,6 +77,7 @@ export class GameService {
 
   constructor(
     private readonly dungeonService: DungeonService,
+    private readonly explorationService: ExplorationService,
     private readonly tileDeckService: TileDeckService,
     private readonly playerService: PlayerService,
     private readonly turnService: TurnService,
@@ -96,6 +98,7 @@ export class GameService {
     this.activePlayerIndex.set(null);
 
     this.initializeDungeon();
+    this.initializeExploration();
     this.initializeTileDeck();
   }
 
@@ -383,6 +386,13 @@ export class GameService {
    */
   private initializeDungeon(): void {
     this.dungeonService.initialize();
+  }
+
+  /**
+   * Réinitialise l'état transitoire d'exploration.
+   */
+  private initializeExploration(): void {
+    this.explorationService.initialize();
   }
 
   /**

@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 
+import { Player } from '../../models/player';
+import { GameService } from '../../services/game.service';
 import { MovementCounter } from '../movement-counter/movement-counter';
 import { PlayerSidebar } from '../player-sidebar/player-sidebar';
 
@@ -17,6 +19,19 @@ export type HudMode = 'solo' | 'vs-computer' | '1v1';
   styleUrl: './player-hud.scss',
 })
 export class PlayerHud {
+  constructor(
+    private readonly gameService: GameService,
+  ) {}
+
+  /**
+   * Joueur dont le tour est actuellement actif.
+   *
+   * Le HUD ne crée aucune source parallèle : il relaie uniquement
+   * GameService.activePlayer vers ses panneaux enfants.
+   */
+  get activePlayer(): Player | null {
+    return this.gameService.activePlayer;
+  }
 
   /**
    * Mode d'affichage actuel du HUD.

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { createEmptyPlayerInventory } from '../../models/inventory';
 import { HeroPanel } from './hero-panel';
 
 describe('HeroPanel', () => {
@@ -17,5 +18,23 @@ describe('HeroPanel', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('reflète le héros du joueur reçu', () => {
+    component.player = {
+      controller: 'human',
+      lives: 5,
+      inventory: createEmptyPlayerInventory(),
+      heroId: 'taia',
+    };
+
+    fixture.detectChanges();
+
+    expect(
+      component.heroDefinition?.id,
+    ).toBe('taia');
+    expect(
+      fixture.nativeElement.textContent,
+    ).toContain('Taia');
   });
 });

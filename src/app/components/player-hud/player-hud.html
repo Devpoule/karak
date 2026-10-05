@@ -24,6 +24,7 @@
     @if (mode === 'solo') {
       <app-player-sidebar
         side="left"
+        [player]="activePlayer"
         [showPlayer]="true"
         [showInventory]="false"
         [showMessage]="false"
@@ -31,6 +32,7 @@
     } @else {
       <app-player-sidebar
         side="left"
+        [player]="activePlayer"
         [showPlayer]="true"
         [showInventory]="true"
         [showMessage]="true"
@@ -80,6 +82,7 @@
     @if (mode === 'solo') {
       <app-player-sidebar
         side="right"
+        [player]="activePlayer"
         [showPlayer]="false"
         [showInventory]="true"
         [showMessage]="true"
@@ -87,6 +90,7 @@
     } @else {
       <app-player-sidebar
         side="right"
+        [player]="activePlayer"
         [showPlayer]="true"
         [showInventory]="true"
         [showMessage]="true"

@@ -117,6 +117,16 @@ export class ExplorationService {
    */
   pendingTile: PendingTilePlacement | null = null;
 
+  /**
+   * Réinitialise l'état d'exploration.
+   *
+   * Une nouvelle partie ne doit jamais hériter d'une tuile
+   * piochée mais non confirmée dans une partie précédente.
+   */
+  initialize(): void {
+    this.pendingTile = null;
+  }
+
 
   // ==========================================================
   // POSSIBILITÉS D'EXPLORATION

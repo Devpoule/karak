@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 
 import { HERO_DEFINITIONS } from '../data/hero-definitions';
 import { HeroId } from '../models/hero';
+import { createEmptyPlayerInventory } from '../models/inventory';
 import { Player } from '../models/player';
 import { Direction } from '../models/tile';
 
@@ -94,6 +95,7 @@ export class PlayerService {
   readonly player: Player = {
     controller: 'human',
     lives: 5,
+    inventory: createEmptyPlayerInventory(),
     heroId: 'argentus',
 
     position: {
@@ -250,6 +252,9 @@ export class PlayerService {
             : 'ai',
 
         lives: 5,
+
+        inventory:
+          createEmptyPlayerInventory(),
       });
     }
   }

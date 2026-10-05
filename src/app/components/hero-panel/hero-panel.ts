@@ -1,19 +1,18 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
+
+import { getHeroDefinition } from '../../data/hero-definitions';
+import { HeroDefinition } from '../../models/hero';
+import { Player } from '../../models/player';
 
 
 /**
  * Affiche le plateau visuel réservé au héros d'un joueur.
  *
- * ÉTAT ACTUEL :
- *
- * Le composant affiche uniquement l'asset servant de support
- * à la future représentation du héros.
+ * Le composant conserve l'asset servant de support au héros,
+ * mais l'identité affichée provient désormais du joueur actif.
  *
  * Il ne gère pas encore :
  *
- * - le héros sélectionné ;
- * - son portrait ;
- * - son nom ;
  * - son pouvoir spécial ;
  * - son état pendant la partie.
  *
@@ -26,4 +25,22 @@ import { Component } from '@angular/core';
   styleUrl: './hero-panel.scss',
   templateUrl: './hero-panel.html',
 })
-export class HeroPanel {}
+export class HeroPanel {
+  /**
+   * Joueur dont le héros est représenté.
+   */
+  @Input() player: Player | null = null;
+
+  get heroDefinition(): HeroDefinition | null {
+    const heroId = this.player?.heroId;
+
+    if (!heroId) {
+      return null;
+    }
+
+    return (
+      getHeroDefinition(heroId)
+      ?? null
+    );
+  }
+}

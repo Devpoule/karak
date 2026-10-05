@@ -1,4 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
+
+import { PLAYER_INVENTORY_CAPACITY, PlayerInventory } from '../../models/inventory';
+import { Player } from '../../models/player';
 
 
 /**
@@ -12,16 +15,12 @@ import { Component } from '@angular/core';
  * - jusqu'à 3 sorts ;
  * - 1 clé.
  *
- * ÉTAT ACTUEL :
- *
- * Le composant affiche uniquement l'asset servant de support
- * à l'inventaire.
+ * Le composant conserve l'asset servant de support à l'inventaire,
+ * mais ses emplacements proviennent désormais du vrai joueur actif.
  *
  * Il ne gère pas encore :
  *
- * - les objets possédés par le joueur ;
  * - l'ajout ou le retrait d'un équipement ;
- * - les limites de capacité ;
  * - l'utilisation d'un objet ou d'un sort.
  *
  * Ces responsabilités seront introduites avec le modèle
@@ -33,4 +32,39 @@ import { Component } from '@angular/core';
   styleUrl: './inventory-panel.scss',
   templateUrl: './inventory-panel.html',
 })
-export class InventoryPanel {}
+export class InventoryPanel {
+  /**
+   * Joueur dont l'inventaire est représenté.
+   */
+  @Input() player: Player | null = null;
+
+  readonly capacity =
+    PLAYER_INVENTORY_CAPACITY;
+
+  get inventory(): PlayerInventory | null {
+    return this.player?.inventory ?? null;
+  }
+
+  get weaponSlots(): unknown[] {
+    return (
+      this.inventory?.weapons
+      ?? Array.from({
+        length: this.capacity.weapons,
+      }, () => null)
+    );
+  }
+
+  get spellSlots(): unknown[] {
+    return (
+      this.inventory?.spells
+      ?? Array.from({
+        length: this.capacity.spells,
+      }, () => null)
+    );
+  }
+
+  get hasKey(): boolean {
+    return this.inventory?.key !== null
+      && this.inventory?.key !== undefined;
+  }
+}

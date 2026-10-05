@@ -1,17 +1,23 @@
 import { TestBed } from '@angular/core/testing';
 
 import { DungeonService } from './dungeon.service';
+import { ExplorationService } from './exploration.service';
 import { GameService } from './game.service';
+import { TurnService } from './turn.service';
 
 describe('GameService', () => {
   let service: GameService;
   let dungeonService: DungeonService;
+  let explorationService: ExplorationService;
+  let turnService: TurnService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
 
     service = TestBed.inject(GameService);
     dungeonService = TestBed.inject(DungeonService);
+    explorationService = TestBed.inject(ExplorationService);
+    turnService = TestBed.inject(TurnService);
   });
 
   function prepareSetup(
@@ -58,6 +64,19 @@ describe('GameService', () => {
     expect(service.phase()).toBe('playing');
   });
 
+  it('réinitialise les mouvements au démarrage de l aventure', () => {
+    prepareSetup(2, 0);
+
+    turnService.consumeMovement();
+    turnService.consumeMovement();
+
+    service.startAdventure();
+
+    expect(
+      turnService.remainingMovements(),
+    ).toBe(4);
+  });
+
   it('conserve les héros tirés au démarrage de l aventure', () => {
     prepareSetup(5, 3);
 
@@ -87,6 +106,30 @@ describe('GameService', () => {
           && player.position?.y === 0,
       ),
     ).toBe(true);
+  });
+
+  it('réinitialise l exploration en attente lors d une nouvelle partie', () => {
+    explorationService.pendingTile = {
+      sourceTile: {
+        definitionId: 'start',
+        x: 0,
+        y: 0,
+        rotation: 0,
+      },
+      direction: 'north',
+      definition: {
+        id: 'test',
+        image: '',
+        openings: ['south'],
+      },
+      rotation: 0,
+    };
+
+    service.initialize();
+
+    expect(
+      explorationService.pendingTile,
+    ).toBeNull();
   });
 
   it('conserve la tuile start en position 0,0', () => {

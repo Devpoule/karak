@@ -6,8 +6,8 @@
        ===================================================== -->
 
   @if (showPlayer) {
-    <app-life-panel />
-    <app-hero-panel />
+    <app-life-panel [player]="player" />
+    <app-hero-panel [player]="player" />
   }
 
 
@@ -16,7 +16,7 @@
        ===================================================== -->
 
   @if (showInventory) {
-    <app-inventory-panel />
+    <app-inventory-panel [player]="player" />
   }
 
 

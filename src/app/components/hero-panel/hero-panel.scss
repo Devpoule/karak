@@ -9,6 +9,8 @@
    ========================================================== */
 
 .hero-panel {
+  position: relative;
+
   width: 100%;
 }
 
@@ -37,4 +39,36 @@
 
   filter:
     drop-shadow(0 6px 6px rgba(0, 0, 0, 0.55));
+}
+
+.hero-panel__hero {
+  position: absolute;
+  inset: 10% 10% 12%;
+
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  pointer-events: none;
+}
+
+.hero-panel__card {
+  width: 28%;
+  max-height: 100%;
+
+  object-fit: contain;
+
+  border: 1px solid rgba(226, 197, 134, 0.65);
+  border-radius: 3px;
+
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.75);
+}
+
+.hero-panel__name {
+  color: #fff0c8;
+
+  font-size: 0.8rem;
+  line-height: 1;
+
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
