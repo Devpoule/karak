@@ -6,12 +6,11 @@ import { HeroPanel } from '../hero-panel/hero-panel';
 import { InventoryPanel } from '../inventory-panel/inventory-panel';
 import { MessagePanel } from '../message-panel/message-panel';
 
-
 /**
  * Position de la fiche joueur dans l'interface.
  *
- * Cette information permettra notamment de différencier
- * les joueurs gauche et droit dans les modes multijoueurs.
+ * Cette information permet notamment de différencier
+ * les joueurs affichés à gauche et à droite.
  */
 export type PlayerSide = 'left' | 'right';
 
@@ -28,7 +27,8 @@ export type PlayerSide = 'left' | 'right';
  * - messages.
  *
  * Le composant ne contient aucune logique de jeu.
- * Il décide uniquement quels panneaux doivent être affichés.
+ * Il reçoit les informations préparées par le HUD et
+ * les transmet aux panneaux concernés.
  */
 @Component({
   selector: 'app-player-sidebar',
@@ -48,18 +48,26 @@ export class PlayerSidebar {
   // ==========================================================
 
   /**
-   * Côté occupé par le joueur dans l'interface.
+   * Côté occupé par la fiche dans l'interface.
    */
   @Input({ required: true }) side!: PlayerSide;
 
+
   /**
    * Joueur représenté par la fiche.
-   *
-   * La donnée provient du HUD, lui-même alimenté par
-   * GameService.activePlayer. Le composant ne choisit pas
-   * son propre joueur.
    */
   @Input() player: Player | null = null;
+
+
+  /**
+   * Couleur UI associée au joueur.
+   *
+   * Elle provient de PLAYER_UI_CONFIG via PlayerHud.
+   *
+   * La sidebar ne cherche volontairement pas à déterminer
+   * elle-même l'identité ou la couleur du joueur.
+   */
+  @Input() playerColor = 'transparent';
 
 
   // ==========================================================
@@ -72,10 +80,12 @@ export class PlayerSidebar {
    */
   @Input() showPlayer = true;
 
+
   /**
    * Affiche le panneau d'inventaire.
    */
   @Input() showInventory = true;
+
 
   /**
    * Affiche l'encadré réservé aux messages du joueur.

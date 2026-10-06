@@ -110,14 +110,38 @@
 }
 
 /* ==========================================================
-   GROUPE J2 À J5
+   GROUPES DE JOUEURS
    ========================================================== */
 
-.player-hud__opponents {
+/*
+ * Le compteur de mouvements sépare visuellement :
+ *
+ * - les joueurs humains à gauche ;
+ * - les joueurs IA à droite.
+ *
+ * Chaque groupe conserve l'ordre réel des joueurs.
+ */
+.player-hud__players {
   display: flex;
   align-items: center;
 
   gap: 0.4rem;
+}
+
+
+/*
+ * Les humains se rapprochent du compteur depuis la gauche.
+ */
+.player-hud__players--human {
+  justify-content: flex-end;
+}
+
+
+/*
+ * Les IA se développent vers la droite du compteur.
+ */
+.player-hud__players--ai {
+  justify-content: flex-start;
 }
 
 /* ==========================================================

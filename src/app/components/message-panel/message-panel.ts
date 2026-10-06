@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 
 /**
@@ -6,8 +6,12 @@ import { Component } from '@angular/core';
  *
  * ÉTAT ACTUEL :
  *
- * Le composant fournit uniquement le support visuel dans lequel
- * les futurs messages du jeu seront affichés.
+ * Le composant fournit principalement le support visuel dans
+ * lequel les futurs messages du jeu seront affichés.
+ *
+ * Il reçoit également la couleur UI du joueur actuellement
+ * représenté afin de rappeler discrètement son identité dans
+ * la fiche dépliée.
  *
  * Il ne gère pas encore :
  *
@@ -26,4 +30,13 @@ import { Component } from '@angular/core';
   styleUrl: './message-panel.scss',
   templateUrl: './message-panel.html',
 })
-export class MessagePanel {}
+export class MessagePanel {
+
+  /**
+   * Couleur UI du joueur auquel appartient la fiche.
+   *
+   * Elle est injectée dans une variable CSS depuis le template
+   * afin de rester purement décorative.
+   */
+  @Input() playerColor = 'transparent';
+}

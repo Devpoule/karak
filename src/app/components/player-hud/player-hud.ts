@@ -7,25 +7,40 @@ import { PlayerService } from '../../services/player.service';
 import { MovementCounter } from '../movement-counter/movement-counter';
 import { PlayerSidebar } from '../player-sidebar/player-sidebar';
 
+/**
+ * Association entre un joueur et son index réel dans la partie.
+ *
+ * L'index est conservé lorsque les joueurs sont séparés
+ * entre humains et IA afin de préserver leur identité J1...J5.
+ */
+interface HudPlayerEntry {
+  player: Player;
+  index: number;
+}
 
 /**
  * HUD principal de la partie.
  *
  * ORGANISATION :
  *
- * - J1 ouvre sa fiche sur le côté gauche ;
- * - J2 à J5 partagent une fiche sur le côté droit ;
- * - les commandes des joueurs sont regroupées autour
- *   du compteur de mouvements ;
+ * - les joueurs humains sont affichés à gauche du compteur ;
+ * - les joueurs IA sont affichés à droite ;
+ * - un joueur humain ouvre sa fiche à gauche ;
+ * - un joueur IA ouvre sa fiche à droite ;
+ * - les deux côtés fonctionnent indépendamment ;
  * - consulter une fiche ne modifie jamais le joueur actif.
  *
- * IMPORTANT :
+ * TRANSITION ENTRE DEUX JOUEURS DU MÊME CÔTÉ :
  *
- * Le joueur affiché dans le panneau droit est mémorisé même
- * lorsque le panneau est fermé.
+ * Si une fiche est déjà ouverte et qu'un autre joueur du même
+ * côté est sélectionné :
  *
- * Cela permet de conserver son contenu pendant toute
- * l'animation de repli.
+ * 1. la fiche actuelle se replie complètement ;
+ * 2. son contenu est remplacé ;
+ * 3. la nouvelle fiche se déplie.
+ *
+ * Le changement est synchronisé avec la transition CSS réelle
+ * grâce à transitionend. Aucun délai artificiel n'est utilisé.
  */
 @Component({
   selector: 'app-player-hud',
@@ -38,30 +53,54 @@ import { PlayerSidebar } from '../player-sidebar/player-sidebar';
 })
 export class PlayerHud {
 
+  // ==========================================================
+  // PANNEAU GAUCHE — JOUEURS HUMAINS
+  // ==========================================================
+
   /**
-   * État d'ouverture de la fiche de J1.
+   * État d'ouverture du panneau gauche.
    */
   leftPanelOpen = false;
 
+  /**
+   * Joueur actuellement mémorisé dans le panneau gauche.
+   *
+   * J1 est utilisé comme valeur initiale.
+   */
+  leftPlayerIndex = 0;
+
+  /**
+   * Joueur devant remplacer le contenu du panneau gauche
+   * une fois son animation de fermeture terminée.
+   *
+   * null signifie qu'aucun changement n'est en attente.
+   */
+  private pendingLeftPlayerIndex: number | null = null;
+
+
+  // ==========================================================
+  // PANNEAU DROIT — JOUEURS IA
+  // ==========================================================
 
   /**
    * État d'ouverture du panneau droit.
-   *
-   * Cet état est volontairement indépendant du joueur
-   * actuellement mémorisé dans ce panneau.
    */
   rightPanelOpen = false;
 
-
   /**
-   * Joueur actuellement associé au panneau droit.
+   * Joueur actuellement mémorisé dans le panneau droit.
    *
-   * J2 est mémorisé par défaut afin que le panneau dispose
-   * toujours d'un contenu lorsqu'il doit être animé.
-   *
-   * La présence réelle de J2 reste vérifiée avant affichage.
+   * J2 est utilisé comme valeur initiale historique.
+   * La présence réelle du joueur est toujours vérifiée
+   * avant affichage.
    */
   rightPlayerIndex = 1;
+
+  /**
+   * Joueur devant remplacer le contenu du panneau droit
+   * une fois son animation de fermeture terminée.
+   */
+  private pendingRightPlayerIndex: number | null = null;
 
 
   constructor(
@@ -89,19 +128,15 @@ export class PlayerHud {
 
 
   /**
-   * J1 possède toujours la fiche gauche.
+   * Joueur actuellement associé au panneau gauche.
    */
-  get playerOne(): Player | null {
-    return this.players[0] ?? null;
+  get leftPlayer(): Player | null {
+    return this.players[this.leftPlayerIndex] ?? null;
   }
 
 
   /**
-   * Joueur mémorisé dans la fiche droite.
-   *
-   * La fiche peut être fermée tout en conservant ce joueur,
-   * ce qui permet au contenu de rester visible pendant
-   * l'animation de repli.
+   * Joueur actuellement associé au panneau droit.
    */
   get rightPlayer(): Player | null {
     return this.players[this.rightPlayerIndex] ?? null;
@@ -117,43 +152,150 @@ export class PlayerHud {
 
 
   // ==========================================================
-  // FICHE GAUCHE
+  // RÉPARTITION HUMAINS / IA
   // ==========================================================
 
   /**
-   * Ouvre ou ferme la fiche de J1.
+   * Joueurs humains.
+   *
+   * Ils sont affichés à gauche du compteur et utilisent
+   * exclusivement le panneau gauche.
    */
-  togglePlayerOne(): void {
-    this.leftPanelOpen = !this.leftPanelOpen;
+  get humanPlayers(): HudPlayerEntry[] {
+    return this.players
+      .map((player, index) => ({
+        player,
+        index,
+      }))
+      .filter(({ player }) => player.controller === 'human');
+  }
+
+
+  /**
+   * Joueurs IA.
+   *
+   * Ils sont affichés à droite du compteur et utilisent
+   * exclusivement le panneau droit.
+   */
+  get aiPlayers(): HudPlayerEntry[] {
+    return this.players
+      .map((player, index) => ({
+        player,
+        index,
+      }))
+      .filter(({ player }) => player.controller === 'ai');
   }
 
 
   // ==========================================================
-  // FICHE DROITE
+  // SÉLECTION D'UNE FICHE
   // ==========================================================
 
   /**
-   * Ouvre, ferme ou change le joueur présenté dans
-   * le panneau droit.
+   * Ouvre ou ferme la fiche du joueur demandé.
    *
-   * Cas 1 :
-   * le panneau est fermé.
-   * -> le joueur demandé est mémorisé puis le panneau s'ouvre.
+   * Le contrôleur du joueur détermine automatiquement
+   * le côté utilisé :
    *
-   * Cas 2 :
-   * le même joueur est déjà affiché.
-   * -> le panneau se ferme mais conserve son contenu afin que
-   *    l'animation de sortie reste entièrement visible.
-   *
-   * Cas 3 :
-   * un autre joueur est demandé pendant que le panneau est ouvert.
-   * -> le contenu change directement sans fermer le panneau.
+   * - human -> gauche ;
+   * - ai    -> droite.
    */
-  toggleRightPlayer(playerIndex: number): void {
+  togglePlayerPanel(playerIndex: number): void {
+    const player = this.players[playerIndex];
+
+    if (!player) {
+      return;
+    }
+
+    if (player.controller === 'human') {
+      this.toggleLeftPlayer(playerIndex);
+      return;
+    }
+
+    this.toggleRightPlayer(playerIndex);
+  }
+
+
+  // ==========================================================
+  // PANNEAU GAUCHE
+  // ==========================================================
+
+  /**
+   * Gère l'ouverture d'un joueur humain.
+   *
+   * Même joueur :
+   * -> ouverture / fermeture normale.
+   *
+   * Autre joueur, panneau fermé :
+   * -> remplacement immédiat puis ouverture.
+   *
+   * Autre joueur, panneau ouvert :
+   * -> mémorisation du prochain joueur puis fermeture.
+   *    Le nouveau joueur sera affiché après transitionend.
+   */
+  private toggleLeftPlayer(playerIndex: number): void {
+    if (!this.isHumanPlayer(playerIndex)) {
+      return;
+    }
+
     if (
-      playerIndex < 1
-      || playerIndex >= this.players.length
+      this.leftPanelOpen
+      && this.leftPlayerIndex === playerIndex
     ) {
+      this.pendingLeftPlayerIndex = null;
+      this.leftPanelOpen = false;
+      return;
+    }
+
+    if (!this.leftPanelOpen) {
+      this.pendingLeftPlayerIndex = null;
+      this.leftPlayerIndex = playerIndex;
+      this.leftPanelOpen = true;
+      return;
+    }
+
+    this.pendingLeftPlayerIndex = playerIndex;
+    this.leftPanelOpen = false;
+  }
+
+
+  /**
+   * Appelé lorsque la transition du panneau gauche se termine.
+   *
+   * Si un autre joueur attend d'être affiché :
+   *
+   * - le contenu est remplacé ;
+   * - le panneau est ensuite rouvert.
+   */
+  onLeftPanelTransitionEnd(event: TransitionEvent): void {
+    if (
+      event.propertyName !== 'transform'
+      || this.leftPanelOpen
+      || this.pendingLeftPlayerIndex === null
+    ) {
+      return;
+    }
+
+    this.leftPlayerIndex = this.pendingLeftPlayerIndex;
+    this.pendingLeftPlayerIndex = null;
+
+    this.leftPanelOpen = true;
+  }
+
+
+  // ==========================================================
+  // PANNEAU DROIT
+  // ==========================================================
+
+  /**
+   * Gère l'ouverture d'un joueur IA.
+   *
+   * Le comportement est identique au panneau gauche :
+   * lorsqu'une autre IA est sélectionnée, la fiche actuelle
+   * se replie avant que la suivante ne se déplie.
+   */
+  private toggleRightPlayer(playerIndex: number): void {
+    if (!this.isAiPlayer(playerIndex)) {
       return;
     }
 
@@ -161,27 +303,92 @@ export class PlayerHud {
       this.rightPanelOpen
       && this.rightPlayerIndex === playerIndex
     ) {
+      this.pendingRightPlayerIndex = null;
       this.rightPanelOpen = false;
       return;
     }
 
-    this.rightPlayerIndex = playerIndex;
-    this.rightPanelOpen = true;
+    if (!this.rightPanelOpen) {
+      this.pendingRightPlayerIndex = null;
+      this.rightPlayerIndex = playerIndex;
+      this.rightPanelOpen = true;
+      return;
+    }
+
+    this.pendingRightPlayerIndex = playerIndex;
+    this.rightPanelOpen = false;
   }
 
 
   /**
-   * Indique si la fiche correspondant au joueur est ouverte.
+   * Appelé lorsque la transition du panneau droit se termine.
+   *
+   * Le nouveau joueur n'est injecté dans le panneau qu'après
+   * le repli complet de la fiche précédente.
+   */
+  onRightPanelTransitionEnd(event: TransitionEvent): void {
+    if (
+      event.propertyName !== 'transform'
+      || this.rightPanelOpen
+      || this.pendingRightPlayerIndex === null
+    ) {
+      return;
+    }
+
+    this.rightPlayerIndex = this.pendingRightPlayerIndex;
+    this.pendingRightPlayerIndex = null;
+
+    this.rightPanelOpen = true;
+  }
+
+
+  // ==========================================================
+  // ÉTAT DES FICHES
+  // ==========================================================
+
+  /**
+   * Indique si la fiche du joueur demandé est actuellement
+   * ouverte.
    */
   isPlayerPanelOpen(playerIndex: number): boolean {
-    if (playerIndex === 0) {
-      return this.leftPanelOpen;
+    const player = this.players[playerIndex];
+
+    if (!player) {
+      return false;
+    }
+
+    if (player.controller === 'human') {
+      return (
+        this.leftPanelOpen
+        && this.leftPlayerIndex === playerIndex
+      );
     }
 
     return (
       this.rightPanelOpen
       && this.rightPlayerIndex === playerIndex
     );
+  }
+
+
+  // ==========================================================
+  // TYPE DE JOUEUR
+  // ==========================================================
+
+  /**
+   * Vérifie que le joueur demandé existe et est humain.
+   */
+  private isHumanPlayer(playerIndex: number): boolean {
+    return this.players[playerIndex]?.controller === 'human';
+  }
+
+
+  /**
+   * Vérifie que le joueur demandé existe et est contrôlé
+   * par l'IA.
+   */
+  private isAiPlayer(playerIndex: number): boolean {
+    return this.players[playerIndex]?.controller === 'ai';
   }
 
 

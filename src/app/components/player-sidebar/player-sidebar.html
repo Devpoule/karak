@@ -6,8 +6,13 @@
        ===================================================== -->
 
   @if (showPlayer) {
-    <app-life-panel [player]="player" />
-    <app-hero-panel [player]="player" />
+    <app-life-panel
+      [player]="player"
+    />
+
+    <app-hero-panel
+      [player]="player"
+    />
   }
 
 
@@ -16,16 +21,26 @@
        ===================================================== -->
 
   @if (showInventory) {
-    <app-inventory-panel [player]="player" />
+    <app-inventory-panel
+      [player]="player"
+    />
   }
 
 
   <!-- =====================================================
        MESSAGES DU JOUEUR
+       =====================================================
+
+       La couleur du joueur est transmise au panneau afin
+       d'apporter un rappel visuel discret de son identité.
+
+       Cette couleur n'a aucune incidence sur le gameplay.
        ===================================================== -->
 
   @if (showMessage) {
-    <app-message-panel />
+    <app-message-panel
+      [playerColor]="playerColor"
+    />
   }
 
 </aside>

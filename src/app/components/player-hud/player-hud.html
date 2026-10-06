@@ -1,19 +1,37 @@
 <div class="player-hud">
 
   <!-- =====================================================
-       FICHE GAUCHE — J1
+       PANNEAU GAUCHE — JOUEURS HUMAINS
+       =====================================================
+
+       Tous les joueurs humains utilisent le panneau gauche.
+
+       Lorsqu'un autre joueur humain est sélectionné alors
+       qu'une fiche est déjà ouverte :
+
+       1. la fiche actuelle se replie ;
+       2. son animation se termine ;
+       3. le contenu est remplacé ;
+       4. la nouvelle fiche se déplie.
+
+       Le panneau reste monté dans le DOM pendant toute
+       l'animation afin de garantir un repli naturel.
        ===================================================== -->
 
-  @if (playerOne; as player) {
+  @if (leftPlayer; as player) {
     <aside
       class="player-hud__side player-hud__side--left"
       [class.player-hud__side--open]="leftPanelOpen"
-      [class.player-hud__side--active]="isActivePlayer(0)"
+      [class.player-hud__side--active]="
+        isActivePlayer(leftPlayerIndex)
+      "
       [attr.aria-hidden]="!leftPanelOpen"
+      (transitionend)="onLeftPanelTransitionEnd($event)"
     >
       <app-player-sidebar
         side="left"
         [player]="player"
+        [playerColor]="getPlayerColor(leftPlayerIndex)"
         [showPlayer]="true"
         [showInventory]="true"
         [showMessage]="true"
@@ -23,10 +41,22 @@
 
 
   <!-- =====================================================
-       FICHE DROITE — J2 À J5
+       PANNEAU DROIT — JOUEURS IA
+       =====================================================
+
+       Tous les joueurs contrôlés par l'IA utilisent le
+       panneau droit.
+
+       Le fonctionnement est symétrique à celui du panneau
+       gauche :
+
+       1. l'ancienne fiche se replie ;
+       2. son animation se termine ;
+       3. le contenu est remplacé ;
+       4. la nouvelle fiche se déplie.
        ===================================================== -->
 
-  @if (players.length > 1) {
+  @if (rightPlayer; as player) {
     <aside
       class="player-hud__side player-hud__side--right"
       [class.player-hud__side--open]="rightPanelOpen"
@@ -34,16 +64,16 @@
         isActivePlayer(rightPlayerIndex)
       "
       [attr.aria-hidden]="!rightPanelOpen"
+      (transitionend)="onRightPanelTransitionEnd($event)"
     >
-      @if (rightPlayer; as player) {
-        <app-player-sidebar
-          side="right"
-          [player]="player"
-          [showPlayer]="true"
-          [showInventory]="true"
-          [showMessage]="true"
-        />
-      }
+      <app-player-sidebar
+        side="right"
+        [player]="player"
+        [playerColor]="getPlayerColor(rightPlayerIndex)"
+        [showPlayer]="true"
+        [showInventory]="true"
+        [showMessage]="true"
+      />
     </aside>
   }
 
@@ -52,105 +82,184 @@
        COMMANDES DU TOUR
        =====================================================
 
-       Chaque joueur est représenté par une seule languette
-       en pierre.
+       Organisation :
 
-       Le chevron indique l'état de sa fiche :
-       ▲ fiche fermée
-       ▼ fiche ouverte
+       HUMAINS | MOUVEMENTS | IA
 
-       La couleur du joueur reste présente sous la forme
-       d'un liseré discret.
+       Les joueurs humains sont toujours placés à gauche
+       du compteur de mouvements.
+
+       Les joueurs contrôlés par l'IA sont toujours placés
+       à droite.
+
+       Leur numéro J1...J5 reste leur identité réelle dans
+       la partie et n'est jamais recalculé selon leur position.
+
+       Exemple :
+
+       J1 humain
+       J2 IA
+       J3 humain
+       J4 IA
+
+       devient visuellement :
+
+       J1 J3 | MOUVEMENTS | J2 J4
        ===================================================== -->
 
   <div class="player-hud__turn-controls">
 
-    <!-- J1 -->
 
-    @if (playerOne) {
-      <button
-        class="player-hud__player-control"
-        type="button"
-        [class.player-hud__player-control--open]="
-          isPlayerPanelOpen(0)
-        "
-        [class.player-hud__player-control--active]="
-          isActivePlayer(0)
-        "
-        [style.--player-color]="getPlayerColor(0)"
-        [attr.aria-label]="
-          leftPanelOpen
-            ? 'Fermer la fiche du joueur 1'
-            : 'Afficher la fiche du joueur 1'
-        "
-        [attr.aria-pressed]="leftPanelOpen"
-        (click)="togglePlayerOne()"
-      >
-        <span
-          class="player-hud__player-chevron"
-          aria-hidden="true"
+    <!-- ===================================================
+         JOUEURS HUMAINS
+         =================================================== -->
+
+    <div
+      class="
+        player-hud__players
+        player-hud__players--human
+      "
+    >
+      @for (
+        entry of humanPlayers;
+        track entry.index
+      ) {
+        <button
+          class="player-hud__player-control"
+          type="button"
+
+          [class.player-hud__player-control--open]="
+            isPlayerPanelOpen(entry.index)
+          "
+
+          [class.player-hud__player-control--active]="
+            isActivePlayer(entry.index)
+          "
+
+          [style.--player-color]="
+            getPlayerColor(entry.index)
+          "
+
+          [attr.aria-label]="
+            isPlayerPanelOpen(entry.index)
+              ? 'Fermer la fiche du joueur ' + (entry.index + 1)
+              : 'Afficher la fiche du joueur ' + (entry.index + 1)
+          "
+
+          [attr.aria-pressed]="
+            isPlayerPanelOpen(entry.index)
+          "
+
+          (click)="togglePlayerPanel(entry.index)"
         >
-          {{ leftPanelOpen ? '▼' : '▲' }}
-        </span>
 
-        <span class="player-hud__player-label">
-          J1
-        </span>
-      </button>
-    }
+          <!--
+            Le chevron indique uniquement l'état de la fiche.
+
+            ▲ = fiche repliée
+            ▼ = fiche dépliée
+          -->
+          <span
+            class="player-hud__player-chevron"
+            aria-hidden="true"
+          >
+            {{
+              isPlayerPanelOpen(entry.index)
+                ? '▼'
+                : '▲'
+            }}
+          </span>
 
 
-    <!-- MOUVEMENTS -->
+          <!--
+            Numéro réel du joueur.
+
+            L'index est conservé même lorsque l'ordre visuel
+            sépare les humains des IA.
+          -->
+          <span class="player-hud__player-label">
+            J{{ entry.index + 1 }}
+          </span>
+
+        </button>
+      }
+    </div>
+
+
+    <!-- ===================================================
+         COMPTEUR DE MOUVEMENTS
+         =================================================== -->
 
     <div class="player-hud__movements">
       <app-movement-counter />
     </div>
 
 
-    <!-- J2 À J5 -->
+    <!-- ===================================================
+         JOUEURS IA
+         =================================================== -->
 
-    <div class="player-hud__opponents">
+    <div
+      class="
+        player-hud__players
+        player-hud__players--ai
+      "
+    >
       @for (
-        player of players.slice(1);
-        track $index;
-        let playerIndex = $index
+        entry of aiPlayers;
+        track entry.index
       ) {
         <button
           class="player-hud__player-control"
           type="button"
+
           [class.player-hud__player-control--open]="
-            isPlayerPanelOpen(playerIndex + 1)
+            isPlayerPanelOpen(entry.index)
           "
+
           [class.player-hud__player-control--active]="
-            isActivePlayer(playerIndex + 1)
+            isActivePlayer(entry.index)
           "
+
           [style.--player-color]="
-            getPlayerColor(playerIndex + 1)
+            getPlayerColor(entry.index)
           "
+
           [attr.aria-label]="
-            isPlayerPanelOpen(playerIndex + 1)
-              ? 'Fermer la fiche du joueur ' + (playerIndex + 2)
-              : 'Afficher la fiche du joueur ' + (playerIndex + 2)
+            isPlayerPanelOpen(entry.index)
+              ? 'Fermer la fiche du joueur ' + (entry.index + 1)
+              : 'Afficher la fiche du joueur ' + (entry.index + 1)
           "
+
           [attr.aria-pressed]="
-            isPlayerPanelOpen(playerIndex + 1)
+            isPlayerPanelOpen(entry.index)
           "
-          (click)="toggleRightPlayer(playerIndex + 1)"
+
+          (click)="togglePlayerPanel(entry.index)"
         >
+
+          <!--
+            Même comportement que pour les humains.
+
+            Le côté d'ouverture de la fiche est déterminé
+            par le contrôleur du joueur dans PlayerHud.
+          -->
           <span
             class="player-hud__player-chevron"
             aria-hidden="true"
           >
             {{
-              isPlayerPanelOpen(playerIndex + 1)
+              isPlayerPanelOpen(entry.index)
                 ? '▼'
                 : '▲'
             }}
           </span>
 
+
           <span class="player-hud__player-label">
-            J{{ playerIndex + 2 }}
+            J{{ entry.index + 1 }}
           </span>
+
         </button>
       }
     </div>

@@ -1,5 +1,6 @@
 :host {
   display: block;
+
   width: 100%;
 }
 
@@ -9,6 +10,12 @@
    ========================================================== */
 
 .message-panel {
+  /*
+   * Couleur du joueur injectée depuis PlayerHud
+   * via PlayerSidebar.
+   */
+  --player-color: transparent;
+
   position: relative;
 
   width: 100%;
@@ -34,17 +41,25 @@
     0 6px 8px rgba(0, 0, 0, 0.6);
 
 
-  /*
-   * Surface intérieure en parchemin.
-   *
-   * Le pseudo-élément permet de conserver la bordure de pierre
-   * indépendante de la future zone de texte.
-   */
+  /* ========================================================
+     SURFACE INTÉRIEURE
+     ========================================================
+
+     Le parchemin conserve son apparence Karak.
+
+     La couleur du joueur est ajoutée sous la forme d'un
+     liseré intérieur léger. Elle sert uniquement de rappel
+     d'identité et ne doit pas dominer le panneau.
+     ======================================================== */
+
   &::before {
     content: '';
 
     position: absolute;
+
     inset: 12px;
+
+    box-sizing: border-box;
 
     background:
       radial-gradient(
@@ -61,6 +76,19 @@
     border: 2px solid var(--karak-stone-deep);
 
     box-shadow:
+      /*
+       * Rappel discret de la couleur du joueur.
+       */
+      inset 0 0 0 2px
+        color-mix(
+          in srgb,
+          var(--player-color) 70%,
+          transparent
+        ),
+
+      /*
+       * Ombre historique du parchemin.
+       */
       inset 0 0 15px rgba(85, 56, 31, 0.28);
   }
 }
@@ -76,6 +104,7 @@
    * par ::before.
    */
   position: relative;
+
   z-index: 1;
 
   margin: 8px;
