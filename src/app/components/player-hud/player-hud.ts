@@ -44,15 +44,11 @@ interface HudPlayerEntry {
  */
 @Component({
   selector: 'app-player-hud',
-  imports: [
-    PlayerSidebar,
-    MovementCounter,
-  ],
+  imports: [PlayerSidebar, MovementCounter],
   templateUrl: './player-hud.html',
   styleUrl: './player-hud.scss',
 })
 export class PlayerHud {
-
   // ==========================================================
   // PANNEAU GAUCHE — JOUEURS HUMAINS
   // ==========================================================
@@ -76,7 +72,6 @@ export class PlayerHud {
    * null signifie qu'aucun changement n'est en attente.
    */
   private pendingLeftPlayerIndex: number | null = null;
-
 
   // ==========================================================
   // PANNEAU DROIT — JOUEURS IA
@@ -102,12 +97,10 @@ export class PlayerHud {
    */
   private pendingRightPlayerIndex: number | null = null;
 
-
   constructor(
     private readonly gameService: GameService,
     private readonly playerService: PlayerService,
   ) {}
-
 
   // ==========================================================
   // JOUEURS
@@ -126,14 +119,12 @@ export class PlayerHud {
     return this.playerService.players;
   }
 
-
   /**
    * Joueur actuellement associé au panneau gauche.
    */
   get leftPlayer(): Player | null {
     return this.players[this.leftPlayerIndex] ?? null;
   }
-
 
   /**
    * Joueur actuellement associé au panneau droit.
@@ -142,14 +133,12 @@ export class PlayerHud {
     return this.players[this.rightPlayerIndex] ?? null;
   }
 
-
   /**
    * Index du joueur dont c'est actuellement le tour.
    */
   get activePlayerIndex(): number | null {
     return this.gameService.activePlayerIndex();
   }
-
 
   // ==========================================================
   // RÉPARTITION HUMAINS / IA
@@ -170,7 +159,6 @@ export class PlayerHud {
       .filter(({ player }) => player.controller === 'human');
   }
 
-
   /**
    * Joueurs IA.
    *
@@ -185,7 +173,6 @@ export class PlayerHud {
       }))
       .filter(({ player }) => player.controller === 'ai');
   }
-
 
   // ==========================================================
   // SÉLECTION D'UNE FICHE
@@ -215,7 +202,6 @@ export class PlayerHud {
     this.toggleRightPlayer(playerIndex);
   }
 
-
   // ==========================================================
   // PANNEAU GAUCHE
   // ==========================================================
@@ -238,10 +224,7 @@ export class PlayerHud {
       return;
     }
 
-    if (
-      this.leftPanelOpen
-      && this.leftPlayerIndex === playerIndex
-    ) {
+    if (this.leftPanelOpen && this.leftPlayerIndex === playerIndex) {
       this.pendingLeftPlayerIndex = null;
       this.leftPanelOpen = false;
       return;
@@ -258,7 +241,6 @@ export class PlayerHud {
     this.leftPanelOpen = false;
   }
 
-
   /**
    * Appelé lorsque la transition du panneau gauche se termine.
    *
@@ -269,9 +251,9 @@ export class PlayerHud {
    */
   onLeftPanelTransitionEnd(event: TransitionEvent): void {
     if (
-      event.propertyName !== 'transform'
-      || this.leftPanelOpen
-      || this.pendingLeftPlayerIndex === null
+      event.propertyName !== 'transform' ||
+      this.leftPanelOpen ||
+      this.pendingLeftPlayerIndex === null
     ) {
       return;
     }
@@ -281,7 +263,6 @@ export class PlayerHud {
 
     this.leftPanelOpen = true;
   }
-
 
   // ==========================================================
   // PANNEAU DROIT
@@ -299,10 +280,7 @@ export class PlayerHud {
       return;
     }
 
-    if (
-      this.rightPanelOpen
-      && this.rightPlayerIndex === playerIndex
-    ) {
+    if (this.rightPanelOpen && this.rightPlayerIndex === playerIndex) {
       this.pendingRightPlayerIndex = null;
       this.rightPanelOpen = false;
       return;
@@ -319,7 +297,6 @@ export class PlayerHud {
     this.rightPanelOpen = false;
   }
 
-
   /**
    * Appelé lorsque la transition du panneau droit se termine.
    *
@@ -328,9 +305,9 @@ export class PlayerHud {
    */
   onRightPanelTransitionEnd(event: TransitionEvent): void {
     if (
-      event.propertyName !== 'transform'
-      || this.rightPanelOpen
-      || this.pendingRightPlayerIndex === null
+      event.propertyName !== 'transform' ||
+      this.rightPanelOpen ||
+      this.pendingRightPlayerIndex === null
     ) {
       return;
     }
@@ -340,7 +317,6 @@ export class PlayerHud {
 
     this.rightPanelOpen = true;
   }
-
 
   // ==========================================================
   // ÉTAT DES FICHES
@@ -358,18 +334,11 @@ export class PlayerHud {
     }
 
     if (player.controller === 'human') {
-      return (
-        this.leftPanelOpen
-        && this.leftPlayerIndex === playerIndex
-      );
+      return this.leftPanelOpen && this.leftPlayerIndex === playerIndex;
     }
 
-    return (
-      this.rightPanelOpen
-      && this.rightPlayerIndex === playerIndex
-    );
+    return this.rightPanelOpen && this.rightPlayerIndex === playerIndex;
   }
-
 
   // ==========================================================
   // TYPE DE JOUEUR
@@ -382,7 +351,6 @@ export class PlayerHud {
     return this.players[playerIndex]?.controller === 'human';
   }
 
-
   /**
    * Vérifie que le joueur demandé existe et est contrôlé
    * par l'IA.
@@ -390,7 +358,6 @@ export class PlayerHud {
   private isAiPlayer(playerIndex: number): boolean {
     return this.players[playerIndex]?.controller === 'ai';
   }
-
 
   // ==========================================================
   // ÉTAT DU TOUR
@@ -403,6 +370,38 @@ export class PlayerHud {
     return this.activePlayerIndex === playerIndex;
   }
 
+  // ==========================================================
+  // COMMANDES DU TOUR
+  // ==========================================================
+
+  /**
+   * Indique si le joueur actuellement actif peut terminer
+   * manuellement son tour.
+   *
+   * Seul un joueur humain dispose de cette commande.
+   * Les joueurs IA seront plus tard gérés automatiquement
+   * par leur propre logique de jeu.
+   */
+  get canEndTurn(): boolean {
+    return this.gameService.activePlayer?.controller === 'human';
+  }
+
+  /**
+   * Termine le tour du joueur humain actuellement actif.
+   *
+   * GameService reste responsable :
+   *
+   * - du changement de joueur actif ;
+   * - du retour au premier joueur après le dernier ;
+   * - de la réinitialisation des mouvements.
+   */
+  endTurn(): void {
+    if (!this.canEndTurn) {
+      return;
+    }
+
+    this.gameService.endTurn();
+  }
 
   // ==========================================================
   // IDENTITÉ VISUELLE

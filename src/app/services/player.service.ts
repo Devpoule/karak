@@ -166,19 +166,12 @@ export class PlayerService {
    * J4 IA
    * J5 IA
    */
-  initialize(
-    playerCount: number,
-    humanPlayerCount = 1,
-  ): void {
+  initialize(playerCount: number, humanPlayerCount = 1): void {
     /**
      * Le nombre total de joueurs
      * doit être un entier.
      */
-    if (
-      !Number.isInteger(
-        playerCount,
-      )
-    ) {
+    if (!Number.isInteger(playerCount)) {
       return;
     }
 
@@ -187,11 +180,7 @@ export class PlayerService {
      * doit respecter les limites
      * de l'application.
      */
-    if (
-      playerCount < MIN_PLAYER_COUNT
-      || playerCount
-        > MAX_PLAYER_COUNT
-    ) {
+    if (playerCount < MIN_PLAYER_COUNT || playerCount > MAX_PLAYER_COUNT) {
       return;
     }
 
@@ -199,11 +188,7 @@ export class PlayerService {
      * Le nombre de joueurs humains
      * doit également être un entier.
      */
-    if (
-      !Number.isInteger(
-        humanPlayerCount,
-      )
-    ) {
+    if (!Number.isInteger(humanPlayerCount)) {
       return;
     }
 
@@ -215,11 +200,7 @@ export class PlayerService {
      * pas dépasser le nombre total
      * de participants.
      */
-    if (
-      humanPlayerCount < 1
-      || humanPlayerCount
-        > playerCount
-    ) {
+    if (humanPlayerCount < 1 || humanPlayerCount > playerCount) {
       return;
     }
 
@@ -239,22 +220,13 @@ export class PlayerService {
      * index 1 → J2 humain
      * index 2+ → IA
      */
-    for (
-      let playerIndex = 0;
-      playerIndex < playerCount;
-      playerIndex++
-    ) {
+    for (let playerIndex = 0; playerIndex < playerCount; playerIndex++) {
       this.players.push({
-        controller:
-          playerIndex
-            < humanPlayerCount
-            ? 'human'
-            : 'ai',
+        controller: playerIndex < humanPlayerCount ? 'human' : 'ai',
 
         lives: 5,
 
-        inventory:
-          createEmptyPlayerInventory(),
+        inventory: createEmptyPlayerInventory(),
       });
     }
   }
@@ -273,18 +245,13 @@ export class PlayerService {
    * utilisera le joueur actif déterminé
    * par le moteur de partie.
    */
-  moveTo(
-    x: number,
-    y: number,
-    direction: Direction,
-  ): void {
+  moveTo(x: number, y: number, direction: Direction): void {
     this.player.position = {
       x,
       y,
     };
 
-    this.player.facing =
-      direction;
+    this.player.facing = direction;
   }
 
   /**
@@ -298,11 +265,59 @@ export class PlayerService {
    * et n'a aucune incidence
    * sur les règles du jeu.
    */
-  face(
-    direction: Direction,
-  ): void {
-    this.player.facing =
-      direction;
+  face(direction: Direction): void {
+    this.player.facing = direction;
+  }
+
+  // ==========================================================
+  // DÉPLACEMENT DES JOUEURS RÉELS
+  // ==========================================================
+
+  /**
+   * Déplace un joueur réel de la partie vers une nouvelle
+   * position du donjon.
+   *
+   * IMPORTANT :
+   *
+   * Cette méthode modifie un joueur appartenant à `players`.
+   * Elle ne concerne donc pas l'ancien joueur temporaire
+   * `player`, conservé provisoirement pour compatibilité.
+   *
+   * La validation du déplacement n'appartient pas à ce service :
+   *
+   * - DungeonService vérifie les connexions entre les tuiles ;
+   * - ExplorationService gère les nouvelles tuiles ;
+   * - TurnService gère les mouvements disponibles.
+   *
+   * PlayerService applique uniquement la nouvelle position
+   * et l'orientation graphique du héros.
+   */
+  movePlayerTo(player: Player, x: number, y: number, direction: Direction): void {
+    if (!this.players.includes(player)) {
+      return;
+    }
+
+    player.position = {
+      x,
+      y,
+    };
+
+    player.facing = direction;
+  }
+
+  /**
+   * Modifie uniquement l'orientation graphique
+   * d'un joueur réel de la partie.
+   *
+   * L'orientation n'a aucune incidence sur les règles
+   * de déplacement : elle sert uniquement au rendu du pion.
+   */
+  facePlayer(player: Player, direction: Direction): void {
+    if (!this.players.includes(player)) {
+      return;
+    }
+
+    player.facing = direction;
   }
 
   // ==========================================================
@@ -330,10 +345,7 @@ export class PlayerService {
    * selon exactement les mêmes règles.
    */
   drawHeroes(): void {
-    const heroIds: HeroId[] =
-      HERO_DEFINITIONS.map(
-        (hero) => hero.id,
-      );
+    const heroIds: HeroId[] = HERO_DEFINITIONS.map((hero) => hero.id);
 
     /**
      * Mélange de Fisher-Yates.
@@ -342,37 +354,19 @@ export class PlayerService {
      * la même probabilité d'occuper
      * chacune des positions du paquet.
      */
-    for (
-      let i =
-        heroIds.length - 1;
-      i > 0;
-      i--
-    ) {
-      const randomIndex =
-        Math.floor(
-          Math.random()
-          * (i + 1),
-        );
+    for (let i = heroIds.length - 1; i > 0; i--) {
+      const randomIndex = Math.floor(Math.random() * (i + 1));
 
-      [
-        heroIds[i],
-        heroIds[randomIndex],
-      ] = [
-        heroIds[randomIndex],
-        heroIds[i],
-      ];
+      [heroIds[i], heroIds[randomIndex]] = [heroIds[randomIndex], heroIds[i]];
     }
 
     /**
      * Une carte différente est attribuée
      * à chacun des participants.
      */
-    this.players.forEach(
-      (player, index) => {
-        player.heroId =
-          heroIds[index];
-      },
-    );
+    this.players.forEach((player, index) => {
+      player.heroId = heroIds[index];
+    });
   }
 
   // ==========================================================
@@ -403,16 +397,13 @@ export class PlayerService {
    * sur les règles.
    */
   placeHeroesOnStart(): void {
-    this.players.forEach(
-      (player) => {
-        player.position = {
-          x: 0,
-          y: 0,
-        };
+    this.players.forEach((player) => {
+      player.position = {
+        x: 0,
+        y: 0,
+      };
 
-        player.facing =
-          'south';
-      },
-    );
+      player.facing = 'south';
+    });
   }
 }

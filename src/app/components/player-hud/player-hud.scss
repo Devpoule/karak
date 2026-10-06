@@ -105,8 +105,90 @@
    COMPTEUR DE MOUVEMENTS
    ========================================================== */
 
+/*
+ * Le compteur et la commande de fin de tour constituent
+ * le centre fixe du HUD.
+ *
+ * Les groupes humains et IA restent disposés de part
+ * et d'autre de cet ensemble.
+ */
+.player-hud__turn-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  flex: 0 0 auto;
+
+  gap: 0.4rem;
+}
+
 .player-hud__movements {
   flex: 0 0 auto;
+}
+
+/* ==========================================================
+   FIN DU TOUR
+   ========================================================== */
+
+/*
+ * La commande reprend le langage visuel des éléments
+ * en pierre du HUD afin de rester intégrée à l'interface.
+ *
+ * Elle est volontairement plus discrète que le compteur :
+ * le nombre de mouvements reste l'information principale.
+ */
+.player-hud__end-turn {
+  min-width: 110px;
+
+  padding: 0.35rem 0.8rem;
+
+  cursor: pointer;
+
+  color: var(--karak-text-light);
+
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  background: linear-gradient(
+    180deg,
+    var(--karak-stone-light),
+    var(--karak-stone),
+    var(--karak-stone-dark)
+  );
+
+  border: 2px solid var(--karak-stone-highlight);
+  border-radius: 3px;
+
+  box-shadow:
+    inset 0 0 0 2px var(--karak-stone-deep),
+    0 3px 5px rgba(0, 0, 0, 0.55);
+
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+
+  transition:
+    transform 140ms ease,
+    filter 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.player-hud__end-turn:hover {
+  filter: brightness(1.12);
+
+  transform: translateY(-1px);
+}
+
+.player-hud__end-turn:active {
+  transform: translateY(1px);
+}
+
+.player-hud__end-turn:focus-visible {
+  outline: 2px solid var(--karak-stone-highlight);
+
+  outline-offset: 3px;
 }
 
 /* ==========================================================
@@ -128,14 +210,12 @@
   gap: 0.4rem;
 }
 
-
 /*
  * Les humains se rapprochent du compteur depuis la gauche.
  */
 .player-hud__players--human {
   justify-content: flex-end;
 }
-
 
 /*
  * Les IA se développent vers la droite du compteur.
@@ -319,7 +399,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .player-hud__side,
-  .player-hud__player-control {
+  .player-hud__player-control,
+  .player-hud__end-turn {
     transition: none;
   }
 }

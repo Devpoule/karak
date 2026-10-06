@@ -172,7 +172,7 @@
          définitives du héros seront implémentées.
          =================================================== -->
 
-    @if (movementControlsEnabled) {
+    @if (movementControlsEnabled && canControlActivePlayer) {
       @if (gameService.activePlayer?.position; as position) {
         @if (playerTile; as tile) {
           @if (!pendingTile) {

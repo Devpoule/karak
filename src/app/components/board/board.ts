@@ -123,7 +123,16 @@ export class Board {
    * de déplacement et d'exploration sans supprimer le code existant,
    * qui sera repris dans la tranche dédiée aux mouvements.
    */
-  readonly movementControlsEnabled = false;
+  /**
+ * Les commandes de déplacement ne sont disponibles
+ * que lorsqu'il reste au moins un mouvement.
+ *
+ * Cette vérification empêche également de commencer
+ * une exploration lorsque le compteur est déjà à zéro.
+ */
+get movementControlsEnabled(): boolean {
+  return this.turnService.canMove;
+}
 
   // ==========================================================
   // DONJON AFFICHÉ
@@ -173,11 +182,7 @@ export class Board {
    * - une position métier dans le donjon.
    */
   get boardPlayers(): readonly Player[] {
-    return this.players.filter(
-      (player) =>
-        Boolean(player.heroId)
-        && Boolean(player.position),
-    );
+    return this.players.filter((player) => Boolean(player.heroId) && Boolean(player.position));
   }
 
   /**
@@ -189,26 +194,16 @@ export class Board {
    * automatiquement le pion principal et les marqueurs.
    */
   get tileOccupancies(): TileOccupancyView[] {
-    const groups =
-      new Map<string, BoardPlayerView[]>();
+    const groups = new Map<string, BoardPlayerView[]>();
 
-    for (
-      let playerIndex = 0;
-      playerIndex < this.players.length;
-      playerIndex++
-    ) {
-      const player =
-        this.players[playerIndex];
+    for (let playerIndex = 0; playerIndex < this.players.length; playerIndex++) {
+      const player = this.players[playerIndex];
 
-      if (
-        !player.heroId
-        || !player.position
-      ) {
+      if (!player.heroId || !player.position) {
         continue;
       }
 
-      const playerUi =
-        getPlayerUiConfig(playerIndex);
+      const playerUi = getPlayerUiConfig(playerIndex);
 
       const view: BoardPlayerView = {
         player,
@@ -217,38 +212,23 @@ export class Board {
         color: playerUi.color,
       };
 
-      const key =
-        this.getTileKey(
-          player.position.x,
-          player.position.y,
-        );
+      const key = this.getTileKey(player.position.x, player.position.y);
 
-      const group =
-        groups.get(key) ?? [];
+      const group = groups.get(key) ?? [];
 
       group.push(view);
       groups.set(key, group);
     }
 
-    return Array.from(
-      groups.entries(),
-    ).map(([key, occupants]) => {
-      const primary =
-        this.getPrimaryOccupant(
-          occupants,
-        );
+    return Array.from(groups.entries()).map(([key, occupants]) => {
+      const primary = this.getPrimaryOccupant(occupants);
 
       return {
         key,
         x: primary.player.position!.x,
         y: primary.player.position!.y,
         primary,
-        markers:
-          occupants.filter(
-            (occupant) =>
-              occupant.playerIndex
-              !== primary.playerIndex,
-          ),
+        markers: occupants.filter((occupant) => occupant.playerIndex !== primary.playerIndex),
       };
     });
   }
@@ -256,43 +236,31 @@ export class Board {
   /**
    * Définition statique du héros attribué au joueur.
    */
-  getHeroDefinition(
-    player: Player,
-  ): HeroDefinition | undefined {
+  getHeroDefinition(player: Player): HeroDefinition | undefined {
     if (!player.heroId) {
       return undefined;
     }
 
-    return getHeroDefinition(
-      player.heroId,
-    );
+    return getHeroDefinition(player.heroId);
   }
 
   /**
    * Asset du pion correspondant à l'orientation actuelle
    * du héros du joueur.
    */
-  getHeroPawnImage(
-    player: Player,
-  ): string | undefined {
+  getHeroPawnImage(player: Player): string | undefined {
     if (!player.facing) {
       return undefined;
     }
 
-    return this.getHeroDefinition(player)
-      ?.pawn[player.facing];
+    return this.getHeroDefinition(player)?.pawn[player.facing];
   }
 
   /**
    * Indique si le joueur rendu est le joueur actif.
    */
-  isActivePlayer(
-    playerIndex: number,
-  ): boolean {
-    return (
-      this.gameService.activePlayerIndex()
-      === playerIndex
-    );
+  isActivePlayer(playerIndex: number): boolean {
+    return this.gameService.activePlayerIndex() === playerIndex;
   }
 
   /**
@@ -303,17 +271,9 @@ export class Board {
    * autour de la case pour rester lisibles lorsque plusieurs joueurs
    * partagent la même tuile.
    */
-  getMarkerPosition(
-    markerIndex: number,
-    markerCount: number,
-  ): PlayerMarkerPosition {
-    const positionsByCount: Record<
-      number,
-      PlayerMarkerPosition[]
-    > = {
-      1: [
-        { x: 82, y: 18 },
-      ],
+  getMarkerPosition(markerIndex: number, markerCount: number): PlayerMarkerPosition {
+    const positionsByCount: Record<number, PlayerMarkerPosition[]> = {
+      1: [{ x: 82, y: 18 }],
       2: [
         { x: 82, y: 18 },
         { x: 18, y: 82 },
@@ -331,12 +291,7 @@ export class Board {
       ],
     };
 
-    return (
-      positionsByCount[markerCount]?.[
-        markerIndex
-      ]
-      ?? { x: 82, y: 18 }
-    );
+    return positionsByCount[markerCount]?.[markerIndex] ?? { x: 82, y: 18 };
   }
 
   /**
@@ -348,34 +303,15 @@ export class Board {
    * - sinon, on parcourt virtuellement la rotation des prochains tours ;
    * - le premier occupant rencontré dans cette rotation porte le pion.
    */
-  private getPrimaryOccupant(
-    occupants: BoardPlayerView[],
-  ): BoardPlayerView {
-    const occupantIndexes =
-      new Set(
-        occupants.map(
-          (occupant) =>
-            occupant.playerIndex,
-        ),
-      );
+  private getPrimaryOccupant(occupants: BoardPlayerView[]): BoardPlayerView {
+    const occupantIndexes = new Set(occupants.map((occupant) => occupant.playerIndex));
 
-    const turnOrder =
-      this.gameService.getTurnOrderFrom();
+    const turnOrder = this.gameService.getTurnOrderFrom();
 
-    const primaryPlayerIndex =
-      turnOrder.find(
-        (playerIndex) =>
-          occupantIndexes.has(playerIndex),
-      );
+    const primaryPlayerIndex = turnOrder.find((playerIndex) => occupantIndexes.has(playerIndex));
 
-    if (
-      primaryPlayerIndex !== undefined
-    ) {
-      return occupants.find(
-        (occupant) =>
-          occupant.playerIndex
-          === primaryPlayerIndex,
-      )!;
+    if (primaryPlayerIndex !== undefined) {
+      return occupants.find((occupant) => occupant.playerIndex === primaryPlayerIndex)!;
     }
 
     return occupants[0];
@@ -384,31 +320,28 @@ export class Board {
   /**
    * Construit une clé stable à partir des coordonnées métier.
    */
-  private getTileKey(
-    x: number,
-    y: number,
-  ): string {
+  private getTileKey(x: number, y: number): string {
     return `${x}:${y}`;
   }
 
   /**
-   * Modifie uniquement la position du joueur prototype.
+   * Déplace le joueur actuellement actif.
    *
-   * Les déplacements réels des joueurs préparés par le SETUP
-   * seront introduits dans une tranche dédiée. Tant que les
-   * contrôles restent désactivés, cette méthode ne peut pas
-   * modifier les coordonnées métier de PlayerService.players.
+   * GameService reste la source de vérité permettant
+   * d'identifier le joueur dont c'est réellement le tour.
+   *
+   * PlayerService applique ensuite la nouvelle position.
    */
-  private movePrototypePlayerTo(
-    x: number,
-    y: number,
-    direction: Direction,
-  ): void {
-    this.playerService.moveTo(
-      x,
-      y,
-      direction,
-    );
+  private moveActivePlayerTo(x: number, y: number, direction: Direction): boolean {
+    const player = this.gameService.activePlayer;
+
+    if (!player || !this.turnService.canMove) {
+      return false;
+    }
+
+    this.playerService.movePlayerTo(player, x, y, direction);
+
+    return true;
   }
 
   // ==========================================================
@@ -506,8 +439,11 @@ export class Board {
       return;
     }
 
-    const player =
-      this.gameService.activePlayer;
+    if (!this.canControlActivePlayer) {
+      return;
+    }
+
+    const player = this.gameService.activePlayer;
 
     const position = player?.position;
 
@@ -527,7 +463,9 @@ export class Board {
 
     const destination = this.dungeonService.getNeighborPosition(currentTile, direction);
 
-    this.movePrototypePlayerTo(destination.x, destination.y, direction);
+    if (this.moveActivePlayerTo(destination.x, destination.y, direction)) {
+      this.turnService.consumeMovement();
+    }
   }
 
   /**
@@ -557,8 +495,11 @@ export class Board {
       return;
     }
 
-    const player =
-      this.gameService.activePlayer;
+    if (!this.canControlActivePlayer) {
+      return;
+    }
+
+    const player = this.gameService.activePlayer;
 
     const position = player?.position;
 
@@ -575,7 +516,9 @@ export class Board {
     if (this.dungeonService.canMoveTo(currentTile, direction)) {
       const destination = this.dungeonService.getNeighborPosition(currentTile, direction);
 
-      this.movePrototypePlayerTo(destination.x, destination.y, direction);
+      if (this.moveActivePlayerTo(destination.x, destination.y, direction)) {
+        this.turnService.consumeMovement();
+      }
 
       return;
     }
@@ -586,11 +529,22 @@ export class Board {
   }
 
   /**
+   * Indique si le joueur actif peut être contrôlé
+   * manuellement depuis le plateau.
+   *
+   * Les joueurs IA utiliseront ultérieurement leur propre
+   * moteur de décision et ne doivent jamais exposer
+   * les commandes destinées à un joueur humain.
+   */
+  get canControlActivePlayer(): boolean {
+    return this.gameService.activePlayer?.controller === 'human';
+  }
+
+  /**
    * Tuile actuellement occupée par le joueur.
    */
   get playerTile(): PlacedTile | undefined {
-    const player =
-      this.gameService.activePlayer;
+    const player = this.gameService.activePlayer;
 
     const position = player?.position;
 
@@ -686,9 +640,9 @@ export class Board {
       return;
     }
 
-    this.movePrototypePlayerTo(placedTile.x, placedTile.y, direction);
-
-    this.turnService.consumeMovement();
+    if (this.moveActivePlayerTo(placedTile.x, placedTile.y, direction)) {
+      this.turnService.consumeMovement();
+    }
   }
 
   /**
@@ -709,7 +663,13 @@ export class Board {
       return;
     }
 
-    this.playerService.face('south');
+    const player = this.gameService.activePlayer;
+
+    if (!player) {
+      return;
+    }
+
+    this.playerService.facePlayer(player, 'south');
   }
 
   // ==========================================================

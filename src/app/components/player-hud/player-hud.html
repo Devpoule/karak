@@ -1,5 +1,4 @@
 <div class="player-hud">
-
   <!-- =====================================================
        PANNEAU GAUCHE — JOUEURS HUMAINS
        =====================================================
@@ -22,9 +21,7 @@
     <aside
       class="player-hud__side player-hud__side--left"
       [class.player-hud__side--open]="leftPanelOpen"
-      [class.player-hud__side--active]="
-        isActivePlayer(leftPlayerIndex)
-      "
+      [class.player-hud__side--active]="isActivePlayer(leftPlayerIndex)"
       [attr.aria-hidden]="!leftPanelOpen"
       (transitionend)="onLeftPanelTransitionEnd($event)"
     >
@@ -38,7 +35,6 @@
       />
     </aside>
   }
-
 
   <!-- =====================================================
        PANNEAU DROIT — JOUEURS IA
@@ -60,9 +56,7 @@
     <aside
       class="player-hud__side player-hud__side--right"
       [class.player-hud__side--open]="rightPanelOpen"
-      [class.player-hud__side--active]="
-        isActivePlayer(rightPlayerIndex)
-      "
+      [class.player-hud__side--active]="isActivePlayer(rightPlayerIndex)"
       [attr.aria-hidden]="!rightPanelOpen"
       (transitionend)="onRightPanelTransitionEnd($event)"
     >
@@ -76,7 +70,6 @@
       />
     </aside>
   }
-
 
   <!-- =====================================================
        COMMANDES DU TOUR
@@ -108,68 +101,35 @@
        ===================================================== -->
 
   <div class="player-hud__turn-controls">
-
-
     <!-- ===================================================
          JOUEURS HUMAINS
          =================================================== -->
 
-    <div
-      class="
-        player-hud__players
-        player-hud__players--human
-      "
-    >
-      @for (
-        entry of humanPlayers;
-        track entry.index
-      ) {
+    <div class="player-hud__players player-hud__players--human">
+      @for (entry of humanPlayers; track entry.index) {
         <button
           class="player-hud__player-control"
           type="button"
-
-          [class.player-hud__player-control--open]="
-            isPlayerPanelOpen(entry.index)
-          "
-
-          [class.player-hud__player-control--active]="
-            isActivePlayer(entry.index)
-          "
-
-          [style.--player-color]="
-            getPlayerColor(entry.index)
-          "
-
+          [class.player-hud__player-control--open]="isPlayerPanelOpen(entry.index)"
+          [class.player-hud__player-control--active]="isActivePlayer(entry.index)"
+          [style.--player-color]="getPlayerColor(entry.index)"
           [attr.aria-label]="
             isPlayerPanelOpen(entry.index)
               ? 'Fermer la fiche du joueur ' + (entry.index + 1)
               : 'Afficher la fiche du joueur ' + (entry.index + 1)
           "
-
-          [attr.aria-pressed]="
-            isPlayerPanelOpen(entry.index)
-          "
-
+          [attr.aria-pressed]="isPlayerPanelOpen(entry.index)"
           (click)="togglePlayerPanel(entry.index)"
         >
-
           <!--
             Le chevron indique uniquement l'état de la fiche.
 
             ▲ = fiche repliée
             ▼ = fiche dépliée
           -->
-          <span
-            class="player-hud__player-chevron"
-            aria-hidden="true"
-          >
-            {{
-              isPlayerPanelOpen(entry.index)
-                ? '▼'
-                : '▲'
-            }}
+          <span class="player-hud__player-chevron" aria-hidden="true">
+            {{ isPlayerPanelOpen(entry.index) ? '▼' : '▲' }}
           </span>
-
 
           <!--
             Numéro réel du joueur.
@@ -177,93 +137,73 @@
             L'index est conservé même lorsque l'ordre visuel
             sépare les humains des IA.
           -->
-          <span class="player-hud__player-label">
-            J{{ entry.index + 1 }}
-          </span>
-
+          <span class="player-hud__player-label"> J{{ entry.index + 1 }} </span>
         </button>
       }
     </div>
-
 
     <!-- ===================================================
          COMPTEUR DE MOUVEMENTS
          =================================================== -->
 
-    <div class="player-hud__movements">
-      <app-movement-counter />
-    </div>
+    <div class="player-hud__turn-center">
+      <!--
+        Compteur des mouvements disponibles.
 
+        MovementCounter reste purement visuel :
+        la gestion du changement de joueur appartient
+        au HUD et à GameService.
+      -->
+      <div class="player-hud__movements">
+        <app-movement-counter />
+      </div>
+
+      <!--
+        Seul un joueur humain peut terminer manuellement
+        son tour.
+
+        Lors du tour d'une IA, cette commande disparaît.
+        L'IA utilisera ultérieurement son propre moteur
+        de décision.
+      -->
+      @if (canEndTurn) {
+        <button class="player-hud__end-turn" type="button" (click)="endTurn()">Fin du tour</button>
+      }
+    </div>
 
     <!-- ===================================================
          JOUEURS IA
          =================================================== -->
 
-    <div
-      class="
-        player-hud__players
-        player-hud__players--ai
-      "
-    >
-      @for (
-        entry of aiPlayers;
-        track entry.index
-      ) {
+    <div class="player-hud__players player-hud__players--ai">
+      @for (entry of aiPlayers; track entry.index) {
         <button
           class="player-hud__player-control"
           type="button"
-
-          [class.player-hud__player-control--open]="
-            isPlayerPanelOpen(entry.index)
-          "
-
-          [class.player-hud__player-control--active]="
-            isActivePlayer(entry.index)
-          "
-
-          [style.--player-color]="
-            getPlayerColor(entry.index)
-          "
-
+          [class.player-hud__player-control--open]="isPlayerPanelOpen(entry.index)"
+          [class.player-hud__player-control--active]="isActivePlayer(entry.index)"
+          [style.--player-color]="getPlayerColor(entry.index)"
           [attr.aria-label]="
             isPlayerPanelOpen(entry.index)
               ? 'Fermer la fiche du joueur ' + (entry.index + 1)
               : 'Afficher la fiche du joueur ' + (entry.index + 1)
           "
-
-          [attr.aria-pressed]="
-            isPlayerPanelOpen(entry.index)
-          "
-
+          [attr.aria-pressed]="isPlayerPanelOpen(entry.index)"
           (click)="togglePlayerPanel(entry.index)"
         >
-
           <!--
             Même comportement que pour les humains.
 
             Le côté d'ouverture de la fiche est déterminé
             par le contrôleur du joueur dans PlayerHud.
           -->
-          <span
-            class="player-hud__player-chevron"
-            aria-hidden="true"
-          >
-            {{
-              isPlayerPanelOpen(entry.index)
-                ? '▼'
-                : '▲'
-            }}
+          <span class="player-hud__player-chevron" aria-hidden="true">
+            {{ isPlayerPanelOpen(entry.index) ? '▼' : '▲' }}
           </span>
 
-
-          <span class="player-hud__player-label">
-            J{{ entry.index + 1 }}
-          </span>
-
+          <span class="player-hud__player-label"> J{{ entry.index + 1 }} </span>
         </button>
       }
     </div>
-
   </div>
-
 </div>

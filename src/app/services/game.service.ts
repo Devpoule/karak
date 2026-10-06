@@ -31,8 +31,7 @@ export class GameService {
   /**
    * Étape actuellement présentée pendant la préparation.
    */
-  readonly setupStep =
-    signal<SetupStep>('player-count');
+  readonly setupStep = signal<SetupStep>('player-count');
 
   /**
    * Résultats définitifs du tour de lancer actuellement joué.
@@ -40,8 +39,7 @@ export class GameService {
    * Leur présence dans le moteur ne signifie pas qu'ils doivent
    * être immédiatement révélés par l'interface.
    */
-  readonly firstPlayerRolls =
-    signal<FirstPlayerRoll[]>([]);
+  readonly firstPlayerRolls = signal<FirstPlayerRoll[]>([]);
 
   /**
    * Joueurs encore en lice pour commencer la partie.
@@ -50,16 +48,14 @@ export class GameService {
    * En cas d'égalité au meilleur score, seuls les joueurs
    * concernés restent en lice pour le lancer suivant.
    */
-  readonly firstPlayerContenders =
-    signal<number[]>([]);
+  readonly firstPlayerContenders = signal<number[]>([]);
 
   /**
    * Index du joueur définitivement désigné pour commencer.
    *
    * Tant qu'aucun maximum unique n'existe, la valeur reste null.
    */
-  readonly firstPlayerIndex =
-    signal<number | null>(null);
+  readonly firstPlayerIndex = signal<number | null>(null);
 
   /**
    * Index du joueur dont le tour est actuellement actif.
@@ -72,8 +68,7 @@ export class GameService {
    * GameService devient ainsi la source de vérité de l'identité
    * du joueur actif, sans recalculer le premier joueur.
    */
-  readonly activePlayerIndex =
-    signal<number | null>(null);
+  readonly activePlayerIndex = signal<number | null>(null);
 
   constructor(
     private readonly dungeonService: DungeonService,
@@ -132,17 +127,11 @@ export class GameService {
    * J4 IA
    * J5 IA
    */
-  initializePlayers(
-    playerCount: number,
-    humanPlayerCount = 1,
-  ): void {
+  initializePlayers(playerCount: number, humanPlayerCount = 1): void {
     if (this.phase() !== 'setup') return;
     if (this.setupStep() !== 'player-count') return;
 
-    this.playerService.initialize(
-      playerCount,
-      humanPlayerCount,
-    );
+    this.playerService.initialize(playerCount, humanPlayerCount);
 
     this.setupStep.set('hero-draw');
   }
@@ -170,11 +159,7 @@ export class GameService {
     this.firstPlayerRolls.set([]);
     this.firstPlayerIndex.set(null);
 
-    this.firstPlayerContenders.set(
-      this.playerService.players.map(
-        (_, playerIndex) => playerIndex,
-      ),
-    );
+    this.firstPlayerContenders.set(this.playerService.players.map((_, playerIndex) => playerIndex));
 
     this.setupStep.set('first-player-roll');
   }
@@ -182,26 +167,16 @@ export class GameService {
   /**
    * Lance les deux dés d'un joueur encore en lice.
    */
-  rollPlayerForFirstPlayer(
-    playerIndex: number,
-  ): void {
+  rollPlayerForFirstPlayer(playerIndex: number): void {
     if (this.phase() !== 'setup') return;
     if (this.setupStep() !== 'first-player-roll') return;
     if (this.firstPlayerIndex() !== null) return;
 
-    if (
-      !this.firstPlayerContenders().includes(
-        playerIndex,
-      )
-    ) {
+    if (!this.firstPlayerContenders().includes(playerIndex)) {
       return;
     }
 
-    const alreadyRolled =
-      this.firstPlayerRolls().some(
-        (roll) =>
-          roll.playerIndex === playerIndex,
-      );
+    const alreadyRolled = this.firstPlayerRolls().some((roll) => roll.playerIndex === playerIndex);
 
     if (alreadyRolled) {
       return;
@@ -210,17 +185,15 @@ export class GameService {
     const die1 = this.rollDie();
     const die2 = this.rollDie();
 
-    this.firstPlayerRolls.update(
-      (rolls) => [
-        ...rolls,
-        {
-          playerIndex,
-          die1,
-          die2,
-          total: die1 + die2,
-        },
-      ],
-    );
+    this.firstPlayerRolls.update((rolls) => [
+      ...rolls,
+      {
+        playerIndex,
+        die1,
+        die2,
+        total: die1 + die2,
+      },
+    ]);
   }
 
   /**
@@ -228,12 +201,8 @@ export class GameService {
    * ont effectué leur lancer actuel.
    */
   get haveAllContendersRolled(): boolean {
-    return this.firstPlayerContenders().every(
-      (playerIndex) =>
-        this.firstPlayerRolls().some(
-          (roll) =>
-            roll.playerIndex === playerIndex,
-        ),
+    return this.firstPlayerContenders().every((playerIndex) =>
+      this.firstPlayerRolls().some((roll) => roll.playerIndex === playerIndex),
     );
   }
 
@@ -256,50 +225,28 @@ export class GameService {
    * - tie : plusieurs joueurs doivent relancer ;
    * - pending : tous les lancers nécessaires ne sont pas faits.
    */
-  resolveFirstPlayerRoll():
-    | 'winner'
-    | 'tie'
-    | 'pending' {
+  resolveFirstPlayerRoll(): 'winner' | 'tie' | 'pending' {
     if (!this.haveAllContendersRolled) {
       return 'pending';
     }
 
-    const contenderRolls =
-      this.firstPlayerRolls().filter(
-        (roll) =>
-          this.firstPlayerContenders().includes(
-            roll.playerIndex,
-          ),
-      );
-
-    const highestTotal = Math.max(
-      ...contenderRolls.map(
-        (roll) => roll.total,
-      ),
+    const contenderRolls = this.firstPlayerRolls().filter((roll) =>
+      this.firstPlayerContenders().includes(roll.playerIndex),
     );
 
-    const leaders =
-      contenderRolls.filter(
-        (roll) =>
-          roll.total === highestTotal,
-      );
+    const highestTotal = Math.max(...contenderRolls.map((roll) => roll.total));
+
+    const leaders = contenderRolls.filter((roll) => roll.total === highestTotal);
 
     if (leaders.length === 1) {
-      this.firstPlayerIndex.set(
-        leaders[0].playerIndex,
-      );
+      this.firstPlayerIndex.set(leaders[0].playerIndex);
 
       return 'winner';
     }
 
-    const tiedPlayerIndexes =
-      leaders.map(
-        (roll) => roll.playerIndex,
-      );
+    const tiedPlayerIndexes = leaders.map((roll) => roll.playerIndex);
 
-    this.firstPlayerContenders.set(
-      tiedPlayerIndexes,
-    );
+    this.firstPlayerContenders.set(tiedPlayerIndexes);
 
     /**
      * Les résultats des joueurs à égalité sont retirés afin
@@ -308,14 +255,8 @@ export class GameService {
      * Les anciens résultats des joueurs éliminés restent
      * disponibles pour l'affichage récapitulatif.
      */
-    this.firstPlayerRolls.update(
-      (rolls) =>
-        rolls.filter(
-          (roll) =>
-            !tiedPlayerIndexes.includes(
-              roll.playerIndex,
-            ),
-        ),
+    this.firstPlayerRolls.update((rolls) =>
+      rolls.filter((roll) => !tiedPlayerIndexes.includes(roll.playerIndex)),
     );
 
     return 'tie';
@@ -325,12 +266,8 @@ export class GameService {
    * Indique si un joueur est encore concerné
    * par la détermination du premier joueur.
    */
-  isFirstPlayerContender(
-    playerIndex: number,
-  ): boolean {
-    return this.firstPlayerContenders().includes(
-      playerIndex,
-    );
+  isFirstPlayerContender(playerIndex: number): boolean {
+    return this.firstPlayerContenders().includes(playerIndex);
   }
 
   /**
@@ -353,8 +290,7 @@ export class GameService {
     if (this.phase() !== 'setup') return;
     if (this.setupStep() !== 'first-player-roll') return;
 
-    const firstPlayerIndex =
-      this.firstPlayerIndex();
+    const firstPlayerIndex = this.firstPlayerIndex();
 
     if (firstPlayerIndex === null) {
       return;
@@ -363,22 +299,74 @@ export class GameService {
     this.playerService.placeHeroesOnStart();
     this.ensureStartTileExists();
 
-    this.activePlayerIndex.set(
-      firstPlayerIndex,
-    );
+    this.activePlayerIndex.set(firstPlayerIndex);
 
     this.turnService.resetMovements();
 
     this.phase.set('playing');
   }
 
+  // ==========================================================
+  // GESTION DES TOURS
+  // ==========================================================
+
+  /**
+   * Termine le tour du joueur actuellement actif
+   * et transmet la main au joueur suivant.
+   *
+   * ORDRE DES JOUEURS :
+   *
+   * L'ordre reste celui établi par les index :
+   *
+   * J1 → J2 → J3 → J4 → J5 → J1
+   *
+   * Le joueur désigné pendant le SETUP détermine uniquement
+   * le point de départ de cette rotation.
+   *
+   * Exemple :
+   *
+   * premier joueur = J3
+   *
+   * J3 → J4 → J5 → J1 → J2 → J3
+   *
+   * Une fois le joueur suivant déterminé, son nouveau tour
+   * commence avec l'intégralité de ses mouvements.
+   */
+  endTurn(): void {
+    if (this.phase() !== 'playing') {
+      return;
+      /*
+       * Un changement de joueur est interdit tant qu'une
+       * exploration attend encore sa confirmation.
+       *
+       * Cela évite qu'une tuile piochée par un joueur soit
+       * finalement manipulée pendant le tour du suivant.
+       */
+      if (this.explorationService.pendingTile) {
+        return;
+      }
+    }
+
+    const currentPlayerIndex = this.activePlayerIndex();
+
+    const playerCount = this.playerService.players.length;
+
+    if (currentPlayerIndex === null || playerCount === 0) {
+      return;
+    }
+
+    const nextPlayerIndex = (currentPlayerIndex + 1) % playerCount;
+
+    this.activePlayerIndex.set(nextPlayerIndex);
+
+    this.turnService.resetMovements();
+  }
+
   /**
    * Retourne la valeur d'un dé classique à six faces.
    */
   private rollDie(): number {
-    return Math.floor(
-      Math.random() * 6,
-    ) + 1;
+    return Math.floor(Math.random() * 6) + 1;
   }
 
   /**
@@ -412,12 +400,9 @@ export class GameService {
    * détruirait les futures tuiles explorées.
    */
   private ensureStartTileExists(): void {
-    const startTile =
-      this.dungeonService.getTileAt(0, 0);
+    const startTile = this.dungeonService.getTileAt(0, 0);
 
-    if (
-      startTile?.definitionId === 'start'
-    ) {
+    if (startTile?.definitionId === 'start') {
       return;
     }
 
@@ -447,19 +432,13 @@ export class GameService {
    * Joueur actuellement actif, lorsqu'une aventure est en cours.
    */
   get activePlayer(): Player | null {
-    const activePlayerIndex =
-      this.activePlayerIndex();
+    const activePlayerIndex = this.activePlayerIndex();
 
     if (activePlayerIndex === null) {
       return null;
     }
 
-    return (
-      this.playerService.players[
-        activePlayerIndex
-      ]
-      ?? null
-    );
+    return this.playerService.players[activePlayerIndex] ?? null;
   }
 
   /**
@@ -472,18 +451,14 @@ export class GameService {
    *
    * Cette méthode ne trie donc jamais les joueurs par score de dés.
    */
-  getTurnOrderFrom(
-    startPlayerIndex: number | null =
-      this.activePlayerIndex(),
-  ): number[] {
-    const playerCount =
-      this.playerService.players.length;
+  getTurnOrderFrom(startPlayerIndex: number | null = this.activePlayerIndex()): number[] {
+    const playerCount = this.playerService.players.length;
 
     if (
-      playerCount === 0
-      || startPlayerIndex === null
-      || startPlayerIndex < 0
-      || startPlayerIndex >= playerCount
+      playerCount === 0 ||
+      startPlayerIndex === null ||
+      startPlayerIndex < 0 ||
+      startPlayerIndex >= playerCount
     ) {
       return [];
     }
@@ -492,9 +467,7 @@ export class GameService {
       {
         length: playerCount,
       },
-      (_, offset) =>
-        (startPlayerIndex + offset)
-        % playerCount,
+      (_, offset) => (startPlayerIndex + offset) % playerCount,
     );
   }
 }
