@@ -1,15 +1,15 @@
-import { Component } from '@angular/core';
+import { Component, effect } from '@angular/core';
 import { getPlayerUiConfig } from '../../constants/player-ui.constants';
 import { getHeroDefinition } from '../../data/hero-definitions';
+import { getTokenDefinition } from '../../data/token-definitions';
 import { HeroDefinition } from '../../models/hero';
 import { Player } from '../../models/player';
+import { Direction, PlacedTile, TileDefinition } from '../../models/tile';
 import { PlayerService } from '../../services/player.service';
 import { DungeonService } from '../../services/dungeon.service';
 import { TurnService } from '../../services/turn.service';
 import { ExplorationService, PendingTilePlacement } from '../../services/exploration.service';
 import { GameService } from '../../services/game.service';
-
-import { Direction, PlacedTile, TileDefinition } from '../../models/tile';
 
 /**
  * Joueur prêt à être représenté sur le plateau.
@@ -71,7 +71,25 @@ export class Board {
     private readonly playerService: PlayerService,
     private readonly turnService: TurnService,
     readonly gameService: GameService,
-  ) {}
+  ) {
+    /*
+     * Lorsqu'un nouveau joueur prend la main, la caméra
+     * rejoint automatiquement sa position.
+     *
+     * L'effect observe activePlayerIndex(), qui est un signal.
+     */
+    effect(() => {
+      this.gameService.activePlayerIndex();
+
+      /*
+       * Laisser Angular terminer la mise à jour du joueur actif
+       * avant de calculer sa nouvelle position visuelle.
+       */
+      queueMicrotask(() => {
+        this.centerOnActivePlayer();
+      });
+    });
+  }
 
   // ==========================================================
   // GÉOMÉTRIE DE LA CARTE
@@ -124,15 +142,15 @@ export class Board {
    * qui sera repris dans la tranche dédiée aux mouvements.
    */
   /**
- * Les commandes de déplacement ne sont disponibles
- * que lorsqu'il reste au moins un mouvement.
- *
- * Cette vérification empêche également de commencer
- * une exploration lorsque le compteur est déjà à zéro.
- */
-get movementControlsEnabled(): boolean {
-  return this.turnService.canMove;
-}
+   * Les commandes de déplacement ne sont disponibles
+   * que lorsqu'il reste au moins un mouvement.
+   *
+   * Cette vérification empêche également de commencer
+   * une exploration lorsque le compteur est déjà à zéro.
+   */
+  get movementControlsEnabled(): boolean {
+    return this.turnService.canMove;
+  }
 
   // ==========================================================
   // DONJON AFFICHÉ
@@ -154,6 +172,25 @@ get movementControlsEnabled(): boolean {
    */
   getTileDefinition(tile: PlacedTile): TileDefinition | undefined {
     return this.dungeonService.getTileDefinition(tile);
+  }
+
+  /**
+   * Retourne l'image du jeton actuellement présent
+   * sur une tuile du donjon.
+   *
+   * Les tuiles ne stockent que l'identifiant métier du jeton.
+   * Les données statiques, notamment l'asset graphique,
+   * restent centralisées dans TOKEN_DEFINITIONS.
+   *
+   * @returns l'asset du jeton lorsqu'un jeton est présent,
+   * ou undefined lorsque la tuile est vide.
+   */
+  getTileTokenImage(tile: PlacedTile): string | undefined {
+    if (!tile.tokenId) {
+      return undefined;
+    }
+
+    return getTokenDefinition(tile.tokenId)?.image;
   }
 
   // ==========================================================
@@ -341,6 +378,19 @@ get movementControlsEnabled(): boolean {
 
     this.playerService.movePlayerTo(player, x, y, direction);
 
+    /*
+     * Le pion regarde dans la direction de son déplacement
+     * pendant l'animation, puis revient face au joueur.
+     */
+    window.setTimeout(() => {
+      this.playerService.facePlayer(player, 'south');
+    }, 450);
+
+    /*
+     * La caméra accompagne le héros vers sa nouvelle case.
+     */
+    this.centerOnPosition(x, y);
+
     return true;
   }
 
@@ -356,6 +406,53 @@ get movementControlsEnabled(): boolean {
    */
   offsetX = 0;
   offsetY = 0;
+
+  /**
+   * Indique si la caméra doit actuellement effectuer
+   * un déplacement animé.
+   *
+   * Le drag manuel désactive immédiatement cette animation
+   * afin que la caméra reste sous le contrôle du joueur.
+   */
+  cameraTransitionEnabled = false;
+
+  /**
+   * Recentre progressivement la caméra sur une position
+   * logique du donjon.
+   *
+   * Les coordonnées x/y appartiennent au moteur de jeu.
+   * La conversion en pixels reste donc confinée au Board.
+   */
+  private centerOnPosition(x: number, y: number): void {
+    this.cameraTransitionEnabled = true;
+
+    this.offsetX = -x * this.tileSize;
+    this.offsetY = -y * this.tileSize;
+  }
+
+  /**
+   * Recentre la caméra sur le joueur dont c'est actuellement
+   * le tour.
+   */
+  centerOnActivePlayer(): void {
+    const position = this.gameService.activePlayer?.position;
+
+    if (!position) {
+      return;
+    }
+
+    this.centerOnPosition(position.x, position.y);
+  }
+
+  /**
+   * Recentre la caméra sur la tuile de départ.
+   *
+   * La tuile de départ possède toujours les coordonnées
+   * logiques (0, 0).
+   */
+  centerOnStartTile(): void {
+    this.centerOnPosition(0, 0);
+  }
 
   /**
    * État interne du glisser-déposer de la caméra.
@@ -389,6 +486,12 @@ get movementControlsEnabled(): boolean {
 
     this.lastMouseX = event.clientX;
     this.lastMouseY = event.clientY;
+
+    /*
+     * Dès que le joueur reprend la caméra manuellement,
+     * toute transition automatique est interrompue.
+     */
+    this.cameraTransitionEnabled = false;
 
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   }
@@ -643,33 +746,6 @@ get movementControlsEnabled(): boolean {
     if (this.moveActivePlayerTo(placedTile.x, placedTile.y, direction)) {
       this.turnService.consumeMovement();
     }
-  }
-
-  /**
-   * Replace le héros face au joueur lorsque son animation
-   * de déplacement est terminée.
-   *
-   * CHOIX D'IMPLÉMENTATION :
-   *
-   * l'orientation de repos n'est appliquée qu'à la fin de la
-   * transition visuelle afin que le héros reste orienté dans
-   * le sens de son déplacement pendant celui-ci.
-   *
-   * Le moteur de jeu ne dépend ainsi pas de la durée définie
-   * dans le CSS.
-   */
-  onHeroMovementEnd(event: TransitionEvent): void {
-    if (event.propertyName !== 'left' && event.propertyName !== 'top') {
-      return;
-    }
-
-    const player = this.gameService.activePlayer;
-
-    if (!player) {
-      return;
-    }
-
-    this.playerService.facePlayer(player, 'south');
   }
 
   // ==========================================================

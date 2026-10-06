@@ -6,6 +6,7 @@ import { DungeonService } from './dungeon.service';
 import { ExplorationService } from './exploration.service';
 import { PlayerService } from './player.service';
 import { TileDeckService } from './tile-deck.service';
+import { TokenBagService } from './token-bag.service';
 import { TurnService } from './turn.service';
 
 /**
@@ -74,6 +75,7 @@ export class GameService {
     private readonly dungeonService: DungeonService,
     private readonly explorationService: ExplorationService,
     private readonly tileDeckService: TileDeckService,
+    private readonly tokenBagService: TokenBagService,
     private readonly playerService: PlayerService,
     private readonly turnService: TurnService,
   ) {}
@@ -82,6 +84,14 @@ export class GameService {
    * Commence la préparation d'une nouvelle partie.
    *
    * Tous les états propres au SETUP sont réinitialisés.
+   *
+   * Les éléments physiques nécessaires à l'aventure sont
+   * également préparés :
+   *
+   * - donjon ;
+   * - état d'exploration ;
+   * - pioche des tuiles ;
+   * - sachet monstres/trésors.
    */
   initialize(): void {
     this.phase.set('setup');
@@ -95,6 +105,7 @@ export class GameService {
     this.initializeDungeon();
     this.initializeExploration();
     this.initializeTileDeck();
+    this.initializeTokenBag();
   }
 
   /**
@@ -335,20 +346,20 @@ export class GameService {
   endTurn(): void {
     if (this.phase() !== 'playing') {
       return;
-      /*
-       * Un changement de joueur est interdit tant qu'une
-       * exploration attend encore sa confirmation.
-       *
-       * Cela évite qu'une tuile piochée par un joueur soit
-       * finalement manipulée pendant le tour du suivant.
-       */
-      if (this.explorationService.pendingTile) {
-        return;
-      }
+    }
+
+    /*
+     * Un changement de joueur est interdit tant qu'une
+     * exploration attend encore sa confirmation.
+     *
+     * Cela évite qu'une tuile piochée par un joueur soit
+     * finalement manipulée pendant le tour du suivant.
+     */
+    if (this.explorationService.pendingTile) {
+      return;
     }
 
     const currentPlayerIndex = this.activePlayerIndex();
-
     const playerCount = this.playerService.players.length;
 
     if (currentPlayerIndex === null || playerCount === 0) {
@@ -389,6 +400,24 @@ export class GameService {
    */
   private initializeTileDeck(): void {
     this.tileDeckService.initialize();
+  }
+
+  /**
+   * Prépare le sachet monstres/trésors pour une nouvelle partie.
+   *
+   * RÈGLE OFFICIELLE KARAK :
+   *
+   * le sachet du jeu de base contient initialement :
+   *
+   * - 43 monstres ;
+   * - 10 coffres ;
+   * - soit 53 jetons au total.
+   *
+   * Les jetons sont mélangés afin que chaque salle nouvellement
+   * découverte puisse en recevoir un aléatoirement.
+   */
+  private initializeTokenBag(): void {
+    this.tokenBagService.initialize();
   }
 
   /**

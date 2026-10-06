@@ -1,3 +1,5 @@
+import { TokenDefinitionId } from './token';
+
 /**
  * Représente les quatre directions utilisées par le moteur
  * pour décrire les ouvertures et les connexions des tuiles.
@@ -184,7 +186,8 @@ export interface TileDefinition {
  *   → décrit ce qu'est la tuile.
  *
  * PlacedTile
- *   → décrit où et comment elle est placée.
+ *   → décrit où et comment elle est placée ainsi que son état
+ *     dynamique pendant la partie.
  *
  * CONVENTION DU MOTEUR :
  *
@@ -227,8 +230,23 @@ export interface PlacedTile {
    * 0° → 90° → 180° → 270°
    */
   rotation: number;
-}
 
+  /**
+   * Jeton actuellement présent sur cette tuile.
+   *
+   * undefined
+   *   → aucun jeton n'est présent.
+   *
+   * Un identifiant est stocké plutôt qu'une TokenDefinition
+   * complète afin de conserver les données statiques dans
+   * TOKEN_DEFINITIONS.
+   *
+   * Cette propriété représente l'état dynamique du donjon :
+   * un jeton pourra apparaître, rester sur place ou être
+   * retiré au cours de la partie.
+   */
+  tokenId?: TokenDefinitionId;
+}
 
 // ==========================================================
 // ROTATION DES DIRECTIONS

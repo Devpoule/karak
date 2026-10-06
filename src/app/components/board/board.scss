@@ -63,6 +63,7 @@
   top: 50%;
   left: 50%;
 
+  will-change: transform;
   transform-origin: top left;
 
   background-color: var(--karak-dungeon);
@@ -83,6 +84,16 @@
     var(--tile-size) var(--tile-size),
     var(--tile-size) var(--tile-size),
     100% 100%;
+}
+
+/*
+ * Déplacement automatique doux de la caméra.
+ *
+ * La transition n'est activée que lors d'un recentrage
+ * automatique. Le drag manuel reste immédiatement réactif.
+ */
+.board__world--camera-transition {
+  transition: transform 3500ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ==========================================================
@@ -107,65 +118,44 @@
   isolation: isolate;
 
   /* ----------------------------------------------------------
-     HALO D'EXPLORATION
-     ---------------------------------------------------------- */
-
-  /*
-   * Chaque tuile éclaire légèrement la zone qui l'entoure.
-   *
-   * Lorsque plusieurs tuiles sont voisines, leurs halos se
-   * superposent naturellement et rendent la zone explorée
-   * plus lumineuse.
-   *
-   * Le halo est purement visuel.
-   */
-  &::before {
-    content: '';
-
-    position: absolute;
-
-    /*
-     * Le halo dépasse approximativement d'une case
-     * autour de la tuile.
-     */
-    inset: calc(-1 * var(--tile-size));
-
-    border-radius: 50%;
-
-    background: radial-gradient(
-      circle,
-      rgba(143, 119, 153, 0.24) 0%,
-      rgba(111, 88, 124, 0.18) 28%,
-      rgba(77, 61, 89, 0.1) 50%,
-      transparent 72%
-    );
-
-    /*
-     * Le halo ne doit jamais intercepter une interaction
-     * destinée au plateau.
-     */
-    pointer-events: none;
-
-    z-index: -1;
-  }
-
-  /* ----------------------------------------------------------
      IMAGE DE LA TUILE
      ---------------------------------------------------------- */
 
-  img {
+  .board__tile-image {
+    position: relative;
+    z-index: 0;
+
     display: block;
 
     width: 100%;
     height: 100%;
 
-    /*
-     * Les PointerEvents restent portés par .board__tile.
-     * L'image elle-même n'intervient jamais dans la sélection
-     * ou le déplacement de la caméra.
-     */
     pointer-events: none;
     user-select: none;
+  }
+
+  /* ----------------------------------------------------------
+     JETON PRÉSENT SUR LA TUILE
+     ---------------------------------------------------------- */
+
+  .board__token {
+    position: absolute;
+    z-index: 2;
+
+    top: 50%;
+    left: 50%;
+
+    width: 48%;
+    height: 48%;
+
+    transform: translate(-50%, -50%);
+
+    object-fit: contain;
+
+    pointer-events: none;
+    user-select: none;
+
+    filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.8));
   }
 }
 
@@ -602,6 +592,56 @@
   transition:
     opacity 500ms ease,
     transform 500ms ease;
+}
+
+/* ==========================================================
+   OUTILS DE CAMÉRA
+   ========================================================== */
+
+.board__camera-tools {
+  position: absolute;
+  z-index: 50;
+
+  right: 14px;
+  bottom: 14px;
+
+  display: flex;
+  gap: 6px;
+
+  padding: 5px;
+
+  border: 1px solid rgba(220, 200, 160, 0.45);
+  border-radius: 6px;
+
+  background: rgba(28, 24, 20, 0.82);
+
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55);
+}
+
+.board__camera-tool {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+
+  padding: 0;
+
+  border: 1px solid rgba(220, 200, 160, 0.65);
+  border-radius: 4px;
+
+  background: rgba(58, 49, 40, 0.95);
+  color: #eee1c5;
+
+  font-size: 18px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  &:hover {
+    filter: brightness(1.2);
+  }
 }
 
 /* ==========================================================

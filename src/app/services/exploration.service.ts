@@ -10,7 +10,7 @@ import {
 
 import { DungeonService } from './dungeon.service';
 import { TileDeckService } from './tile-deck.service';
-
+import { TokenBagService } from './token-bag.service';
 
 /**
  * Représente une exploration commencée mais dont la nouvelle
@@ -26,7 +26,6 @@ import { TileDeckService } from './tile-deck.service';
  * son déclenchement.
  */
 export interface PendingTilePlacement {
-
   /**
    * Tuile depuis laquelle l'exploration a commencé.
    */
@@ -59,7 +58,6 @@ export interface PendingTilePlacement {
   rotation: number;
 }
 
-
 /**
  * Orchestre le processus d'exploration du donjon.
  *
@@ -77,6 +75,12 @@ export interface PendingTilePlacement {
  *   placement
  *          │
  *          ▼
+ *   découverte éventuelle d'une salle
+ *          │
+ *          ▼
+ *   tirage d'un jeton monstres/trésors
+ *          │
+ *          ▼
  *   entrée du héros
  *
  * RESPONSABILITÉS :
@@ -87,24 +91,27 @@ export interface PendingTilePlacement {
  * - conserver la tuile et la direction choisie ;
  * - gérer l'orientation de la tuile ;
  * - vérifier son raccordement à la tuile source ;
- * - confirmer son placement.
+ * - confirmer son placement ;
+ * - tirer le contenu d'une salle nouvellement découverte.
  *
  * DungeonService
  *   → source de vérité du donjon.
  *
  * TileDeckService
- *   → source de vérité de la pioche.
+ *   → source de vérité de la pioche des tuiles.
+ *
+ * TokenBagService
+ *   → source de vérité du sachet monstres/trésors.
  */
 @Injectable({
   providedIn: 'root',
 })
 export class ExplorationService {
-
   constructor(
     private readonly dungeonService: DungeonService,
     private readonly tileDeckService: TileDeckService,
+    private readonly tokenBagService: TokenBagService,
   ) {}
-
 
   // ==========================================================
   // ÉTAT DE L'EXPLORATION
@@ -127,7 +134,6 @@ export class ExplorationService {
     this.pendingTile = null;
   }
 
-
   // ==========================================================
   // POSSIBILITÉS D'EXPLORATION
   // ==========================================================
@@ -141,21 +147,11 @@ export class ExplorationService {
    * - la tuile actuelle possède une ouverture dans cette direction ;
    * - aucune tuile n'occupe encore la position voisine.
    */
-  canExplore(
-    tile: PlacedTile,
-    direction: Direction,
-  ): boolean {
-    const neighbor = this.dungeonService.getNeighbor(
-      tile,
-      direction,
-    );
+  canExplore(tile: PlacedTile, direction: Direction): boolean {
+    const neighbor = this.dungeonService.getNeighbor(tile, direction);
 
-    return (
-      !neighbor &&
-      this.dungeonService.hasTileOpening(tile, direction)
-    );
+    return !neighbor && this.dungeonService.hasTileOpening(tile, direction);
   }
-
 
   // ==========================================================
   // DÉCLENCHEMENT DE L'EXPLORATION
@@ -179,10 +175,7 @@ export class ExplorationService {
    * La tuile ne rejoint le donjon qu'après confirmation
    * de son orientation.
    */
-  start(
-    tile: PlacedTile,
-    direction: Direction,
-  ): void {
+  start(tile: PlacedTile, direction: Direction): void {
     if (!this.canExplore(tile, direction) || this.pendingTile) {
       return;
     }
@@ -200,7 +193,6 @@ export class ExplorationService {
       rotation: 0,
     };
   }
-
 
   // ==========================================================
   // POSITION DU PLACEMENT
@@ -224,7 +216,6 @@ export class ExplorationService {
     );
   }
 
-
   // ==========================================================
   // ORIENTATION DE LA TUILE
   // ==========================================================
@@ -241,10 +232,8 @@ export class ExplorationService {
       return;
     }
 
-    this.pendingTile.rotation =
-      (this.pendingTile.rotation + 90) % 360;
+    this.pendingTile.rotation = (this.pendingTile.rotation + 90) % 360;
   }
-
 
   // ==========================================================
   // VALIDATION DU PLACEMENT
@@ -267,9 +256,7 @@ export class ExplorationService {
       return false;
     }
 
-    const requiredDirection = getOppositeDirection(
-      this.pendingTile.direction,
-    );
+    const requiredDirection = getOppositeDirection(this.pendingTile.direction);
 
     return hasOpening(
       this.pendingTile.definition.openings,
@@ -278,7 +265,6 @@ export class ExplorationService {
     );
   }
 
-
   // ==========================================================
   // CONFIRMATION DU PLACEMENT
   // ==========================================================
@@ -286,23 +272,26 @@ export class ExplorationService {
   /**
    * Place définitivement la tuile explorée dans le donjon.
    *
-   * Le placement est refusé lorsque :
+   * RÈGLE OFFICIELLE KARAK :
    *
-   * - aucune exploration n'est en cours ;
-   * - l'orientation choisie ne permet pas l'entrée du héros ;
-   * - la position ne peut pas être déterminée.
+   * lorsqu'une salle est découverte, un jeton est immédiatement
+   * tiré du sachet monstres/trésors et placé dans cette salle.
    *
-   * Une fois le placement effectué, l'exploration en attente
-   * est libérée.
+   * Les couloirs ne provoquent aucun tirage.
+   *
+   * Cette méthode ne résout volontairement pas encore :
+   *
+   * - les combats ;
+   * - l'ouverture des coffres ;
+   * - la récupération d'un trésor.
+   *
+   * Ces règles appartiennent aux étapes suivantes du manuel.
    *
    * @returns la tuile placée lorsque la confirmation réussit,
    * ou null lorsque la confirmation est refusée.
    */
   confirmPlacement(): PlacedTile | null {
-    if (
-      !this.pendingTile ||
-      !this.isPendingTilePlacementValid()
-    ) {
+    if (!this.pendingTile || !this.isPendingTilePlacementValid()) {
       return null;
     }
 
@@ -312,12 +301,31 @@ export class ExplorationService {
       return null;
     }
 
+    /*
+     * La définition doit être conservée avant de libérer
+     * pendingTile, car elle détermine notamment si le secteur
+     * découvert est une salle.
+     */
+    const definition = this.pendingTile.definition;
+
     const placedTile: PlacedTile = {
-      definitionId: this.pendingTile.definition.id,
+      definitionId: definition.id,
       x: position.x,
       y: position.y,
       rotation: this.pendingTile.rotation,
     };
+
+    /*
+     * Une salle nouvellement découverte reçoit immédiatement
+     * un jeton provenant du sachet monstres/trésors.
+     */
+    if (definition.kind === 'room') {
+      const token = this.tokenBagService.draw();
+
+      if (token) {
+        placedTile.tokenId = token.id;
+      }
+    }
 
     this.dungeonService.placeTile(placedTile);
 

@@ -32,10 +32,41 @@
 
   <div
     class="board__world"
+    [class.board__world--camera-transition]="cameraTransitionEnabled"
     [style.width.px]="mapSizeInPixels"
     [style.height.px]="mapSizeInPixels"
     [style.transform]="worldTransform"
   >
+
+  <!-- =====================================================
+     OUTILS DE CAMÉRA
+     ===================================================== -->
+
+  <div
+    class="board__camera-tools"
+    (pointerdown)="$event.stopPropagation()"
+  >
+    <button
+      type="button"
+      class="board__camera-tool"
+      title="Centrer sur le joueur actif"
+      aria-label="Centrer sur le joueur actif"
+      (click)="centerOnActivePlayer()"
+    >
+      ◎
+    </button>
+
+    <button
+      type="button"
+      class="board__camera-tool"
+      title="Centrer sur la tuile de départ"
+      aria-label="Centrer sur la tuile de départ"
+      (click)="centerOnStartTile()"
+    >
+      ⌂
+    </button>
+  </div>
+
     <!-- ===================================================
          TUILES POSÉES
          ===================================================
@@ -52,12 +83,30 @@
         [style.left.px]="mapCenterInPixels + tile.x * tileSize - tileSize / 2"
         [style.top.px]="mapCenterInPixels + tile.y * tileSize - tileSize / 2"
       >
+        <!-- Image de la tuile -->
+
         <img
+          class="board__tile-image"
           [src]="getTileDefinition(tile)?.image"
           [style.transform]="'rotate(' + tile.rotation + 'deg)'"
           alt=""
           draggable="false"
         />
+
+        <!--
+    Jeton actuellement présent sur la tuile.
+
+    Il peut s'agir à ce stade :
+    - d'un monstre ;
+    - d'un coffre fermé.
+
+    Le jeton appartient à l'état dynamique de PlacedTile
+    et n'est affiché que lorsqu'un tokenId est présent.
+  -->
+
+        @if (getTileTokenImage(tile); as tokenImage) {
+          <img class="board__token" [src]="tokenImage" alt="" draggable="false" />
+        }
       </div>
     }
 
@@ -82,7 +131,6 @@
           [style.left.px]="mapCenterInPixels + occupancy.x * tileSize - tileSize / 2"
           [style.top.px]="mapCenterInPixels + occupancy.y * tileSize - tileSize / 2"
           [style.--player-color]="occupancy.primary.color"
-          (transitionend)="onHeroMovementEnd($event)"
         >
           <img [src]="pawnImage" [alt]="hero?.name ?? 'Héros'" draggable="false" />
 
@@ -119,12 +167,13 @@
     @if (pendingTile; as pending) {
       @if (getPendingTilePosition(); as position) {
         <div
-          class="board__tile board__tile--pending"
+          class="board__tile board__tile--pending board__tile-image"
           [class.board__tile--invalid]="!isPendingTilePlacementValid()"
           [style.left.px]="mapCenterInPixels + position.x * tileSize - tileSize / 2"
           [style.top.px]="mapCenterInPixels + position.y * tileSize - tileSize / 2"
         >
           <img
+            class="board__tile-image"
             [src]="pending.definition.image"
             [style.transform]="'rotate(' + pending.rotation + 'deg)'"
             alt=""
