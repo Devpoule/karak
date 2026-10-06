@@ -50,6 +50,67 @@ export const DIRECTIONS: Direction[] = [
 
 
 // ==========================================================
+// NATURE DES TUILES
+// ==========================================================
+
+/**
+ * Nature structurelle d'une tuile.
+ *
+ * Cette propriété décrit le type de secteur représenté
+ * par la tuile indépendamment de ses éventuelles
+ * particularités de gameplay.
+ *
+ * start
+ *   → tuile de départ du donjon ;
+ *
+ * corridor
+ *   → couloir dans lequel le héros peut circuler ;
+ *
+ * room
+ *   → pièce dont la découverte provoquera ultérieurement
+ *     le tirage d'un jeton monstres/trésors.
+ *
+ * IMPORTANT :
+ *
+ * Un portail ou une fontaine ne constitue pas une nature
+ * différente de tuile.
+ *
+ * Il s'agit d'une particularité portée par un couloir.
+ * Ces éléments sont donc décrits séparément par TileFeature.
+ */
+export type TileKind =
+  | 'start'
+  | 'corridor'
+  | 'room';
+
+
+/**
+ * Particularité éventuelle présente sur une tuile.
+ *
+ * Une feature complète la nature structurelle de la tuile
+ * sans la remplacer.
+ *
+ * Exemple :
+ *
+ * un portail est représenté par :
+ *
+ * kind: 'corridor'
+ * feature: 'portal'
+ *
+ * Cela permet de conserver la distinction entre :
+ *
+ * - la structure du secteur ;
+ * - l'effet particulier qu'il contient.
+ *
+ * Les règles associées à ces features seront implémentées
+ * séparément lorsque leur étape sera atteinte dans le manuel.
+ */
+export type TileFeature =
+  | 'portal'
+  | 'healing-fountain';
+
+
+// ==========================================================
 // MODÈLES DES TUILES
 // ==========================================================
 
@@ -77,6 +138,27 @@ export interface TileDefinition {
    * Chemin vers l'asset graphique représentant la tuile.
    */
   image: string;
+
+  /**
+   * Nature structurelle de la tuile.
+   *
+   * Cette information permettra notamment de distinguer
+   * les couloirs des pièces lors de l'exploration.
+   */
+  kind: TileKind;
+
+  /**
+   * Particularité éventuelle présente sur la tuile.
+   *
+   * Exemple :
+   *
+   * 'portal'
+   * 'healing-fountain'
+   *
+   * L'absence de valeur signifie que la tuile ne possède
+   * aucune feature particulière actuellement modélisée.
+   */
+  feature?: TileFeature;
 
   /**
    * Ouvertures présentes sur l'asset dans son orientation
