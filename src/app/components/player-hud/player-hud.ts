@@ -371,39 +371,6 @@ export class PlayerHud {
   }
 
   // ==========================================================
-  // COMMANDES DU TOUR
-  // ==========================================================
-
-  /**
-   * Indique si le joueur actuellement actif peut terminer
-   * manuellement son tour.
-   *
-   * Seul un joueur humain dispose de cette commande.
-   * Les joueurs IA seront plus tard gérés automatiquement
-   * par leur propre logique de jeu.
-   */
-  get canEndTurn(): boolean {
-    return this.gameService.activePlayer?.controller === 'human';
-  }
-
-  /**
-   * Termine le tour du joueur humain actuellement actif.
-   *
-   * GameService reste responsable :
-   *
-   * - du changement de joueur actif ;
-   * - du retour au premier joueur après le dernier ;
-   * - de la réinitialisation des mouvements.
-   */
-  endTurn(): void {
-    if (!this.canEndTurn) {
-      return;
-    }
-
-    this.gameService.endTurn();
-  }
-
-  // ==========================================================
   // IDENTITÉ VISUELLE
   // ==========================================================
 

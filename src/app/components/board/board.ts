@@ -532,6 +532,26 @@ export class Board {
   // ==========================================================
 
   /**
+   * Termine volontairement le tour du joueur actif.
+   *
+   * Le joueur peut renoncer aux mouvements qu'il lui reste.
+   *
+   * Une exploration déjà commencée doit toutefois être
+   * confirmée avant de pouvoir terminer le tour.
+   */
+  endTurn(): void {
+    if (!this.canControlActivePlayer) {
+      return;
+    }
+
+    if (this.pendingTile) {
+      return;
+    }
+
+    this.gameService.endTurn();
+  }
+
+  /**
    * Tente de déplacer le joueur dans la direction demandée.
    *
    * Le déplacement n'est effectué que si une tuile existante
@@ -567,7 +587,25 @@ export class Board {
     const destination = this.dungeonService.getNeighborPosition(currentTile, direction);
 
     if (this.moveActivePlayerTo(destination.x, destination.y, direction)) {
-      this.turnService.consumeMovement();
+      this.consumePlayerMovement();
+    }
+  }
+
+  /**
+   * Consomme un déplacement du joueur humain.
+   *
+   * RÈGLE OFFICIELLE KARAK :
+   * après le quatrième déplacement, le tour prend fin
+   * automatiquement.
+   *
+   * Il ne doit donc jamais être nécessaire de cliquer
+   * sur "Fin du tour" lorsque le compteur atteint zéro.
+   */
+  private consumePlayerMovement(): void {
+    this.turnService.consumeMovement();
+
+    if (!this.turnService.canMove) {
+      this.gameService.endTurn();
     }
   }
 
@@ -575,23 +613,16 @@ export class Board {
    * Exécute l'action disponible dans une direction depuis
    * la tuile actuellement occupée par le joueur.
    *
-   * Sans tuile piochée :
+   * Trois situations sont possibles :
    *
-   * - une tuile connectée existe : déplacement normal ;
-   * - une sortie inexplorée existe : aucune exploration n'est
-   *   déclenchée automatiquement.
+   * 1. une exploration est déjà en cours :
+   *    la même tuile piochée change simplement d'emplacement ;
    *
-   * Avec une tuile piochée :
+   * 2. une tuile connectée existe :
+   *    le héros s'y déplace ;
    *
-   * - une sortie explorable sélectionne l'emplacement envisagé
-   *   pour cette tuile ;
-   * - le joueur peut changer cette sélection librement avant
-   *   la confirmation définitive.
-   *
-   * CHOIX D'IMPLÉMENTATION :
-   *
-   * la sélection d'une direction et la pioche sont désormais
-   * deux actions indépendantes.
+   * 3. une sortie inexplorée existe :
+   *    une nouvelle exploration commence.
    */
   handlePlayerDirection(direction: Direction): void {
     if (!this.movementControlsEnabled) {
@@ -603,7 +634,6 @@ export class Board {
     }
 
     const player = this.gameService.activePlayer;
-
     const position = player?.position;
 
     if (!position) {
@@ -616,16 +646,33 @@ export class Board {
       return;
     }
 
+    /*
+     * Une tuile est déjà en attente.
+     *
+     * Le joueur change uniquement l'endroit où il envisage
+     * de la poser. Aucune nouvelle tuile n'est piochée.
+     */
+    if (this.explorationService.pendingTile) {
+      this.explorationService.changePendingDirection(direction);
+      return;
+    }
+
+    /*
+     * Déplacement dans une partie déjà explorée du donjon.
+     */
     if (this.dungeonService.canMoveTo(currentTile, direction)) {
       const destination = this.dungeonService.getNeighborPosition(currentTile, direction);
 
       if (this.moveActivePlayerTo(destination.x, destination.y, direction)) {
-        this.turnService.consumeMovement();
+        this.consumePlayerMovement();
       }
 
       return;
     }
 
+    /*
+     * Exploration d'un nouveau secteur.
+     */
     if (this.explorationService.canExplore(currentTile, direction)) {
       this.explorationService.start(currentTile, direction);
     }
@@ -698,6 +745,23 @@ export class Board {
   }
 
   /**
+   * Indique si une direction doit être proposée au joueur.
+   *
+   * Lorsqu'une exploration est en attente, seules les sorties
+   * encore inexplorées peuvent recevoir la tuile déjà piochée.
+   *
+   * En temps normal, une direction est disponible lorsqu'elle
+   * permet soit un déplacement, soit une exploration.
+   */
+  canUseDirection(tile: PlacedTile, direction: Direction): boolean {
+    if (this.pendingTile) {
+      return this.canExplore(tile, direction);
+    }
+
+    return this.canMoveTo(tile, direction) || this.canExplore(tile, direction);
+  }
+
+  /**
    * Fait pivoter la tuile actuellement en attente.
    */
   rotatePendingTile(): void {
@@ -744,7 +808,7 @@ export class Board {
     }
 
     if (this.moveActivePlayerTo(placedTile.x, placedTile.y, direction)) {
-      this.turnService.consumeMovement();
+      this.consumePlayerMovement();
     }
   }
 

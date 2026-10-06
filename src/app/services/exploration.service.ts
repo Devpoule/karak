@@ -194,6 +194,32 @@ export class ExplorationService {
     };
   }
 
+  /**
+   * Change l'emplacement envisagé d'une tuile déjà piochée.
+   *
+   * Tant que la tuile n'a pas été confirmée, le joueur peut
+   * changer d'avis et sélectionner une autre sortie inexplorée
+   * depuis la même tuile source.
+   *
+   * IMPORTANT :
+   * - aucune nouvelle tuile n'est piochée ;
+   * - la rotation actuelle est conservée ;
+   * - seule la direction de placement change.
+   */
+  changePendingDirection(direction: Direction): void {
+    if (!this.pendingTile) {
+      return;
+    }
+
+    const sourceTile = this.pendingTile.sourceTile;
+
+    if (!this.canExplore(sourceTile, direction)) {
+      return;
+    }
+
+    this.pendingTile.direction = direction;
+  }
+
   // ==========================================================
   // POSITION DU PLACEMENT
   // ==========================================================

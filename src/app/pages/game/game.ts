@@ -72,7 +72,7 @@ export class Game implements OnInit, OnDestroy {
    * Cette valeur appartient à la présentation :
    * elle n'a aucune incidence sur les règles du jeu.
    */
-  private readonly aiActionDelay = 700;
+  private readonly aiActionDelay = 1800;
 
   /**
    * Empêche plusieurs boucles IA de fonctionner

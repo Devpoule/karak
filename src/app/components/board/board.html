@@ -224,64 +224,74 @@
     @if (movementControlsEnabled && canControlActivePlayer) {
       @if (gameService.activePlayer?.position; as position) {
         @if (playerTile; as tile) {
-          @if (!pendingTile) {
-            <div
-              class="board__movement-controls"
-              [style.left.px]="mapCenterInPixels + position.x * tileSize"
-              [style.top.px]="mapCenterInPixels + position.y * tileSize"
-            >
-              @if (canMoveTo(tile, 'north') || canExplore(tile, 'north')) {
-                <button
-                  class="board__movement-control board__movement-control--north"
-                  [class.board__movement-control--explore]="canExplore(tile, 'north')"
-                  type="button"
-                  (pointerdown)="$event.stopPropagation()"
-                  (click)="handlePlayerDirection('north')"
-                >
-                  <span>▲</span>
-                </button>
-              }
+          <div
+            class="board__movement-controls"
+            [style.left.px]="mapCenterInPixels + position.x * tileSize"
+            [style.top.px]="mapCenterInPixels + position.y * tileSize"
+          >
+            @if (canUseDirection(tile, 'north')) {
+              <button
+                class="board__movement-control board__movement-control--north"
+                [class.board__movement-control--explore]="canExplore(tile, 'north')"
+                type="button"
+                (pointerdown)="$event.stopPropagation()"
+                (click)="handlePlayerDirection('north')"
+              >
+                <span>▲</span>
+              </button>
+            }
 
-              @if (canMoveTo(tile, 'east') || canExplore(tile, 'east')) {
-                <button
-                  class="board__movement-control board__movement-control--east"
-                  [class.board__movement-control--explore]="canExplore(tile, 'east')"
-                  type="button"
-                  aria-label="Se déplacer vers l'est"
-                  (pointerdown)="$event.stopPropagation()"
-                  (click)="handlePlayerDirection('east')"
-                >
-                  <span>▶</span>
-                </button>
-              }
+            @if (canUseDirection(tile, 'east')) {
+              <button
+                class="board__movement-control board__movement-control--east"
+                [class.board__movement-control--explore]="canExplore(tile, 'east')"
+                type="button"
+                aria-label="Se déplacer vers l'est"
+                (pointerdown)="$event.stopPropagation()"
+                (click)="handlePlayerDirection('east')"
+              >
+                <span>▶</span>
+              </button>
+            }
 
-              @if (canMoveTo(tile, 'south') || canExplore(tile, 'south')) {
-                <button
-                  class="board__movement-control board__movement-control--south"
-                  [class.board__movement-control--explore]="canExplore(tile, 'south')"
-                  type="button"
-                  aria-label="Se déplacer vers le sud"
-                  (pointerdown)="$event.stopPropagation()"
-                  (click)="handlePlayerDirection('south')"
-                >
-                  <span>▼</span>
-                </button>
-              }
+            @if (canUseDirection(tile, 'south')) {
+              <button
+                class="board__movement-control board__movement-control--south"
+                [class.board__movement-control--explore]="canExplore(tile, 'south')"
+                type="button"
+                aria-label="Se déplacer vers le sud"
+                (pointerdown)="$event.stopPropagation()"
+                (click)="handlePlayerDirection('south')"
+              >
+                <span>▼</span>
+              </button>
+            }
 
-              @if (canMoveTo(tile, 'west') || canExplore(tile, 'west')) {
-                <button
-                  class="board__movement-control board__movement-control--west"
-                  [class.board__movement-control--explore]="canExplore(tile, 'west')"
-                  type="button"
-                  aria-label="Se déplacer vers l'ouest"
-                  (pointerdown)="$event.stopPropagation()"
-                  (click)="handlePlayerDirection('west')"
-                >
-                  <span>◀</span>
-                </button>
-              }
-            </div>
-          }
+            @if (canUseDirection(tile, 'west')) {
+              <button
+                class="board__movement-control board__movement-control--west"
+                [class.board__movement-control--explore]="canExplore(tile, 'west')"
+                type="button"
+                aria-label="Se déplacer vers l'ouest"
+                (pointerdown)="$event.stopPropagation()"
+                (click)="handlePlayerDirection('west')"
+              >
+                <span>◀</span>
+              </button>
+            }
+            @if (!pendingTile) {
+              <button
+                type="button"
+                class="board__end-turn"
+                title="Terminer le tour"
+                aria-label="Terminer le tour"
+                (pointerdown)="$event.stopPropagation()"
+                (click)="endTurn()"
+              >
+                <span aria-hidden="true">✓</span>
+              </button>
+            }
+          </div>
         }
       }
     }

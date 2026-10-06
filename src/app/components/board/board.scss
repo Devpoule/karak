@@ -237,6 +237,27 @@
   }
 }
 
+.board__hero--active > img {
+  animation: active-hero-arrival 700ms ease-out;
+}
+
+@keyframes active-hero-arrival {
+  0% {
+    transform: scale(0.92);
+    filter: brightness(1);
+  }
+
+  45% {
+    transform: scale(1.1);
+    filter: brightness(1.25);
+  }
+
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
 /*
  * Marqueurs des joueurs partageant la tuile du pion principal.
  *
@@ -419,6 +440,75 @@
     0 2px 5px rgba(0, 0, 0, 0.8),
     0 0 9px rgba(218, 170, 72, 0.45),
     inset 0 1px 1px rgba(255, 255, 255, 0.15);
+}
+
+/* ==========================================================
+   FIN DE TOUR
+   ========================================================== */
+
+/*
+ * La fin volontaire du tour reste attachée au héros,
+ * mais demeure en dehors de la croix directionnelle.
+ *
+ * Elle est volontairement plus petite que les commandes
+ * cardinales afin de ne jamais être confondue avec un
+ * déplacement.
+ */
+.board__end-turn {
+  position: absolute;
+
+  right: -18px;
+  bottom: -18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+
+  padding: 0;
+
+  border: 1px solid rgba(220, 200, 160, 0.75);
+  border-radius: 50%;
+
+  background: radial-gradient(
+    circle at 35% 30%,
+    rgba(105, 93, 75, 0.96),
+    rgba(37, 32, 27, 0.96)
+  );
+
+  color: #eee1c5;
+
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+
+  cursor: pointer;
+  pointer-events: auto;
+
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.8),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+
+  transition:
+    transform 120ms ease,
+    filter 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover {
+    transform: scale(1.12);
+    filter: brightness(1.2);
+
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.9),
+      0 0 8px rgba(220, 200, 160, 0.35),
+      inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
 }
 
 /* ==========================================================
