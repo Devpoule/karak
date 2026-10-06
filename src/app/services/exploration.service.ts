@@ -10,7 +10,6 @@ import {
 
 import { DungeonService } from './dungeon.service';
 import { TileDeckService } from './tile-deck.service';
-import { TokenBagService } from './token-bag.service';
 
 /**
  * Représente une exploration commencée mais dont la nouvelle
@@ -92,7 +91,6 @@ export interface PendingTilePlacement {
  * - gérer l'orientation de la tuile ;
  * - vérifier son raccordement à la tuile source ;
  * - confirmer son placement ;
- * - tirer le contenu d'une salle nouvellement découverte.
  *
  * DungeonService
  *   → source de vérité du donjon.
@@ -110,7 +108,6 @@ export class ExplorationService {
   constructor(
     private readonly dungeonService: DungeonService,
     private readonly tileDeckService: TileDeckService,
-    private readonly tokenBagService: TokenBagService,
   ) {}
 
   // ==========================================================
@@ -300,18 +297,19 @@ export class ExplorationService {
    *
    * RÈGLE OFFICIELLE KARAK :
    *
-   * lorsqu'une salle est découverte, un jeton est immédiatement
-   * tiré du sachet monstres/trésors et placé dans cette salle.
+   * la confirmation fixe uniquement la nouvelle tuile dans
+   * le donjon. Le héros doit ensuite entrer sur cette tuile.
    *
-   * Les couloirs ne provoquent aucun tirage.
+   * Si cette nouvelle tuile est une salle, son contenu sera
+   * révélé après l'entrée du héros.
    *
-   * Cette méthode ne résout volontairement pas encore :
+   * Cette méthode ne gère donc volontairement pas :
    *
+   * - le déplacement du héros ;
+   * - le tirage d'un jeton de salle ;
    * - les combats ;
    * - l'ouverture des coffres ;
    * - la récupération d'un trésor.
-   *
-   * Ces règles appartiennent aux étapes suivantes du manuel.
    *
    * @returns la tuile placée lorsque la confirmation réussit,
    * ou null lorsque la confirmation est refusée.
@@ -327,31 +325,12 @@ export class ExplorationService {
       return null;
     }
 
-    /*
-     * La définition doit être conservée avant de libérer
-     * pendingTile, car elle détermine notamment si le secteur
-     * découvert est une salle.
-     */
-    const definition = this.pendingTile.definition;
-
     const placedTile: PlacedTile = {
-      definitionId: definition.id,
+      definitionId: this.pendingTile.definition.id,
       x: position.x,
       y: position.y,
       rotation: this.pendingTile.rotation,
     };
-
-    /*
-     * Une salle nouvellement découverte reçoit immédiatement
-     * un jeton provenant du sachet monstres/trésors.
-     */
-    if (definition.kind === 'room') {
-      const token = this.tokenBagService.draw();
-
-      if (token) {
-        placedTile.tokenId = token.id;
-      }
-    }
 
     this.dungeonService.placeTile(placedTile);
 

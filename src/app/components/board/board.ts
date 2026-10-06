@@ -10,6 +10,7 @@ import { DungeonService } from '../../services/dungeon.service';
 import { TurnService } from '../../services/turn.service';
 import { ExplorationService, PendingTilePlacement } from '../../services/exploration.service';
 import { GameService } from '../../services/game.service';
+import { CombatService } from '../../services/combat.service';
 
 /**
  * Joueur prêt à être représenté sur le plateau.
@@ -71,6 +72,7 @@ export class Board {
     private readonly playerService: PlayerService,
     private readonly turnService: TurnService,
     readonly gameService: GameService,
+    private readonly combatService: CombatService,
   ) {
     /*
      * Lorsqu'un nouveau joueur prend la main, la caméra
@@ -141,15 +143,15 @@ export class Board {
    * de déplacement et d'exploration sans supprimer le code existant,
    * qui sera repris dans la tranche dédiée aux mouvements.
    */
+
   /**
-   * Les commandes de déplacement ne sont disponibles
-   * que lorsqu'il reste au moins un mouvement.
+   * Les déplacements sont possibles uniquement :
    *
-   * Cette vérification empêche également de commencer
-   * une exploration lorsque le compteur est déjà à zéro.
+   * - s'il reste au moins un mouvement ;
+   * - si aucun combat obligatoire n'attend sa résolution.
    */
   get movementControlsEnabled(): boolean {
-    return this.turnService.canMove;
+    return this.turnService.canMove && !this.combatService.hasPendingCombat;
   }
 
   // ==========================================================
@@ -594,17 +596,14 @@ export class Board {
   /**
    * Consomme un déplacement du joueur humain.
    *
-   * RÈGLE OFFICIELLE KARAK :
-   * après le quatrième déplacement, le tour prend fin
-   * automatiquement.
-   *
-   * Il ne doit donc jamais être nécessaire de cliquer
-   * sur "Fin du tour" lorsque le compteur atteint zéro.
+   * Après le quatrième déplacement, le tour se termine
+   * automatiquement uniquement lorsqu'aucune résolution
+   * obligatoire ne doit encore avoir lieu.
    */
   private consumePlayerMovement(): void {
     this.turnService.consumeMovement();
 
-    if (!this.turnService.canMove) {
+    if (!this.turnService.canMove && !this.combatService.hasPendingCombat) {
       this.gameService.endTurn();
     }
   }
@@ -777,16 +776,18 @@ export class Board {
   }
 
   /**
-   * Confirme le placement de la tuile explorée puis déplace
-   * le joueur sur cette nouvelle tuile.
+   * Confirme une exploration puis résout l'entrée du héros
+   * sur la nouvelle tuile dans l'ordre du manuel.
    *
-   * RÈGLE OFFICIELLE KARAK :
+   * ORDRE :
    *
-   * lorsqu'un héros explore un secteur inexploré, il entre
-   * sur la nouvelle tuile après son placement.
-   *
-   * Cette entrée constitue un déplacement et consomme donc
-   * un mouvement du tour.
+   * 1. placement de la tuile ;
+   * 2. entrée du héros ;
+   * 3. révélation éventuelle du contenu de la salle ;
+   * 4. déclenchement éventuel du combat obligatoire ;
+   * 5. consommation du mouvement ;
+   * 6. fin automatique du tour uniquement si aucune
+   *    résolution obligatoire ne reste en attente.
    */
   confirmPendingTile(): void {
     const pending = this.explorationService.pendingTile;
@@ -795,11 +796,8 @@ export class Board {
       return;
     }
 
-    /*
-     * La direction doit être conservée avant la confirmation,
-     * car celle-ci termine l'exploration et remet pendingTile à null.
-     */
     const direction = pending.direction;
+    const sourceTile = pending.sourceTile;
 
     const placedTile = this.explorationService.confirmPlacement();
 
@@ -807,9 +805,38 @@ export class Board {
       return;
     }
 
-    if (this.moveActivePlayerTo(placedTile.x, placedTile.y, direction)) {
-      this.consumePlayerMovement();
+    const player = this.gameService.activePlayer;
+
+    if (!player) {
+      return;
     }
+
+    const playerEntered = this.moveActivePlayerTo(placedTile.x, placedTile.y, direction);
+
+    if (!playerEntered) {
+      return;
+    }
+
+    /*
+     * Le contenu d'une salle est révélé uniquement après
+     * l'entrée effective du héros.
+     */
+    this.gameService.revealNewRoom(placedTile);
+
+    /*
+     * Si le jeton révélé est un monstre, le combat devient
+     * immédiatement obligatoire.
+     *
+     * CombatService détermine lui-même si tokenId correspond
+     * réellement à un monstre.
+     */
+    this.combatService.startCombat(player, sourceTile, placedTile);
+
+    /*
+     * Le déplacement ayant permis d'entrer dans la salle
+     * compte bien parmi les quatre déplacements du tour.
+     */
+    this.consumePlayerMovement();
   }
 
   // ==========================================================

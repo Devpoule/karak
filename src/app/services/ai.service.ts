@@ -6,9 +6,9 @@ import { Player } from '../models/player';
 import { DungeonService } from './dungeon.service';
 import { ExplorationService } from './exploration.service';
 import { GameService } from './game.service';
+import { CombatService } from './combat.service';
 import { PlayerService } from './player.service';
 import { TurnService } from './turn.service';
-
 
 /**
  * Action élémentaire qu'une IA peut actuellement effectuer.
@@ -25,7 +25,6 @@ interface AiAction {
   direction: Direction;
   type: 'move' | 'explore';
 }
-
 
 /**
  * Gère les décisions et actions des joueurs contrôlés par l'IA.
@@ -76,15 +75,14 @@ interface AiAction {
   providedIn: 'root',
 })
 export class AiService {
-
   constructor(
     private readonly dungeonService: DungeonService,
     private readonly explorationService: ExplorationService,
     private readonly gameService: GameService,
+    private readonly combatService: CombatService,
     private readonly playerService: PlayerService,
     private readonly turnService: TurnService,
   ) {}
-
 
   // ==========================================================
   // ACTION PRINCIPALE
@@ -97,9 +95,12 @@ export class AiService {
    *
    * Cette granularité est volontaire :
    *
-   * elle permettra plus tard à l'interface d'animer chaque
-   * déplacement séparément au lieu de faire jouer les quatre
-   * mouvements de l'IA instantanément.
+   * elle permet à l'interface d'animer chaque déplacement
+   * séparément au lieu de faire jouer les quatre mouvements
+   * de l'IA instantanément.
+   *
+   * Un combat obligatoire suspend immédiatement les décisions
+   * de déplacement de l'IA jusqu'à sa résolution.
    *
    * @returns true lorsqu'une action a été effectuée.
    */
@@ -115,7 +116,19 @@ export class AiService {
     }
 
     /*
-     * Lorsque tous les mouvements ont été consommés,
+     * Un combat obligatoire suspend toute nouvelle décision
+     * de déplacement de l'IA.
+     *
+     * La résolution automatique du combat sera ajoutée
+     * dans la prochaine tranche.
+     */
+    if (this.combatService.hasPendingCombat) {
+      return false;
+    }
+
+    /*
+     * Lorsque tous les mouvements ont été consommés
+     * et qu'aucune résolution obligatoire n'est en attente,
      * le tour est terminé.
      */
     if (!this.turnService.canMove) {
@@ -157,17 +170,9 @@ export class AiService {
     let actionPerformed = false;
 
     if (action.type === 'move') {
-      actionPerformed = this.performMove(
-        player,
-        currentTile,
-        action.direction,
-      );
+      actionPerformed = this.performMove(player, currentTile, action.direction);
     } else {
-      actionPerformed = this.performExploration(
-        player,
-        currentTile,
-        action.direction,
-      );
+      actionPerformed = this.performExploration(player, currentTile, action.direction);
     }
 
     /*
@@ -179,20 +184,22 @@ export class AiService {
     }
 
     /*
-     * Lorsque le dernier mouvement vient d'être utilisé,
-     * l'IA peut transmettre immédiatement la main.
+     * Après l'action, le quatrième mouvement ne transmet
+     * la main que lorsqu'aucun combat obligatoire
+     * n'attend encore sa résolution.
      *
-     * Plus tard, cette décision pourra être différée si
-     * certaines mécaniques doivent encore être résolues
-     * après le déplacement.
+     * Cas important :
+     *
+     * si le quatrième mouvement révèle un monstre,
+     * remainingMovements atteint bien zéro mais le joueur
+     * actif reste l'IA jusqu'à la résolution du combat.
      */
-    if (!this.turnService.canMove) {
+    if (!this.turnService.canMove && !this.combatService.hasPendingCombat) {
       this.gameService.endTurn();
     }
 
     return actionPerformed;
   }
-
 
   // ==========================================================
   // ANALYSE DES ACTIONS
@@ -207,18 +214,11 @@ export class AiService {
    * - à un déplacement vers une tuile existante ;
    * - à l'exploration d'une sortie encore inconnue.
    */
-  private getAvailableActions(
-    tile: PlacedTile,
-  ): AiAction[] {
+  private getAvailableActions(tile: PlacedTile): AiAction[] {
     const actions: AiAction[] = [];
 
     for (const direction of DIRECTIONS) {
-      if (
-        this.dungeonService.canMoveTo(
-          tile,
-          direction,
-        )
-      ) {
+      if (this.dungeonService.canMoveTo(tile, direction)) {
         actions.push({
           direction,
           type: 'move',
@@ -227,12 +227,7 @@ export class AiService {
         continue;
       }
 
-      if (
-        this.explorationService.canExplore(
-          tile,
-          direction,
-        )
-      ) {
+      if (this.explorationService.canExplore(tile, direction)) {
         actions.push({
           direction,
           type: 'explore',
@@ -242,7 +237,6 @@ export class AiService {
 
     return actions;
   }
-
 
   // ==========================================================
   // CHOIX DE L'ACTION
@@ -268,55 +262,46 @@ export class AiService {
    * - exploiter les capacités du héros ;
    * - etc.
    */
-  private chooseAction(
-    actions: AiAction[],
-  ): AiAction {
-    const randomIndex = Math.floor(
-      Math.random() * actions.length,
-    );
+  private chooseAction(actions: AiAction[]): AiAction {
+    const randomIndex = Math.floor(Math.random() * actions.length);
 
     return actions[randomIndex];
   }
-
 
   // ==========================================================
   // DÉPLACEMENT
   // ==========================================================
 
   /**
+   * Replace le pion face au joueur après avoir brièvement
+   * affiché la direction de son déplacement.
+   *
+   * Le délai est identique à celui utilisé pour les joueurs
+   * humains sur le plateau.
+   */
+  private restorePlayerFacing(player: Player): void {
+    window.setTimeout(() => {
+      this.playerService.facePlayer(player, 'south');
+    }, 50);
+  }
+
+  /**
    * Déplace l'IA vers une tuile déjà présente
    * et correctement connectée.
    */
-  private performMove(
-    player: Player,
-    currentTile: PlacedTile,
-    direction: Direction,
-  ): boolean {
-    if (
-      !this.dungeonService.canMoveTo(
-        currentTile,
-        direction,
-      )
-    ) {
+  private performMove(player: Player, currentTile: PlacedTile, direction: Direction): boolean {
+    if (!this.dungeonService.canMoveTo(currentTile, direction)) {
       return false;
     }
 
-    const destination =
-      this.dungeonService.getNeighborPosition(
-        currentTile,
-        direction,
-      );
+    const destination = this.dungeonService.getNeighborPosition(currentTile, direction);
 
-    this.playerService.movePlayerTo(
-      player,
-      destination.x,
-      destination.y,
-      direction,
-    );
+    this.playerService.movePlayerTo(player, destination.x, destination.y, direction);
+
+    this.restorePlayerFacing(player);
 
     return true;
   }
-
 
   // ==========================================================
   // EXPLORATION
@@ -338,19 +323,11 @@ export class AiService {
     currentTile: PlacedTile,
     direction: Direction,
   ): boolean {
-    if (
-      !this.explorationService.canExplore(
-        currentTile,
-        direction,
-      )
-    ) {
+    if (!this.explorationService.canExplore(currentTile, direction)) {
       return false;
     }
 
-    this.explorationService.start(
-      currentTile,
-      direction,
-    );
+    this.explorationService.start(currentTile, direction);
 
     /*
      * start() peut échouer, notamment lorsque
@@ -367,8 +344,7 @@ export class AiService {
      * On cherche la première orientation permettant
      * l'entrée depuis la tuile source.
      */
-    const orientationFound =
-      this.findValidPendingTileRotation();
+    const orientationFound = this.findValidPendingTileRotation();
 
     if (!orientationFound) {
       /*
@@ -381,23 +357,28 @@ export class AiService {
       return false;
     }
 
-    const placedTile =
-      this.explorationService.confirmPlacement();
+    const placedTile = this.explorationService.confirmPlacement();
 
     if (!placedTile) {
       return false;
     }
 
-    this.playerService.movePlayerTo(
-      player,
-      placedTile.x,
-      placedTile.y,
-      direction,
-    );
+    this.playerService.movePlayerTo(player, placedTile.x, placedTile.y, direction);
+    this.restorePlayerFacing(player);
+
+    /*
+     * Comme pour un joueur humain, le contenu d'une salle
+     * n'est révélé qu'après l'entrée effective du héros.
+     */
+    this.gameService.revealNewRoom(placedTile);
+
+    /*
+     * Une révélation de monstre impose immédiatement un combat.
+     */
+    this.combatService.startCombat(player, currentTile, placedTile);
 
     return true;
   }
-
 
   /**
    * Recherche automatiquement une orientation valide
@@ -409,10 +390,7 @@ export class AiService {
    */
   private findValidPendingTileRotation(): boolean {
     for (let attempt = 0; attempt < 4; attempt++) {
-      if (
-        this.explorationService
-          .isPendingTilePlacementValid()
-      ) {
+      if (this.explorationService.isPendingTilePlacementValid()) {
         return true;
       }
 
@@ -422,7 +400,6 @@ export class AiService {
     return false;
   }
 
-
   // ==========================================================
   // POSITION DU JOUEUR
   // ==========================================================
@@ -431,18 +408,13 @@ export class AiService {
    * Retrouve la tuile actuellement occupée
    * par le joueur demandé.
    */
-  private getPlayerTile(
-    player: Player,
-  ): PlacedTile | undefined {
+  private getPlayerTile(player: Player): PlacedTile | undefined {
     const position = player.position;
 
     if (!position) {
       return undefined;
     }
 
-    return this.dungeonService.getTileAt(
-      position.x,
-      position.y,
-    );
+    return this.dungeonService.getTileAt(position.x, position.y);
   }
 }

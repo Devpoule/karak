@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 
 import { GamePhase, SetupStep } from '../models/game';
+import { PlacedTile } from '../models/tile';
 import { Player } from '../models/player';
 import { DungeonService } from './dungeon.service';
 import { ExplorationService } from './exploration.service';
@@ -8,6 +9,7 @@ import { PlayerService } from './player.service';
 import { TileDeckService } from './tile-deck.service';
 import { TokenBagService } from './token-bag.service';
 import { TurnService } from './turn.service';
+import { CombatService } from './combat.service';
 
 /**
  * Résultat du lancer effectué par un joueur
@@ -78,6 +80,7 @@ export class GameService {
     private readonly tokenBagService: TokenBagService,
     private readonly playerService: PlayerService,
     private readonly turnService: TurnService,
+    private readonly combatService: CombatService,
   ) {}
 
   /**
@@ -106,6 +109,7 @@ export class GameService {
     this.initializeExploration();
     this.initializeTileDeck();
     this.initializeTokenBag();
+    this.initializeCombat();
   }
 
   /**
@@ -145,6 +149,13 @@ export class GameService {
     this.playerService.initialize(playerCount, humanPlayerCount);
 
     this.setupStep.set('hero-draw');
+  }
+
+  /**
+   * Réinitialise l'état de combat pour une nouvelle partie.
+   */
+  private initializeCombat(): void {
+    this.combatService.initialize();
   }
 
   /**
@@ -315,6 +326,53 @@ export class GameService {
     this.turnService.resetMovements();
 
     this.phase.set('playing');
+  }
+
+  // ==========================================================
+  // ENTRÉE DANS UNE SALLE
+  // ==========================================================
+
+  /**
+   * Révèle le contenu d'une salle nouvellement découverte
+   * après que le héros y est entré.
+   *
+   * RÈGLE OFFICIELLE KARAK :
+   *
+   * lorsqu'un héros entre dans une salle qui vient d'être
+   * ajoutée au donjon, un jeton est tiré du sachet
+   * monstres/trésors et placé dans cette salle.
+   *
+   * IMPORTANT :
+   *
+   * cette première étape se limite à la révélation.
+   *
+   * Elle ne résout pas encore :
+   *
+   * - un éventuel combat ;
+   * - l'ouverture d'un coffre ;
+   * - la récupération d'un trésor.
+   */
+  revealNewRoom(tile: PlacedTile): void {
+    const definition = this.dungeonService.getTileDefinition(tile);
+
+    if (!definition || definition.kind !== 'room') {
+      return;
+    }
+
+    /*
+     * Une salle ne doit recevoir son contenu qu'une seule fois.
+     */
+    if (tile.tokenId) {
+      return;
+    }
+
+    const token = this.tokenBagService.draw();
+
+    if (!token) {
+      return;
+    }
+
+    tile.tokenId = token.id;
   }
 
   // ==========================================================
