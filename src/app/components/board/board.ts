@@ -10,7 +10,7 @@ import { DungeonService } from '../../services/dungeon.service';
 import { TurnService } from '../../services/turn.service';
 import { ExplorationService, PendingTilePlacement } from '../../services/exploration.service';
 import { GameService } from '../../services/game.service';
-import { CombatService } from '../../services/combat.service';
+import { CombatOverlay } from '../combat-overlay/combat-overlay';
 
 /**
  * Joueur prêt à être représenté sur le plateau.
@@ -61,7 +61,7 @@ interface PlayerMarkerPosition {
  */
 @Component({
   selector: 'app-board',
-  imports: [],
+  imports: [CombatOverlay],
   templateUrl: './board.html',
   styleUrl: './board.scss',
 })
@@ -72,7 +72,6 @@ export class Board {
     private readonly playerService: PlayerService,
     private readonly turnService: TurnService,
     readonly gameService: GameService,
-    private readonly combatService: CombatService,
   ) {
     /*
      * Lorsqu'un nouveau joueur prend la main, la caméra
@@ -151,7 +150,7 @@ export class Board {
    * - si aucun combat obligatoire n'attend sa résolution.
    */
   get movementControlsEnabled(): boolean {
-    return this.turnService.canMove && !this.combatService.hasPendingCombat;
+    return this.turnService.canMove && !this.gameService.hasPendingTileResolution;
   }
 
   // ==========================================================
@@ -588,7 +587,14 @@ export class Board {
 
     const destination = this.dungeonService.getNeighborPosition(currentTile, direction);
 
+    const destinationTile = this.dungeonService.getTileAt(destination.x, destination.y);
+
+    if (!destinationTile) {
+      return;
+    }
+
     if (this.moveActivePlayerTo(destination.x, destination.y, direction)) {
+      this.gameService.resolveTileEntry(player, currentTile, destinationTile);
       this.consumePlayerMovement();
     }
   }
@@ -603,7 +609,7 @@ export class Board {
   private consumePlayerMovement(): void {
     this.turnService.consumeMovement();
 
-    if (!this.turnService.canMove && !this.combatService.hasPendingCombat) {
+    if (!this.turnService.canMove && !this.gameService.hasPendingTileResolution) {
       this.gameService.endTurn();
     }
   }
@@ -662,7 +668,14 @@ export class Board {
     if (this.dungeonService.canMoveTo(currentTile, direction)) {
       const destination = this.dungeonService.getNeighborPosition(currentTile, direction);
 
+      const destinationTile = this.dungeonService.getTileAt(destination.x, destination.y);
+
+      if (!destinationTile) {
+        return;
+      }
+
       if (this.moveActivePlayerTo(destination.x, destination.y, direction)) {
+        this.gameService.resolveTileEntry(player, currentTile, destinationTile);
         this.consumePlayerMovement();
       }
 
@@ -818,19 +831,12 @@ export class Board {
     }
 
     /*
-     * Le contenu d'une salle est révélé uniquement après
-     * l'entrée effective du héros.
+     * L'entrée sur la nouvelle tuile est résolue par le même
+     * mécanisme que lors d'un déplacement dans le donjon déjà
+     * exploré. La salle venant d'être découverte, son contenu
+     * doit d'abord être révélé.
      */
-    this.gameService.revealNewRoom(placedTile);
-
-    /*
-     * Si le jeton révélé est un monstre, le combat devient
-     * immédiatement obligatoire.
-     *
-     * CombatService détermine lui-même si tokenId correspond
-     * réellement à un monstre.
-     */
-    this.combatService.startCombat(player, sourceTile, placedTile);
+    this.gameService.resolveTileEntry(player, sourceTile, placedTile, true);
 
     /*
      * Le déplacement ayant permis d'entrer dans la salle

@@ -80,6 +80,13 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     image: `${TOKEN_ASSET_PATH}/fallen.png`,
   },
 
+  // {
+  //   id: 'skeleton-ice-magician',
+  //   kind: 'monster',
+  //   strength: 11,
+  //   image: `${TOKEN_ASSET_PATH}/skeleton_ice_magician.png`,
+  // },
+
   {
     id: 'dragon',
     kind: 'monster',
@@ -95,6 +102,18 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     id: 'closed-chest',
     kind: 'treasure',
     image: `${TOKEN_ASSET_PATH}/closed_chest.png`,
+  },
+
+  {
+    id: 'open-chest',
+    kind: 'treasure',
+    image: `${TOKEN_ASSET_PATH}/open_chest.png`,
+  },
+
+  {
+    id: 'treasure',
+    kind: 'treasure',
+    image: `${TOKEN_ASSET_PATH}/treasure.png`,
   },
 ];
 

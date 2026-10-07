@@ -6,9 +6,9 @@ import { Player } from '../models/player';
 import { DungeonService } from './dungeon.service';
 import { ExplorationService } from './exploration.service';
 import { GameService } from './game.service';
-import { CombatService } from './combat.service';
 import { PlayerService } from './player.service';
 import { TurnService } from './turn.service';
+import { CombatService } from './combat.service';
 
 /**
  * Action élémentaire qu'une IA peut actuellement effectuer.
@@ -79,9 +79,9 @@ export class AiService {
     private readonly dungeonService: DungeonService,
     private readonly explorationService: ExplorationService,
     private readonly gameService: GameService,
-    private readonly combatService: CombatService,
     private readonly playerService: PlayerService,
     private readonly turnService: TurnService,
+    private readonly combatService: CombatService,
   ) {}
 
   // ==========================================================
@@ -123,6 +123,21 @@ export class AiService {
      * dans la prochaine tranche.
      */
     if (this.combatService.hasPendingCombat) {
+      const result = this.combatService.resolvePendingCombat();
+
+      if (result) {
+        this.gameService.endTurn();
+        return true;
+      }
+
+      return false;
+    }
+
+    /*
+     * Les autres résolutions obligatoires, notamment les coffres,
+     * restent bloquantes tant que leur mécanique n'est pas implémentée.
+     */
+    if (this.gameService.hasPendingTileResolution) {
       return false;
     }
 
@@ -194,7 +209,7 @@ export class AiService {
      * remainingMovements atteint bien zéro mais le joueur
      * actif reste l'IA jusqu'à la résolution du combat.
      */
-    if (!this.turnService.canMove && !this.combatService.hasPendingCombat) {
+    if (!this.turnService.canMove && !this.gameService.hasPendingTileResolution) {
       this.gameService.endTurn();
     }
 
@@ -295,10 +310,17 @@ export class AiService {
     }
 
     const destination = this.dungeonService.getNeighborPosition(currentTile, direction);
+    const destinationTile = this.dungeonService.getTileAt(destination.x, destination.y);
+
+    if (!destinationTile) {
+      return false;
+    }
 
     this.playerService.movePlayerTo(player, destination.x, destination.y, direction);
 
     this.restorePlayerFacing(player);
+
+    this.gameService.resolveTileEntry(player, currentTile, destinationTile);
 
     return true;
   }
@@ -367,15 +389,13 @@ export class AiService {
     this.restorePlayerFacing(player);
 
     /*
-     * Comme pour un joueur humain, le contenu d'une salle
-     * n'est révélé qu'après l'entrée effective du héros.
+     * L'entrée sur la nouvelle tuile suit exactement la même
+     * résolution métier que pour un joueur humain.
+     *
+     * La salle vient d'être découverte : son contenu doit donc
+     * être révélé avant la détection du jeton.
      */
-    this.gameService.revealNewRoom(placedTile);
-
-    /*
-     * Une révélation de monstre impose immédiatement un combat.
-     */
-    this.combatService.startCombat(player, currentTile, placedTile);
+    this.gameService.resolveTileEntry(player, currentTile, placedTile, true);
 
     return true;
   }

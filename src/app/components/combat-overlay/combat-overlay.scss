@@ -1,0 +1,368 @@
+:host {
+  display: contents;
+}
+
+.combat-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  overflow: hidden;
+  isolation: isolate;
+  color: #fff;
+}
+
+.combat-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(72, 44, 26, 0.42), transparent 36%),
+    rgba(5, 4, 4, 0.84);
+  backdrop-filter: blur(5px) saturate(0.65);
+  animation: combat-backdrop-in 260ms ease-out both;
+}
+
+.combat-overlay__flash {
+  position: absolute;
+  inset: -20%;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    linear-gradient(112deg, transparent 47%, rgba(255, 255, 255, 0.9) 49%, transparent 51%),
+    linear-gradient(68deg, transparent 48%, rgba(255, 224, 121, 0.55) 49%, transparent 50%);
+  opacity: 0;
+  animation: combat-flash 620ms 180ms ease-out both;
+}
+
+.combat-overlay__arena {
+  align-self: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  width: min(1100px, 94%);
+  min-height: 0;
+  margin: auto;
+  padding: 2rem 1rem 0;
+}
+
+.combat-overlay__fighter {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.combat-overlay__fighter--hero {
+  animation: combat-hero-in 520ms cubic-bezier(0.18, 0.82, 0.24, 1.15) both;
+}
+
+.combat-overlay__fighter--monster {
+  animation: combat-monster-in 520ms cubic-bezier(0.18, 0.82, 0.24, 1.15) both;
+}
+
+.combat-overlay__fighter-label {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(10, 8, 7, 0.72);
+  font-size: clamp(0.8rem, 1.5vw, 1rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 4px #000;
+}
+
+.combat-overlay__fighter-image {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  user-select: none;
+  filter: drop-shadow(0 1.2rem 1.1rem rgba(0, 0, 0, 0.65));
+}
+
+.combat-overlay__fighter-image--hero {
+  height: clamp(220px, 48vh, 520px);
+  transform: scale(1.32);
+  transform-origin: center bottom;
+  image-rendering: auto;
+}
+
+.combat-overlay__fighter-image--monster {
+  height: clamp(190px, 39vh, 420px);
+  transform: scale(1.08);
+}
+
+.combat-overlay__versus {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(130px, 18vw, 230px);
+  height: clamp(130px, 18vw, 230px);
+  animation: combat-vs-impact 560ms 260ms cubic-bezier(0.18, 1.35, 0.32, 1) both;
+}
+
+.combat-overlay__versus::before,
+.combat-overlay__versus::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 155%;
+  background: linear-gradient(transparent, #fff 20%, #ffd45c 48%, #fff 70%, transparent);
+  box-shadow: 0 0 12px #fff, 0 0 26px rgba(255, 202, 64, 0.9);
+  transform: rotate(28deg);
+  opacity: 0.82;
+}
+
+.combat-overlay__versus::after {
+  transform: rotate(-32deg) scaleY(0.82);
+  opacity: 0.58;
+}
+
+.combat-overlay__versus strong {
+  position: relative;
+  z-index: 2;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: clamp(4.4rem, 11vw, 9rem);
+  font-style: italic;
+  line-height: 0.8;
+  letter-spacing: -0.08em;
+  transform: rotate(-7deg);
+  color: #fff;
+  -webkit-text-stroke: clamp(2px, 0.35vw, 5px) #2a0d06;
+  text-shadow:
+    0 0 8px #fff,
+    0 0 18px rgba(255, 209, 82, 0.95),
+    0 0 38px rgba(255, 111, 32, 0.78),
+    0 0 70px rgba(255, 73, 19, 0.55);
+}
+
+.combat-overlay__bolt {
+  position: absolute;
+  z-index: 3;
+  font-size: clamp(3rem, 7vw, 6rem);
+  color: #fff4ae;
+  text-shadow: 0 0 10px #fff, 0 0 24px #ffd33d;
+  animation: combat-bolt 900ms ease-in-out infinite alternate;
+}
+
+.combat-overlay__bolt--left {
+  left: -12%;
+  top: 4%;
+  transform: rotate(-24deg);
+}
+
+.combat-overlay__bolt--right {
+  right: -8%;
+  bottom: 2%;
+  transform: rotate(18deg) scaleX(-1);
+  animation-delay: -430ms;
+}
+
+.combat-overlay__action {
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem clamp(1.5rem, 5vh, 3.5rem);
+  animation: combat-action-in 360ms 720ms ease-out both;
+}
+
+.combat-overlay__roll,
+.combat-result__close {
+  border: 1px solid rgba(255, 232, 166, 0.62);
+  color: #fff7dc;
+  background: linear-gradient(#8a3118, #4b160c);
+  box-shadow:
+    0 0.55rem 1.2rem rgba(0, 0, 0, 0.42),
+    inset 0 1px rgba(255, 255, 255, 0.22);
+  font: inherit;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  cursor: pointer;
+}
+
+.combat-overlay__roll {
+  min-width: min(280px, 78vw);
+  min-height: 3.2rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 0.7rem;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+}
+
+.combat-overlay__roll:hover {
+  transform: translateY(-2px) scale(1.02);
+  filter: brightness(1.12);
+}
+
+.combat-overlay__roll:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.combat-overlay__waiting {
+  padding: 0.7rem 1.2rem;
+  border-radius: 999px;
+  background: rgba(10, 8, 7, 0.72);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.combat-result {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 51;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  width: min(310px, calc(100% - 2rem));
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.85rem;
+  background: rgba(20, 16, 13, 0.95);
+  color: #fff;
+  box-shadow: 0 0.8rem 2.2rem rgba(0, 0, 0, 0.48);
+  animation: combat-result-in 280ms ease-out both;
+}
+
+.combat-result__title {
+  font-size: 1.35rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.combat-result--victory .combat-result__title {
+  color: #ffe28a;
+}
+
+.combat-result--tie .combat-result__title {
+  color: #e8e8e8;
+}
+
+.combat-result--defeat .combat-result__title {
+  color: #ff9b8d;
+}
+
+.combat-result__dice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  font-size: 1.15rem;
+}
+
+.combat-result__dice span,
+.combat-result__dice strong {
+  display: grid;
+  place-items: center;
+  min-width: 2.2rem;
+  min-height: 2.2rem;
+  padding: 0.2rem;
+  border-radius: 0.45rem;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.combat-result__scores {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  opacity: 0.88;
+}
+
+.combat-result__close {
+  min-height: 2.35rem;
+  border-radius: 0.55rem;
+}
+
+@keyframes combat-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes combat-hero-in {
+  from { opacity: 0; transform: translateX(-55%) scale(0.7); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes combat-monster-in {
+  from { opacity: 0; transform: translateX(55%) scale(0.7); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes combat-vs-impact {
+  0% { opacity: 0; transform: scale(3.2) rotate(12deg); }
+  62% { opacity: 1; transform: scale(0.88) rotate(-4deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes combat-flash {
+  0%, 18%, 100% { opacity: 0; }
+  8% { opacity: 0.95; }
+  28% { opacity: 0.28; }
+}
+
+@keyframes combat-bolt {
+  from { opacity: 0.42; filter: brightness(0.85); }
+  to { opacity: 1; filter: brightness(1.35); }
+}
+
+@keyframes combat-action-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes combat-result-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 720px) {
+  .combat-overlay__arena {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    padding-inline: 0.25rem;
+  }
+
+  .combat-overlay__fighter-image--hero {
+    height: clamp(150px, 38vh, 300px);
+  }
+
+  .combat-overlay__fighter-image--monster {
+    height: clamp(125px, 31vh, 250px);
+  }
+
+  .combat-overlay__versus {
+    width: clamp(82px, 20vw, 130px);
+    height: clamp(82px, 20vw, 130px);
+  }
+
+  .combat-overlay__versus strong {
+    font-size: clamp(3.1rem, 13vw, 5rem);
+  }
+
+  .combat-overlay__fighter-label {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .combat-overlay *,
+  .combat-result {
+    animation: none !important;
+    transition: none !important;
+  }
+}

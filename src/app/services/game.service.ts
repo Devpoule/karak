@@ -1,8 +1,10 @@
 import { Injectable, signal } from '@angular/core';
 
 import { GamePhase, SetupStep } from '../models/game';
+import { getTokenDefinition } from '../data/token-definitions';
 import { PlacedTile } from '../models/tile';
 import { Player } from '../models/player';
+import { TreasureTokenDefinition } from '../models/token';
 import { DungeonService } from './dungeon.service';
 import { ExplorationService } from './exploration.service';
 import { PlayerService } from './player.service';
@@ -21,6 +23,23 @@ export interface FirstPlayerRoll {
   die2: number;
   total: number;
 }
+
+/**
+ * Coffre dont la résolution est obligatoire après l'entrée
+ * d'un héros sur sa tuile.
+ *
+ * La mécanique d'ouverture du coffre sera ajoutée dans une
+ * tranche ultérieure. Cet état sert pour l'instant à bloquer
+ * correctement la suite du tour.
+ */
+export interface PendingTreasure {
+  player: Player;
+  treasure: TreasureTokenDefinition;
+  treasureTile: PlacedTile;
+  sourceTile: PlacedTile;
+}
+
+export type TileEntryResolution = 'none' | 'combat' | 'treasure';
 
 @Injectable({
   providedIn: 'root',
@@ -73,6 +92,22 @@ export class GameService {
    */
   readonly activePlayerIndex = signal<number | null>(null);
 
+  /**
+   * Coffre actuellement en attente de résolution.
+   *
+   * Cette tranche ne gère pas encore son ouverture : elle
+   * représente uniquement l'obligation de s'arrêter dessus.
+   */
+  readonly pendingTreasure = signal<PendingTreasure | null>(null);
+
+  /**
+   * Indique si l'entrée sur une tuile a déclenché une résolution
+   * obligatoire qui doit être traitée avant toute autre action.
+   */
+  get hasPendingTileResolution(): boolean {
+    return this.combatService.hasPendingCombat || this.pendingTreasure() !== null;
+  }
+
   constructor(
     private readonly dungeonService: DungeonService,
     private readonly explorationService: ExplorationService,
@@ -104,6 +139,7 @@ export class GameService {
     this.firstPlayerContenders.set([]);
     this.firstPlayerIndex.set(null);
     this.activePlayerIndex.set(null);
+    this.pendingTreasure.set(null);
 
     this.initializeDungeon();
     this.initializeExploration();
@@ -375,6 +411,69 @@ export class GameService {
     tile.tokenId = token.id;
   }
 
+  /**
+   * Résout les conséquences communes de l'entrée d'un héros
+   * sur une tuile.
+   *
+   * Cette méthode constitue le point de passage unique pour les
+   * joueurs humains comme pour les IA.
+   *
+   * ORDRE :
+   *
+   * 1. si la tuile vient d'être découverte, révéler son contenu ;
+   * 2. détecter le jeton présent ;
+   * 3. arrêter immédiatement les déplacements si un jeton existe ;
+   * 4. déclencher le combat ou mettre le coffre en attente.
+   *
+   * La résolution effective du combat et l'ouverture du coffre
+   * seront implémentées dans leurs tranches respectives.
+   */
+  resolveTileEntry(
+    player: Player,
+    sourceTile: PlacedTile,
+    destinationTile: PlacedTile,
+    revealRoom = false,
+  ): TileEntryResolution {
+    if (this.hasPendingTileResolution) {
+      return 'none';
+    }
+
+    if (revealRoom) {
+      this.revealNewRoom(destinationTile);
+    }
+
+    if (!destinationTile.tokenId) {
+      return 'none';
+    }
+
+    const token = getTokenDefinition(destinationTile.tokenId);
+
+    if (!token) {
+      return 'none';
+    }
+
+    /*
+     * La présence d'un jeton impose l'arrêt du déplacement,
+     * quelle que soit sa nature.
+     */
+    this.turnService.stopMovements();
+
+    if (token.kind === 'monster') {
+      return this.combatService.startCombat(player, sourceTile, destinationTile)
+        ? 'combat'
+        : 'none';
+    }
+
+    this.pendingTreasure.set({
+      player,
+      treasure: token,
+      treasureTile: destinationTile,
+      sourceTile,
+    });
+
+    return 'treasure';
+  }
+
   // ==========================================================
   // GESTION DES TOURS
   // ==========================================================
@@ -414,6 +513,14 @@ export class GameService {
      * finalement manipulée pendant le tour du suivant.
      */
     if (this.explorationService.pendingTile) {
+      return;
+    }
+
+    /*
+     * Un combat ou un coffre obligatoire doit être résolu avant
+     * que la main puisse passer au joueur suivant.
+     */
+    if (this.hasPendingTileResolution) {
       return;
     }
 

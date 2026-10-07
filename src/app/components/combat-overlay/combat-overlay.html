@@ -1,0 +1,92 @@
+@if (pendingCombat; as combat) {
+  <div
+    class="combat-overlay"
+    (pointerdown)="$event.stopPropagation()"
+    (pointermove)="$event.stopPropagation()"
+    (pointerup)="$event.stopPropagation()"
+  >
+    <div class="combat-overlay__backdrop"></div>
+    <div class="combat-overlay__flash"></div>
+
+    <div class="combat-overlay__arena">
+      <section class="combat-overlay__fighter combat-overlay__fighter--hero">
+        <span class="combat-overlay__fighter-label">{{ getHeroName() }}</span>
+
+        @if (getHeroImage(); as heroImage) {
+          <img
+            class="combat-overlay__fighter-image combat-overlay__fighter-image--hero"
+            [src]="heroImage"
+            [alt]="getHeroName()"
+            draggable="false"
+          />
+        }
+      </section>
+
+      <div class="combat-overlay__versus" aria-hidden="true">
+        <span class="combat-overlay__bolt combat-overlay__bolt--left">ϟ</span>
+        <strong>VS</strong>
+        <span class="combat-overlay__bolt combat-overlay__bolt--right">ϟ</span>
+      </div>
+
+      <section class="combat-overlay__fighter combat-overlay__fighter--monster">
+        <span class="combat-overlay__fighter-label">Force {{ combat.monster.strength }}</span>
+
+        <img
+          class="combat-overlay__fighter-image combat-overlay__fighter-image--monster"
+          [src]="combat.monster.image"
+          alt="Monstre"
+          draggable="false"
+        />
+      </section>
+    </div>
+
+    <div class="combat-overlay__action">
+      @if (canRoll) {
+        <button
+          type="button"
+          class="combat-overlay__roll"
+          (click)="resolveCombat()"
+        >
+          Lancer les dés
+        </button>
+      } @else {
+        <span class="combat-overlay__waiting">Combat de l'IA…</span>
+      }
+    </div>
+  </div>
+}
+
+@if (!pendingCombat && lastCombatResult; as result) {
+  <div
+    class="combat-result"
+    [class.combat-result--victory]="result.outcome === 'victory'"
+    [class.combat-result--tie]="result.outcome === 'tie'"
+    [class.combat-result--defeat]="result.outcome === 'defeat'"
+    (pointerdown)="$event.stopPropagation()"
+  >
+    <strong class="combat-result__title">
+      {{ getOutcomeLabel(result.outcome) }}
+    </strong>
+
+    <div class="combat-result__dice" aria-label="Résultat des dés">
+      <span>{{ result.die1 }}</span>
+      <b>+</b>
+      <span>{{ result.die2 }}</span>
+      <b>=</b>
+      <strong>{{ result.diceTotal }}</strong>
+    </div>
+
+    <div class="combat-result__scores">
+      <span>Attaque {{ result.attackPower }}</span>
+      <span>Monstre {{ result.monsterStrength }}</span>
+    </div>
+
+    <button
+      type="button"
+      class="combat-result__close"
+      (click)="dismissResult()"
+    >
+      Continuer
+    </button>
+  </div>
+}

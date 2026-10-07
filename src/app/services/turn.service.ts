@@ -85,6 +85,17 @@ export class TurnService {
 
 
   /**
+   * Interrompt immédiatement les déplacements du tour courant.
+   *
+   * Utilisé lorsqu'une entrée sur une tuile déclenche une
+   * résolution obligatoire, par exemple un combat ou un coffre.
+   */
+  stopMovements(): void {
+    this.remainingMovements.set(0);
+  }
+
+
+  /**
    * Rétablit le nombre de déplacements disponibles
    * pour un nouveau tour.
    */
