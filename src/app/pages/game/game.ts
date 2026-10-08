@@ -1,3 +1,4 @@
+
 import {
   Component,
   OnDestroy,
@@ -11,213 +12,184 @@ import { Board } from '../../components/board/board';
 import { PlayerHud } from '../../components/player-hud/player-hud';
 
 import { AiService } from '../../services/ai.service';
+import { CombatService } from '../../services/combat.service';
 import { GameService } from '../../services/game.service';
 
-
 /**
- * Page principale de jeu.
+ * Page principale du jeu.
  *
- * Cette page joue principalement un rôle de composition :
+ * Compose les différentes interfaces et orchestre
+ * le rythme des tours contrôlés par l'IA.
  *
- * - GameHeader fournit l'en-tête de la partie ;
- * - GameSetup affiche les étapes de préparation ;
- * - Board affiche et permet de manipuler le donjon ;
- * - PlayerHud superpose l'interface des joueurs au plateau.
- *
- * Elle constitue également le point d'entrée de la partie :
- * lors de son initialisation, elle demande à GameService
- * de commencer la préparation d'une nouvelle partie.
- *
- * ==========================================================
- * ORCHESTRATION DES TOURS IA
- * ==========================================================
- *
- * Game constitue également le bon niveau pour rythmer
- * visuellement les actions automatiques.
- *
- * La séparation reste volontairement la suivante :
- *
- * AiService
- *   -> décide et exécute UNE action métier ;
- *
- * Game
- *   -> décide QUAND demander l'action suivante.
- *
- * GameService
- *   -> conserve l'identité du joueur actif et gère
- *      le passage au joueur suivant.
- *
- * Ainsi :
- *
- * - aucune temporisation n'entre dans le moteur métier ;
- * - AiService reste indépendant de l'interface ;
- * - les animations pourront évoluer sans modifier les règles.
+ * Les décisions restent dans AiService.
+ * Les règles et changements de joueur restent
+ * dans les services métier.
  */
 @Component({
+  selector: 'app-game',
   imports: [
     GameHeader,
     GameSetup,
     Board,
     PlayerHud,
   ],
-  selector: 'app-game',
-  styleUrl: './game.scss',
   templateUrl: './game.html',
+  styleUrl: './game.scss',
 })
 export class Game implements OnInit, OnDestroy {
 
   /**
-   * Délai entre deux décisions successives de l'IA.
-   *
-   * Cette valeur appartient à la présentation :
-   * elle n'a aucune incidence sur les règles du jeu.
+   * Intervalle visuel entre deux actions IA.
    */
   private readonly aiActionDelay = 1500;
 
   /**
-   * Empêche plusieurs boucles IA de fonctionner
-   * simultanément.
+   * Intervalle de vérification pendant une résolution
+   * obligatoire.
+   */
+  private readonly aiBlockedCheckDelay = 200;
+
+  /**
+   * Empêche plusieurs boucles simultanées.
    */
   private aiTurnRunning = false;
 
   /**
-   * Permet d'invalider une boucle asynchrone devenue obsolète.
-   *
-   * La valeur est incrémentée notamment lors de la destruction
-   * de la page.
+   * Invalide les boucles asynchrones obsolètes.
    */
   private aiRunId = 0;
 
+  private destroyed = false;
 
   constructor(
     readonly gameService: GameService,
     private readonly aiService: AiService,
+    private readonly combatService: CombatService,
   ) {
-    /**
-     * Observe les changements d'état nécessaires au déclenchement
-     * d'un éventuel tour automatique.
-     *
-     * La lecture de phase() et activePlayerIndex() établit
-     * explicitement les dépendances réactives.
-     */
     effect(() => {
       const phase = this.gameService.phase();
-
       const activePlayerIndex =
         this.gameService.activePlayerIndex();
 
       if (
         phase !== 'playing'
         || activePlayerIndex === null
+        || this.destroyed
       ) {
         return;
       }
 
-      const activePlayer =
-        this.gameService.activePlayer;
-
-      if (activePlayer?.controller !== 'ai') {
+      if (
+        this.gameService.activePlayer?.controller !== 'ai'
+      ) {
         return;
       }
 
-      /*
-       * Le lancement réel est différé afin de ne pas modifier
-       * les Signals observés directement pendant l'exécution
-       * de l'effect.
-       */
       queueMicrotask(() => {
-        void this.runAiTurn();
+        if (!this.destroyed) {
+          void this.runAiTurn();
+        }
       });
     });
   }
-
-
-  // ==========================================================
-  // INITIALISATION
-  // ==========================================================
 
   ngOnInit(): void {
     this.gameService.initialize();
   }
 
-
-  // ==========================================================
-  // DESTRUCTION
-  // ==========================================================
-
   ngOnDestroy(): void {
-    /*
-     * Toute boucle encore en attente devient obsolète.
-     */
+    this.destroyed = true;
     this.aiRunId++;
   }
 
-
-  // ==========================================================
-  // TOUR IA
-  // ==========================================================
+  /**
+   * Indique si le Battle doit encore bloquer les actions IA.
+   *
+   * pendingCombat :
+   *   le résultat n'a pas encore été calculé.
+   *
+   * lastCombatResult :
+   *   le résultat existe mais sa présentation n'est
+   *   pas encore terminée.
+   */
+  private get combatBlocksAi(): boolean {
+    return (
+      this.combatService.pendingCombat() !== null
+      || this.combatService.lastCombatResult() !== null
+    );
+  }
 
   /**
-   * Orchestre le tour complet d'un joueur IA.
+   * Orchestre les actions automatiques.
    *
-   * IMPORTANT :
-   *
-   * cette méthode ne décide jamais où l'IA doit aller.
-   *
-   * Elle demande simplement à AiService de jouer UNE action,
-   * attend un court instant pour laisser l'interface refléter
-   * le nouvel état, puis recommence si le joueur actif est
-   * toujours une IA.
-   *
-   * AiService reste responsable de terminer le tour lorsque :
-   *
-   * - les mouvements sont épuisés ;
-   * - aucune action n'est disponible.
+   * Un Battle suspend la boucle, sans la terminer.
+   * L'overlay est seul responsable du lancer et
+   * de la fermeture du résultat.
    */
   private async runAiTurn(): Promise<void> {
-    if (this.aiTurnRunning) {
+    if (this.aiTurnRunning || this.destroyed) {
       return;
     }
 
-    const player = this.gameService.activePlayer;
-
     if (
       this.gameService.phase() !== 'playing'
-      || player?.controller !== 'ai'
+      || this.gameService.activePlayer?.controller !== 'ai'
     ) {
       return;
     }
 
     this.aiTurnRunning = true;
 
-    /*
-     * Chaque exécution reçoit son propre identifiant.
-     *
-     * Si la page est détruite pendant une attente,
-     * l'identifiant global change et la boucle s'arrête.
-     */
     const runId = ++this.aiRunId;
 
     try {
       while (
         runId === this.aiRunId
+        && !this.destroyed
         && this.gameService.phase() === 'playing'
         && this.gameService.activePlayer?.controller === 'ai'
       ) {
-        /*
-         * Petite pause avant l'action.
-         *
-         * Elle permet notamment de voir clairement qu'un joueur
-         * IA vient de devenir actif avant son déplacement.
+        /**
+         * Ne jamais solliciter AiService pendant
+         * un combat ou son animation de résultat.
          */
+        if (this.combatBlocksAi) {
+          await this.wait(this.aiBlockedCheckDelay);
+          continue;
+        }
+
+        /**
+         * Les autres résolutions obligatoires restent
+         * bloquantes, notamment les trésors.
+         *
+         * Leur automatisation sera traitée séparément.
+         */
+        if (this.gameService.hasPendingTileResolution) {
+          await this.wait(this.aiBlockedCheckDelay);
+          continue;
+        }
+
         await this.wait(this.aiActionDelay);
 
         if (
           runId !== this.aiRunId
+          || this.destroyed
           || this.gameService.phase() !== 'playing'
           || this.gameService.activePlayer?.controller !== 'ai'
         ) {
           break;
+        }
+
+        /**
+         * Revérification après l'attente :
+         * un combat peut avoir été déclenché
+         * pendant cette période.
+         */
+        if (
+          this.combatBlocksAi
+          || this.gameService.hasPendingTileResolution
+        ) {
+          continue;
         }
 
         this.aiService.playAction();
@@ -225,47 +197,32 @@ export class Game implements OnInit, OnDestroy {
     } finally {
       this.aiTurnRunning = false;
 
-      /*
-       * Cas important :
-       *
-       * une IA peut terminer son tour et transmettre la main
-       * directement à une autre IA.
-       *
-       * L'effect Angular peut avoir tenté de lancer cette
-       * nouvelle IA alors que aiTurnRunning valait encore true.
-       *
-       * On vérifie donc une dernière fois l'état après avoir
-       * libéré le verrou.
+      /**
+       * Si une IA a transmis la main à une autre IA
+       * pendant que le verrou était actif,
+       * une nouvelle boucle peut démarrer.
        */
       if (
-        runId === this.aiRunId
+        !this.destroyed
+        && runId === this.aiRunId
         && this.gameService.phase() === 'playing'
         && this.gameService.activePlayer?.controller === 'ai'
       ) {
         queueMicrotask(() => {
-          void this.runAiTurn();
+          if (!this.destroyed) {
+            void this.runAiTurn();
+          }
         });
       }
     }
   }
 
-
-  // ==========================================================
-  // TEMPORISATION
-  // ==========================================================
-
   /**
-   * Attend le nombre de millisecondes demandé.
-   *
-   * Cette temporisation sert uniquement au rythme visuel
-   * des actions automatiques.
+   * Temporisation purement visuelle.
    */
   private wait(milliseconds: number): Promise<void> {
     return new Promise((resolve) => {
-      window.setTimeout(
-        resolve,
-        milliseconds,
-      );
+      window.setTimeout(resolve, milliseconds);
     });
   }
 }

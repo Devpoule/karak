@@ -1,6 +1,11 @@
+
 import { Injectable } from '@angular/core';
 
-import { Direction, DIRECTIONS, PlacedTile } from '../models/tile';
+import {
+  Direction,
+  DIRECTIONS,
+  PlacedTile,
+} from '../models/tile';
 import { Player } from '../models/player';
 
 import { DungeonService } from './dungeon.service';
@@ -11,15 +16,7 @@ import { TurnService } from './turn.service';
 import { CombatService } from './combat.service';
 
 /**
- * Action élémentaire qu'une IA peut actuellement effectuer.
- *
- * Cette première version distingue uniquement :
- *
- * - move    : déplacement vers une tuile déjà présente ;
- * - explore : exploration d'un secteur encore inconnu.
- *
- * Les combats, coffres, soins et capacités des héros seront
- * ajoutés ultérieurement comme nouvelles décisions possibles.
+ * Action élémentaire disponible pour l'IA.
  */
 interface AiAction {
   direction: Direction;
@@ -27,54 +24,19 @@ interface AiAction {
 }
 
 /**
- * Gère les décisions et actions des joueurs contrôlés par l'IA.
+ * Service de décision des joueurs IA.
  *
- * ==========================================================
- * RESPONSABILITÉS
- * ==========================================================
+ * Chaque appel à playAction() exécute au maximum
+ * une action de déplacement ou d'exploration.
  *
- * AiService :
- *
- * - vérifie que le joueur actif est bien une IA ;
- * - analyse les directions accessibles ;
- * - choisit une action parmi celles disponibles ;
- * - exécute un déplacement existant ;
- * - exécute une exploration ;
- * - oriente automatiquement une tuile explorée ;
- * - consomme les mouvements utilisés ;
- * - termine le tour lorsqu'aucune action n'est possible
- *   ou lorsque tous les mouvements ont été consommés.
- *
- * ==========================================================
- * IMPORTANT
- * ==========================================================
- *
- * AiService ne possède pas de copie des règles du moteur.
- *
- * Il s'appuie sur :
- *
- * DungeonService
- *   -> géométrie du donjon ;
- *
- * ExplorationService
- *   -> exploration et placement des nouvelles tuiles ;
- *
- * PlayerService
- *   -> position des joueurs ;
- *
- * TurnService
- *   -> mouvements disponibles ;
- *
- * GameService
- *   -> joueur actif et changement de tour.
- *
- * Cette séparation permettra plus tard d'améliorer la stratégie
- * de l'IA sans modifier les règles fondamentales du jeu.
+ * Le rythme des actions appartient à Game.
+ * La présentation des combats appartient à CombatOverlay.
  */
 @Injectable({
   providedIn: 'root',
 })
 export class AiService {
+
   constructor(
     private readonly dungeonService: DungeonService,
     private readonly explorationService: ExplorationService,
@@ -89,94 +51,59 @@ export class AiService {
   // ==========================================================
 
   /**
-   * Joue une action pour l'IA actuellement active.
+   * Exécute au maximum une action pour le joueur IA actif.
    *
-   * Une invocation correspond au maximum à un déplacement.
-   *
-   * Cette granularité est volontaire :
-   *
-   * elle permet à l'interface d'animer chaque déplacement
-   * séparément au lieu de faire jouer les quatre mouvements
-   * de l'IA instantanément.
-   *
-   * Un combat obligatoire suspend immédiatement les décisions
-   * de déplacement de l'IA jusqu'à sa résolution.
-   *
-   * @returns true lorsqu'une action a été effectuée.
+   * @returns true si un déplacement ou une exploration
+   * a effectivement été réalisé.
    */
   playAction(): boolean {
     const player = this.gameService.activePlayer;
 
-    /*
-     * AiService ne doit jamais prendre le contrôle
-     * d'un joueur humain.
-     */
     if (!player || player.controller !== 'ai') {
       return false;
     }
 
-    /*
-     * Un combat obligatoire suspend toute nouvelle décision
-     * de déplacement de l'IA.
+    /**
+     * Le combat est entièrement pris en charge
+     * par CombatOverlay.
      *
-     * La résolution automatique du combat sera ajoutée
-     * dans la prochaine tranche.
+     * Il ne faut ni lancer les dés ici,
+     * ni terminer le tour.
      */
-    if (this.combatService.hasPendingCombat) {
-      const result = this.combatService.resolvePendingCombat();
-
-      if (result) {
-        this.gameService.endTurn();
-        return true;
-      }
-
+    if (
+      this.combatService.hasPendingCombat
+      || this.combatService.lastCombatResult() !== null
+    ) {
       return false;
     }
 
-    /*
-     * Les autres résolutions obligatoires, notamment les coffres,
-     * restent bloquantes tant que leur mécanique n'est pas implémentée.
+    /**
+     * Une autre résolution obligatoire
+     * interdit les déplacements.
      */
     if (this.gameService.hasPendingTileResolution) {
       return false;
     }
 
-    /*
-     * Lorsque tous les mouvements ont été consommés
-     * et qu'aucune résolution obligatoire n'est en attente,
-     * le tour est terminé.
+    /**
+     * Plus aucun mouvement disponible.
      */
     if (!this.turnService.canMove) {
       this.gameService.endTurn();
-
       return false;
     }
 
     const currentTile = this.getPlayerTile(player);
 
-    /*
-     * Un joueur sans position valide ne peut rien faire.
-     *
-     * On termine son tour afin d'éviter de bloquer
-     * définitivement la partie.
-     */
     if (!currentTile) {
       this.gameService.endTurn();
-
       return false;
     }
 
     const actions = this.getAvailableActions(currentTile);
 
-    /*
-     * Aucun passage utilisable :
-     *
-     * l'IA ne possède actuellement aucune autre action.
-     * Son tour se termine donc immédiatement.
-     */
     if (actions.length === 0) {
       this.gameService.endTurn();
-
       return false;
     }
 
@@ -185,31 +112,38 @@ export class AiService {
     let actionPerformed = false;
 
     if (action.type === 'move') {
-      actionPerformed = this.performMove(player, currentTile, action.direction);
+      actionPerformed = this.performMove(
+        player,
+        currentTile,
+        action.direction,
+      );
     } else {
-      actionPerformed = this.performExploration(player, currentTile, action.direction);
+      actionPerformed = this.performExploration(
+        player,
+        currentTile,
+        action.direction,
+      );
     }
 
-    /*
-     * Une action réussie consomme exactement
-     * un mouvement.
+    /**
+     * Une action réussie consomme un mouvement.
      */
     if (actionPerformed) {
       this.turnService.consumeMovement();
     }
 
-    /*
-     * Après l'action, le quatrième mouvement ne transmet
-     * la main que lorsqu'aucun combat obligatoire
-     * n'attend encore sa résolution.
+    /**
+     * La fin du tour ne doit jamais interrompre
+     * une résolution obligatoire.
      *
-     * Cas important :
-     *
-     * si le quatrième mouvement révèle un monstre,
-     * remainingMovements atteint bien zéro mais le joueur
-     * actif reste l'IA jusqu'à la résolution du combat.
+     * Un monstre découvert au quatrième mouvement
+     * doit donc être combattu avant de changer de joueur.
      */
-    if (!this.turnService.canMove && !this.gameService.hasPendingTileResolution) {
+    if (
+      !this.turnService.canMove
+      && !this.gameService.hasPendingTileResolution
+      && this.combatService.lastCombatResult() === null
+    ) {
       this.gameService.endTurn();
     }
 
@@ -221,13 +155,8 @@ export class AiService {
   // ==========================================================
 
   /**
-   * Retourne toutes les actions actuellement possibles
-   * depuis la tuile occupée par l'IA.
-   *
-   * Une direction peut correspondre :
-   *
-   * - à un déplacement vers une tuile existante ;
-   * - à l'exploration d'une sortie encore inconnue.
+   * Retourne les déplacements et explorations
+   * disponibles depuis la tuile courante.
    */
   private getAvailableActions(tile: PlacedTile): AiAction[] {
     const actions: AiAction[] = [];
@@ -258,29 +187,30 @@ export class AiService {
   // ==========================================================
 
   /**
-   * Choisit une action parmi celles disponibles.
+   * Choix aléatoire pour cette première version.
    *
-   * PREMIÈRE VERSION :
-   *
-   * le choix est volontairement aléatoire.
-   *
-   * L'objectif actuel n'est pas encore de créer une IA
-   * intelligente, mais de valider son intégration au moteur.
-   *
-   * Cette méthode deviendra plus tard le point central
-   * de la stratégie :
-   *
-   * - privilégier l'exploration ;
-   * - rechercher des coffres ;
-   * - éviter certains monstres ;
-   * - chercher une fontaine ;
-   * - exploiter les capacités du héros ;
-   * - etc.
+   * Une stratégie plus avancée pourra être
+   * introduite sans modifier les règles métier.
    */
   private chooseAction(actions: AiAction[]): AiAction {
-    const randomIndex = Math.floor(Math.random() * actions.length);
+    const randomIndex =
+      Math.floor(Math.random() * actions.length);
 
     return actions[randomIndex];
+  }
+
+  // ==========================================================
+  // ORIENTATION DU HÉROS
+  // ==========================================================
+
+  /**
+   * Replace le pion face au joueur après
+   * l'animation directionnelle.
+   */
+  private restorePlayerFacing(player: Player): void {
+    window.setTimeout(() => {
+      this.playerService.facePlayer(player, 'south');
+    }, 450);
   }
 
   // ==========================================================
@@ -288,39 +218,47 @@ export class AiService {
   // ==========================================================
 
   /**
-   * Replace le pion face au joueur après avoir brièvement
-   * affiché la direction de son déplacement.
-   *
-   * Le délai est identique à celui utilisé pour les joueurs
-   * humains sur le plateau.
+   * Déplace l'IA vers une tuile déjà présente.
    */
-  private restorePlayerFacing(player: Player): void {
-    window.setTimeout(() => {
-      this.playerService.facePlayer(player, 'south');
-    }, 50);
-  }
-
-  /**
-   * Déplace l'IA vers une tuile déjà présente
-   * et correctement connectée.
-   */
-  private performMove(player: Player, currentTile: PlacedTile, direction: Direction): boolean {
+  private performMove(
+    player: Player,
+    currentTile: PlacedTile,
+    direction: Direction,
+  ): boolean {
     if (!this.dungeonService.canMoveTo(currentTile, direction)) {
       return false;
     }
 
-    const destination = this.dungeonService.getNeighborPosition(currentTile, direction);
-    const destinationTile = this.dungeonService.getTileAt(destination.x, destination.y);
+    const destination =
+      this.dungeonService.getNeighborPosition(
+        currentTile,
+        direction,
+      );
+
+    const destinationTile =
+      this.dungeonService.getTileAt(
+        destination.x,
+        destination.y,
+      );
 
     if (!destinationTile) {
       return false;
     }
 
-    this.playerService.movePlayerTo(player, destination.x, destination.y, direction);
+    this.playerService.movePlayerTo(
+      player,
+      destination.x,
+      destination.y,
+      direction,
+    );
 
     this.restorePlayerFacing(player);
 
-    this.gameService.resolveTileEntry(player, currentTile, destinationTile);
+    this.gameService.resolveTileEntry(
+      player,
+      currentTile,
+      destinationTile,
+    );
 
     return true;
   }
@@ -330,15 +268,13 @@ export class AiService {
   // ==========================================================
 
   /**
-   * Effectue automatiquement une exploration complète.
+   * Réalise une exploration complète :
    *
-   * Séquence :
-   *
-   * 1. déclenche l'exploration ;
-   * 2. pioche une tuile via ExplorationService ;
-   * 3. cherche une orientation valide ;
-   * 4. confirme le placement ;
-   * 5. déplace l'IA sur la nouvelle tuile.
+   * - pioche ;
+   * - recherche d'une rotation valide ;
+   * - confirmation du placement ;
+   * - déplacement ;
+   * - résolution du contenu de la salle.
    */
   private performExploration(
     player: Player,
@@ -351,66 +287,56 @@ export class AiService {
 
     this.explorationService.start(currentTile, direction);
 
-    /*
-     * start() peut échouer, notamment lorsque
-     * la pioche ne contient plus de tuile.
-     */
     if (!this.explorationService.pendingTile) {
       return false;
     }
 
-    /*
-     * Une tuile possède au maximum quatre orientations
-     * distinctes : 0°, 90°, 180° et 270°.
-     *
-     * On cherche la première orientation permettant
-     * l'entrée depuis la tuile source.
-     */
-    const orientationFound = this.findValidPendingTileRotation();
+    const orientationFound =
+      this.findValidPendingTileRotation();
 
     if (!orientationFound) {
-      /*
-       * Avec les tuiles normales de Karak, une orientation
-       * compatible devrait exister.
-       *
-       * Si ce n'est pas le cas, on refuse de poursuivre
-       * plutôt que de placer une tuile invalide.
-       */
       return false;
     }
 
-    const placedTile = this.explorationService.confirmPlacement();
+    const placedTile =
+      this.explorationService.confirmPlacement();
 
     if (!placedTile) {
       return false;
     }
 
-    this.playerService.movePlayerTo(player, placedTile.x, placedTile.y, direction);
+    this.playerService.movePlayerTo(
+      player,
+      placedTile.x,
+      placedTile.y,
+      direction,
+    );
+
     this.restorePlayerFacing(player);
 
-    /*
-     * L'entrée sur la nouvelle tuile suit exactement la même
-     * résolution métier que pour un joueur humain.
-     *
-     * La salle vient d'être découverte : son contenu doit donc
-     * être révélé avant la détection du jeton.
+    /**
+     * true indique que la salle vient d'être
+     * explorée et que son contenu doit être révélé.
      */
-    this.gameService.resolveTileEntry(player, currentTile, placedTile, true);
+    this.gameService.resolveTileEntry(
+      player,
+      currentTile,
+      placedTile,
+      true,
+    );
 
     return true;
   }
 
   /**
-   * Recherche automatiquement une orientation valide
-   * pour la tuile actuellement en attente.
-   *
-   * L'orientation courante est testée avant toute rotation.
-   *
-   * Au maximum quatre orientations sont examinées.
+   * Cherche une orientation compatible
+   * parmi les quatre rotations possibles.
    */
   private findValidPendingTileRotation(): boolean {
     for (let attempt = 0; attempt < 4; attempt++) {
-      if (this.explorationService.isPendingTilePlacementValid()) {
+      if (
+        this.explorationService.isPendingTilePlacementValid()
+      ) {
         return true;
       }
 
@@ -421,12 +347,11 @@ export class AiService {
   }
 
   // ==========================================================
-  // POSITION DU JOUEUR
+  // POSITION
   // ==========================================================
 
   /**
-   * Retrouve la tuile actuellement occupée
-   * par le joueur demandé.
+   * Retrouve la tuile occupée par le joueur.
    */
   private getPlayerTile(player: Player): PlacedTile | undefined {
     const position = player.position;
@@ -435,6 +360,9 @@ export class AiService {
       return undefined;
     }
 
-    return this.dungeonService.getTileAt(position.x, position.y);
+    return this.dungeonService.getTileAt(
+      position.x,
+      position.y,
+    );
   }
 }

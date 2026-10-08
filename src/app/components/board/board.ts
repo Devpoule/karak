@@ -26,14 +26,15 @@ interface BoardPlayerView {
  * Représentation visuelle d'une tuile occupée.
  *
  * Les coordonnées restent celles du donjon. Lorsqu'une tuile contient
- * plusieurs joueurs, un seul pion est affiché et les autres joueurs
- * deviennent des marqueurs légers.
+ * un ou deux joueurs, leurs pions sont visibles. À partir de trois,
+ * un seul pion reste visible et les autres deviennent des marqueurs.
  */
 interface TileOccupancyView {
   key: string;
   x: number;
   y: number;
   primary: BoardPlayerView;
+  displayedPlayers: BoardPlayerView[];
   markers: BoardPlayerView[];
 }
 
@@ -103,7 +104,7 @@ export class Board {
    * deux cases voisines sont toujours séparées de 1,
    * indépendamment de cette valeur d'affichage.
    */
-  readonly tileSize = 120;
+  readonly tileSize = 144;
 
   /**
    * Nombre de positions disponibles sur chaque axe de la carte.
@@ -266,7 +267,10 @@ export class Board {
         x: primary.player.position!.x,
         y: primary.player.position!.y,
         primary,
-        markers: occupants.filter((occupant) => occupant.playerIndex !== primary.playerIndex),
+        displayedPlayers: occupants.length <= 2 ? occupants : [primary],
+        markers: occupants.length <= 2
+          ? []
+          : occupants.filter((occupant) => occupant.playerIndex !== primary.playerIndex),
       };
     });
   }

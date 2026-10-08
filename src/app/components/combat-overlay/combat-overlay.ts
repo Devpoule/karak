@@ -1,3 +1,4 @@
+
 import {
   Component,
   effect,
@@ -6,34 +7,24 @@ import {
 } from '@angular/core';
 
 import { getHeroDefinition } from '../../data/hero-definitions';
+
 import {
   CombatOutcome,
   CombatResult,
   CombatService,
   PendingCombat,
 } from '../../services/combat.service';
+
 import { GameService } from '../../services/game.service';
 
-
 /**
- * Étapes purement visuelles d'un combat.
- *
- * Le moteur de jeu reste responsable du calcul réel du combat.
- *
- * L'overlay ne fait que présenter successivement :
- *
- * - l'arrivée des deux combattants ;
- * - le face-à-face ;
- * - le déclenchement du lancer ;
- * - l'animation des dés ;
- * - le résultat.
+ * Étapes visuelles de présentation d'un combat.
  */
 type CombatPresentationState =
   | 'intro'
   | 'ready'
   | 'rolling'
   | 'result';
-
 
 @Component({
   selector: 'app-combat-overlay',
@@ -43,87 +34,49 @@ type CombatPresentationState =
 })
 export class CombatOverlay implements OnDestroy {
 
-  /**
-   * Étape actuellement affichée par l'interface.
-   */
   readonly presentationState =
     signal<CombatPresentationState>('intro');
 
-
-  /**
-   * Valeurs actuellement visibles sur les dés.
-   *
-   * Pendant l'animation, ces valeurs sont purement visuelles.
-   *
-   * À la fin du lancer, elles sont remplacées par les véritables
-   * valeurs déterminées par CombatService.
-   */
   readonly displayedDice = signal({
     die1: 1,
     die2: 1,
   });
 
-
   /**
-   * Combat conservé localement par l'overlay.
+   * Snapshot du combat.
    *
-   * CombatService supprime son pendingCombat dès que le combat
-   * est résolu.
-   *
-   * L'interface doit néanmoins conserver les combattants à l'écran
-   * pendant toute l'animation du résultat.
+   * Il reste disponible après la suppression
+   * de pendingCombat dans CombatService.
    */
   readonly presentedCombat =
     signal<PendingCombat | null>(null);
 
-
-  /**
-   * Résultat conservé localement le temps de sa présentation.
-   */
   readonly presentedResult =
     signal<CombatResult | null>(null);
 
-
-  /**
-   * Référence du combat déjà pris en charge.
-   *
-   * Elle évite de relancer l'introduction lorsqu'un signal Angular
-   * provoque une nouvelle évaluation de l'effet.
-   */
   private trackedCombat: PendingCombat | null = null;
 
-
-  /**
-   * Timers utilisés par la présentation.
-   *
-   * Ils sont tous supprimés à la destruction du composant afin
-   * d'éviter qu'une animation ancienne modifie un nouvel état.
-   */
   private readonly timers: number[] = [];
 
-
   /**
-   * Durée totale avant que l'action de lancer les dés soit proposée.
-   *
-   * Cette durée laisse volontairement respirer :
-   *
-   * - l'arrivée du héros ;
-   * - l'arrivée du monstre ;
-   * - l'impact du VS.
+   * Durée de l'introduction des combattants.
    */
   private readonly introDuration = 1900;
 
+  /**
+   * Durée de lecture du verdict pour une IA.
+   */
+  private readonly aiResultDuration = 3600;
+
+  /**
+   * Empêche deux résolutions simultanées.
+   */
+  private resolving = false;
 
   constructor(
     private readonly combatService: CombatService,
     private readonly gameService: GameService,
   ) {
-    /**
-     * L'overlay observe uniquement l'apparition d'un nouveau combat.
-     *
-     * Il ne décide pas qu'un combat doit avoir lieu :
-     * cette responsabilité appartient toujours au moteur de jeu.
-     */
     effect(() => {
       const combat = this.combatService.pendingCombat();
 
@@ -135,46 +88,30 @@ export class CombatOverlay implements OnDestroy {
     });
   }
 
+  // ==========================================================
+  // ÉTAT DE PRÉSENTATION
+  // ==========================================================
 
-  /**
-   * Combat actuellement présenté.
-   */
   get combat(): PendingCombat | null {
     return this.presentedCombat();
   }
 
-
-  /**
-   * Résultat actuellement présenté.
-   */
   get result(): CombatResult | null {
     return this.presentedResult();
   }
 
-
-  /**
-   * Le lancer manuel n'est disponible que pour un joueur humain
-   * et uniquement lorsque l'introduction est terminée.
-   */
   get canRoll(): boolean {
     return (
       this.presentationState() === 'ready'
       && this.combat?.player.controller === 'human'
+      && !this.resolving
     );
   }
 
-
-  /**
-   * Indique que les dés sont actuellement en mouvement.
-   */
   get isRolling(): boolean {
     return this.presentationState() === 'rolling';
   }
 
-
-  /**
-   * Indique que le verdict peut être affiché.
-   */
   get isResultVisible(): boolean {
     return (
       this.presentationState() === 'result'
@@ -182,14 +119,12 @@ export class CombatOverlay implements OnDestroy {
     );
   }
 
+  // ==========================================================
+  // ASSETS
+  // ==========================================================
 
   /**
-   * Carte du héros.
-   *
-   * Il s'agit volontairement du même asset que celui utilisé
-   * dans HeroPanel.
-   *
-   * Le battle ne doit plus utiliser le pion directionnel du plateau.
+   * Carte du héros, et non son pion directionnel.
    */
   getHeroImage(): string | undefined {
     const player =
@@ -203,26 +138,61 @@ export class CombatOverlay implements OnDestroy {
     return getHeroDefinition(player.heroId)?.character;
   }
 
+  /** Nom du héros affiché sur la carte de combat. */
+  getHeroName(): string {
+    const heroId = this.combat?.player.heroId;
+    return heroId ? (getHeroDefinition(heroId)?.name ?? 'Héros') : 'Héros';
+  }
+
+  /** Nom de l’adversaire, avec repli si la définition ne le fournit pas. */
+  getMonsterName(): string {
+    const monster = this.combat?.monster as { name?: string } | undefined;
+    return monster?.name ?? 'Adversaire';
+  }
+
+  // ==========================================================
+  // LANCER DES DÉS
+  // ==========================================================
 
   /**
-   * Lance réellement le combat.
-   *
-   * CombatService calcule immédiatement le résultat réel.
-   *
-   * Celui-ci est ensuite conservé par l'overlay pendant que
-   * l'animation fait défiler des valeurs intermédiaires.
-   *
-   * Le hasard visuel n'a donc aucune incidence sur le gameplay.
+   * Action publique du bouton humain.
    */
   resolveCombat(): void {
     if (!this.canRoll) {
       return;
     }
 
+    this.performCombatResolution();
+  }
+
+  /**
+   * Résolution commune aux humains et aux IA.
+   *
+   * CombatService calcule les véritables dés
+   * et applique les conséquences du combat.
+   *
+   * L'overlay ne modifie jamais ces règles.
+   */
+  private performCombatResolution(): void {
+    if (
+      this.resolving
+      || this.presentationState() !== 'ready'
+      || !this.presentedCombat()
+    ) {
+      return;
+    }
+
+    if (!this.combatService.hasPendingCombat) {
+      return;
+    }
+
+    this.resolving = true;
+
     const result =
       this.combatService.resolvePendingCombat();
 
     if (!result) {
+      this.resolving = false;
       return;
     }
 
@@ -232,47 +202,18 @@ export class CombatOverlay implements OnDestroy {
     this.animateDice(result);
   }
 
+  // ==========================================================
+  // INITIALISATION DU BATTLE
+  // ==========================================================
 
   /**
-   * Ferme le résultat du combat.
-   */
-  dismissResult(): void {
-    this.clearTimers();
-
-    this.combatService.clearLastCombatResult();
-
-    this.presentedCombat.set(null);
-    this.presentedResult.set(null);
-    this.presentationState.set('intro');
-
-    this.trackedCombat = null;
-  }
-
-
-  /**
-   * Libellé du verdict.
-   */
-  getOutcomeLabel(outcome: CombatOutcome): string {
-    switch (outcome) {
-      case 'victory':
-        return 'Victoire';
-
-      case 'tie':
-        return 'Égalité';
-
-      case 'defeat':
-        return 'Défaite';
-    }
-  }
-
-
-  /**
-   * Initialise la présentation d'un nouveau combat.
+   * Prépare l'affichage d'un nouveau combat.
    */
   private startPresentation(combat: PendingCombat): void {
     this.clearTimers();
 
     this.trackedCombat = combat;
+    this.resolving = false;
 
     this.presentedCombat.set(combat);
     this.presentedResult.set(null);
@@ -285,30 +226,41 @@ export class CombatOverlay implements OnDestroy {
     this.presentationState.set('intro');
 
     /**
-     * Une fois l'introduction terminée, le joueur humain
-     * peut déclencher son lancer.
+     * L'introduction est identique pour tous.
      *
-     * L'IA reste volontairement sous le contrôle de AiService.
-     * CombatOverlay ne doit pas devenir un second moteur de jeu.
+     * Humain :
+     *   le bouton de lancer devient disponible.
+     *
+     * IA :
+     *   le lancer démarre automatiquement.
      */
     this.schedule(() => {
-      if (
-        this.presentedCombat() === combat
-        && combat.player.controller === 'human'
-      ) {
-        this.presentationState.set('ready');
+      if (this.presentedCombat() !== combat) {
+        return;
+      }
+
+      if (!this.combatService.hasPendingCombat) {
+        return;
+      }
+
+      this.presentationState.set('ready');
+
+      if (combat.player.controller === 'ai') {
+        this.performCombatResolution();
       }
     }, this.introDuration);
   }
 
+  // ==========================================================
+  // ANIMATION DES DÉS
+  // ==========================================================
 
   /**
-   * Anime les dés avec le même principe que le tirage du
-   * premier joueur :
+   * Simule un ralentissement progressif.
    *
-   * - changements rapides au départ ;
-   * - ralentissement progressif ;
-   * - arrêt sur les véritables valeurs du combat.
+   * Les valeurs intermédiaires sont visuelles.
+   * Les valeurs finales proviennent exclusivement
+   * de CombatService.
    */
   private animateDice(result: CombatResult): void {
     const speeds = [
@@ -339,8 +291,7 @@ export class CombatOverlay implements OnDestroy {
     }
 
     /**
-     * Les dés s'arrêtent exactement sur les valeurs calculées
-     * par CombatService.
+     * Arrêt sur les dés réels.
      */
     elapsed += 180;
 
@@ -352,37 +303,100 @@ export class CombatOverlay implements OnDestroy {
     }, elapsed);
 
     /**
-     * Un court silence visuel laisse le joueur lire les dés
-     * avant l'apparition du verdict.
+     * Temps de lecture des dés avant le verdict.
      */
-    elapsed += 650;
+    elapsed += 1050;
 
     this.schedule(() => {
       this.presentationState.set('result');
 
       /**
-       * Le combat étant désormais entièrement résolu et présenté,
-       * le moteur peut transmettre la main.
+       * Contrairement à l'ancienne version,
+       * on ne termine PAS le tour ici.
        *
-       * Le snapshot local permet de conserver l'écran de résultat
-       * jusqu'à ce que le joueur clique sur Continuer.
+       * Le verdict doit rester visible avant
+       * tout changement de joueur.
        */
-      this.gameService.endTurn();
+      if (result.player.controller === 'ai') {
+        this.schedule(() => {
+          if (
+            this.presentationState() === 'result'
+            && this.presentedResult() === result
+          ) {
+            this.dismissResult();
+          }
+        }, this.aiResultDuration);
+      }
     }, elapsed);
   }
 
+  // ==========================================================
+  // FERMETURE ET FIN DU TOUR
+  // ==========================================================
 
   /**
-   * Retourne une face de dé purement visuelle.
+   * Ferme le Battle puis transmet la main.
+   *
+   * Appel manuel pour un humain.
+   * Appel automatique pour une IA.
    */
+  dismissResult(): void {
+    if (
+      this.presentationState() !== 'result'
+      || !this.presentedResult()
+    ) {
+      return;
+    }
+
+    this.clearTimers();
+
+    /**
+     * On libère d'abord l'état du combat.
+     *
+     * Cela évite que le nouveau joueur actif
+     * soit bloqué par l'ancien résultat.
+     */
+    this.combatService.clearLastCombatResult();
+
+    this.presentedCombat.set(null);
+    this.presentedResult.set(null);
+    this.presentationState.set('intro');
+
+    this.trackedCombat = null;
+    this.resolving = false;
+
+    /**
+     * Le tour ne change qu'une fois,
+     * après la fermeture effective du Battle.
+     */
+    this.gameService.endTurn();
+  }
+
+  // ==========================================================
+  // VERDICT
+  // ==========================================================
+
+  getOutcomeLabel(outcome: CombatOutcome): string {
+    switch (outcome) {
+      case 'victory':
+        return 'Victoire';
+
+      case 'tie':
+        return 'Égalité';
+
+      case 'defeat':
+        return 'Défaite';
+    }
+  }
+
+  // ==========================================================
+  // TEMPORISATIONS
+  // ==========================================================
+
   private randomDie(): number {
     return Math.floor(Math.random() * 6) + 1;
   }
 
-
-  /**
-   * Programme une étape de présentation.
-   */
   private schedule(
     callback: () => void,
     delay: number,
@@ -395,10 +409,6 @@ export class CombatOverlay implements OnDestroy {
     this.timers.push(timer);
   }
 
-
-  /**
-   * Supprime tous les timers encore enregistrés.
-   */
   private clearTimers(): void {
     for (const timer of this.timers) {
       window.clearTimeout(timer);
@@ -406,7 +416,6 @@ export class CombatOverlay implements OnDestroy {
 
     this.timers.length = 0;
   }
-
 
   ngOnDestroy(): void {
     this.clearTimers();

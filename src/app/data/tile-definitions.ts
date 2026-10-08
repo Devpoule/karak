@@ -412,7 +412,7 @@ export const TILE_DEFINITIONS: TileDefinition[] = [
    * Intersection ordinaire.
    */
   defineTile({
-    id: 'crossroads',
+    id: 'cross',
     kind: 'corridor',
     openings: ['north', 'east', 'south', 'west'],
   }),

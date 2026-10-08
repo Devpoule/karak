@@ -90,7 +90,7 @@ export const TILE_DECK_COMPOSITION: TileDeckEntry[] = [
   // CROISEMENTS
   // ----------------------------------------------------------
 
-  { definitionId: 'crossroads', count: 7 },
+  { definitionId: 'cross', count: 7 },
 
 
   // ----------------------------------------------------------

@@ -46,7 +46,7 @@
 }
 
 .player-hud__side--active {
-  filter: drop-shadow(0 0 8px rgba(244, 205, 112, 0.22));
+  filter: drop-shadow(0 0 9px color-mix(in srgb, var(--player-color) 45%, transparent));
 }
 
 /* ==========================================================

@@ -1,3 +1,4 @@
+
 @if (combat; as currentCombat) {
   <div
     class="combat-overlay"
@@ -46,6 +47,8 @@
             />
           }
         </div>
+
+        <div class="combat-overlay__fighter-name">{{ getHeroName() }}</div>
 
         <div class="combat-overlay__fighter-footer">
           @if (presentationState() === 'ready' && canRoll) {
@@ -112,6 +115,8 @@
           />
         </div>
 
+        <div class="combat-overlay__fighter-name">{{ getMonsterName() }}</div>
+
         <!--
           Emplacement réservé pour conserver la symétrie.
 
@@ -150,13 +155,22 @@
           <span>{{ combatResult.monsterStrength }}</span>
         </div>
 
-        <button
-          type="button"
-          class="combat-overlay__continue"
-          (click)="dismissResult()"
-        >
-          Continuer
-        </button>
+        <!--
+          Seul un joueur humain peut fermer manuellement
+          le résultat du combat.
+
+          Pour une IA, CombatOverlay ferme automatiquement
+          le résultat après le délai prévu.
+        -->
+        @if (currentCombat.player.controller === 'human') {
+          <button
+            type="button"
+            class="combat-overlay__continue"
+            (click)="dismissResult()"
+          >
+            Continuer
+          </button>
+        }
       </div>
     }
   </div>

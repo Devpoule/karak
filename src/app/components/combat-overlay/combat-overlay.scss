@@ -144,7 +144,7 @@
   position: relative;
 
   display: grid;
-  grid-template-rows: 360px 100px;
+  grid-template-rows: 360px 44px 100px;
 
   justify-items: center;
   align-items: center;
@@ -494,7 +494,7 @@
   z-index: 30;
 
   left: 50%;
-  top: 48%;
+  top: calc(50% + 125px);
 
   display: flex;
   flex-direction: column;
@@ -506,8 +506,8 @@
 
   animation:
     combat-verdict-in
-    480ms
-    cubic-bezier(0.18, 1.35, 0.34, 1)
+    950ms
+    cubic-bezier(0.16, 1, 0.3, 1)
     both;
 }
 
@@ -518,8 +518,8 @@
   align-items: center;
   justify-content: center;
 
-  min-width: 330px;
-  min-height: 110px;
+  min-width: min(330px, 90vw);
+  min-height: 70px;
 
   isolation: isolate;
 }
@@ -528,7 +528,7 @@
   position: relative;
   z-index: 5;
 
-  font-size: clamp(3rem, 7vw, 6rem);
+  font-size: clamp(2.2rem, 5vw, 4.3rem);
   font-weight: 950;
   font-style: italic;
   line-height: 1;
@@ -946,12 +946,12 @@
 @keyframes combat-verdict-in {
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.45);
+    transform: translate(-50%, -30%) scale(0.88);
   }
 
   70% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.08);
+    transform: translate(-50%, -50%) scale(1.015);
   }
 
   100% {
@@ -1036,7 +1036,7 @@
   }
 
   .combat-overlay__fighter {
-    grid-template-rows: 290px 90px;
+    grid-template-rows: 290px 40px 90px;
   }
 
   .combat-overlay__visual,
@@ -1077,7 +1077,7 @@
   }
 
   .combat-overlay__fighter {
-    grid-template-rows: 220px 80px;
+    grid-template-rows: 220px 36px 80px;
   }
 
   .combat-overlay__visual,
@@ -1136,4 +1136,38 @@
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
   }
+}
+/* ==========================================================
+   NOMS DES COMBATTANTS — TYPOGRAPHIE ARCADE
+   ========================================================== */
+.combat-overlay__fighter-name {
+  width: 100%;
+  max-width: 100%;
+  padding: 0 6px;
+  overflow: hidden;
+  color: var(--combat-gold);
+  font-size: clamp(1.1rem, 2vw, 1.8rem);
+  font-weight: 950;
+  font-style: italic;
+  letter-spacing: 0.025em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 2px 0 #6f2c16, 0 4px 10px rgba(0,0,0,.85);
+}
+
+/* Le verdict se lit sous le VS, sans couvrir les cartes. */
+.combat-overlay__verdict {
+  width: min(380px, 94vw);
+  gap: 8px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .combat-overlay__verdict { top: calc(50% + 100px); }
+}
+@media (max-width: 620px) {
+  .combat-overlay__verdict { top: calc(50% + 82px); }
+  .combat-overlay__fighter-name { font-size: .95rem; }
+  .combat-overlay__verdict-title { font-size: clamp(2rem, 9vw, 3.1rem); }
 }

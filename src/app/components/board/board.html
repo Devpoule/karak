@@ -122,34 +122,39 @@
      =================================================== -->
 
     @for (occupancy of tileOccupancies; track occupancy.key) {
-      @if (getHeroPawnImage(occupancy.primary.player); as pawnImage) {
-        @let hero = getHeroDefinition(occupancy.primary.player);
-
-        <div
-          class="board__hero"
-          [class.board__hero--active]="isActivePlayer(occupancy.primary.playerIndex)"
-          [style.left.px]="mapCenterInPixels + occupancy.x * tileSize - tileSize / 2"
-          [style.top.px]="mapCenterInPixels + occupancy.y * tileSize - tileSize / 2"
-          [style.--player-color]="occupancy.primary.color"
-        >
-          <img [src]="pawnImage" [alt]="hero?.name ?? 'Héros'" draggable="false" />
-
-          @for (marker of occupancy.markers; track marker.playerIndex; let markerIndex = $index) {
-            @let markerPosition = getMarkerPosition(markerIndex, occupancy.markers.length);
-
-            <span
-              class="board__player-marker"
-              [style.--marker-color]="marker.color"
-              [style.left.%]="markerPosition.x"
-              [style.top.%]="markerPosition.y"
-            >
-              <span class="board__player-marker-label">
-                {{ marker.label }}
-              </span>
-            </span>
+      <div
+        class="board__hero"
+        [class.board__hero--pair]="occupancy.displayedPlayers.length === 2"
+        [class.board__hero--active]="isActivePlayer(occupancy.primary.playerIndex)"
+        [style.left.px]="mapCenterInPixels + occupancy.x * tileSize - tileSize / 2"
+        [style.top.px]="mapCenterInPixels + occupancy.y * tileSize - tileSize / 2"
+        [style.--player-color]="occupancy.primary.color"
+      >
+        @for (occupant of occupancy.displayedPlayers; track occupant.playerIndex) {
+          @if (getHeroPawnImage(occupant.player); as pawnImage) {
+            @let hero = getHeroDefinition(occupant.player);
+            <img
+              class="board__hero-pawn"
+              [class.board__hero-pawn--active]="isActivePlayer(occupant.playerIndex)"
+              [src]="pawnImage"
+              [alt]="hero?.name ?? 'Héros'"
+              draggable="false"
+            />
           }
-        </div>
-      }
+        }
+
+        @for (marker of occupancy.markers; track marker.playerIndex; let markerIndex = $index) {
+          @let markerPosition = getMarkerPosition(markerIndex, occupancy.markers.length);
+          <span
+            class="board__player-marker"
+            [style.--marker-color]="marker.color"
+            [style.left.%]="markerPosition.x"
+            [style.top.%]="markerPosition.y"
+          >
+            <span class="board__player-marker-label">{{ marker.label }}</span>
+          </span>
+        }
+      </div>
     }
 
     <!-- ===================================================

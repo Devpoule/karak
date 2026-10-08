@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, effect } from '@angular/core';
 
 import { getPlayerUiConfig } from '../../constants/player-ui.constants';
 import { Player } from '../../models/player';
@@ -97,10 +97,78 @@ export class PlayerHud {
    */
   private pendingRightPlayerIndex: number | null = null;
 
+  /** Empêche une ouverture différée de rétablir un ancien tour. */
+  private activeTurnSequence = 0;
+
   constructor(
     private readonly gameService: GameService,
     private readonly playerService: PlayerService,
-  ) {}
+  ) {
+    effect(() => {
+      const playerIndex = this.gameService.activePlayerIndex();
+      const sequence = ++this.activeTurnSequence;
+
+      // L'effet observe uniquement le joueur actif. Les panneaux sont
+      // synchronisés après la mise à jour de l'état de la partie.
+      queueMicrotask(() => {
+        if (sequence !== this.activeTurnSequence || playerIndex === null) {
+          return;
+        }
+
+        this.showActivePlayerPanel(playerIndex);
+      });
+    });
+  }
+
+  /**
+   * Ouvre la fiche du joueur actif et replie le panneau opposé.
+   * Les changements de fiche sur un même côté respectent transitionend.
+   */
+  private showActivePlayerPanel(playerIndex: number): void {
+    const player = this.players[playerIndex];
+
+    if (!player) {
+      return;
+    }
+
+    if (player.controller === 'human') {
+      this.pendingRightPlayerIndex = null;
+      this.rightPanelOpen = false;
+      this.openLeftPlayer(playerIndex);
+    } else {
+      this.pendingLeftPlayerIndex = null;
+      this.leftPanelOpen = false;
+      this.openRightPlayer(playerIndex);
+    }
+  }
+
+  private openLeftPlayer(playerIndex: number): void {
+    if (this.leftPlayerIndex === playerIndex) {
+      this.pendingLeftPlayerIndex = null;
+      this.leftPanelOpen = true;
+    } else if (this.leftPanelOpen) {
+      this.pendingLeftPlayerIndex = playerIndex;
+      this.leftPanelOpen = false;
+    } else {
+      this.pendingLeftPlayerIndex = null;
+      this.leftPlayerIndex = playerIndex;
+      this.leftPanelOpen = true;
+    }
+  }
+
+  private openRightPlayer(playerIndex: number): void {
+    if (this.rightPlayerIndex === playerIndex) {
+      this.pendingRightPlayerIndex = null;
+      this.rightPanelOpen = true;
+    } else if (this.rightPanelOpen) {
+      this.pendingRightPlayerIndex = playerIndex;
+      this.rightPanelOpen = false;
+    } else {
+      this.pendingRightPlayerIndex = null;
+      this.rightPlayerIndex = playerIndex;
+      this.rightPanelOpen = true;
+    }
+  }
 
   // ==========================================================
   // JOUEURS

@@ -22,6 +22,7 @@
       class="player-hud__side player-hud__side--left"
       [class.player-hud__side--open]="leftPanelOpen"
       [class.player-hud__side--active]="isActivePlayer(leftPlayerIndex)"
+      [style.--player-color]="getPlayerColor(leftPlayerIndex)"
       [attr.aria-hidden]="!leftPanelOpen"
       (transitionend)="onLeftPanelTransitionEnd($event)"
     >
@@ -57,6 +58,7 @@
       class="player-hud__side player-hud__side--right"
       [class.player-hud__side--open]="rightPanelOpen"
       [class.player-hud__side--active]="isActivePlayer(rightPlayerIndex)"
+      [style.--player-color]="getPlayerColor(rightPlayerIndex)"
       [attr.aria-hidden]="!rightPanelOpen"
       (transitionend)="onRightPanelTransitionEnd($event)"
     >
