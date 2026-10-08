@@ -3,13 +3,48 @@ import { TileDefinition } from '../models/tile';
 
 
 /**
+ * Construit une définition de tuile à partir de ses propriétés.
+ *
+ * CONVENTION DES ASSETS :
+ *
+ * L'identifiant d'une tuile correspond exactement au nom
+ * de son fichier graphique, sans l'extension.
+ *
+ * Exemple :
+ *
+ * id: 'straight-01'
+ * → /assets/tiles/straight-01.png
+ *
+ * CHOIX D'IMPLÉMENTATION :
+ *
+ * Le chemin de l'image est généré automatiquement afin
+ * de garantir la cohérence entre :
+ *
+ * - l'identifiant utilisé par le moteur ;
+ * - le nom du fichier graphique ;
+ * - le chemin de l'asset.
+ *
+ * Cette fonction ne modifie aucune propriété métier.
+ * Elle complète uniquement la définition avec son image.
+ */
+function defineTile(
+  definition: Omit<TileDefinition, 'image'>,
+): TileDefinition {
+  return {
+    ...definition,
+    image: `${ASSET_PATHS.tiles}/${definition.id}.png`,
+  };
+}
+
+
+/**
  * Catalogue des définitions de tuiles du jeu de base Karak.
  *
  * Une TileDefinition décrit les propriétés intrinsèques
  * d'un type de tuile :
  *
  * - son identifiant ;
- * - son asset graphique ;
+ * - son asset graphique, généré depuis cet identifiant ;
  * - sa nature structurelle ;
  * - son éventuelle particularité ;
  * - ses ouvertures à 0°.
@@ -58,6 +93,27 @@ import { TileDefinition } from '../models/tile';
  * d'une tuile avec les règles particulières qu'elle porte.
  *
  * ==========================================================
+ * CONVENTION DE NOMMAGE
+ * ==========================================================
+ *
+ * Les identifiants utilisent le kebab-case.
+ *
+ * Exemples :
+ *
+ * - start
+ * - straight-01
+ * - corner-room
+ * - t-junction-01
+ * - crossroads-room
+ * - portal-straight-01
+ *
+ * Chaque identifiant correspond directement à un fichier
+ * présent dans public/assets/tiles/.
+ *
+ * Les chemins ne sont jamais renseignés manuellement
+ * dans les définitions.
+ *
+ * ==========================================================
  * SÉPARATION DES RESPONSABILITÉS
  * ==========================================================
  *
@@ -89,13 +145,12 @@ export const TILE_DEFINITIONS: TileDefinition[] = [
    * que les futures règles de guérison puissent traiter
    * uniformément toutes les fontaines du jeu.
    */
-  {
+  defineTile({
     id: 'start',
-    image: `${ASSET_PATHS.tiles}/start_tile.jpg`,
     kind: 'start',
     feature: 'healing-fountain',
     openings: ['north', 'east', 'south', 'west'],
-  },
+  }),
 
 
   // ==========================================================
@@ -107,30 +162,29 @@ export const TILE_DEFINITIONS: TileDefinition[] = [
   // west ←────────────→ east
   //
 
-  {
-    id: 'length-01',
-    image: `${ASSET_PATHS.tiles}/length_01.jpg`,
+  defineTile({
+    id: 'straight-01',
     kind: 'corridor',
     openings: ['east', 'west'],
-  },
-  {
-    id: 'length-02',
-    image: `${ASSET_PATHS.tiles}/length_02.jpg`,
+  }),
+
+  defineTile({
+    id: 'straight-02',
     kind: 'corridor',
     openings: ['east', 'west'],
-  },
-  {
-    id: 'length-03',
-    image: `${ASSET_PATHS.tiles}/length_03.jpg`,
+  }),
+
+  defineTile({
+    id: 'straight-03',
     kind: 'corridor',
     openings: ['east', 'west'],
-  },
-  {
-    id: 'length-04',
-    image: `${ASSET_PATHS.tiles}/length_04.jpg`,
+  }),
+
+  defineTile({
+    id: 'straight-04',
     kind: 'corridor',
     openings: ['east', 'west'],
-  },
+  }),
 
 
   // ==========================================================
@@ -146,34 +200,33 @@ export const TILE_DEFINITIONS: TileDefinition[] = [
   // lorsque cette étape du manuel sera traitée.
   //
 
-  {
-    id: 'teleporter-length-01',
-    image: `${ASSET_PATHS.tiles}/teleporter_length_01.jpg`,
+  defineTile({
+    id: 'portal-straight-01',
     kind: 'corridor',
     feature: 'portal',
     openings: ['east', 'west'],
-  },
-  {
-    id: 'teleporter-length-02',
-    image: `${ASSET_PATHS.tiles}/teleporter_length_02.jpg`,
+  }),
+
+  defineTile({
+    id: 'portal-straight-02',
     kind: 'corridor',
     feature: 'portal',
     openings: ['east', 'west'],
-  },
-  {
-    id: 'teleporter-length-03',
-    image: `${ASSET_PATHS.tiles}/teleporter_length_03.jpg`,
+  }),
+
+  defineTile({
+    id: 'portal-straight-03',
     kind: 'corridor',
     feature: 'portal',
     openings: ['east', 'west'],
-  },
-  {
-    id: 'teleporter-length-04',
-    image: `${ASSET_PATHS.tiles}/teleporter_length_04.jpg`,
+  }),
+
+  defineTile({
+    id: 'portal-straight-04',
     kind: 'corridor',
     feature: 'portal',
     openings: ['east', 'west'],
-  },
+  }),
 
 
   // ==========================================================
@@ -192,23 +245,21 @@ export const TILE_DEFINITIONS: TileDefinition[] = [
    *               ↓
    *             south
    */
-  {
-    id: 'intersection-room',
-    image: `${ASSET_PATHS.tiles}/intersection_room.jpg`,
+  defineTile({
+    id: 't-junction-room',
     kind: 'room',
     openings: ['north', 'south', 'west'],
-  },
+  }),
 
 
   /*
    * Salle traversante nord / sud.
    */
-  {
-    id: 'length-room',
-    image: `${ASSET_PATHS.tiles}/length_room.jpg`,
+  defineTile({
+    id: 'straight-room',
     kind: 'room',
     openings: ['north', 'south'],
-  },
+  }),
 
 
   // ==========================================================
@@ -224,30 +275,29 @@ export const TILE_DEFINITIONS: TileDefinition[] = [
   //                south
   //
 
-  {
+  defineTile({
     id: 'corner-01',
-    image: `${ASSET_PATHS.tiles}/corner_01.jpg`,
     kind: 'corridor',
     openings: ['east', 'south'],
-  },
-  {
+  }),
+
+  defineTile({
     id: 'corner-02',
-    image: `${ASSET_PATHS.tiles}/corner_02.jpg`,
     kind: 'corridor',
     openings: ['east', 'south'],
-  },
-  {
+  }),
+
+  defineTile({
     id: 'corner-03',
-    image: `${ASSET_PATHS.tiles}/corner_03.jpg`,
     kind: 'corridor',
     openings: ['east', 'south'],
-  },
-  {
+  }),
+
+  defineTile({
     id: 'corner-04',
-    image: `${ASSET_PATHS.tiles}/corner_04.jpg`,
     kind: 'corridor',
     openings: ['east', 'south'],
-  },
+  }),
 
 
   /*
@@ -260,12 +310,11 @@ export const TILE_DEFINITIONS: TileDefinition[] = [
    *                  │
    *        west ← [ salle ]
    */
-  {
+  defineTile({
     id: 'corner-room',
-    image: `${ASSET_PATHS.tiles}/corner_room.jpg`,
     kind: 'room',
     openings: ['north', 'west'],
-  },
+  }),
 
 
   // ==========================================================
@@ -281,13 +330,12 @@ export const TILE_DEFINITIONS: TileDefinition[] = [
   // lorsque cette étape du manuel sera traitée.
   //
 
-  {
+  defineTile({
     id: 'healing-corner',
-    image: `${ASSET_PATHS.tiles}/healing_corner.jpg`,
     kind: 'corridor',
     feature: 'healing-fountain',
     openings: ['west', 'south'],
-  },
+  }),
 
 
   // ==========================================================
@@ -302,36 +350,35 @@ export const TILE_DEFINITIONS: TileDefinition[] = [
   //                south
   //
 
-  {
-    id: 'intersection-01',
-    image: `${ASSET_PATHS.tiles}/intersection_01.jpg`,
+  defineTile({
+    id: 't-junction-01',
     kind: 'corridor',
     openings: ['east', 'south', 'west'],
-  },
-  {
-    id: 'intersection-02',
-    image: `${ASSET_PATHS.tiles}/intersection_02.jpg`,
+  }),
+
+  defineTile({
+    id: 't-junction-02',
     kind: 'corridor',
     openings: ['east', 'south', 'west'],
-  },
-  {
-    id: 'intersection-03',
-    image: `${ASSET_PATHS.tiles}/intersection_03.jpg`,
+  }),
+
+  defineTile({
+    id: 't-junction-03',
     kind: 'corridor',
     openings: ['east', 'south', 'west'],
-  },
-  {
-    id: 'intersection-04',
-    image: `${ASSET_PATHS.tiles}/intersection_04.jpg`,
+  }),
+
+  defineTile({
+    id: 't-junction-04',
     kind: 'corridor',
     openings: ['east', 'south', 'west'],
-  },
-  {
-    id: 'intersection-05',
-    image: `${ASSET_PATHS.tiles}/intersection_05.jpg`,
+  }),
+
+  defineTile({
+    id: 't-junction-05',
     kind: 'corridor',
     openings: ['east', 'south', 'west'],
-  },
+  }),
 
 
   // ==========================================================
@@ -354,20 +401,19 @@ export const TILE_DEFINITIONS: TileDefinition[] = [
   /*
    * Variante avec salle.
    */
-  {
-    id: 'cross-room',
-    image: `${ASSET_PATHS.tiles}/cross_room.jpg`,
+  defineTile({
+    id: 'crossroads-room',
     kind: 'room',
     openings: ['north', 'east', 'south', 'west'],
-  },
+  }),
+
 
   /*
    * Intersection ordinaire.
    */
-  {
-    id: 'cross',
-    image: `${ASSET_PATHS.tiles}/cross.jpg`,
+  defineTile({
+    id: 'crossroads',
     kind: 'corridor',
     openings: ['north', 'east', 'south', 'west'],
-  },
+  }),
 ];

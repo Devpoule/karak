@@ -131,7 +131,7 @@ export interface TileDefinition {
    *
    * Exemple :
    * 'start'
-   * 'length-01'
+   * 'straight-01'
    * 'corner-room'
    */
   id: string;

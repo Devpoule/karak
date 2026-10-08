@@ -2,13 +2,14 @@
   <!--
     Support visuel du héros.
 
-    board_02.jpg constitue le cadre de pierre.
-    La carte du héros est superposée dans sa zone intérieure
-    sans modifier les dimensions générales du panneau.
+    hero-panel.png constitue le cadre de pierre.
+
+    L'illustration du personnage est superposée
+    sans modifier les dimensions du panneau.
   -->
   <img
     class="hero-panel__board"
-    src="/assets/board/board_02.jpg"
+    src="/assets/board/hero-panel.png"
     alt=""
     draggable="false"
   />
@@ -20,7 +21,7 @@
     >
       <img
         class="hero-panel__card"
-        [src]="hero.card"
+        [src]="hero.characterStats"
         [alt]="hero.name"
         draggable="false"
       />

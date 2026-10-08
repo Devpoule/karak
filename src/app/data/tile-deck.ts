@@ -60,10 +60,10 @@ export const TILE_DECK_COMPOSITION: TileDeckEntry[] = [
   // COULOIRS DROITS
   // ----------------------------------------------------------
 
-  { definitionId: 'length-01', count: 1 },
-  { definitionId: 'length-02', count: 1 },
-  { definitionId: 'length-03', count: 1 },
-  { definitionId: 'length-04', count: 1 },
+  { definitionId: 'straight-01', count: 1 },
+  { definitionId: 'straight-02', count: 1 },
+  { definitionId: 'straight-03', count: 1 },
+  { definitionId: 'straight-04', count: 1 },
 
 
   // ----------------------------------------------------------
@@ -81,26 +81,26 @@ export const TILE_DECK_COMPOSITION: TileDeckEntry[] = [
   // ----------------------------------------------------------
 
   { definitionId: 'corner-room', count: 13 },
-  { definitionId: 'cross-room', count: 14 },
-  { definitionId: 'intersection-room', count: 13 },
-  { definitionId: 'length-room', count: 13 },
+  { definitionId: 'crossroads-room', count: 14 },
+  { definitionId: 't-junction-room', count: 13 },
+  { definitionId: 'straight-room', count: 13 },
 
 
   // ----------------------------------------------------------
   // CROISEMENTS
   // ----------------------------------------------------------
 
-  { definitionId: 'cross', count: 7 },
+  { definitionId: 'crossroads', count: 7 },
 
 
   // ----------------------------------------------------------
   // TÉLÉPORTEURS
   // ----------------------------------------------------------
 
-  { definitionId: 'teleporter-length-01', count: 1 },
-  { definitionId: 'teleporter-length-02', count: 1 },
-  { definitionId: 'teleporter-length-03', count: 1 },
-  { definitionId: 'teleporter-length-04', count: 1 },
+  { definitionId: 'portal-straight-01', count: 1 },
+  { definitionId: 'portal-straight-02', count: 1 },
+  { definitionId: 'portal-straight-03', count: 1 },
+  { definitionId: 'portal-straight-04', count: 1 },
 
 
   // ----------------------------------------------------------
@@ -114,11 +114,11 @@ export const TILE_DECK_COMPOSITION: TileDeckEntry[] = [
   // INTERSECTIONS EN T
   // ----------------------------------------------------------
 
-  { definitionId: 'intersection-01', count: 1 },
-  { definitionId: 'intersection-02', count: 1 },
-  { definitionId: 'intersection-03', count: 1 },
-  { definitionId: 'intersection-04', count: 1 },
-  { definitionId: 'intersection-05', count: 1 },
+  { definitionId: 't-junction-01', count: 1 },
+  { definitionId: 't-junction-02', count: 1 },
+  { definitionId: 't-junction-03', count: 1 },
+  { definitionId: 't-junction-04', count: 1 },
+  { definitionId: 't-junction-05', count: 1 },
 ];
 
 
@@ -183,7 +183,7 @@ if (unknownDefinitionIds.length > 0) {
 
 // ==========================================================
 // CRÉATION DE LA PIOCHE
-// ==========================================================
+// ============== ============================================
 
 /**
  * Construit la pioche complète à partir de sa composition.

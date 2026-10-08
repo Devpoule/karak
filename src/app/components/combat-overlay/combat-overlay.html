@@ -1,92 +1,163 @@
-@if (pendingCombat; as combat) {
+@if (combat; as currentCombat) {
   <div
     class="combat-overlay"
+    [class.combat-overlay--rolling]="isRolling"
+    [class.combat-overlay--result]="isResultVisible"
+    [class.combat-overlay--victory]="result?.outcome === 'victory'"
+    [class.combat-overlay--tie]="result?.outcome === 'tie'"
+    [class.combat-overlay--defeat]="result?.outcome === 'defeat'"
     (pointerdown)="$event.stopPropagation()"
     (pointermove)="$event.stopPropagation()"
     (pointerup)="$event.stopPropagation()"
   >
+    <!-- Fond cinématique indépendant de la caméra du plateau. -->
     <div class="combat-overlay__backdrop"></div>
-    <div class="combat-overlay__flash"></div>
 
+    <!-- Lignes de vitesse lors de l'arrivée des combattants. -->
+    <div class="combat-overlay__speed-lines" aria-hidden="true"></div>
+
+    <!-- Impact central du VS. -->
+    <div class="combat-overlay__flash" aria-hidden="true"></div>
+    <div class="combat-overlay__shockwave" aria-hidden="true"></div>
+
+    <!--
+      Arène symétrique :
+      deux colonnes de même largeur autour du VS.
+
+      Chaque combattant possède :
+      - une surface graphique fixe ;
+      - un emplacement inférieur réservé.
+
+      Les dés ne modifient jamais l'alignement des cartes.
+    -->
     <div class="combat-overlay__arena">
-      <section class="combat-overlay__fighter combat-overlay__fighter--hero">
-        <span class="combat-overlay__fighter-label">{{ getHeroName() }}</span>
 
-        @if (getHeroImage(); as heroImage) {
-          <img
-            class="combat-overlay__fighter-image combat-overlay__fighter-image--hero"
-            [src]="heroImage"
-            [alt]="getHeroName()"
-            draggable="false"
-          />
-        }
+      <!-- HÉROS -->
+      <section
+        class="combat-overlay__fighter combat-overlay__fighter--hero"
+      >
+        <div class="combat-overlay__visual">
+          @if (getHeroImage(); as heroImage) {
+            <img
+              class="combat-overlay__fighter-image combat-overlay__fighter-image--hero"
+              [src]="heroImage"
+              alt="Héros"
+              draggable="false"
+            />
+          }
+        </div>
+
+        <div class="combat-overlay__fighter-footer">
+          @if (presentationState() === 'ready' && canRoll) {
+            <button
+              type="button"
+              class="combat-overlay__roll-trigger"
+              aria-label="Lancer les dés"
+              (click)="resolveCombat()"
+            >
+              <span aria-hidden="true">⚄</span>
+            </button>
+          }
+
+          @if (
+            presentationState() === 'rolling'
+            || presentationState() === 'result'
+          ) {
+            <div
+              class="combat-overlay__dice"
+              [class.combat-overlay__dice--rolling]="isRolling"
+              aria-label="Dés du combat"
+            >
+              <div
+                class="combat-overlay__die"
+                [class.combat-overlay__die--stopped]="isResultVisible"
+                [attr.data-value]="displayedDice().die1"
+              ></div>
+
+              <div
+                class="combat-overlay__die"
+                [class.combat-overlay__die--stopped]="isResultVisible"
+                [attr.data-value]="displayedDice().die2"
+              ></div>
+            </div>
+          }
+        </div>
       </section>
 
-      <div class="combat-overlay__versus" aria-hidden="true">
-        <span class="combat-overlay__bolt combat-overlay__bolt--left">ϟ</span>
-        <strong>VS</strong>
-        <span class="combat-overlay__bolt combat-overlay__bolt--right">ϟ</span>
+      <!-- VS -->
+      <div class="combat-overlay__center" aria-hidden="true">
+        <div class="combat-overlay__versus">
+          <span class="combat-overlay__bolt combat-overlay__bolt--left">
+            ϟ
+          </span>
+
+          <strong>VS</strong>
+
+          <span class="combat-overlay__bolt combat-overlay__bolt--right">
+            ϟ
+          </span>
+        </div>
       </div>
 
-      <section class="combat-overlay__fighter combat-overlay__fighter--monster">
-        <span class="combat-overlay__fighter-label">Force {{ combat.monster.strength }}</span>
+      <!-- MONSTRE -->
+      <section
+        class="combat-overlay__fighter combat-overlay__fighter--monster"
+      >
+        <div class="combat-overlay__visual">
+          <img
+            class="combat-overlay__fighter-image combat-overlay__fighter-image--monster"
+            [src]="currentCombat.monster.image"
+            alt="Adversaire"
+            draggable="false"
+          />
+        </div>
 
-        <img
-          class="combat-overlay__fighter-image combat-overlay__fighter-image--monster"
-          [src]="combat.monster.image"
-          alt="Monstre"
-          draggable="false"
-        />
+        <!--
+          Emplacement réservé pour conserver la symétrie.
+
+          La force du monstre est déjà imprimée sur sa carte :
+          aucun libellé supplémentaire n'est nécessaire.
+        -->
+        <div
+          class="combat-overlay__fighter-footer"
+          aria-hidden="true"
+        ></div>
       </section>
     </div>
 
-    <div class="combat-overlay__action">
-      @if (canRoll) {
+    <!-- VERDICT -->
+    @if (isResultVisible && result; as combatResult) {
+      <div
+        class="combat-overlay__verdict"
+        [class.combat-overlay__verdict--victory]="combatResult.outcome === 'victory'"
+        [class.combat-overlay__verdict--tie]="combatResult.outcome === 'tie'"
+        [class.combat-overlay__verdict--defeat]="combatResult.outcome === 'defeat'"
+      >
+        <div class="combat-overlay__verdict-effect">
+          <span
+            class="combat-overlay__verdict-energy"
+            aria-hidden="true"
+          ></span>
+
+          <strong class="combat-overlay__verdict-title">
+            {{ getOutcomeLabel(combatResult.outcome) }}
+          </strong>
+        </div>
+
+        <div class="combat-overlay__result-score">
+          <span>{{ combatResult.attackPower }}</span>
+          <b>—</b>
+          <span>{{ combatResult.monsterStrength }}</span>
+        </div>
+
         <button
           type="button"
-          class="combat-overlay__roll"
-          (click)="resolveCombat()"
+          class="combat-overlay__continue"
+          (click)="dismissResult()"
         >
-          Lancer les dés
+          Continuer
         </button>
-      } @else {
-        <span class="combat-overlay__waiting">Combat de l'IA…</span>
-      }
-    </div>
-  </div>
-}
-
-@if (!pendingCombat && lastCombatResult; as result) {
-  <div
-    class="combat-result"
-    [class.combat-result--victory]="result.outcome === 'victory'"
-    [class.combat-result--tie]="result.outcome === 'tie'"
-    [class.combat-result--defeat]="result.outcome === 'defeat'"
-    (pointerdown)="$event.stopPropagation()"
-  >
-    <strong class="combat-result__title">
-      {{ getOutcomeLabel(result.outcome) }}
-    </strong>
-
-    <div class="combat-result__dice" aria-label="Résultat des dés">
-      <span>{{ result.die1 }}</span>
-      <b>+</b>
-      <span>{{ result.die2 }}</span>
-      <b>=</b>
-      <strong>{{ result.diceTotal }}</strong>
-    </div>
-
-    <div class="combat-result__scores">
-      <span>Attaque {{ result.attackPower }}</span>
-      <span>Monstre {{ result.monsterStrength }}</span>
-    </div>
-
-    <button
-      type="button"
-      class="combat-result__close"
-      (click)="dismissResult()"
-    >
-      Continuer
-    </button>
+      </div>
+    }
   </div>
 }

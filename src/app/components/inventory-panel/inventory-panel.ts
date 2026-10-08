@@ -11,7 +11,7 @@ import { Player } from '../../models/player';
 /**
  * Affiche l'inventaire d'un joueur.
  *
- * Le support board_03.jpg matérialise déjà graphiquement
+ * Le support inventory-panel.png matérialise déjà graphiquement
  * les différents emplacements de l'inventaire.
  *
  * Les emplacements vides ne produisent donc aucun rendu

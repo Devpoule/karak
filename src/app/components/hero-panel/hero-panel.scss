@@ -10,7 +10,7 @@
    ========================================================== */
 
 /*
- * Le support board_02 définit à lui seul les proportions
+ * Le support hero-panel définit à lui seul les proportions
  * générales du panneau.
  *
  * La carte du héros est superposée dessus : elle ne participe
@@ -46,7 +46,7 @@
    ========================================================== */
 
 /*
- * board_02.jpg contient déjà son propre cadre de pierre.
+ * hero-panel.png contient déjà son propre cadre de pierre.
  *
  * Cette zone correspond à l'ouverture intérieure du support.
  * Elle est volontairement plus grande que dans l'ancienne
@@ -57,7 +57,7 @@
   position: absolute;
 
   /*
-   * Le cadre extérieur de board_02 représente environ 5 %
+   * Le cadre extérieur de hero-panel représente environ 5 %
    * de la largeur du support.
    *
    * On conserve légèrement plus d'espace vertical afin que

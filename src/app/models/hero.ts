@@ -3,8 +3,7 @@ import { Direction } from './tile';
 /**
  * Identifiants des héros disponibles dans le jeu de base.
  *
- * Ils servent de références stables dans l'état de la partie,
- * indépendamment de leur nom affiché ou de leurs assets.
+ * Ils restent indépendants de l'organisation des assets.
  */
 export type HeroId =
   | 'aderyn'
@@ -18,21 +17,38 @@ export type HeroId =
 /**
  * Définition statique d'un héros.
  *
- * Cette structure décrit l'identité et les ressources graphiques
- * du personnage. Elle ne contient aucun état lié à une partie :
- * position, inventaire, état de santé, etc.
- *
- * CHOIX D'IMPLÉMENTATION :
- *
- * chaque pion possède une représentation pour les quatre
- * directions cardinales afin que son orientation sur le plateau
- * reflète directement la direction du héros.
+ * Les images sont regroupées par rôle graphique.
+ * Aucun état de partie n'est stocké ici.
  */
 export interface HeroDefinition {
   id: HeroId;
   name: string;
 
+  /**
+   * Carte utilisée pendant le tirage des héros.
+   */
   card: string;
 
+  /**
+   * Illustration principale sans indicateurs de pouvoirs.
+   */
+  character: string;
+
+  /**
+   * Illustration détourée, sans arrière-plan.
+   */
+  characterTransparent: string;
+
+  /**
+   * Illustration enrichie des indicateurs de pouvoirs.
+   */
+  characterStats: string;
+
+  /**
+   * Sprites directionnels du héros sur le plateau.
+   *
+   * La propriété pawn est conservée pour maintenir
+   * la compatibilité avec les composants existants.
+   */
   pawn: Record<Direction, string>;
 }

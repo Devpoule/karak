@@ -1,104 +1,86 @@
-import { ASSET_PATHS } from '../constants/asset-paths.constants';
-import { HeroDefinition, HeroId } from '../models/hero';
+import {
+  HeroDefinition,
+  HeroId,
+} from '../models/hero';
 
 /**
- * Dos commun aux cartes Héros.
- *
- * Il est utilisé pendant la préparation de la partie,
- * avant la révélation des héros attribués aux joueurs.
+ * Répertoire commun des ressources graphiques des héros.
+ */
+const HERO_ASSETS_PATH = '/assets/heroes';
+
+
+/**
+ * Dos commun à toutes les cartes Héros.
  */
 export const HERO_CARD_BACK =
-  `${ASSET_PATHS.characters.cards}/hero_card_back.jpg`;
+  `${HERO_ASSETS_PATH}/card-back.png`;
+
+
+/**
+ * Variante transparente du dos de carte.
+ */
+export const HERO_CARD_BACK_TRANSPARENT =
+  `${HERO_ASSETS_PATH}/card-back-transparent.png`;
+
+
+/**
+ * Construit la définition graphique d'un héros.
+ *
+ * CONVENTION :
+ *
+ * assets/heroes/{heroId}/{nom-du-fichier}.png
+ *
+ * Tous les héros utilisent les mêmes noms de fichiers.
+ */
+function createHeroDefinition(
+  id: HeroId,
+  name: string,
+): HeroDefinition {
+  const path = `${HERO_ASSETS_PATH}/${id}`;
+
+  return {
+    id,
+    name,
+
+    /**
+     * La carte du tirage correspond à l'illustration
+     * complète du personnage.
+     */
+    card: `${path}/character.png`,
+
+    character: `${path}/character.png`,
+
+    characterTransparent:
+      `${path}/character-transparent.png`,
+
+    characterStats:
+      `${path}/character-stats.png`,
+
+    pawn: {
+      north: `${path}/sprite-north.png`,
+      east: `${path}/sprite-east.png`,
+      south: `${path}/sprite-south.png`,
+      west: `${path}/sprite-west.png`,
+    },
+  };
+}
+
 
 /**
  * Catalogue des héros disponibles dans le jeu de base.
  *
- * Chaque entrée contient uniquement les données statiques
- * nécessaires pour identifier et représenter graphiquement
- * un héros.
+ * L'ordre des héros est conservé.
  *
- * L'état d'un héros pendant une partie ne doit pas être
- * stocké dans ce catalogue.
+ * Les définitions contiennent uniquement des données
+ * statiques : aucune information propre à une partie.
  */
 export const HERO_DEFINITIONS: readonly HeroDefinition[] = [
-  {
-    id: 'aderyn',
-    name: 'Aderyn',
-
-    card: `${ASSET_PATHS.characters.cards}/aderyn.jpg`,
-
-    pawn: {
-      north: `${ASSET_PATHS.characters.pawns}/aderyn_pawn_north.png`,
-      east: `${ASSET_PATHS.characters.pawns}/aderyn_pawn_east.png`,
-      south: `${ASSET_PATHS.characters.pawns}/aderyn_pawn_south.png`,
-      west: `${ASSET_PATHS.characters.pawns}/aderyn_pawn_west.png`,
-    },
-  },
-  {
-    id: 'argentus',
-    name: 'Argentus',
-
-    card: `${ASSET_PATHS.characters.cards}/argentus.jpg`,
-
-    pawn: {
-      north: `${ASSET_PATHS.characters.pawns}/argentus_pawn_north.png`,
-      east: `${ASSET_PATHS.characters.pawns}/argentus_pawn_east.png`,
-      south: `${ASSET_PATHS.characters.pawns}/argentus_pawn_south.png`,
-      west: `${ASSET_PATHS.characters.pawns}/argentus_pawn_west.png`,
-    },
-  },
-  {
-    id: 'horan',
-    name: 'Horan',
-
-    card: `${ASSET_PATHS.characters.cards}/horan.jpg`,
-
-    pawn: {
-      north: `${ASSET_PATHS.characters.pawns}/horan_pawn_north.png`,
-      east: `${ASSET_PATHS.characters.pawns}/horan_pawn_east.png`,
-      south: `${ASSET_PATHS.characters.pawns}/horan_pawn_south.png`,
-      west: `${ASSET_PATHS.characters.pawns}/horan_pawn_west.png`,
-    },
-  },
-  {
-    id: 'taia',
-    name: 'Taia',
-
-    card: `${ASSET_PATHS.characters.cards}/taia.jpg`,
-
-    pawn: {
-      north: `${ASSET_PATHS.characters.pawns}/taia_pawn_north.png`,
-      east: `${ASSET_PATHS.characters.pawns}/taia_pawn_east.png`,
-      south: `${ASSET_PATHS.characters.pawns}/taia_pawn_south.png`,
-      west: `${ASSET_PATHS.characters.pawns}/taia_pawn_west.png`,
-    },
-  },
-  {
-    id: 'victorius',
-    name: 'Victorius',
-
-    card: `${ASSET_PATHS.characters.cards}/victorius.jpg`,
-
-    pawn: {
-      north: `${ASSET_PATHS.characters.pawns}/victorius_pawn_north.png`,
-      east: `${ASSET_PATHS.characters.pawns}/victorius_pawn_east.png`,
-      south: `${ASSET_PATHS.characters.pawns}/victorius_pawn_south.png`,
-      west: `${ASSET_PATHS.characters.pawns}/victorius_pawn_west.png`,
-    },
-  },
-  {
-    id: 'xanros',
-    name: 'Xanros',
-
-    card: `${ASSET_PATHS.characters.cards}/xanros.jpg`,
-
-    pawn: {
-      north: `${ASSET_PATHS.characters.pawns}/xanros_pawn_north.png`,
-      east: `${ASSET_PATHS.characters.pawns}/xanros_pawn_east.png`,
-      south: `${ASSET_PATHS.characters.pawns}/xanros_pawn_south.png`,
-      west: `${ASSET_PATHS.characters.pawns}/xanros_pawn_west.png`,
-    },
-  },
+  createHeroDefinition('aderyn', 'Aderyn'),
+  createHeroDefinition('argentus', 'Argentus'),
+  createHeroDefinition('horan', 'Horan'),
+  createHeroDefinition('taia', 'Taia'),
+  createHeroDefinition('victorius', 'Victorius'),
+  createHeroDefinition('xanros', 'Xanros'),
 ];
 
 
