@@ -43,7 +43,7 @@ export class Rules {
    *
    * Exemple :
    *
-   * page 1 → /assets/rules/karak_base_01.jpg
+   * page 1 → /assets/rules/karak-base-01.jpg
    */
   get currentPageImage(): string {
     const page =
@@ -51,7 +51,7 @@ export class Rules {
         .toString()
         .padStart(2, '0');
 
-    return `/assets/rules/karak_base_${page}.jpg`;
+    return `/assets/rules/karak-base-${page}.jpg`;
   }
 
 

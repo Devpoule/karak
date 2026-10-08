@@ -35,42 +35,42 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     id: 'giant-rat',
     kind: 'monster',
     strength: 5,
-    image: `${TOKEN_ASSET_PATH}/giant_rat.png`,
+    image: `${TOKEN_ASSET_PATH}/giant-rat.png`,
   },
 
   {
     id: 'giant-spider',
     kind: 'monster',
     strength: 6,
-    image: `${TOKEN_ASSET_PATH}/giant_spider.png`,
+    image: `${TOKEN_ASSET_PATH}/giant-spider.png`,
   },
 
   {
     id: 'skeleton-mummy',
     kind: 'monster',
     strength: 7,
-    image: `${TOKEN_ASSET_PATH}/skeleton_mummy.png`,
+    image: `${TOKEN_ASSET_PATH}/skeleton-mummy.png`,
   },
 
   {
     id: 'skeleton-key-guardian',
     kind: 'monster',
     strength: 8,
-    image: `${TOKEN_ASSET_PATH}/skeleton_key_guardian.png`,
+    image: `${TOKEN_ASSET_PATH}/skeleton-key-guardian.png`,
   },
 
   {
     id: 'skeleton-swordsman',
     kind: 'monster',
     strength: 9,
-    image: `${TOKEN_ASSET_PATH}/skeleton_swordsman.png`,
+    image: `${TOKEN_ASSET_PATH}/skeleton-swordsman.png`,
   },
 
   {
     id: 'skeleton-king',
     kind: 'monster',
     strength: 10,
-    image: `${TOKEN_ASSET_PATH}/skeleton_king.png`,
+    image: `${TOKEN_ASSET_PATH}/skeleton-king.png`,
   },
 
   {
@@ -84,7 +84,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
   //   id: 'skeleton-ice-magician',
   //   kind: 'monster',
   //   strength: 11,
-  //   image: `${TOKEN_ASSET_PATH}/skeleton_ice_magician.png`,
+  //   image: `${TOKEN_ASSET_PATH}/skeleton-ice-magician.png`,
   // },
 
   {
@@ -101,13 +101,13 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
   {
     id: 'closed-chest',
     kind: 'treasure',
-    image: `${TOKEN_ASSET_PATH}/closed_chest.png`,
+    image: `${TOKEN_ASSET_PATH}/closed-chest.png`,
   },
 
   {
     id: 'open-chest',
     kind: 'treasure',
-    image: `${TOKEN_ASSET_PATH}/open_chest.png`,
+    image: `${TOKEN_ASSET_PATH}/open-chest.png`,
   },
 
   {
