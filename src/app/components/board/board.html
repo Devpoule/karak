@@ -89,6 +89,20 @@
         @if (getTileTokenImage(tile); as tokenImage) {
           <img class="board__token" [src]="tokenImage" alt="" draggable="false" />
         }
+        @if (getGroundEquipment(tile).length; as itemCount) {
+          <div class="board__ground-items" [attr.aria-label]="itemCount + ' équipement(s) au sol'">
+            @for (equipment of getGroundEquipment(tile); track $index; let equipmentIndex = $index) {
+              <button type="button" class="board__ground-item"
+                [disabled]="!canSelectGroundEquipment(tile)"
+                [attr.aria-label]="'Récupérer ' + equipment.name"
+                [title]="equipment.name"
+                (pointerdown)="$event.stopPropagation()"
+                (click)="selectGroundEquipment(tile, equipmentIndex)">
+                <img [src]="equipment.image" [alt]="equipment.name" draggable="false" />
+              </button>
+            }
+          </div>
+        }
       </div>
     }
     <!-- ===================================================
@@ -271,7 +285,12 @@
           <img class="board__reward-image" [src]="equipment.image" [alt]="equipment.name" draggable="false" />
           <p>{{ equipment.name }}</p>
           @if (!canCollectPendingEquipment) {
-            <p class="board__reward-notice">Aucun emplacement libre dans l'inventaire.</p>
+             <p class="board__reward-notice">Aucun emplacement libre : choisissez un objet à remplacer.</p>
+             <div class="board__reward-actions">
+               @for (slot of getReplacementSlots(equipment); track slot.index) {
+                 <button type="button" (click)="replacePendingEquipment(slot.index)">Remplacer {{ slot.name }}</button>
+               }
+             </div>
           }
           <div class="board__reward-actions">
             <button type="button" [disabled]="!canCollectPendingEquipment" (click)="collectPendingEquipment()">Récupérer</button>
@@ -295,6 +314,24 @@
             <button type="button" (click)="leavePendingReward()">Laisser sur la tuile</button>
           </div>
         }
+      </section>
+    </div>
+  }
+  @if (humanPendingGroundEquipment; as pending) {
+    <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
+      <section class="board__reward-panel" role="dialog" aria-modal="true" aria-labelledby="ground-equipment-title">
+        <h2 id="ground-equipment-title">Équipement trouvé</h2>
+        <img class="board__reward-image" [src]="pending.equipment.image" [alt]="pending.equipment.name" draggable="false" />
+        <p>{{ pending.equipment.name }}</p>
+        <div class="board__reward-actions">
+          <button type="button" [disabled]="!canCollectGroundEquipment" (click)="collectGroundEquipment()">Récupérer</button>
+          @if (!canCollectGroundEquipment) {
+            @for (slot of getReplacementSlots(pending.equipment); track slot.index) {
+              <button type="button" (click)="replaceGroundEquipment(slot.index)">Remplacer {{ slot.name }}</button>
+            }
+          }
+          <button type="button" (click)="leaveGroundEquipment()">Laisser sur la tuile</button>
+        </div>
       </section>
     </div>
   }

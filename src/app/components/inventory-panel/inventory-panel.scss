@@ -62,7 +62,23 @@
   flex: 1 1 0;
   min-height: 0;
   width: 100%;
+  pointer-events: auto;
 }
+
+.inventory-panel__item-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.inventory-panel__item-button:disabled { cursor: default; }
+.inventory-panel__item-button:focus-visible { outline: 2px solid #f5be41; outline-offset: -2px; }
 
 .inventory-panel__item {
   display: block;
@@ -100,3 +116,16 @@
     animation: none !important;
   }
 }
+
+.inventory-panel__drop-confirmation {
+  position: relative;
+  z-index: 3;
+  margin-top: 0.5rem;
+  padding: 0.65rem;
+  border-radius: 0.5rem;
+  background: rgba(25, 20, 15, 0.95);
+  color: #fff;
+  text-align: center;
+}
+.inventory-panel__drop-confirmation p { margin: 0 0 0.5rem; }
+.inventory-panel__drop-confirmation button { margin: 0 0.2rem; cursor: pointer; }

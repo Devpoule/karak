@@ -1,11 +1,12 @@
 import { Component, DoCheck, Input, OnDestroy } from '@angular/core';
+import { GameService } from '../../services/game.service';
 import { PLAYER_INVENTORY_CAPACITY, PlayerInventory } from '../../models/inventory';
 import { Player } from '../../models/player';
-import { KeyEquipment, SpellEquipment, WeaponEquipment } from '../../models/equipment';
+import { Equipment, KeyEquipment, SpellEquipment, WeaponEquipment } from '../../models/equipment';
 
 type InventoryGroup = 'weapons' | 'spells' | 'key';
 
-/** Affichage uniquement : aucune mutation de l'inventaire. */
+/** Affichage de l’inventaire et demande de dépôt volontaire via GameService. */
 @Component({
   imports: [],
   selector: 'app-inventory-panel',
@@ -14,6 +15,33 @@ type InventoryGroup = 'weapons' | 'spells' | 'key';
 })
 export class InventoryPanel implements DoCheck, OnDestroy {
   @Input() player: Player | null = null;
+
+  constructor(private readonly gameService: GameService) {}
+
+  selectedDrop: { kind: Equipment['kind']; index: number; name: string } | null = null;
+
+  get canDropEquipment(): boolean {
+    return !!this.player && this.player === this.gameService.activePlayer
+      && this.player.controller === 'human' && this.gameService.phase() === 'playing'
+      && !this.gameService.turnTransitionPending() && !this.gameService.hasPendingTileResolution;
+  }
+
+  selectDrop(kind: Equipment['kind'], index: number, equipment: Equipment): void {
+    if (!this.canDropEquipment) return;
+    this.selectedDrop = { kind, index, name: equipment.name };
+  }
+
+  cancelDrop(): void {
+    this.selectedDrop = null;
+  }
+
+  confirmDrop(): void {
+    const selected = this.selectedDrop;
+    if (!selected || !this.player || !this.canDropEquipment) return;
+    if (this.gameService.dropInventoryEquipment(this.player, selected.kind, selected.index)) {
+      this.selectedDrop = null;
+    }
+  }
 
   readonly capacity = PLAYER_INVENTORY_CAPACITY;
   highlightedGroups: InventoryGroup[] = [];
@@ -46,6 +74,7 @@ export class InventoryPanel implements DoCheck, OnDestroy {
     const current = [...this.weaponSlots, ...this.spellSlots, this.keyItem];
 
     if (this.player !== this.observedPlayer) {
+      this.selectedDrop = null;
       this.observedPlayer = this.player;
       this.observedItems = current;
       this.clearFeedback();

@@ -647,3 +647,36 @@
 }
 .board__reward-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
 .board__reward-actions button:not(:disabled):hover { filter: brightness(1.2); }
+
+/* Équipements déposés : superposition sans modifier la géométrie des tuiles. */
+.board__ground-items {
+  position: absolute;
+  right: 4%;
+  bottom: 4%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 2px;
+  width: 70%;
+  pointer-events: none;
+}
+
+.board__ground-item {
+  width: 28%;
+  max-width: 34px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.board__ground-item:disabled { cursor: default; }
+.board__ground-item:not(:disabled):hover { filter: brightness(1.35); }
+.board__ground-item:focus-visible { outline: 2px solid #f5be41; }
+
+.board__ground-items img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .8));
+}
