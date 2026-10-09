@@ -25,6 +25,14 @@
         [alt]="hero.name"
         draggable="false"
       />
+      @if (isCursed) {
+        <img
+          class="hero-panel__curse"
+          [src]="curseImagePath"
+          alt="Héros maudit : pouvoirs spéciaux désactivés"
+          draggable="false"
+        />
+      }
     </div>
   }
 </section>

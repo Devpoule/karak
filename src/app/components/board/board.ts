@@ -2,14 +2,16 @@ import { Component, effect } from '@angular/core';
 import { getPlayerUiConfig } from '../../constants/player-ui.constants';
 import { getHeroDefinition } from '../../data/hero-definitions';
 import { getTokenDefinition } from '../../data/token-definitions';
+import { getEquipmentDefinition } from '../../data/equipment-definitions';
 import { HeroDefinition } from '../../models/hero';
+import { Equipment } from '../../models/equipment';
 import { Player } from '../../models/player';
 import { Direction, PlacedTile, TileDefinition } from '../../models/tile';
 import { PlayerService } from '../../services/player.service';
 import { DungeonService } from '../../services/dungeon.service';
 import { TurnService } from '../../services/turn.service';
 import { ExplorationService, PendingTilePlacement } from '../../services/exploration.service';
-import { GameService } from '../../services/game.service';
+import { GameService, PendingReward } from '../../services/game.service';
 import { CombatOverlay } from '../combat-overlay/combat-overlay';
 
 /**
@@ -192,7 +194,129 @@ export class Board {
       return undefined;
     }
 
-    return getTokenDefinition(tile.tokenId)?.image;
+    const token = getTokenDefinition(tile.tokenId);
+    if (!token) return undefined;
+    if (tile.tokenFace !== 'back') return token.image;
+    if (token.kind === 'treasure') {
+      return token.backTokenId ? getTokenDefinition(token.backTokenId)?.image : token.image;
+    }
+    const equipmentReward = token.rewards?.find((reward) => reward.kind === 'equipment');
+    if (equipmentReward?.kind === 'equipment') {
+      return getEquipmentDefinition(equipmentReward.equipmentId)?.image ?? token.image;
+    }
+    return token.image;
+  }
+
+  /** Récompense actuellement proposée au joueur humain. */
+  get humanPendingReward(): PendingReward | null {
+    const pending = this.gameService.pendingReward();
+    return pending?.player === this.gameService.activePlayer && pending.player.controller === 'human'
+      ? pending
+      : null;
+  }
+
+  /** Équipement récupérable, même si le monstre possède d'autres récompenses. */
+  get pendingEquipment() {
+    const pending = this.humanPendingReward;
+    const reward = pending?.remainingRewards.find((item) => item.kind === 'equipment');
+    return reward?.kind === 'equipment' ? getEquipmentDefinition(reward.equipmentId) : undefined;
+  }
+
+  /** Indique si la récupération est possible sans remplacer un objet existant. */
+  get canCollectPendingEquipment(): boolean {
+    const pending = this.humanPendingReward;
+    const equipment = this.pendingEquipment;
+    return !!pending && !!equipment && this.playerService.canAddEquipment(pending.player, equipment);
+  }
+
+  collectPendingEquipment(): void {
+    if (!this.canCollectPendingEquipment) return;
+    this.gameService.collectPendingEquipment();
+  }
+
+  /** Emplacements occupés susceptibles d'être remplacés. */
+  getReplacementSlots(equipment: Equipment): { index: number; name: string }[] {
+    const inventory = this.gameService.activePlayer?.inventory;
+    if (!inventory) return [];
+    if (equipment.kind === 'key') {
+      return inventory.key ? [{ index: 0, name: inventory.key.name }] : [];
+    }
+    const slots = equipment.kind === 'weapon' ? inventory.weapons : inventory.spells;
+    return slots.flatMap((item, index) => item ? [{ index, name: item.name }] : []);
+  }
+
+  replacePendingEquipment(index: number): void {
+    if (!this.humanPendingReward || !this.pendingEquipment) return;
+    this.gameService.replacePendingEquipment(index);
+  }
+
+  get humanPendingGroundEquipment() {
+    const pending = this.gameService.pendingGroundEquipment();
+    return pending?.player === this.gameService.activePlayer && pending.player.controller === 'human'
+      ? pending : null;
+  }
+
+  get canCollectGroundEquipment(): boolean {
+    const pending = this.humanPendingGroundEquipment;
+    return !!pending && this.playerService.canAddEquipment(pending.player, pending.equipment);
+  }
+
+  collectGroundEquipment(): void {
+    if (this.canCollectGroundEquipment) this.gameService.collectGroundEquipment();
+  }
+
+  replaceGroundEquipment(index: number): void {
+    if (this.humanPendingGroundEquipment) this.gameService.replaceGroundEquipment(index);
+  }
+
+  leaveGroundEquipment(): void {
+    if (this.humanPendingGroundEquipment) this.gameService.leaveGroundEquipment();
+  }
+
+  /** Un équipement au sol est sélectionnable uniquement sur la tuile du héros actif. */
+  canSelectGroundEquipment(tile: PlacedTile): boolean {
+    const player = this.gameService.activePlayer;
+    return this.gameService.phase() === 'playing'
+      && player?.controller === 'human'
+      && player.position?.x === tile.x && player.position?.y === tile.y
+      && !this.gameService.turnTransitionPending()
+      && !this.gameService.hasPendingTileResolution
+      && !this.explorationService.pendingTile;
+  }
+
+  /** Ouvre le choix de récupération pour l'objet sélectionné. */
+  selectGroundEquipment(tile: PlacedTile, index: number): void {
+    if (!this.canSelectGroundEquipment(tile)) return;
+    this.gameService.offerGroundEquipmentAt(tile, index);
+  }
+
+  getGroundEquipment(tile: PlacedTile): readonly Equipment[] {
+    return this.gameService.getGroundEquipment(tile);
+  }
+
+  /** La momie impose une décision concernant la malédiction. */
+  get hasPendingCurse(): boolean {
+    return this.humanPendingReward?.remainingRewards.some(
+      reward => reward.kind === 'special' && reward.effect === 'curse',
+    ) ?? false;
+  }
+
+  /** Joueurs pouvant recevoir la malédiction, hormis le vainqueur. */
+  get curseTargets(): { player: Player; index: number }[] {
+    const winner = this.humanPendingReward?.player;
+    return winner
+      ? this.players.flatMap((player, index) => player === winner ? [] : [{ player, index }])
+      : [];
+  }
+
+  resolvePendingCurse(player: Player | null): void {
+    if (!this.hasPendingCurse) return;
+    this.gameService.resolvePendingCurse(player);
+  }
+
+  leavePendingReward(): void {
+    if (!this.humanPendingReward) return;
+    this.gameService.leavePendingReward();
   }
 
   // ==========================================================

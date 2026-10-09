@@ -1,125 +1,131 @@
 :host {
   display: block;
-
   width: 100%;
 }
 
-
-/* ==========================================================
-   INVENTAIRE
-   ========================================================== */
-
-/*
- * Le composant utilise inventory-panel.png comme support graphique.
- *
- * Le support contient déjà visuellement les emplacements
- * d'inventaire. Aucun marqueur supplémentaire ne doit donc
- * apparaître lorsqu'un emplacement est vide.
- */
+/* Le support contient déjà les six emplacements gravés. */
 .inventory-panel {
   position: relative;
-
   width: 100%;
 }
-
-
-/* ==========================================================
-   SUPPORT
-   ========================================================== */
 
 .inventory-panel__board {
   display: block;
-
   width: 100%;
   height: auto;
-
   user-select: none;
   pointer-events: none;
-
-  filter:
-    drop-shadow(0 6px 6px rgba(0, 0, 0, 0.55));
+  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.55));
 }
 
-
-/* ==========================================================
-   CALQUE DES OBJETS
-   ========================================================== */
-
-/*
- * Ce calque servira uniquement à afficher les véritables
- * objets possédés par le joueur.
- *
- * Il est superposé au support et ne participe jamais à ses
- * dimensions.
- */
 .inventory-panel__items {
   position: absolute;
-
   inset: 0;
-
   pointer-events: none;
 }
 
-
-/* ==========================================================
-   GROUPES D'INVENTAIRE
-   ========================================================== */
-
-/*
- * Les groupes sont conservés dès maintenant afin de disposer
- * d'une structure prête à recevoir :
- *
- * - les deux armes ;
- * - les trois sorts ;
- * - la clé.
- *
- * Ils ne produisent aucun rendu tant que l'inventaire est vide.
+/* Coordonnées proportionnelles au support (référence : 1024 × 1536).
+ * Colonnes centrées approximativement à 31 % et 70 %.
+ * Rangées centrées approximativement à 24 %, 48 % et 72 %.
+ * Ces valeurs peuvent être affinées après contrôle visuel dans le jeu.
  */
 .inventory-panel__group {
   position: absolute;
-
   display: flex;
-
+  flex-direction: column;
+  width: 35%;
   pointer-events: none;
 }
 
-
-/*
- * Les coordonnées exactes de chaque groupe seront ajustées
- * lorsque les premiers objets graphiques seront intégrés.
- *
- * Il est inutile de matérialiser artificiellement ces zones
- * avant cette étape : inventory-panel.png les montre déjà.
- */
 .inventory-panel__group--weapons {
-  top: 0;
-  left: 0;
+  top: 12%;
+  left: 13.5%;
+  height: 48%;
 }
 
 .inventory-panel__group--spells {
-  top: 0;
-  left: 0;
+  top: 12%;
+  left: 52.5%;
+  height: 72%;
 }
 
 .inventory-panel__group--key {
-  top: 0;
-  left: 0;
+  top: 60%;
+  left: 13.5%;
+  height: 24%;
 }
 
+.inventory-panel__slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  pointer-events: auto;
+}
 
-/* ==========================================================
-   OBJET D'INVENTAIRE
-   ========================================================== */
+.inventory-panel__item-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
 
-/*
- * Un élément .inventory-panel__item n'existe que lorsqu'un
- * véritable objet est présent dans le modèle PlayerInventory.
- *
- * Aucune forme générique n'est dessinée ici : l'apparence
- * dépendra de l'asset réel de l'objet.
- */
+.inventory-panel__item-button:disabled { cursor: default; }
+.inventory-panel__item-button:focus-visible { outline: 2px solid #f5be41; outline-offset: -2px; }
+
 .inventory-panel__item {
   display: block;
-
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+  user-select: none;
   pointer-events: none;
 }
+
+/* Retour visuel du panneau hérité de la version stabilisée. */
+.inventory-panel--acquired .inventory-panel__board {
+  animation: inventory-board-acquired 1000ms ease-out both;
+}
+
+@keyframes inventory-board-acquired {
+  0%, 100% { filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.55)); }
+  35% { filter: drop-shadow(0 0 12px rgba(245, 190, 65, 0.85)); }
+}
+
+/* Apparition des équipements provenant de la nouvelle implémentation. */
+.inventory-panel__group--highlighted .inventory-panel__item {
+  animation: inventory-item-acquired 1100ms ease-out;
+}
+
+@keyframes inventory-item-acquired {
+  0% { transform: scale(0.8); filter: brightness(1.7); }
+  45% { transform: scale(1.06); filter: brightness(1.4); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inventory-panel__board,
+  .inventory-panel__item {
+    animation: none !important;
+  }
+}
+
+.inventory-panel__drop-confirmation {
+  position: relative;
+  z-index: 3;
+  margin-top: 0.5rem;
+  padding: 0.65rem;
+  border-radius: 0.5rem;
+  background: rgba(25, 20, 15, 0.95);
+  color: #fff;
+  text-align: center;
+}
+.inventory-panel__drop-confirmation p { margin: 0 0 0.5rem; }
+.inventory-panel__drop-confirmation button { margin: 0 0.2rem; cursor: pointer; }

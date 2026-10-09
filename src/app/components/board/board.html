@@ -1,16 +1,13 @@
 <!-- =========================================================
      PLATEAU DE JEU
      =========================================================
-
      Le plateau joue le rôle de caméra.
-
      Les PointerEvents permettent :
      - de déplacer la vue par glisser-déposer ;
      - de distinguer un déplacement d'un clic sur une tuile ;
      - de sélectionner une tuile pour les contrôles temporaires
        d'exploration.
      ========================================================= -->
-
 <section
   class="board"
   [style.--tile-size.px]="tileSize"
@@ -22,14 +19,11 @@
   <!-- =====================================================
        MONDE DU DONJON
        =====================================================
-
        Le monde est volontairement beaucoup plus grand que
        la zone visible à l'écran.
-
        La caméra ne déplace pas les tuiles individuellement :
        elle déplace l'ensemble du monde via worldTransform.
        ===================================================== -->
-
   <div
     class="board__world"
     [class.board__world--camera-transition]="cameraTransitionEnabled"
@@ -37,11 +31,9 @@
     [style.height.px]="mapSizeInPixels"
     [style.transform]="worldTransform"
   >
-
   <!-- =====================================================
      OUTILS DE CAMÉRA
      ===================================================== -->
-
   <div
     class="board__camera-tools"
     (pointerdown)="$event.stopPropagation()"
@@ -55,7 +47,6 @@
     >
       ◎
     </button>
-
     <button
       type="button"
       class="board__camera-tool"
@@ -66,17 +57,13 @@
       ⌂
     </button>
   </div>
-
     <!-- ===================================================
          TUILES POSÉES
          ===================================================
-
          Chaque tuile possède des coordonnées logiques x/y.
-
          Ces coordonnées sont converties ici en pixels à partir
          du centre physique de la carte et de tileSize.
          =================================================== -->
-
     @for (tile of tiles; track $index) {
       <div
         class="board__tile"
@@ -84,7 +71,6 @@
         [style.top.px]="mapCenterInPixels + tile.y * tileSize - tileSize / 2"
       >
         <!-- Image de la tuile -->
-
         <img
           class="board__tile-image"
           [src]="getTileDefinition(tile)?.image"
@@ -92,35 +78,41 @@
           alt=""
           draggable="false"
         />
-
         <!--
     Jeton actuellement présent sur la tuile.
-
     Il peut s'agir à ce stade :
     - d'un monstre ;
     - d'un coffre fermé.
-
     Le jeton appartient à l'état dynamique de PlacedTile
     et n'est affiché que lorsqu'un tokenId est présent.
   -->
-
         @if (getTileTokenImage(tile); as tokenImage) {
           <img class="board__token" [src]="tokenImage" alt="" draggable="false" />
         }
+        @if (getGroundEquipment(tile).length; as itemCount) {
+          <div class="board__ground-items" [attr.aria-label]="itemCount + ' équipement(s) au sol'">
+            @for (equipment of getGroundEquipment(tile); track $index; let equipmentIndex = $index) {
+              <button type="button" class="board__ground-item"
+                [disabled]="!canSelectGroundEquipment(tile)"
+                [attr.aria-label]="'Récupérer ' + equipment.name"
+                [title]="equipment.name"
+                (pointerdown)="$event.stopPropagation()"
+                (click)="selectGroundEquipment(tile, equipmentIndex)">
+                <img [src]="equipment.image" [alt]="equipment.name" draggable="false" />
+              </button>
+            }
+          </div>
+        }
       </div>
     }
-
     <!-- ===================================================
      HÉROS
      ===================================================
-
      Le pion utilise les mêmes coordonnées logiques que
      les tuiles du donjon.
-
      Il appartient au monde du Board : il suit donc
      naturellement les déplacements de la caméra.
      =================================================== -->
-
     @for (occupancy of tileOccupancies; track occupancy.key) {
       <div
         class="board__hero"
@@ -142,7 +134,6 @@
             />
           }
         }
-
         @for (marker of occupancy.markers; track marker.playerIndex; let markerIndex = $index) {
           @let markerPosition = getMarkerPosition(markerIndex, occupancy.markers.length);
           <span
@@ -156,19 +147,15 @@
         }
       </div>
     }
-
     <!-- ===================================================
          TUILE EN COURS D'EXPLORATION
          ===================================================
-
          Une tuile piochée n'est pas immédiatement ajoutée
          au donjon.
-
          Elle reste temporairement en attente afin que le
          joueur puisse choisir son orientation puis confirmer
          son placement.
          =================================================== -->
-
     @if (pendingTile; as pending) {
       @if (getPendingTilePosition(); as position) {
         <div
@@ -184,9 +171,7 @@
             alt=""
             draggable="false"
           />
-
           <!-- Rotation de la tuile en attente -->
-
           <button
             type="button"
             class="board__rotate"
@@ -195,9 +180,7 @@
           >
             ↻
           </button>
-
           <!-- Confirmation du placement -->
-
           <button
             type="button"
             class="board__confirm"
@@ -210,22 +193,17 @@
         </div>
       }
     }
-
     <!-- ===================================================
          CONTRÔLES TEMPORAIRES DE DÉVELOPPEMENT
          ===================================================
-
          Ces contrôles servent actuellement à tester le moteur
          de déplacement et d'exploration sans héros.
-
          ✓ = déplacement possible vers une tuile existante
          ? = exploration possible
          × = direction inaccessible
-
          Ils ont vocation à disparaître lorsque les interactions
          définitives du héros seront implémentées.
          =================================================== -->
-
     @if (movementControlsEnabled && canControlActivePlayer) {
       @if (gameService.activePlayer?.position; as position) {
         @if (playerTile; as tile) {
@@ -245,7 +223,6 @@
                 <span>▲</span>
               </button>
             }
-
             @if (canUseDirection(tile, 'east')) {
               <button
                 class="board__movement-control board__movement-control--east"
@@ -258,7 +235,6 @@
                 <span>▶</span>
               </button>
             }
-
             @if (canUseDirection(tile, 'south')) {
               <button
                 class="board__movement-control board__movement-control--south"
@@ -271,7 +247,6 @@
                 <span>▼</span>
               </button>
             }
-
             @if (canUseDirection(tile, 'west')) {
               <button
                 class="board__movement-control board__movement-control--west"
@@ -301,6 +276,64 @@
       }
     }
   </div>
+  <!-- Résolution d'une récompense : interface fixe, indépendante de la caméra. -->
+  @if (humanPendingReward; as reward) {
+    <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
+      <section class="board__reward-panel" role="dialog" aria-modal="true" aria-labelledby="reward-title">
+        <h2 id="reward-title">Récompense du combat</h2>
+        @if (pendingEquipment; as equipment) {
+          <img class="board__reward-image" [src]="equipment.image" [alt]="equipment.name" draggable="false" />
+          <p>{{ equipment.name }}</p>
+          @if (!canCollectPendingEquipment) {
+             <p class="board__reward-notice">Aucun emplacement libre : choisissez un objet à remplacer.</p>
+             <div class="board__reward-actions">
+               @for (slot of getReplacementSlots(equipment); track slot.index) {
+                 <button type="button" (click)="replacePendingEquipment(slot.index)">Remplacer {{ slot.name }}</button>
+               }
+             </div>
+          }
+          <div class="board__reward-actions">
+            <button type="button" [disabled]="!canCollectPendingEquipment" (click)="collectPendingEquipment()">Récupérer</button>
+          </div>
+        }
+        @if (hasPendingCurse) {
+          <p>Choisissez le héros qui recevra la malédiction :</p>
+          <div class="board__reward-actions">
+            @for (target of curseTargets; track target.index) {
+              <button type="button" (click)="resolvePendingCurse(target.player)">
+                J{{ target.index + 1 }} — {{ getHeroDefinition(target.player)?.name ?? 'Héros' }}
+              </button>
+            }
+            @if (gameService.cursedPlayer) {
+              <button type="button" (click)="resolvePendingCurse(null)">Laisser la malédiction à son détenteur actuel</button>
+            }
+          </div>
+        }
+        @if (!hasPendingCurse) {
+          <div class="board__reward-actions">
+            <button type="button" (click)="leavePendingReward()">Laisser sur la tuile</button>
+          </div>
+        }
+      </section>
+    </div>
+  }
+  @if (humanPendingGroundEquipment; as pending) {
+    <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
+      <section class="board__reward-panel" role="dialog" aria-modal="true" aria-labelledby="ground-equipment-title">
+        <h2 id="ground-equipment-title">Équipement trouvé</h2>
+        <img class="board__reward-image" [src]="pending.equipment.image" [alt]="pending.equipment.name" draggable="false" />
+        <p>{{ pending.equipment.name }}</p>
+        <div class="board__reward-actions">
+          <button type="button" [disabled]="!canCollectGroundEquipment" (click)="collectGroundEquipment()">Récupérer</button>
+          @if (!canCollectGroundEquipment) {
+            @for (slot of getReplacementSlots(pending.equipment); track slot.index) {
+              <button type="button" (click)="replaceGroundEquipment(slot.index)">Remplacer {{ slot.name }}</button>
+            }
+          }
+          <button type="button" (click)="leaveGroundEquipment()">Laisser sur la tuile</button>
+        </div>
+      </section>
+    </div>
+  }
   <app-combat-overlay />
-
 </section>

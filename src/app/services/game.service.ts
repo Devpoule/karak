@@ -1,10 +1,11 @@
 import { Injectable, signal } from '@angular/core';
-
 import { GamePhase, SetupStep } from '../models/game';
 import { getTokenDefinition } from '../data/token-definitions';
+import { getEquipmentDefinition } from '../data/equipment-definitions';
+import { Equipment } from '../models/equipment';
 import { PlacedTile } from '../models/tile';
 import { Player } from '../models/player';
-import { TreasureTokenDefinition } from '../models/token';
+import { MonsterReward, MonsterTokenDefinition, TreasureTokenDefinition } from '../models/token';
 import { DungeonService } from './dungeon.service';
 import { ExplorationService } from './exploration.service';
 import { PlayerService } from './player.service';
@@ -23,7 +24,6 @@ export interface FirstPlayerRoll {
   die2: number;
   total: number;
 }
-
 /**
  * Coffre dont la résolution est obligatoire après l'entrée
  * d'un héros sur sa tuile.
@@ -38,13 +38,28 @@ export interface PendingTreasure {
   treasureTile: PlacedTile;
   sourceTile: PlacedTile;
 }
+/** Récompense révélée au verso d'un monstre vaincu. */
+export interface PendingReward {
+  player: Player;
+  monster: MonsterTokenDefinition;
+  rewardTile: PlacedTile;
+  sourceTile: PlacedTile;
+  remainingRewards: readonly MonsterReward[];
+}
+export type TileEntryResolution = 'none' | 'combat' | 'treasure' | 'reward' | 'equipment';
 
-export type TileEntryResolution = 'none' | 'combat' | 'treasure';
-
+/** Objet au sol en attente d'une décision du joueur. */
+export interface PendingGroundEquipment {
+  player: Player;
+  tile: PlacedTile;
+  equipment: Equipment;
+  index: number;
+}
 @Injectable({
   providedIn: 'root',
 })
 export class GameService {
+
   /**
    * Phase globale actuelle de la partie.
    */
@@ -100,14 +115,39 @@ export class GameService {
    */
   readonly pendingTreasure = signal<PendingTreasure | null>(null);
 
+  /** Récompense en attente de prise en charge par l'interface. */
+  readonly pendingReward = signal<PendingReward | null>(null);
+
+  /** Équipement présent sur la tuile et proposé au joueur actif. */
+  readonly pendingGroundEquipment = signal<PendingGroundEquipment | null>(null);
+
+  /** Objets déposés indépendamment des jetons monstres/trésors. */
+  private groundEquipmentByTile = new Map<string, Equipment[]>();
+  /** Révision réactive de l'affichage des équipements au sol. */
+  readonly groundEquipmentRevision = signal(0);
+
+  private groundKey(tile: PlacedTile): string {
+    return `${tile.x}:${tile.y}`;
+  }
+
+  /** Une transition bloque les actions jusqu'à l'arrivée du prochain joueur. */
+  readonly turnTransitionPending = signal(false);
+  private readonly turnTransitionDelay = 2800;
+  private turnTransitionTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Récompenses restant sur chaque jeton retourné après une récupération partielle. */
+  private remainingRewardsByTile = new WeakMap<PlacedTile, readonly MonsterReward[]>();
+
   /**
    * Indique si l'entrée sur une tuile a déclenché une résolution
    * obligatoire qui doit être traitée avant toute autre action.
    */
   get hasPendingTileResolution(): boolean {
-    return this.combatService.hasPendingCombat || this.pendingTreasure() !== null;
+    return this.combatService.hasPendingCombat
+      || this.pendingTreasure() !== null
+      || this.pendingReward() !== null
+      || this.pendingGroundEquipment() !== null;
   }
-
   constructor(
     private readonly dungeonService: DungeonService,
     private readonly explorationService: ExplorationService,
@@ -132,15 +172,23 @@ export class GameService {
    * - sachet monstres/trésors.
    */
   initialize(): void {
+    if (this.turnTransitionTimer !== null) {
+      clearTimeout(this.turnTransitionTimer);
+      this.turnTransitionTimer = null;
+    }
+    this.turnTransitionPending.set(false);
     this.phase.set('setup');
     this.setupStep.set('player-count');
-
     this.firstPlayerRolls.set([]);
     this.firstPlayerContenders.set([]);
     this.firstPlayerIndex.set(null);
     this.activePlayerIndex.set(null);
     this.pendingTreasure.set(null);
-
+    this.pendingReward.set(null);
+    this.pendingGroundEquipment.set(null);
+    this.groundEquipmentByTile = new Map<string, Equipment[]>();
+    this.groundEquipmentRevision.update(value => value + 1);
+    this.remainingRewardsByTile = new WeakMap<PlacedTile, readonly MonsterReward[]>();
     this.initializeDungeon();
     this.initializeExploration();
     this.initializeTileDeck();
@@ -181,9 +229,7 @@ export class GameService {
   initializePlayers(playerCount: number, humanPlayerCount = 1): void {
     if (this.phase() !== 'setup') return;
     if (this.setupStep() !== 'player-count') return;
-
     this.playerService.initialize(playerCount, humanPlayerCount);
-
     this.setupStep.set('hero-draw');
   }
 
@@ -200,7 +246,6 @@ export class GameService {
   drawHeroes(): void {
     if (this.phase() !== 'setup') return;
     if (this.setupStep() !== 'hero-draw') return;
-
     this.playerService.drawHeroes();
   }
 
@@ -211,14 +256,10 @@ export class GameService {
   placeHeroesOnStart(): void {
     if (this.phase() !== 'setup') return;
     if (this.setupStep() !== 'hero-draw') return;
-
     this.playerService.placeHeroesOnStart();
-
     this.firstPlayerRolls.set([]);
     this.firstPlayerIndex.set(null);
-
     this.firstPlayerContenders.set(this.playerService.players.map((_, playerIndex) => playerIndex));
-
     this.setupStep.set('first-player-roll');
   }
 
@@ -229,20 +270,15 @@ export class GameService {
     if (this.phase() !== 'setup') return;
     if (this.setupStep() !== 'first-player-roll') return;
     if (this.firstPlayerIndex() !== null) return;
-
     if (!this.firstPlayerContenders().includes(playerIndex)) {
       return;
     }
-
     const alreadyRolled = this.firstPlayerRolls().some((roll) => roll.playerIndex === playerIndex);
-
     if (alreadyRolled) {
       return;
     }
-
     const die1 = this.rollDie();
     const die2 = this.rollDie();
-
     this.firstPlayerRolls.update((rolls) => [
       ...rolls,
       {
@@ -287,25 +323,17 @@ export class GameService {
     if (!this.haveAllContendersRolled) {
       return 'pending';
     }
-
     const contenderRolls = this.firstPlayerRolls().filter((roll) =>
       this.firstPlayerContenders().includes(roll.playerIndex),
     );
-
     const highestTotal = Math.max(...contenderRolls.map((roll) => roll.total));
-
     const leaders = contenderRolls.filter((roll) => roll.total === highestTotal);
-
     if (leaders.length === 1) {
       this.firstPlayerIndex.set(leaders[0].playerIndex);
-
       return 'winner';
     }
-
     const tiedPlayerIndexes = leaders.map((roll) => roll.playerIndex);
-
     this.firstPlayerContenders.set(tiedPlayerIndexes);
-
     /**
      * Les résultats des joueurs à égalité sont retirés afin
      * de leur permettre d'effectuer leur nouveau lancer.
@@ -316,7 +344,6 @@ export class GameService {
     this.firstPlayerRolls.update((rolls) =>
       rolls.filter((roll) => !tiedPlayerIndexes.includes(roll.playerIndex)),
     );
-
     return 'tie';
   }
 
@@ -347,25 +374,20 @@ export class GameService {
   startAdventure(): void {
     if (this.phase() !== 'setup') return;
     if (this.setupStep() !== 'first-player-roll') return;
-
     const firstPlayerIndex = this.firstPlayerIndex();
-
     if (firstPlayerIndex === null) {
       return;
     }
-
     this.playerService.placeHeroesOnStart();
     this.ensureStartTileExists();
-
     this.activePlayerIndex.set(firstPlayerIndex);
-
     this.turnService.resetMovements();
-
     this.phase.set('playing');
   }
 
   // ==========================================================
   // ENTRÉE DANS UNE SALLE
+
   // ==========================================================
 
   /**
@@ -390,25 +412,21 @@ export class GameService {
    */
   revealNewRoom(tile: PlacedTile): void {
     const definition = this.dungeonService.getTileDefinition(tile);
-
     if (!definition || definition.kind !== 'room') {
       return;
     }
-
     /*
      * Une salle ne doit recevoir son contenu qu'une seule fois.
      */
     if (tile.tokenId) {
       return;
     }
-
     const token = this.tokenBagService.draw();
-
     if (!token) {
       return;
     }
-
     tile.tokenId = token.id;
+    tile.tokenFace = 'front';
   }
 
   /**
@@ -437,45 +455,259 @@ export class GameService {
     if (this.hasPendingTileResolution) {
       return 'none';
     }
-
     if (revealRoom) {
       this.revealNewRoom(destinationTile);
     }
-
     if (!destinationTile.tokenId) {
-      return 'none';
+      return this.offerGroundEquipment(player, destinationTile);
     }
-
     const token = getTokenDefinition(destinationTile.tokenId);
-
     if (!token) {
       return 'none';
     }
-
-    /*
-     * La présence d'un jeton impose l'arrêt du déplacement,
-     * quelle que soit sa nature.
-     */
+    // Le verso d'un monstre contient une récompense, pas un adversaire.
+    if (token.kind === 'monster' && destinationTile.tokenFace === 'back') {
+      const remainingRewards = this.remainingRewardsByTile.get(destinationTile) ?? token.rewards ?? [];
+      if (!remainingRewards.length) return this.offerGroundEquipment(player, destinationTile);
+      this.turnService.stopMovements();
+      this.pendingReward.set({
+        player,
+        monster: token,
+        rewardTile: destinationTile,
+        sourceTile,
+        remainingRewards: [...remainingRewards],
+      });
+      return 'reward';
+    }
+    // Un coffre déjà retourné ne peut pas être ouvert à nouveau.
+    if (token.kind === 'treasure' && destinationTile.tokenFace === 'back') {
+      return this.offerGroundEquipment(player, destinationTile);
+    }
     this.turnService.stopMovements();
-
     if (token.kind === 'monster') {
       return this.combatService.startCombat(player, sourceTile, destinationTile)
         ? 'combat'
         : 'none';
     }
-
     this.pendingTreasure.set({
       player,
       treasure: token,
       treasureTile: destinationTile,
       sourceTile,
     });
-
     return 'treasure';
   }
 
   // ==========================================================
+  // ÉQUIPEMENTS DÉPOSÉS SUR LES TUILES
+
+  // ==========================================================
+
+  /**
+   * Dépose volontairement un équipement sur la tuile du héros actif.
+   * Les résolutions obligatoires et les transitions interdisent cette action.
+   */
+  dropInventoryEquipment(player: Player, kind: Equipment['kind'], slotIndex: number): boolean {
+    if (this.phase() !== 'playing' || player !== this.activePlayer || player.controller !== 'human') return false;
+    if (this.turnTransitionPending() || this.hasPendingTileResolution || this.explorationService.pendingTile) return false;
+    if (!Number.isInteger(slotIndex) || !player.position) return false;
+    const tile = this.dungeonService.getTileAt(player.position.x, player.position.y);
+    if (!tile) return false;
+    const equipment = this.playerService.removeEquipment(player, kind, slotIndex);
+    if (!equipment) return false;
+    this.dropEquipment(tile, equipment);
+    return true;
+  }
+
+  /** Liste en lecture seule des équipements présents sur une tuile. */
+  getGroundEquipment(tile: PlacedTile): readonly Equipment[] {
+    this.groundEquipmentRevision();
+    return this.groundEquipmentByTile.get(this.groundKey(tile)) ?? [];
+  }
+
+  /** Dépose un objet sans altérer le jeton éventuellement présent. */
+  private dropEquipment(tile: PlacedTile, equipment: Equipment): void {
+    const key = this.groundKey(tile);
+    const items = this.groundEquipmentByTile.get(key) ?? [];
+    this.groundEquipmentByTile.set(key, [...items, equipment]);
+    this.groundEquipmentRevision.update(value => value + 1);
+  }
+
+  /** Propose le premier objet au sol lors de l'entrée sur une tuile libre. */
+  private offerGroundEquipment(player: Player, tile: PlacedTile): TileEntryResolution {
+    const equipment = this.getGroundEquipment(tile)[0];
+    if (!equipment) return 'none';
+    this.turnService.stopMovements();
+    this.pendingGroundEquipment.set({ player, tile, equipment, index: 0 });
+    return 'equipment';
+  }
+
+  /** Vérifie que la proposition correspond toujours à l'objet présent au sol. */
+  private isGroundEquipmentAvailable(pending: PendingGroundEquipment): boolean {
+    return this.getGroundEquipment(pending.tile)[pending.index] === pending.equipment;
+  }
+
+  /** Retire exactement l'objet récupéré et notifie immédiatement le plateau. */
+  private consumeGroundEquipment(pending: PendingGroundEquipment): boolean {
+    const key = this.groundKey(pending.tile);
+    const items = [...this.getGroundEquipment(pending.tile)];
+    if (items[pending.index] !== pending.equipment) return false;
+    items.splice(pending.index, 1);
+    if (items.length) this.groundEquipmentByTile.set(key, items);
+    else this.groundEquipmentByTile.delete(key);
+    this.groundEquipmentRevision.update(value => value + 1);
+    this.pendingGroundEquipment.set(null);
+    this.endTurn();
+    return true;
+  }
+
+  /** Permet de sélectionner un équipement directement sur la tuile du héros. */
+  offerGroundEquipmentAt(tile: PlacedTile, index: number): boolean {
+    const player = this.activePlayer;
+    if (this.phase() !== 'playing' || !player || player.controller !== 'human') return false;
+    if (this.turnTransitionPending() || this.hasPendingTileResolution || this.explorationService.pendingTile) return false;
+    if (!player.position || player.position.x !== tile.x || player.position.y !== tile.y) return false;
+    if (!Number.isInteger(index) || index < 0) return false;
+    const equipment = this.getGroundEquipment(tile)[index];
+    if (!equipment) return false;
+    this.turnService.stopMovements();
+    this.pendingGroundEquipment.set({ player, tile, equipment, index });
+    return true;
+  }
+
+  /** Ramasse l'objet proposé si une place est disponible. */
+  collectGroundEquipment(): boolean {
+    const pending = this.pendingGroundEquipment();
+    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
+    if (!this.isGroundEquipmentAvailable(pending)) return false;
+    if (!this.playerService.addEquipment(pending.player, pending.equipment)) return false;
+    this.consumeGroundEquipment(pending);
+    return true;
+  }
+
+  /** Échange un objet au sol contre un équipement du même type. */
+  replaceGroundEquipment(slotIndex: number): boolean {
+    const pending = this.pendingGroundEquipment();
+    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
+    if (!this.isGroundEquipmentAvailable(pending)) return false;
+    const previous = this.playerService.replaceEquipment(pending.player, pending.equipment, slotIndex);
+    if (!previous) return false;
+    this.consumeGroundEquipment(pending);
+    this.dropEquipment(pending.tile, previous);
+    return true;
+  }
+
+  /** Renonce à l'objet au sol : il reste disponible sur la tuile. */
+  leaveGroundEquipment(): boolean {
+    const pending = this.pendingGroundEquipment();
+    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
+    this.pendingGroundEquipment.set(null);
+    this.endTurn();
+    return true;
+  }
+
+  // ==========================================================
+  // RÉCUPÉRATION DES RÉCOMPENSES
+
+  // ==========================================================
+
+  /**
+   * Consomme une récompense et conserve les autres sur le jeton.
+   * Le tour ne se termine que lorsque toutes les résolutions sont terminées.
+   */
+  private consumePendingReward(pending: PendingReward, rewardIndex: number): void {
+    const remainingRewards = pending.remainingRewards.filter((_, index) => index !== rewardIndex);
+    if (remainingRewards.length) {
+      this.remainingRewardsByTile.set(pending.rewardTile, remainingRewards);
+      this.pendingReward.set({ ...pending, remainingRewards });
+      return;
+    }
+    this.remainingRewardsByTile.delete(pending.rewardTile);
+    pending.rewardTile.tokenId = undefined;
+    pending.rewardTile.tokenFace = undefined;
+    this.pendingReward.set(null);
+    this.endTurn();
+  }
+
+  /** Récupère un équipement sans appliquer les autres récompenses implicitement. */
+  collectPendingEquipment(): boolean {
+    const pending = this.pendingReward();
+    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
+    const rewardIndex = pending.remainingRewards.findIndex(reward => reward.kind === 'equipment');
+    if (rewardIndex < 0) return false;
+    const reward = pending.remainingRewards[rewardIndex];
+    if (reward.kind !== 'equipment') return false;
+    const equipment = getEquipmentDefinition(reward.equipmentId);
+    if (!equipment || !this.playerService.addEquipment(pending.player, equipment)) return false;
+    this.consumePendingReward(pending, rewardIndex);
+    return true;
+  }
+
+  /** Remplace un équipement plein et dépose l'ancien sur la tuile du combat. */
+  replacePendingEquipment(slotIndex: number): boolean {
+    const pending = this.pendingReward();
+    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
+    const rewardIndex = pending.remainingRewards.findIndex(reward => reward.kind === 'equipment');
+    if (rewardIndex < 0) return false;
+    const reward = pending.remainingRewards[rewardIndex];
+    if (reward.kind !== 'equipment') return false;
+    const equipment = getEquipmentDefinition(reward.equipmentId);
+    if (!equipment) return false;
+    const previous = this.playerService.replaceEquipment(pending.player, equipment, slotIndex);
+    if (!previous) return false;
+    this.dropEquipment(pending.rewardTile, previous);
+    this.consumePendingReward(pending, rewardIndex);
+    return true;
+  }
+
+  /** Détenteur actuel de l'unique malédiction. */
+  get cursedPlayer(): Player | null {
+    return this.playerService.players.find(player => player.isCursed) ?? null;
+  }
+
+  /**
+   * Attribue la malédiction à un autre joueur ou la laisse à son détenteur.
+   * target === null signifie conserver le détenteur actuel (si présent).
+   */
+  resolvePendingCurse(target: Player | null): boolean {
+    const pending = this.pendingReward();
+    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
+    const rewardIndex = pending.remainingRewards.findIndex(
+      reward => reward.kind === 'special' && reward.effect === 'curse',
+    );
+    if (rewardIndex < 0) return false;
+    const currentHolder = this.cursedPlayer;
+    if (target === null) {
+      if (!currentHolder) return false;
+    } else {
+      if (target === pending.player || !this.playerService.players.includes(target)) return false;
+      if (currentHolder && currentHolder !== target) {
+        this.playerService.setCursed(currentHolder, false);
+      }
+      this.playerService.setCursed(target, true);
+    }
+    this.consumePendingReward(pending, rewardIndex);
+    return true;
+  }
+
+  /**
+   * Laisse l'équipement sur la tuile pour une visite future.
+   * La malédiction, lorsqu'elle est présente, doit d'abord être résolue.
+   */
+  leavePendingReward(): boolean {
+    const pending = this.pendingReward();
+    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
+    if (pending.remainingRewards.some(reward => reward.kind === 'special' && reward.effect === 'curse')) {
+      return false;
+    }
+    this.pendingReward.set(null);
+    this.endTurn();
+    return true;
+  }
+
+  // ==========================================================
   // GESTION DES TOURS
+
   // ==========================================================
 
   /**
@@ -501,10 +733,10 @@ export class GameService {
    * commence avec l'intégralité de ses mouvements.
    */
   endTurn(): void {
+    if (this.turnTransitionPending()) return;
     if (this.phase() !== 'playing') {
       return;
     }
-
     /*
      * Un changement de joueur est interdit tant qu'une
      * exploration attend encore sa confirmation.
@@ -515,7 +747,6 @@ export class GameService {
     if (this.explorationService.pendingTile) {
       return;
     }
-
     /*
      * Un combat ou un coffre obligatoire doit être résolu avant
      * que la main puisse passer au joueur suivant.
@@ -523,19 +754,25 @@ export class GameService {
     if (this.hasPendingTileResolution) {
       return;
     }
-
     const currentPlayerIndex = this.activePlayerIndex();
     const playerCount = this.playerService.players.length;
-
     if (currentPlayerIndex === null || playerCount === 0) {
       return;
     }
-
     const nextPlayerIndex = (currentPlayerIndex + 1) % playerCount;
-
-    this.activePlayerIndex.set(nextPlayerIndex);
-
-    this.turnService.resetMovements();
+    // Conserver le joueur sortant pendant la pause entre les tours.
+    this.turnTransitionPending.set(true);
+    this.turnService.stopMovements();
+    this.turnTransitionTimer = setTimeout(() => {
+      this.turnTransitionTimer = null;
+      if (this.phase() !== 'playing' || this.activePlayerIndex() !== currentPlayerIndex) {
+        this.turnTransitionPending.set(false);
+        return;
+      }
+      this.turnService.resetMovements();
+      this.activePlayerIndex.set(nextPlayerIndex);
+      this.turnTransitionPending.set(false);
+    }, this.turnTransitionDelay);
   }
 
   /**
@@ -595,11 +832,9 @@ export class GameService {
    */
   private ensureStartTileExists(): void {
     const startTile = this.dungeonService.getTileAt(0, 0);
-
     if (startTile?.definitionId === 'start') {
       return;
     }
-
     this.dungeonService.initialize();
   }
 
@@ -627,11 +862,9 @@ export class GameService {
    */
   get activePlayer(): Player | null {
     const activePlayerIndex = this.activePlayerIndex();
-
     if (activePlayerIndex === null) {
       return null;
     }
-
     return this.playerService.players[activePlayerIndex] ?? null;
   }
 
@@ -647,7 +880,6 @@ export class GameService {
    */
   getTurnOrderFrom(startPlayerIndex: number | null = this.activePlayerIndex()): number[] {
     const playerCount = this.playerService.players.length;
-
     if (
       playerCount === 0 ||
       startPlayerIndex === null ||
@@ -656,7 +888,6 @@ export class GameService {
     ) {
       return [];
     }
-
     return Array.from(
       {
         length: playerCount,

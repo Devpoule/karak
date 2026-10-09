@@ -1,41 +1,40 @@
-import { TokenDefinition } from '../models/token';
 
+import {
+  TokenDefinition,
+  TokenDefinitionId,
+} from '../models/token';
 
 /**
- * Chemin racine des assets représentant les jetons.
- *
- * Centralisé ici afin d'éviter de répéter le chemin complet
- * pour chaque définition.
+ * Chemin des illustrations des jetons.
  */
 const TOKEN_ASSET_PATH = '/assets/tokens';
 
-
 /**
- * Définitions des jetons pouvant être tirés depuis le sachet
- * monstres/trésors du jeu de base Karak.
+ * Catalogue des jetons de Karak.
  *
- * Cette collection décrit les caractéristiques propres à chaque
- * type de jeton :
+ * Les récompenses correspondent aux versos physiques
+ * des monstres.
  *
- * - son identifiant métier ;
- * - sa nature (monstre ou trésor) ;
- * - son image ;
- * - sa force lorsqu'il s'agit d'un monstre.
+ * Les définitions des extensions restent disponibles
+ * sans être automatiquement ajoutées au sachet.
  *
- * Le nombre d'exemplaires présents dans le sachet n'est pas
- * défini ici : il appartient à TOKEN_BAG_COMPOSITION.
+ * Le nombre d'exemplaires est défini séparément dans
+ * TOKEN_BAG_COMPOSITION.
  */
 export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
-  // ---------------------------------------------------------------------------
-  // Monstres
-  // ---------------------------------------------------------------------------
+  // ==========================================================
+  // MONSTRES — JEU DE BASE
+  // ==========================================================
 
   {
     id: 'giant-rat',
     kind: 'monster',
     strength: 5,
     image: `${TOKEN_ASSET_PATH}/giant-rat.png`,
+    rewards: [
+      { kind: 'equipment', equipmentId: 'daggers' },
+    ],
   },
 
   {
@@ -43,6 +42,9 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     kind: 'monster',
     strength: 6,
     image: `${TOKEN_ASSET_PATH}/giant-spider.png`,
+    rewards: [
+      { kind: 'equipment', equipmentId: 'heart' },
+    ],
   },
 
   {
@@ -50,6 +52,10 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     kind: 'monster',
     strength: 7,
     image: `${TOKEN_ASSET_PATH}/skeleton-mummy.png`,
+    rewards: [
+      { kind: 'equipment', equipmentId: 'fire-sword' },
+      { kind: 'special', effect: 'curse' },
+    ],
   },
 
   {
@@ -57,6 +63,9 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     kind: 'monster',
     strength: 8,
     image: `${TOKEN_ASSET_PATH}/skeleton-key-guardian.png`,
+    rewards: [
+      { kind: 'equipment', equipmentId: 'key' },
+    ],
   },
 
   {
@@ -64,6 +73,9 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     kind: 'monster',
     strength: 9,
     image: `${TOKEN_ASSET_PATH}/skeleton-swordsman.png`,
+    rewards: [
+      { kind: 'equipment', equipmentId: 'sword' },
+    ],
   },
 
   {
@@ -71,6 +83,9 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     kind: 'monster',
     strength: 10,
     image: `${TOKEN_ASSET_PATH}/skeleton-king.png`,
+    rewards: [
+      { kind: 'equipment', equipmentId: 'axe' },
+    ],
   },
 
   {
@@ -78,30 +93,54 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     kind: 'monster',
     strength: 12,
     image: `${TOKEN_ASSET_PATH}/fallen.png`,
+    rewards: [
+      { kind: 'treasure', tokenId: 'open-chest' },
+    ],
   },
-
-  // {
-  //   id: 'skeleton-ice-magician',
-  //   kind: 'monster',
-  //   strength: 11,
-  //   image: `${TOKEN_ASSET_PATH}/skeleton-ice-magician.png`,
-  // },
 
   {
     id: 'dragon',
     kind: 'monster',
     strength: 15,
     image: `${TOKEN_ASSET_PATH}/dragon.png`,
+    rewards: [
+      { kind: 'treasure', tokenId: 'treasure' },
+    ],
   },
 
-  // ---------------------------------------------------------------------------
-  // Trésors
-  // ---------------------------------------------------------------------------
+  // ==========================================================
+  // MONSTRES — EXTENSION KARAK RÉGENT
+  // ==========================================================
+
+  {
+    id: 'giant-bat',
+    kind: 'monster',
+    strength: 6,
+    image: `${TOKEN_ASSET_PATH}/giant-bat.png`,
+    rewards: [
+      { kind: 'equipment', equipmentId: 'skull' },
+    ],
+  },
+
+  {
+    id: 'skeleton-ice-magician',
+    kind: 'monster',
+    strength: 11,
+    image: `${TOKEN_ASSET_PATH}/skeleton-ice-magician.png`,
+    rewards: [
+      { kind: 'equipment', equipmentId: 'punch' },
+    ],
+  },
+
+  // ==========================================================
+  // TRÉSORS
+  // ==========================================================
 
   {
     id: 'closed-chest',
     kind: 'treasure',
     image: `${TOKEN_ASSET_PATH}/closed-chest.png`,
+    backTokenId: 'open-chest',
   },
 
   {
@@ -117,12 +156,12 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
   },
 ];
 
-
 /**
- * Recherche une définition de jeton à partir de son identifiant métier.
+ * Recherche une définition de jeton
+ * à partir de son identifiant métier.
  */
 export function getTokenDefinition(
-  id: string,
+  id: TokenDefinitionId,
 ): TokenDefinition | undefined {
   return TOKEN_DEFINITIONS.find(
     definition => definition.id === id,

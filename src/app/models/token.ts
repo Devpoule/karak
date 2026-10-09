@@ -1,119 +1,112 @@
+
 /**
- * Nature d'un jeton pouvant être tiré depuis le sachet
- * monstres/trésors.
- *
- * Le manuel distingue deux résultats possibles lors de
- * la découverte d'une nouvelle salle :
- *
- * - un monstre ;
- * - un trésor.
+ * Nature d'un jeton tiré depuis le sachet.
  */
 export type TokenKind =
   | 'monster'
   | 'treasure';
 
-
 /**
- * Identifiant unique d'une définition de jeton.
- *
- * Il est volontairement indépendant :
- *
- * - du nom du fichier image ;
- * - de la force éventuelle du monstre ;
- * - du nombre d'exemplaires présents dans le sachet.
+ * Identifiant métier d'une définition de jeton.
  */
 export type TokenDefinitionId = string;
 
+/**
+ * Identifiants des équipements pouvant apparaître
+ * au verso des monstres.
+ */
+export type EquipmentRewardId =
+  | 'daggers'
+  | 'sword'
+  | 'axe'
+  | 'fire-sword'
+  | 'heart'
+  | 'skull'
+  | 'punch'
+  | 'key';
 
 /**
- * Décrit les propriétés communes d'un type de jeton.
- *
- * Une TokenDefinition représente ce qu'est le jeton,
- * indépendamment de l'exemplaire physique tiré pendant
- * une partie.
+ * Effets particuliers pouvant être associés
+ * à une récompense.
  */
-interface BaseTokenDefinition {
+export type SpecialRewardId = 'curse';
 
-  /**
-   * Identifiant métier unique.
-   *
-   * Exemples :
-   *
-   * 'giant-rat'
-   * 'skeleton-mummy'
-   * 'closed-chest'
-   */
-  id: TokenDefinitionId;
-
-  /**
-   * Nature du jeton.
-   */
-  kind: TokenKind;
-
-  /**
-   * Chemin vers l'image représentant la face visible
-   * lors du tirage depuis le sachet.
-   */
-  image: string;
+/**
+ * Récompense correspondant à un équipement.
+ */
+export interface EquipmentReward {
+  readonly kind: 'equipment';
+  readonly equipmentId: EquipmentRewardId;
 }
 
+/**
+ * Récompense correspondant à un effet particulier.
+ */
+export interface SpecialReward {
+  readonly kind: 'special';
+  readonly effect: SpecialRewardId;
+}
+
+/**
+ * Récompense correspondant à un trésor.
+ */
+export interface TreasureReward {
+  readonly kind: 'treasure';
+  readonly tokenId: 'open-chest' | 'treasure';
+}
+
+/**
+ * Ensemble des récompenses possibles.
+ */
+export type MonsterReward =
+  | EquipmentReward
+  | SpecialReward
+  | TreasureReward;
+
+/**
+ * Propriétés communes aux définitions de jetons.
+ */
+interface BaseTokenDefinition {
+  readonly id: TokenDefinitionId;
+  readonly kind: TokenKind;
+  readonly image: string;
+}
 
 /**
  * Définition d'un monstre.
  *
- * `strength` correspond à la valeur imprimée sur sa face
- * monstre et utilisée lors du combat.
- *
- * Les équipements présents au verso ne sont volontairement
- * pas encore modélisés : cette règle appartient à l'étape
- * Combat du manuel.
+ * rewards décrit les éléments associés à son verso.
+ * La récupération et les effets seront gérés séparément.
  */
 export interface MonsterTokenDefinition
   extends BaseTokenDefinition {
 
-  kind: 'monster';
-
-  /**
-   * Force du monstre.
-   */
-  strength: number;
+  readonly kind: 'monster';
+  readonly strength: number;
+  readonly rewards?: readonly MonsterReward[];
 }
 
-
 /**
- * Définition d'un trésor tiré directement depuis le sachet.
+ * Définition d'un trésor.
  *
- * À ce stade, le coffre reste simplement identifié comme
- * un trésor.
+ * backTokenId représente l'identifiant de la face
+ * visible après retournement du jeton.
  *
- * Les règles concernant :
+ * Exemple :
+ * closed-chest -> open-chest
  *
- * - la clé ;
- * - l'ouverture du coffre ;
- * - sa récupération ;
- * - sa valeur finale ;
- *
- * seront implémentées aux étapes correspondantes du manuel.
+ * Cette propriété ne provoque pas automatiquement
+ * le retournement du jeton.
  */
 export interface TreasureTokenDefinition
   extends BaseTokenDefinition {
 
-  kind: 'treasure';
+  readonly kind: 'treasure';
+  readonly backTokenId?: TokenDefinitionId;
 }
 
-
 /**
- * Ensemble des types de jetons pouvant être tirés
- * depuis le sachet.
- *
- * Cette union discriminée permet à TypeScript de déterminer
- * automatiquement les propriétés disponibles selon `kind`.
- *
- * Exemple :
- *
- * if (token.kind === 'monster') {
- *   console.log(token.strength);
- * }
+ * Union discriminée des jetons.
  */
 export type TokenDefinition =
   | MonsterTokenDefinition

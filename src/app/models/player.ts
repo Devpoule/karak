@@ -1,3 +1,4 @@
+
 import { HeroId } from './hero';
 import { PlayerInventory } from './inventory';
 import { Direction } from './tile';
@@ -76,6 +77,26 @@ export interface Player {
    * ne sont attribués au début de partie.
    */
   inventory: PlayerInventory;
+
+  /**
+   * Indique si le joueur est victime d'une malédiction.
+   *
+   * RÈGLE KARAK :
+   *
+   * un héros maudit ne peut plus utiliser ses pouvoirs
+   * spéciaux propres à son personnage.
+   *
+   * La malédiction ne bloque pas les déplacements,
+   * les combats ordinaires ni l'utilisation de l'équipement.
+   *
+   * REPRÉSENTATION :
+   *
+   * lorsque cette valeur est true, le médaillon curse.png
+   * doit être superposé au portrait du héros dans l'inventaire.
+   *
+   * Cet état ne consomme aucun emplacement d'inventaire.
+   */
+  isCursed: boolean;
 
   /**
    * Héros attribué au joueur.

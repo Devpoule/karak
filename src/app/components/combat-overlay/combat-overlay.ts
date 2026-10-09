@@ -141,12 +141,18 @@ export class CombatOverlay implements OnDestroy {
   /** Nom du héros affiché sur la carte de combat. */
   getHeroName(): string {
     const heroId = this.combat?.player.heroId;
-    return heroId ? (getHeroDefinition(heroId)?.name ?? 'Héros') : 'Héros';
+
+    return heroId
+      ? (getHeroDefinition(heroId)?.name ?? 'Héros')
+      : 'Héros';
   }
 
-  /** Nom de l’adversaire, avec repli si la définition ne le fournit pas. */
+  /** Nom de l'adversaire. */
   getMonsterName(): string {
-    const monster = this.combat?.monster as { name?: string } | undefined;
+    const monster = this.combat?.monster as
+      | { name?: string }
+      | undefined;
+
     return monster?.name ?? 'Adversaire';
   }
 
@@ -203,7 +209,7 @@ export class CombatOverlay implements OnDestroy {
   }
 
   // ==========================================================
-  // INITIALISATION DU BATTLE
+  // INITIALISATION DU COMBAT
   // ==========================================================
 
   /**
@@ -311,11 +317,8 @@ export class CombatOverlay implements OnDestroy {
       this.presentationState.set('result');
 
       /**
-       * Contrairement à l'ancienne version,
-       * on ne termine PAS le tour ici.
-       *
-       * Le verdict doit rester visible avant
-       * tout changement de joueur.
+       * Le verdict reste visible avant toute
+       * transition vers le joueur suivant.
        */
       if (result.player.controller === 'ai') {
         this.schedule(() => {
@@ -331,19 +334,32 @@ export class CombatOverlay implements OnDestroy {
   }
 
   // ==========================================================
-  // FERMETURE ET FIN DU TOUR
+  // FERMETURE ET SUITE DU TOUR
   // ==========================================================
 
   /**
-   * Ferme le Battle puis transmet la main.
+   * Ferme la présentation du combat.
+   *
+   * Après une victoire :
+   * - le jeton a déjà été retourné par CombatService ;
+   * - GameService examine son verso ;
+   * - une récompense éventuelle est mise en attente.
+   *
+   * Après une égalité ou une défaite :
+   * - les conséquences ont déjà été appliquées ;
+   * - le tour peut se terminer normalement.
    *
    * Appel manuel pour un humain.
    * Appel automatique pour une IA.
    */
   dismissResult(): void {
+    const result = this.presentedResult();
+    const combat = this.presentedCombat();
+
     if (
       this.presentationState() !== 'result'
-      || !this.presentedResult()
+      || !result
+      || !combat
     ) {
       return;
     }
@@ -351,10 +367,11 @@ export class CombatOverlay implements OnDestroy {
     this.clearTimers();
 
     /**
-     * On libère d'abord l'état du combat.
+     * Libérer l'état de présentation et le dernier
+     * résultat avant de traiter la suite du tour.
      *
-     * Cela évite que le nouveau joueur actif
-     * soit bloqué par l'ancien résultat.
+     * L'IA ne doit plus considérer que le verdict
+     * précédent est en cours d'affichage.
      */
     this.combatService.clearLastCombatResult();
 
@@ -366,8 +383,33 @@ export class CombatOverlay implements OnDestroy {
     this.resolving = false;
 
     /**
-     * Le tour ne change qu'une fois,
-     * après la fermeture effective du Battle.
+     * Le héros est déjà présent sur la tuile
+     * du monstre vaincu.
+     *
+     * Nous déclenchons donc la résolution de son
+     * verso sans effectuer un second déplacement.
+     */
+    if (result.outcome === 'victory') {
+      this.gameService.resolveTileEntry(
+        combat.player,
+        combat.sourceTile,
+        combat.monsterTile,
+      );
+    }
+
+    /**
+     * Une récompense obligatoire bloque le passage
+     * au joueur suivant.
+     *
+     * GameService reste responsable de cette règle.
+     */
+    if (this.gameService.hasPendingTileResolution) {
+      return;
+    }
+
+    /**
+     * Aucun contenu obligatoire ne reste à résoudre.
+     * Le tour peut se terminer.
      */
     this.gameService.endTurn();
   }

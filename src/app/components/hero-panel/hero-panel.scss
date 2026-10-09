@@ -110,3 +110,18 @@
   user-select: none;
   pointer-events: none;
 }
+
+/* Médaillon de malédiction superposé à la carte, sans affecter sa taille. */
+.hero-panel__curse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 34%;
+  max-height: 50%;
+  height: auto;
+  object-fit: contain;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7));
+  pointer-events: none;
+  user-select: none;
+}

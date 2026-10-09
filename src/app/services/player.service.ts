@@ -1,11 +1,10 @@
-import { Injectable } from '@angular/core';
-
+import { Injectable, signal } from '@angular/core';
 import { HERO_DEFINITIONS } from '../data/hero-definitions';
 import { HeroId } from '../models/hero';
-import { createEmptyPlayerInventory } from '../models/inventory';
+import { createEmptyPlayerInventory, PLAYER_INVENTORY_CAPACITY } from '../models/inventory';
+import { Equipment, EquipmentKind } from '../models/equipment';
 import { Player } from '../models/player';
 import { Direction } from '../models/tile';
-
 /**
  * Nombre minimal de joueurs participant
  * à une partie dans l'application.
@@ -21,7 +20,6 @@ import { Direction } from '../models/tile';
  * J2 est contrôlé par l'IA.
  */
 export const MIN_PLAYER_COUNT = 2;
-
 /**
  * Nombre maximal de joueurs pouvant
  * participer à une partie.
@@ -33,7 +31,6 @@ export const MIN_PLAYER_COUNT = 2;
  * lors de la préparation.
  */
 export const MAX_PLAYER_COUNT = 5;
-
 /**
  * Gère l'état des joueurs pendant une partie.
  *
@@ -60,7 +57,6 @@ export class PlayerService {
   // ==========================================================
   // JOUEURS DE LA PARTIE
   // ==========================================================
-
   /**
    * Joueurs participant à la partie.
    *
@@ -69,11 +65,30 @@ export class PlayerService {
    * n'a pas été effectuée.
    */
   readonly players: Player[] = [];
-
+  /** Notification réactive des changements de points de vie. */
+  readonly livesRevision = signal(0);
+  /** Notification réactive des changements d’inventaire. */
+  readonly inventoryRevision = signal(0);
+  /** Notification réactive des changements de malédiction. */
+  readonly curseRevision = signal(0);
+  /** Applique ou lève la malédiction sans modifier les autres attributs du héros. */
+  setCursed(player: Player, isCursed: boolean): boolean {
+    if (!this.players.includes(player) || player.isCursed === isCursed) return false;
+    player.isCursed = isCursed;
+    this.curseRevision.update(revision => revision + 1);
+    return true;
+  }
+  /** Applique les dégâts au joueur réel, sans remplacer sa référence. */
+  loseLife(player: Player, amount = 1): void {
+    if (!this.players.includes(player) || !Number.isFinite(amount) || amount <= 0) return;
+    const next = Math.max(0, player.lives - Math.floor(amount));
+    if (next === player.lives) return;
+    player.lives = next;
+    this.livesRevision.update((revision) => revision + 1);
+  }
   // ==========================================================
   // JOUEUR TEMPORAIRE DU PROTOTYPE
   // ==========================================================
-
   /**
    * Joueur actuellement utilisé
    * par le prototype du plateau.
@@ -95,21 +110,18 @@ export class PlayerService {
   readonly player: Player = {
     controller: 'human',
     lives: 5,
+    isCursed: false,
     inventory: createEmptyPlayerInventory(),
     heroId: 'argentus',
-
     position: {
       x: 0,
       y: 0,
     },
-
     facing: 'south',
   };
-
   // ==========================================================
   // INITIALISATION
   // ==========================================================
-
   /**
    * Prépare les joueurs pour une nouvelle partie.
    *
@@ -174,7 +186,6 @@ export class PlayerService {
     if (!Number.isInteger(playerCount)) {
       return;
     }
-
     /**
      * Le nombre total de participants
      * doit respecter les limites
@@ -183,7 +194,6 @@ export class PlayerService {
     if (playerCount < MIN_PLAYER_COUNT || playerCount > MAX_PLAYER_COUNT) {
       return;
     }
-
     /**
      * Le nombre de joueurs humains
      * doit également être un entier.
@@ -191,7 +201,6 @@ export class PlayerService {
     if (!Number.isInteger(humanPlayerCount)) {
       return;
     }
-
     /**
      * Il doit toujours exister
      * au moins un humain.
@@ -203,13 +212,13 @@ export class PlayerService {
     if (humanPlayerCount < 1 || humanPlayerCount > playerCount) {
       return;
     }
-
     /**
      * Une nouvelle initialisation remplace
      * complètement la composition précédente.
      */
     this.players.length = 0;
-
+    this.livesRevision.update((revision) => revision + 1);
+    this.curseRevision.update(revision => revision + 1);
     /**
      * Les humains occupent toujours
      * les premières positions.
@@ -223,18 +232,15 @@ export class PlayerService {
     for (let playerIndex = 0; playerIndex < playerCount; playerIndex++) {
       this.players.push({
         controller: playerIndex < humanPlayerCount ? 'human' : 'ai',
-
         lives: 5,
-
+        isCursed: false,
         inventory: createEmptyPlayerInventory(),
       });
     }
   }
-
   // ==========================================================
   // DÉPLACEMENT TEMPORAIRE
   // ==========================================================
-
   /**
    * Déplace le joueur utilisé actuellement
    * par le prototype du plateau.
@@ -250,10 +256,8 @@ export class PlayerService {
       x,
       y,
     };
-
     this.player.facing = direction;
   }
-
   /**
    * Modifie uniquement l'orientation
    * graphique du pion.
@@ -268,20 +272,18 @@ export class PlayerService {
   face(direction: Direction): void {
     this.player.facing = direction;
   }
-
   // ==========================================================
   // DÉPLACEMENT DES JOUEURS RÉELS
   // ==========================================================
-
   /**
    * Déplace un joueur réel de la partie vers une nouvelle
    * position du donjon.
    *
    * IMPORTANT :
    *
-   * Cette méthode modifie un joueur appartenant à `players`.
+   * Cette méthode modifie un joueur appartenant à \\\\`players\\\\`.
    * Elle ne concerne donc pas l'ancien joueur temporaire
-   * `player`, conservé provisoirement pour compatibilité.
+   * \\\\`player\\\\`, conservé provisoirement pour compatibilité.
    *
    * La validation du déplacement n'appartient pas à ce service :
    *
@@ -296,15 +298,12 @@ export class PlayerService {
     if (!this.players.includes(player)) {
       return;
     }
-
     player.position = {
       x,
       y,
     };
-
     player.facing = direction;
   }
-
   /**
    * Modifie uniquement l'orientation graphique
    * d'un joueur réel de la partie.
@@ -316,14 +315,11 @@ export class PlayerService {
     if (!this.players.includes(player)) {
       return;
     }
-
     player.facing = direction;
   }
-
   // ==========================================================
   // TIRAGE DES HÉROS
   // ==========================================================
-
   /**
    * Attribue aléatoirement
    * un héros différent à chaque joueur.
@@ -346,7 +342,6 @@ export class PlayerService {
    */
   drawHeroes(): void {
     const heroIds: HeroId[] = HERO_DEFINITIONS.map((hero) => hero.id);
-
     /**
      * Mélange de Fisher-Yates.
      *
@@ -356,10 +351,8 @@ export class PlayerService {
      */
     for (let i = heroIds.length - 1; i > 0; i--) {
       const randomIndex = Math.floor(Math.random() * (i + 1));
-
       [heroIds[i], heroIds[randomIndex]] = [heroIds[randomIndex], heroIds[i]];
     }
-
     /**
      * Une carte différente est attribuée
      * à chacun des participants.
@@ -368,11 +361,9 @@ export class PlayerService {
       player.heroId = heroIds[index];
     });
   }
-
   // ==========================================================
   // PLACEMENT INITIAL
   // ==========================================================
-
   /**
    * Place tous les héros
    * sur la tuile Départ.
@@ -402,8 +393,110 @@ export class PlayerService {
         x: 0,
         y: 0,
       };
-
       player.facing = 'south';
     });
+  }
+  // ==========================================================
+  // INVENTAIRE DES JOUEURS
+  // ==========================================================
+  /** Renvoie les emplacements correspondant au type d'équipement. */
+  private getEquipmentSlots(player: Player, kind: 'weapon' | 'spell') {
+    return kind === 'weapon'
+      ? player.inventory.weapons
+      : player.inventory.spells;
+  }
+  /** Indique si un équipement peut être ajouté sans remplacement. */
+  canAddEquipment(player: Player, equipment: Equipment): boolean {
+    if (!this.players.includes(player)) return false;
+    if (equipment.kind === 'key') {
+      return player.inventory.key === null;
+    }
+    return this.getEquipmentSlots(player, equipment.kind)
+      .some((item) => item === null);
+  }
+  /**
+   * Place un équipement dans le premier emplacement libre.
+   * Ne remplace jamais implicitement un objet déjà possédé.
+   */
+  addEquipment(player: Player, equipment: Equipment): boolean {
+    if (!this.canAddEquipment(player, equipment)) return false;
+    if (equipment.kind === 'key') {
+      player.inventory.key = equipment;
+    } else if (equipment.kind === 'weapon') {
+      const index = player.inventory.weapons.findIndex((item) => item === null);
+      if (index < 0 || index >= PLAYER_INVENTORY_CAPACITY.weapons) return false;
+      player.inventory.weapons[index] = equipment;
+    } else {
+      const index = player.inventory.spells.findIndex((item) => item === null);
+      if (index < 0 || index >= PLAYER_INVENTORY_CAPACITY.spells) return false;
+      player.inventory.spells[index] = equipment;
+    }
+    this.inventoryRevision.update((revision) => revision + 1);
+    return true;
+  }
+  /**
+   * Remplace explicitement un emplacement du type approprié.
+   * Retourne l'ancien équipement, ou null si l'emplacement était vide.
+   * undefined indique une opération invalide.
+   */
+  replaceEquipment(
+    player: Player,
+    equipment: Equipment,
+    slotIndex: number,
+  ): Equipment | null | undefined {
+    if (!this.players.includes(player) || !Number.isInteger(slotIndex)) {
+      return undefined;
+    }
+    if (equipment.kind === 'key') {
+      if (slotIndex !== 0) return undefined;
+      const previous = player.inventory.key;
+      player.inventory.key = equipment;
+      this.inventoryRevision.update((revision) => revision + 1);
+      return previous;
+    }
+    if (equipment.kind === 'weapon') {
+      if (slotIndex < 0 || slotIndex >= PLAYER_INVENTORY_CAPACITY.weapons) return undefined;
+      const previous = player.inventory.weapons[slotIndex];
+      player.inventory.weapons[slotIndex] = equipment;
+      this.inventoryRevision.update((revision) => revision + 1);
+      return previous;
+    }
+    if (slotIndex < 0 || slotIndex >= PLAYER_INVENTORY_CAPACITY.spells) return undefined;
+    const previous = player.inventory.spells[slotIndex];
+    player.inventory.spells[slotIndex] = equipment;
+    this.inventoryRevision.update((revision) => revision + 1);
+    return previous;
+  }
+  /** Retire un équipement d'un emplacement précis, sans décaler les autres. */
+  removeEquipment(
+    player: Player,
+    kind: EquipmentKind,
+    slotIndex: number,
+  ): Equipment | null | undefined {
+    if (!this.players.includes(player) || !Number.isInteger(slotIndex)) {
+      return undefined;
+    }
+    if (kind === 'key') {
+      if (slotIndex !== 0) return undefined;
+      const previous = player.inventory.key;
+      if (previous === null) return null;
+      player.inventory.key = null;
+      this.inventoryRevision.update((revision) => revision + 1);
+      return previous;
+    }
+    if (kind === 'weapon') {
+      if (slotIndex < 0 || slotIndex >= PLAYER_INVENTORY_CAPACITY.weapons) return undefined;
+      const previous = player.inventory.weapons[slotIndex];
+      if (previous === null) return null;
+      player.inventory.weapons[slotIndex] = null;
+      this.inventoryRevision.update((revision) => revision + 1);
+      return previous;
+    }
+    if (slotIndex < 0 || slotIndex >= PLAYER_INVENTORY_CAPACITY.spells) return undefined;
+    const previous = player.inventory.spells[slotIndex];
+    if (previous === null) return null;
+    player.inventory.spells[slotIndex] = null;
+    this.inventoryRevision.update((revision) => revision + 1);
+    return previous;
   }
 }
