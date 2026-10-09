@@ -1,3 +1,4 @@
+
 import { Injectable, signal } from '@angular/core';
 
 import { getTokenDefinition } from '../data/token-definitions';
@@ -9,8 +10,8 @@ import { MonsterTokenDefinition } from '../models/token';
 /**
  * État d'un combat obligatoire en cours.
  *
- * La tuile d'origine est conservée car un héros doit y retourner
- * lorsqu'il perd le combat ou obtient un match nul.
+ * La tuile d'origine est conservée pour permettre
+ * au héros de reculer après une égalité ou une défaite.
  */
 export interface PendingCombat {
   player: Player;
@@ -23,10 +24,6 @@ export type CombatOutcome = 'victory' | 'tie' | 'defeat';
 
 /**
  * Résultat complet du dernier combat résolu.
- *
- * equipmentBonus et heroBonus sont déjà séparés du lancer afin
- * que les futures mécaniques d'équipement et de pouvoir puissent
- * être ajoutées sans modifier la structure générale du combat.
  */
 export interface CombatResult {
   player: Player;
@@ -42,34 +39,21 @@ export interface CombatResult {
 }
 
 /**
- * Gère l'état et la résolution des combats obligatoires.
+ * Gère les combats obligatoires contre les monstres.
  *
- * Cette tranche implémente le cœur commun du combat :
- *
- * - lancer de deux dés à six faces ;
- * - calcul de la force d'attaque ;
- * - comparaison avec la force du monstre ;
- * - victoire, match nul ou défaite ;
- * - perte d'une vie en cas de défaite ;
- * - recul vers la tuile d'origine en cas de match nul ou défaite.
- *
- * Les équipements, sorts et pouvoirs de héros seront branchés
- * ultérieurement sur les bonus déjà prévus dans CombatResult.
+ * Une victoire retourne le jeton sur son verso.
+ * La récupération de la récompense est traitée séparément.
  */
 @Injectable({
   providedIn: 'root',
 })
 export class CombatService {
-  constructor(private readonly playerService: PlayerService) {}
+  constructor(
+    private readonly playerService: PlayerService,
+  ) {}
 
   readonly pendingCombat = signal<PendingCombat | null>(null);
 
-  /**
-   * Dernier combat effectivement résolu.
-   *
-   * Cet état est distinct de pendingCombat afin que l'interface
-   * puisse encore présenter le résultat après la fin du combat.
-   */
   readonly lastCombatResult = signal<CombatResult | null>(null);
 
   get hasPendingCombat(): boolean {
@@ -82,8 +66,11 @@ export class CombatService {
   }
 
   /**
-   * Déclenche un combat si la tuile de destination contient
-   * effectivement un monstre.
+   * Déclenche un combat uniquement contre un monstre
+   * dont le recto est encore visible.
+   *
+   * Un monstre déjà vaincu ne peut pas être combattu
+   * une seconde fois.
    */
   startCombat(
     player: Player,
@@ -95,6 +82,10 @@ export class CombatService {
     }
 
     if (!monsterTile.tokenId) {
+      return false;
+    }
+
+    if (monsterTile.tokenFace === 'back') {
       return false;
     }
 
@@ -117,16 +108,14 @@ export class CombatService {
   }
 
   /**
-   * Lance les dés et résout le combat actuellement obligatoire.
+   * Lance deux dés et résout le combat obligatoire.
    *
-   * RÈGLE KARAK :
+   * attaque > monstre : victoire
+   * attaque = monstre : égalité
+   * attaque < monstre : défaite
    *
-   * attaque > monstre  -> victoire ;
-   * attaque = monstre  -> match nul ;
-   * attaque < monstre  -> défaite.
-   *
-   * Cette première version utilise uniquement les deux dés.
-   * Les bonus restent donc volontairement à zéro.
+   * Les bonus d'équipement et de héros seront
+   * intégrés ultérieurement.
    */
   resolvePendingCombat(): CombatResult | null {
     const combat = this.pendingCombat();
@@ -141,7 +130,8 @@ export class CombatService {
 
     const equipmentBonus = 0;
     const heroBonus = 0;
-    const attackPower = diceTotal + equipmentBonus + heroBonus;
+    const attackPower =
+      diceTotal + equipmentBonus + heroBonus;
 
     let outcome: CombatOutcome;
 
@@ -175,21 +165,23 @@ export class CombatService {
   }
 
   /**
-   * Applique les conséquences immédiates de l'issue du combat.
+   * Applique les conséquences du combat.
    *
    * Victoire :
-   * le monstre disparaît de la tuile. Son futur verso équipement
-   * n'est pas encore modélisé.
+   * le jeton reste sur la tuile et présente son verso.
    *
-   * Match nul :
-   * le héros recule sur la tuile d'origine, sans perdre de vie.
+   * Égalité :
+   * le héros recule sans perdre de vie.
    *
    * Défaite :
-   * le héros perd une vie puis recule sur la tuile d'origine.
+   * le héros perd une vie puis recule.
    */
-  private applyOutcome(combat: PendingCombat, outcome: CombatOutcome): void {
+  private applyOutcome(
+    combat: PendingCombat,
+    outcome: CombatOutcome,
+  ): void {
     if (outcome === 'victory') {
-      combat.monsterTile.tokenId = undefined;
+      combat.monsterTile.tokenFace = 'back';
       return;
     }
 
@@ -204,14 +196,15 @@ export class CombatService {
   }
 
   /**
-   * Efface uniquement le compte-rendu du dernier combat.
-   *
-   * Cela n'a aucune incidence sur un éventuel combat en cours.
+   * Efface uniquement le dernier résultat de combat.
    */
   clearLastCombatResult(): void {
     this.lastCombatResult.set(null);
   }
 
+  /**
+   * Lance un dé à six faces.
+   */
   private rollDie(): number {
     return Math.floor(Math.random() * 6) + 1;
   }

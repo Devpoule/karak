@@ -1,14 +1,11 @@
 import { Component, DoCheck, Input, OnDestroy } from '@angular/core';
-
-import {
-  PLAYER_INVENTORY_CAPACITY,
-  PlayerInventory,
-} from '../../models/inventory';
+import { PLAYER_INVENTORY_CAPACITY, PlayerInventory } from '../../models/inventory';
 import { Player } from '../../models/player';
+import { KeyEquipment, SpellEquipment, WeaponEquipment } from '../../models/equipment';
 
 type InventoryGroup = 'weapons' | 'spells' | 'key';
 
-/** Inventaire visuel : détecte les acquisitions sans toucher aux règles du jeu. */
+/** Affichage uniquement : aucune mutation de l'inventaire. */
 @Component({
   imports: [],
   selector: 'app-inventory-panel',
@@ -29,22 +26,25 @@ export class InventoryPanel implements DoCheck, OnDestroy {
     return this.player?.inventory ?? null;
   }
 
-  get weaponSlots(): unknown[] {
+  get weaponSlots(): (WeaponEquipment | null)[] {
     return this.inventory?.weapons ?? Array.from({ length: this.capacity.weapons }, () => null);
   }
 
-  get spellSlots(): unknown[] {
+  get spellSlots(): (SpellEquipment | null)[] {
     return this.inventory?.spells ?? Array.from({ length: this.capacity.spells }, () => null);
   }
 
+  get keyItem(): KeyEquipment | null {
+    return this.inventory?.key ?? null;
+  }
+
   get hasKey(): boolean {
-    return this.inventory?.key !== null && this.inventory?.key !== undefined;
+    return this.keyItem !== null;
   }
 
   ngDoCheck(): void {
-    const current = [...this.weaponSlots, ...this.spellSlots, this.inventory?.key ?? null];
+    const current = [...this.weaponSlots, ...this.spellSlots, this.keyItem];
 
-    // L'ouverture d'une autre fiche ne constitue pas une acquisition.
     if (this.player !== this.observedPlayer) {
       this.observedPlayer = this.player;
       this.observedItems = current;

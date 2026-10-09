@@ -14,7 +14,7 @@ import { Player } from '../../models/player';
  * Il ne gère pas encore :
  *
  * - son pouvoir spécial ;
- * - son état pendant la partie.
+ * - les autres états du héros pendant la partie.
  *
  * Ces informations seront ajoutées lorsque le modèle des héros
  * et l'état des joueurs seront implémentés.
@@ -30,6 +30,11 @@ export class HeroPanel {
    * Joueur dont le héros est représenté.
    */
   @Input() player: Player | null = null;
+  @Input() curseImagePath = '/assets/tokens/curse.png';
+
+  get isCursed(): boolean {
+    return this.player?.isCursed === true;
+  }
 
   get heroDefinition(): HeroDefinition | null {
     const heroId = this.player?.heroId;

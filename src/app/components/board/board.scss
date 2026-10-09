@@ -1,15 +1,12 @@
 :host {
   display: block;
-
   width: 100%;
   height: 100%;
   min-height: 0;
 }
-
 /* ==========================================================
    PLATEAU / CAMÉRA
    ========================================================== */
-
 /*
  * Zone visible du donjon.
  *
@@ -20,20 +17,15 @@
  */
 .board {
   position: relative;
-
   width: 100%;
   height: 100%;
-
   overflow: hidden;
-
   cursor: grab;
   user-select: none;
-
   background:
     radial-gradient(circle at 50% 35%, rgba(105, 88, 70, 0.12), transparent 45%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.018) 25%, transparent 25%),
     var(--karak-dungeon-deep);
-
   /*
    * Retour visuel pendant le déplacement de la caméra.
    */
@@ -41,11 +33,9 @@
     cursor: grabbing;
   }
 }
-
 /* ==========================================================
    MONDE DU DONJON
    ========================================================== */
-
 /*
  * Surface complète sur laquelle les tuiles sont positionnées.
  *
@@ -59,15 +49,11 @@
  */
 .board__world {
   position: absolute;
-
   top: 50%;
   left: 50%;
-
   will-change: transform;
   transform-origin: top left;
-
   background-color: var(--karak-dungeon);
-
   /*
    * Les deux premiers gradients dessinent la grille.
    * Leur pas doit correspondre à la taille visuelle d'une tuile.
@@ -79,13 +65,11 @@
     linear-gradient(var(--karak-grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--karak-grid) 1px, transparent 1px),
     radial-gradient(circle at center, rgba(122, 101, 80, 0.09), transparent 55%);
-
   background-size:
     var(--tile-size) var(--tile-size),
     var(--tile-size) var(--tile-size),
     100% 100%;
 }
-
 /*
  * Déplacement automatique doux de la caméra.
  *
@@ -95,74 +79,55 @@
 .board__world--camera-transition {
   transition: transform 3500ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-
 /* ==========================================================
    TUILES POSÉES
    ========================================================== */
-
 .board__tile {
   position: absolute;
-
   /*
    * La taille doit rester cohérente avec tileSize
    * défini dans Board.
    */
   width: var(--tile-size);
   height: var(--tile-size);
-
   /*
    * Chaque tuile possède son propre contexte d'empilement.
    * Cela permet de placer son halo derrière son image sans
    * l'envoyer derrière l'ensemble du monde.
    */
   isolation: isolate;
-
   /* ----------------------------------------------------------
      IMAGE DE LA TUILE
      ---------------------------------------------------------- */
-
   .board__tile-image {
     position: relative;
     z-index: 0;
-
     display: block;
-
     width: 100%;
     height: 100%;
-
     pointer-events: none;
     user-select: none;
   }
-
   /* ----------------------------------------------------------
      JETON PRÉSENT SUR LA TUILE
      ---------------------------------------------------------- */
-
   .board__token {
     position: absolute;
     z-index: 2;
-
     top: 22%;
     right: 19%;
-
     width: 40%;
     height: 40%;
-
     transform: none;
-
     object-fit: contain;
-
     pointer-events: none;
     user-select: none;
-
     filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.8));
   }
 }
-
 /* ==========================================================
     HÉROS
     ========================================================== */
-
 /*
   * Le conteneur du héros occupe exactement la surface logique
   * d'une tuile.
@@ -173,27 +138,21 @@
 .board__hero {
   position: absolute;
   z-index: 5;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: var(--tile-size);
   height: var(--tile-size);
-
   /*
     * Le pion est actuellement purement visuel.
     * Les interactions restent donc destinées au plateau.
     */
   pointer-events: none;
-
   transition:
     left 500ms ease-in-out,
     top 500ms ease-in-out;
-
   img {
     display: block;
-
     /*
       * Le personnage doit rester suffisamment petit pour que
       * la géométrie de la tuile reste lisible autour de lui.
@@ -201,26 +160,19 @@
     height: 63%;
     width: auto;
     max-width: 70%;
-
     transform: translate(-2%, 7%);
-
     object-fit: contain;
-
     user-select: none;
-
     filter: drop-shadow(1px 0 1px rgba(0, 0, 0, 0.95)) drop-shadow(-1px 0 1px rgba(0, 0, 0, 0.95))
       drop-shadow(0 1px 1px rgba(0, 0, 0, 0.95)) drop-shadow(0 -1px 1px rgba(0, 0, 0, 0.95))
       drop-shadow(0 4px 3px rgba(0, 0, 0, 0.75));
   }
 }
-
-
 /* Deux héros sur une même case : chacun conserve son pion. */
 .board__hero--pair {
   justify-content: center;
   align-items: center;
   gap: 0;
-
   .board__hero-pawn {
     width: auto;
     max-width: 70%;
@@ -229,7 +181,6 @@
     object-fit: contain;
   }
 }
-
 /*
  * Indicateur discret du joueur actif.
  *
@@ -240,42 +191,33 @@
 .board__hero--active {
   &::after {
     content: '';
-
     position: absolute;
     inset: 14%;
-
     border: 2px solid var(--player-color, rgba(245, 213, 138, 0.95));
     border-radius: 50%;
-
     box-shadow:
       0 0 8px var(--player-color, rgba(245, 213, 138, 0.75)),
       0 0 18px rgba(255, 255, 255, 0.35);
-
     pointer-events: none;
   }
 }
-
 .board__hero--active > img {
   animation: active-hero-arrival 700ms ease-out;
 }
-
 @keyframes active-hero-arrival {
   0% {
     transform: scale(0.92);
     filter: brightness(1);
   }
-
   45% {
     transform: scale(1.1);
     filter: brightness(1.25);
   }
-
   100% {
     transform: scale(1);
     filter: brightness(1);
   }
 }
-
 /*
  * Marqueurs des joueurs partageant la tuile du pion principal.
  *
@@ -286,42 +228,30 @@
 .board__player-marker {
   position: absolute;
   z-index: 6;
-
   transform: translate(-50%, -50%);
-
   pointer-events: none;
 }
-
 .board__player-marker-label {
   display: flex;
   align-items: center;
   justify-content: center;
-
   min-width: 22px;
   height: 18px;
-
   padding: 0 4px;
-
   border: 1px solid var(--marker-color);
   border-radius: 999px;
-
   background: rgba(20, 17, 15, 0.78);
-
   color: #fff8e8;
-
   font-size: 0.68rem;
   font-weight: 800;
   line-height: 1;
-
   box-shadow:
     0 1px 4px rgba(0, 0, 0, 0.85),
     0 0 5px color-mix(in srgb, var(--marker-color) 50%, transparent);
 }
-
 /* ==========================================================
    CONTRÔLES DE DÉPLACEMENT
    ========================================================== */
-
 /*
  * Les contrôles sont centrés sur la position logique du héros.
  *
@@ -331,15 +261,11 @@
 .board__movement-controls {
   position: absolute;
   z-index: 20;
-
   width: var(--tile-size);
   height: var(--tile-size);
-
   transform: translate(-50%, -50%);
-
   pointer-events: none;
 }
-
 /*
  * Bouton directionnel commun.
  *
@@ -348,100 +274,71 @@
  */
 .board__movement-control {
   position: absolute;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: 34px;
   height: 34px;
-
   padding: 0;
-
   border: 1px solid rgba(220, 200, 160, 0.75);
   border-radius: 50%;
-
   background: radial-gradient(circle at 35% 30%, rgba(105, 93, 75, 0.95), rgba(37, 32, 27, 0.95));
-
   color: #eee1c5;
-
   font-size: 17px;
   line-height: 1;
-
   cursor: pointer;
   pointer-events: auto;
-
   box-shadow:
     0 2px 5px rgba(0, 0, 0, 0.8),
     inset 0 1px 1px rgba(255, 255, 255, 0.15);
-
   transition:
     transform 120ms ease,
     filter 120ms ease,
     box-shadow 120ms ease;
-
   &:hover {
     filter: brightness(1.25);
-
     box-shadow:
       0 2px 8px rgba(0, 0, 0, 0.9),
       0 0 8px rgba(220, 200, 160, 0.35),
       inset 0 1px 1px rgba(255, 255, 255, 0.2);
   }
 }
-
 /* Nord */
-
 .board__movement-control--north {
   top: 0;
   left: 50%;
-
   transform: translate(-50%, -50%);
-
   &:hover {
     transform: translate(-50%, -50%) scale(1.12);
   }
 }
-
 /* Est */
-
 .board__movement-control--east {
   top: 50%;
   right: 0;
-
   transform: translate(50%, -50%);
-
   &:hover {
     transform: translate(50%, -50%) scale(1.12);
   }
 }
-
 /* Sud */
-
 .board__movement-control--south {
   bottom: 0;
   left: 50%;
-
   transform: translate(-50%, 50%);
-
   &:hover {
     transform: translate(-50%, 50%) scale(1.12);
   }
 }
-
 /* Ouest */
-
 .board__movement-control--west {
   top: 50%;
   left: 0;
-
   transform: translate(-50%, -50%);
-
   &:hover {
     transform: translate(-50%, -50%) scale(1.12);
   }
 }
-
 /*
  * Une sortie menant vers une zone encore inexplorée
  * reçoit une légère mise en évidence.
@@ -451,19 +348,15 @@
  */
 .board__movement-control--explore {
   border-color: rgba(224, 187, 104, 0.95);
-
   color: #f5d58a;
-
   box-shadow:
     0 2px 5px rgba(0, 0, 0, 0.8),
     0 0 9px rgba(218, 170, 72, 0.45),
     inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
-
 /* ==========================================================
    FIN DE TOUR
    ========================================================== */
-
 /*
  * La fin volontaire du tour reste attachée au héros,
  * mais demeure en dehors de la croix directionnelle.
@@ -474,65 +367,49 @@
  */
 .board__end-turn {
   position: absolute;
-
   right: -18px;
   bottom: -18px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: 28px;
   height: 28px;
-
   padding: 0;
-
   border: 1px solid rgba(220, 200, 160, 0.75);
   border-radius: 50%;
-
   background: radial-gradient(
     circle at 35% 30%,
     rgba(105, 93, 75, 0.96),
     rgba(37, 32, 27, 0.96)
   );
-
   color: #eee1c5;
-
   font-size: 14px;
   font-weight: 700;
   line-height: 1;
-
   cursor: pointer;
   pointer-events: auto;
-
   box-shadow:
     0 2px 5px rgba(0, 0, 0, 0.8),
     inset 0 1px 1px rgba(255, 255, 255, 0.15);
-
   transition:
     transform 120ms ease,
     filter 120ms ease,
     box-shadow 120ms ease;
-
   &:hover {
     transform: scale(1.12);
     filter: brightness(1.2);
-
     box-shadow:
       0 2px 8px rgba(0, 0, 0, 0.9),
       0 0 8px rgba(220, 200, 160, 0.35),
       inset 0 1px 1px rgba(255, 255, 255, 0.2);
   }
-
   &:active {
     transform: scale(0.96);
   }
 }
-
 /* ==========================================================
    TUILE EN COURS D'EXPLORATION
    ========================================================== */
-
 /*
  * La tuile piochée est affichée au-dessus des tuiles déjà
  * présentes tant que son placement n'est pas confirmé.
@@ -543,9 +420,7 @@
  */
 .board__tile--pending {
   z-index: 10;
-
   animation: pending-tile-glow 1.6s ease-in-out infinite;
-
   /*
    * Une orientation invalide remplace le halo blanc
    * par un signal rouge.
@@ -554,50 +429,37 @@
     animation: invalid-tile-glow 1.1s ease-in-out infinite;
   }
 }
-
 /* ==========================================================
    CONTRÔLES DE LA TUILE EN ATTENTE
    ========================================================== */
-
 /*
  * Style commun aux boutons de rotation et de confirmation.
  */
 .board__rotate,
 .board__confirm {
   position: absolute;
-
   bottom: -36px;
-
   width: 32px;
   height: 32px;
-
   transform: translateX(-50%);
-
   border: 0;
   border-radius: 50%;
-
   cursor: pointer;
-
   line-height: 1;
 }
-
 /*
  * Rotation de la tuile.
  */
 .board__rotate {
   left: calc(50% - 22px);
-
   font-size: 20px;
 }
-
 /*
  * Confirmation du placement.
  */
 .board__confirm {
   left: calc(50% + 22px);
-
   font-size: 18px;
-
   /*
    * Une orientation invalide ne peut pas être confirmée.
    */
@@ -606,11 +468,9 @@
     opacity: 0.35;
   }
 }
-
 /* ==========================================================
    CONTRÔLES TEMPORAIRES DE DÉVELOPPEMENT
    ========================================================== */
-
 /*
  * Interface provisoire permettant de tester les quatre
  * directions autour d'une tuile sélectionnée.
@@ -620,142 +480,102 @@
  */
 .board__debug {
   position: absolute;
-
   width: var(--tile-size);
   height: var(--tile-size);
-
   transform: translate(-50%, -50%);
-
   span {
     position: absolute;
-
     font-weight: bold;
   }
 }
-
 /*
  * Direction nord.
  */
 .board__debug-north {
   top: 4px;
   left: 50%;
-
   transform: translateX(-50%);
 }
-
 /*
  * Direction est.
  */
 .board__debug-east {
   top: 50%;
   right: 4px;
-
   transform: translateY(-50%);
 }
-
 /*
  * Direction sud.
  */
 .board__debug-south {
   bottom: 4px;
   left: 50%;
-
   transform: translateX(-50%);
 }
-
 /*
  * Direction ouest.
  */
 .board__debug-west {
   top: 50%;
   left: 4px;
-
   transform: translateY(-50%);
 }
-
 /* ==========================================================
    ACTION D'ENTRÉE DANS LE DONJON
    ========================================================== */
-
 .board__cover-action {
   position: relative;
   z-index: 1;
-
   padding: 0.8rem 1.5rem;
-
   color: #fff8e8;
-
   font-weight: 700;
   font-size: 1rem;
-
   background: rgba(86, 34, 31, 0.88);
-
   border: 1px solid rgba(224, 177, 93, 0.65);
   border-radius: 4px;
-
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-
   opacity: 0.92;
-
   transition:
     opacity 500ms ease,
     transform 500ms ease;
 }
-
 /* ==========================================================
    OUTILS DE CAMÉRA
    ========================================================== */
-
 .board__camera-tools {
   position: absolute;
   z-index: 50;
-
   right: 14px;
   bottom: 14px;
-
   display: flex;
   gap: 6px;
-
   padding: 5px;
-
   border: 1px solid rgba(220, 200, 160, 0.45);
   border-radius: 6px;
-
   background: rgba(28, 24, 20, 0.82);
-
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55);
 }
-
 .board__camera-tool {
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: 32px;
   height: 32px;
-
   padding: 0;
-
   border: 1px solid rgba(220, 200, 160, 0.65);
   border-radius: 4px;
-
   background: rgba(58, 49, 40, 0.95);
   color: #eee1c5;
-
   font-size: 18px;
   line-height: 1;
-
   cursor: pointer;
-
   &:hover {
     filter: brightness(1.2);
   }
 }
-
 /* ==========================================================
    ANIMATIONS
    ========================================================== */
-
 /*
  * Placement possible :
  * pulsation blanche discrète.
@@ -765,14 +585,12 @@
   100% {
     box-shadow: 0 0 4px rgba(255, 255, 255, 0.35);
   }
-
   50% {
     box-shadow:
       0 0 8px rgba(255, 255, 255, 0.75),
       0 0 14px rgba(255, 255, 255, 0.35);
   }
 }
-
 /*
  * Placement impossible :
  * pulsation rouge plus marquée.
@@ -782,10 +600,50 @@
   100% {
     box-shadow: 0 0 5px rgba(220, 40, 40, 0.55);
   }
-
   50% {
     box-shadow:
       0 0 9px rgba(220, 40, 40, 0.95),
       0 0 16px rgba(220, 40, 40, 0.55);
   }
 }
+
+/* Résolution des récompenses, au-dessus du monde déplaçable. */
+.board__reward-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(12, 10, 9, 0.72);
+  cursor: default;
+}
+.board__reward-panel {
+  width: min(100%, 380px);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 24px;
+  border: 1px solid rgba(224, 187, 104, 0.75);
+  border-radius: 10px;
+  background: #29221c;
+  color: #eee1c5;
+  text-align: center;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
+}
+.board__reward-panel h2 { margin: 0 0 16px; font-size: 1.35rem; }
+.board__reward-panel p { margin: 12px 0; }
+.board__reward-image { display: block; width: 100px; height: 100px; margin: 0 auto; object-fit: contain; }
+.board__reward-notice { color: #f2c9a1; }
+.board__reward-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
+.board__reward-actions button {
+  padding: 10px 14px;
+  border: 1px solid rgba(224, 187, 104, 0.7);
+  border-radius: 6px;
+  background: #49392a;
+  color: #fff8e8;
+  font: inherit;
+  cursor: pointer;
+}
+.board__reward-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+.board__reward-actions button:not(:disabled):hover { filter: brightness(1.2); }

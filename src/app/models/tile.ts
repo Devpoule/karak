@@ -21,12 +21,7 @@ import { TokenDefinitionId } from './token';
  * Cet ordre est important car il sert également au calcul
  * des rotations.
  */
-export type Direction =
-  | 'north'
-  | 'east'
-  | 'south'
-  | 'west';
-
+export type Direction = 'north' | 'east' | 'south' | 'west';
 
 /**
  * Liste ordonnée des directions du moteur.
@@ -43,13 +38,7 @@ export type Direction =
  * south + 90°  → west
  * west  + 90°  → north
  */
-export const DIRECTIONS: Direction[] = [
-  'north',
-  'east',
-  'south',
-  'west',
-];
-
+export const DIRECTIONS: Direction[] = ['north', 'east', 'south', 'west'];
 
 // ==========================================================
 // NATURE DES TUILES
@@ -80,11 +69,7 @@ export const DIRECTIONS: Direction[] = [
  * Il s'agit d'une particularité portée par un couloir.
  * Ces éléments sont donc décrits séparément par TileFeature.
  */
-export type TileKind =
-  | 'start'
-  | 'corridor'
-  | 'room';
-
+export type TileKind = 'start' | 'corridor' | 'room';
 
 /**
  * Particularité éventuelle présente sur une tuile.
@@ -107,10 +92,7 @@ export type TileKind =
  * Les règles associées à ces features seront implémentées
  * séparément lorsque leur étape sera atteinte dans le manuel.
  */
-export type TileFeature =
-  | 'portal'
-  | 'healing-fountain';
-
+export type TileFeature = 'portal' | 'healing-fountain';
 
 // ==========================================================
 // MODÈLES DES TUILES
@@ -125,7 +107,6 @@ export type TileFeature =
  * Elle ne contient donc ni coordonnées ni rotation de placement.
  */
 export interface TileDefinition {
-
   /**
    * Identifiant unique du type de tuile.
    *
@@ -177,7 +158,6 @@ export interface TileDefinition {
   openings: Direction[];
 }
 
-
 /**
  * Représente une occurrence d'une tuile effectivement placée
  * dans le donjon.
@@ -203,7 +183,6 @@ export interface TileDefinition {
  * y augmente vers le sud.
  */
 export interface PlacedTile {
-
   /**
    * Identifiant de la TileDefinition utilisée.
    *
@@ -246,6 +225,24 @@ export interface PlacedTile {
    * retiré au cours de la partie.
    */
   tokenId?: TokenDefinitionId;
+
+  /**
+   * Face actuellement visible du jeton présent sur la tuile.
+   *
+   * front :
+   *   face initiale du jeton (monstre ou coffre fermé).
+   *
+   * back :
+   *   face révélée après résolution du combat
+   *   ou ouverture du coffre.
+   *
+   * Lorsque cette propriété est absente, le moteur
+   * considère que le recto est visible.
+   *
+   * La face visible ne modifie pas l'identité du jeton :
+   * tokenId conserve toujours son identifiant initial.
+   */
+  tokenFace?: 'front' | 'back';
 }
 
 // ==========================================================
@@ -269,19 +266,14 @@ export interface PlacedTile {
  * rotateDirection('north', 180)
  * → 'south'
  */
-export function rotateDirection(
-  direction: Direction,
-  rotation: number,
-): Direction {
+export function rotateDirection(direction: Direction, rotation: number): Direction {
   const currentIndex = DIRECTIONS.indexOf(direction);
   const quarterTurns = rotation / 90;
 
-  const newIndex =
-    (currentIndex + quarterTurns) % DIRECTIONS.length;
+  const newIndex = (currentIndex + quarterTurns) % DIRECTIONS.length;
 
   return DIRECTIONS[newIndex];
 }
-
 
 /**
  * Calcule les ouvertures réelles d'une tuile après rotation.
@@ -296,15 +288,9 @@ export function rotateDirection(
  *
  * résultat = ['east', 'west']
  */
-export function getRotatedOpenings(
-  openings: Direction[],
-  rotation: number,
-): Direction[] {
-  return openings.map(
-    (direction) => rotateDirection(direction, rotation),
-  );
+export function getRotatedOpenings(openings: Direction[], rotation: number): Direction[] {
+  return openings.map((direction) => rotateDirection(direction, rotation));
 }
-
 
 /**
  * Vérifie si une tuile possède une ouverture dans une direction
@@ -318,17 +304,9 @@ export function getRotatedOpenings(
  *
  * → true
  */
-export function hasOpening(
-  openings: Direction[],
-  rotation: number,
-  direction: Direction,
-): boolean {
-  return getRotatedOpenings(
-    openings,
-    rotation,
-  ).includes(direction);
+export function hasOpening(openings: Direction[], rotation: number, direction: Direction): boolean {
+  return getRotatedOpenings(openings, rotation).includes(direction);
 }
-
 
 // ==========================================================
 // DIRECTIONS OPPOSÉES
@@ -343,9 +321,7 @@ export function hasOpening(
  * Cette opération est notamment nécessaire pour vérifier
  * les connexions entre deux tuiles voisines.
  */
-export function getOppositeDirection(
-  direction: Direction,
-): Direction {
+export function getOppositeDirection(direction: Direction): Direction {
   const opposites: Record<Direction, Direction> = {
     north: 'south',
     east: 'west',
@@ -355,7 +331,6 @@ export function getOppositeDirection(
 
   return opposites[direction];
 }
-
 
 // ==========================================================
 // CONNEXION ENTRE DEUX TUILES
@@ -397,15 +372,7 @@ export function areConnected(
   direction: Direction,
 ): boolean {
   return (
-    hasOpening(
-      firstOpenings,
-      firstRotation,
-      direction,
-    ) &&
-    hasOpening(
-      secondOpenings,
-      secondRotation,
-      getOppositeDirection(direction),
-    )
+    hasOpening(firstOpenings, firstRotation, direction) &&
+    hasOpening(secondOpenings, secondRotation, getOppositeDirection(direction))
   );
 }

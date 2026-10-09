@@ -1,16 +1,16 @@
 import { Injectable, signal } from '@angular/core';
 
-
-
 import { GamePhase, SetupStep } from '../models/game';
 
 import { getTokenDefinition } from '../data/token-definitions';
+
+import { getEquipmentDefinition } from '../data/equipment-definitions';
 
 import { PlacedTile } from '../models/tile';
 
 import { Player } from '../models/player';
 
-import { TreasureTokenDefinition } from '../models/token';
+import { MonsterReward, MonsterTokenDefinition, TreasureTokenDefinition } from '../models/token';
 
 import { DungeonService } from './dungeon.service';
 
@@ -25,8 +25,6 @@ import { TokenBagService } from './token-bag.service';
 import { TurnService } from './turn.service';
 
 import { CombatService } from './combat.service';
-
-
 
 /**
 
@@ -47,8 +45,6 @@ export interface FirstPlayerRoll {
   total: number;
 
 }
-
-
 
 /**
 
@@ -78,11 +74,23 @@ export interface PendingTreasure {
 
 }
 
+/** Récompense révélée au verso d'un monstre vaincu. */
 
+export interface PendingReward {
 
-export type TileEntryResolution = 'none' | 'combat' | 'treasure';
+  player: Player;
 
+  monster: MonsterTokenDefinition;
 
+  rewardTile: PlacedTile;
+
+  sourceTile: PlacedTile;
+
+  remainingRewards: readonly MonsterReward[];
+
+}
+
+export type TileEntryResolution = 'none' | 'combat' | 'treasure' | 'reward';
 
 @Injectable({
 
@@ -100,8 +108,6 @@ export class GameService {
 
   readonly phase = signal<GamePhase>('setup');
 
-
-
   /**
 
    * Étape actuellement présentée pendant la préparation.
@@ -109,8 +115,6 @@ export class GameService {
    */
 
   readonly setupStep = signal<SetupStep>('player-count');
-
-
 
   /**
 
@@ -125,8 +129,6 @@ export class GameService {
    */
 
   readonly firstPlayerRolls = signal<FirstPlayerRoll[]>([]);
-
-
 
   /**
 
@@ -144,8 +146,6 @@ export class GameService {
 
   readonly firstPlayerContenders = signal<number[]>([]);
 
-
-
   /**
 
    * Index du joueur définitivement désigné pour commencer.
@@ -157,8 +157,6 @@ export class GameService {
    */
 
   readonly firstPlayerIndex = signal<number | null>(null);
-
-
 
   /**
 
@@ -184,8 +182,6 @@ export class GameService {
 
   readonly activePlayerIndex = signal<number | null>(null);
 
-
-
   /**
 
    * Coffre actuellement en attente de résolution.
@@ -200,12 +196,21 @@ export class GameService {
 
   readonly pendingTreasure = signal<PendingTreasure | null>(null);
 
+  /** Récompense en attente de prise en charge par l'interface. */
+
+  readonly pendingReward = signal<PendingReward | null>(null);
+
   /** Une transition bloque les actions jusqu'à l'arrivée du prochain joueur. */
+
   readonly turnTransitionPending = signal(false);
+
   private readonly turnTransitionDelay = 2800;
+
   private turnTransitionTimer: ReturnType<typeof setTimeout> | null = null;
 
+  /** Récompenses restant sur chaque jeton retourné après une récupération partielle. */
 
+  private remainingRewardsByTile = new WeakMap<PlacedTile, readonly MonsterReward[]>();
 
   /**
 
@@ -217,11 +222,13 @@ export class GameService {
 
   get hasPendingTileResolution(): boolean {
 
-    return this.combatService.hasPendingCombat || this.pendingTreasure() !== null;
+    return this.combatService.hasPendingCombat
+
+      || this.pendingTreasure() !== null
+
+      || this.pendingReward() !== null;
 
   }
-
-
 
   constructor(
 
@@ -240,8 +247,6 @@ export class GameService {
     private readonly combatService: CombatService,
 
   ) {}
-
-
 
   /**
 
@@ -272,15 +277,18 @@ export class GameService {
   initialize(): void {
 
     if (this.turnTransitionTimer !== null) {
+
       clearTimeout(this.turnTransitionTimer);
+
       this.turnTransitionTimer = null;
+
     }
+
     this.turnTransitionPending.set(false);
+
     this.phase.set('setup');
 
     this.setupStep.set('player-count');
-
-
 
     this.firstPlayerRolls.set([]);
 
@@ -292,7 +300,9 @@ export class GameService {
 
     this.pendingTreasure.set(null);
 
+    this.pendingReward.set(null);
 
+    this.remainingRewardsByTile = new WeakMap<PlacedTile, readonly MonsterReward[]>();
 
     this.initializeDungeon();
 
@@ -305,8 +315,6 @@ export class GameService {
     this.initializeCombat();
 
   }
-
-
 
   /**
 
@@ -374,17 +382,11 @@ export class GameService {
 
     if (this.setupStep() !== 'player-count') return;
 
-
-
     this.playerService.initialize(playerCount, humanPlayerCount);
-
-
 
     this.setupStep.set('hero-draw');
 
   }
-
-
 
   /**
 
@@ -398,8 +400,6 @@ export class GameService {
 
   }
 
-
-
   /**
 
    * Effectue le tirage aléatoire des héros.
@@ -412,13 +412,9 @@ export class GameService {
 
     if (this.setupStep() !== 'hero-draw') return;
 
-
-
     this.playerService.drawHeroes();
 
   }
-
-
 
   /**
 
@@ -434,27 +430,17 @@ export class GameService {
 
     if (this.setupStep() !== 'hero-draw') return;
 
-
-
     this.playerService.placeHeroesOnStart();
-
-
 
     this.firstPlayerRolls.set([]);
 
     this.firstPlayerIndex.set(null);
 
-
-
     this.firstPlayerContenders.set(this.playerService.players.map((_, playerIndex) => playerIndex));
-
-
 
     this.setupStep.set('first-player-roll');
 
   }
-
-
 
   /**
 
@@ -470,19 +456,13 @@ export class GameService {
 
     if (this.firstPlayerIndex() !== null) return;
 
-
-
     if (!this.firstPlayerContenders().includes(playerIndex)) {
 
       return;
 
     }
 
-
-
     const alreadyRolled = this.firstPlayerRolls().some((roll) => roll.playerIndex === playerIndex);
-
-
 
     if (alreadyRolled) {
 
@@ -490,13 +470,9 @@ export class GameService {
 
     }
 
-
-
     const die1 = this.rollDie();
 
     const die2 = this.rollDie();
-
-
 
     this.firstPlayerRolls.update((rolls) => [
 
@@ -518,8 +494,6 @@ export class GameService {
 
   }
 
-
-
   /**
 
    * Indique si tous les joueurs encore en lice
@@ -537,8 +511,6 @@ export class GameService {
     );
 
   }
-
-
 
   /**
 
@@ -586,43 +558,27 @@ export class GameService {
 
     }
 
-
-
     const contenderRolls = this.firstPlayerRolls().filter((roll) =>
 
       this.firstPlayerContenders().includes(roll.playerIndex),
 
     );
 
-
-
     const highestTotal = Math.max(...contenderRolls.map((roll) => roll.total));
 
-
-
     const leaders = contenderRolls.filter((roll) => roll.total === highestTotal);
-
-
 
     if (leaders.length === 1) {
 
       this.firstPlayerIndex.set(leaders[0].playerIndex);
 
-
-
       return 'winner';
 
     }
 
-
-
     const tiedPlayerIndexes = leaders.map((roll) => roll.playerIndex);
 
-
-
     this.firstPlayerContenders.set(tiedPlayerIndexes);
-
-
 
     /**
 
@@ -644,13 +600,9 @@ export class GameService {
 
     );
 
-
-
     return 'tie';
 
   }
-
-
 
   /**
 
@@ -665,8 +617,6 @@ export class GameService {
     return this.firstPlayerContenders().includes(playerIndex);
 
   }
-
-
 
   /**
 
@@ -706,11 +656,7 @@ export class GameService {
 
     if (this.setupStep() !== 'first-player-roll') return;
 
-
-
     const firstPlayerIndex = this.firstPlayerIndex();
-
-
 
     if (firstPlayerIndex === null) {
 
@@ -718,35 +664,23 @@ export class GameService {
 
     }
 
-
-
     this.playerService.placeHeroesOnStart();
 
     this.ensureStartTileExists();
 
-
-
     this.activePlayerIndex.set(firstPlayerIndex);
 
-
-
     this.turnService.resetMovements();
-
-
 
     this.phase.set('playing');
 
   }
-
-
 
   // ==========================================================
 
   // ENTRÉE DANS UNE SALLE
 
   // ==========================================================
-
-
 
   /**
 
@@ -792,15 +726,11 @@ export class GameService {
 
     const definition = this.dungeonService.getTileDefinition(tile);
 
-
-
     if (!definition || definition.kind !== 'room') {
 
       return;
 
     }
-
-
 
     /*
 
@@ -814,11 +744,7 @@ export class GameService {
 
     }
 
-
-
     const token = this.tokenBagService.draw();
-
-
 
     if (!token) {
 
@@ -826,13 +752,11 @@ export class GameService {
 
     }
 
-
-
     tile.tokenId = token.id;
 
+    tile.tokenFace = 'front';
+
   }
-
-
 
   /**
 
@@ -886,15 +810,11 @@ export class GameService {
 
     }
 
-
-
     if (revealRoom) {
 
       this.revealNewRoom(destinationTile);
 
     }
-
-
 
     if (!destinationTile.tokenId) {
 
@@ -902,11 +822,7 @@ export class GameService {
 
     }
 
-
-
     const token = getTokenDefinition(destinationTile.tokenId);
-
-
 
     if (!token) {
 
@@ -914,19 +830,43 @@ export class GameService {
 
     }
 
+    // Le verso d'un monstre contient une récompense, pas un adversaire.
 
+    if (token.kind === 'monster' && destinationTile.tokenFace === 'back') {
 
-    /*
+      const remainingRewards = this.remainingRewardsByTile.get(destinationTile) ?? token.rewards ?? [];
 
-     * La présence d'un jeton impose l'arrêt du déplacement,
+      if (!remainingRewards.length) return 'none';
 
-     * quelle que soit sa nature.
+      this.turnService.stopMovements();
 
-     */
+      this.pendingReward.set({
+
+        player,
+
+        monster: token,
+
+        rewardTile: destinationTile,
+
+        sourceTile,
+
+        remainingRewards: [...remainingRewards],
+
+      });
+
+      return 'reward';
+
+    }
+
+    // Un coffre déjà retourné ne peut pas être ouvert à nouveau.
+
+    if (token.kind === 'treasure' && destinationTile.tokenFace === 'back') {
+
+      return 'none';
+
+    }
 
     this.turnService.stopMovements();
-
-
 
     if (token.kind === 'monster') {
 
@@ -937,8 +877,6 @@ export class GameService {
         : 'none';
 
     }
-
-
 
     this.pendingTreasure.set({
 
@@ -952,21 +890,108 @@ export class GameService {
 
     });
 
-
-
     return 'treasure';
 
   }
 
+  // ==========================================================
 
+  // RÉCUPÉRATION DES RÉCOMPENSES
+
+  // ==========================================================
+
+  /**
+   * Consomme une récompense et conserve les autres sur le jeton.
+   * Le tour ne se termine que lorsque toutes les résolutions sont terminées.
+   */
+  private consumePendingReward(pending: PendingReward, rewardIndex: number): void {
+    const remainingRewards = pending.remainingRewards.filter((_, index) => index !== rewardIndex);
+
+    if (remainingRewards.length) {
+      this.remainingRewardsByTile.set(pending.rewardTile, remainingRewards);
+      this.pendingReward.set({ ...pending, remainingRewards });
+      return;
+    }
+
+    this.remainingRewardsByTile.delete(pending.rewardTile);
+    pending.rewardTile.tokenId = undefined;
+    pending.rewardTile.tokenFace = undefined;
+    this.pendingReward.set(null);
+    this.endTurn();
+  }
+
+  /** Récupère un équipement sans appliquer les autres récompenses implicitement. */
+  collectPendingEquipment(): boolean {
+    const pending = this.pendingReward();
+    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
+
+    const rewardIndex = pending.remainingRewards.findIndex(reward => reward.kind === 'equipment');
+    if (rewardIndex < 0) return false;
+
+    const reward = pending.remainingRewards[rewardIndex];
+    if (reward.kind !== 'equipment') return false;
+
+    const equipment = getEquipmentDefinition(reward.equipmentId);
+    if (!equipment || !this.playerService.addEquipment(pending.player, equipment)) return false;
+
+    this.consumePendingReward(pending, rewardIndex);
+    return true;
+  }
+
+  /** Détenteur actuel de l'unique malédiction. */
+  get cursedPlayer(): Player | null {
+    return this.playerService.players.find(player => player.isCursed) ?? null;
+  }
+
+  /**
+   * Attribue la malédiction à un autre joueur ou la laisse à son détenteur.
+   * target === null signifie conserver le détenteur actuel (si présent).
+   */
+  resolvePendingCurse(target: Player | null): boolean {
+    const pending = this.pendingReward();
+    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
+
+    const rewardIndex = pending.remainingRewards.findIndex(
+      reward => reward.kind === 'special' && reward.effect === 'curse',
+    );
+    if (rewardIndex < 0) return false;
+
+    const currentHolder = this.cursedPlayer;
+    if (target === null) {
+      if (!currentHolder) return false;
+    } else {
+      if (target === pending.player || !this.playerService.players.includes(target)) return false;
+      if (currentHolder && currentHolder !== target) {
+        this.playerService.setCursed(currentHolder, false);
+      }
+      this.playerService.setCursed(target, true);
+    }
+
+    this.consumePendingReward(pending, rewardIndex);
+    return true;
+  }
+
+  /**
+   * Laisse l'équipement sur la tuile pour une visite future.
+   * La malédiction, lorsqu'elle est présente, doit d'abord être résolue.
+   */
+  leavePendingReward(): boolean {
+    const pending = this.pendingReward();
+    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
+    if (pending.remainingRewards.some(reward => reward.kind === 'special' && reward.effect === 'curse')) {
+      return false;
+    }
+
+    this.pendingReward.set(null);
+    this.endTurn();
+    return true;
+  }
 
   // ==========================================================
 
   // GESTION DES TOURS
 
   // ==========================================================
-
-
 
   /**
 
@@ -1013,6 +1038,7 @@ export class GameService {
    */
 
   endTurn(): void {
+
     if (this.turnTransitionPending()) return;
 
     if (this.phase() !== 'playing') {
@@ -1020,8 +1046,6 @@ export class GameService {
       return;
 
     }
-
-
 
     /*
 
@@ -1043,8 +1067,6 @@ export class GameService {
 
     }
 
-
-
     /*
 
      * Un combat ou un coffre obligatoire doit être résolu avant
@@ -1059,13 +1081,9 @@ export class GameService {
 
     }
 
-
-
     const currentPlayerIndex = this.activePlayerIndex();
 
     const playerCount = this.playerService.players.length;
-
-
 
     if (currentPlayerIndex === null || playerCount === 0) {
 
@@ -1073,30 +1091,35 @@ export class GameService {
 
     }
 
-
-
     const nextPlayerIndex = (currentPlayerIndex + 1) % playerCount;
 
-
-
     // Conserver le joueur sortant pendant la pause entre les tours.
+
     this.turnTransitionPending.set(true);
+
     this.turnService.stopMovements();
 
     this.turnTransitionTimer = setTimeout(() => {
+
       this.turnTransitionTimer = null;
+
       if (this.phase() !== 'playing' || this.activePlayerIndex() !== currentPlayerIndex) {
+
         this.turnTransitionPending.set(false);
+
         return;
+
       }
+
       this.turnService.resetMovements();
+
       this.activePlayerIndex.set(nextPlayerIndex);
+
       this.turnTransitionPending.set(false);
+
     }, this.turnTransitionDelay);
 
   }
-
-
 
   /**
 
@@ -1110,8 +1133,6 @@ export class GameService {
 
   }
 
-
-
   /**
 
    * Première étape du SETUP : prépare le donjon.
@@ -1124,8 +1145,6 @@ export class GameService {
 
   }
 
-
-
   /**
 
    * Réinitialise l'état transitoire d'exploration.
@@ -1137,8 +1156,6 @@ export class GameService {
     this.explorationService.initialize();
 
   }
-
-
 
   /**
 
@@ -1153,8 +1170,6 @@ export class GameService {
     this.tileDeckService.initialize();
 
   }
-
-
 
   /**
 
@@ -1190,8 +1205,6 @@ export class GameService {
 
   }
 
-
-
   /**
 
    * Garantit que le donjon possède bien sa tuile de départ.
@@ -1212,21 +1225,15 @@ export class GameService {
 
     const startTile = this.dungeonService.getTileAt(0, 0);
 
-
-
     if (startTile?.definitionId === 'start') {
 
       return;
 
     }
 
-
-
     this.dungeonService.initialize();
 
   }
-
-
 
   /**
 
@@ -1243,8 +1250,6 @@ export class GameService {
     return this.playerService.players.length;
 
   }
-
-
 
   /**
 
@@ -1264,8 +1269,6 @@ export class GameService {
 
   }
 
-
-
   /**
 
    * Joueur actuellement actif, lorsqu'une aventure est en cours.
@@ -1276,21 +1279,15 @@ export class GameService {
 
     const activePlayerIndex = this.activePlayerIndex();
 
-
-
     if (activePlayerIndex === null) {
 
       return null;
 
     }
 
-
-
     return this.playerService.players[activePlayerIndex] ?? null;
 
   }
-
-
 
   /**
 
@@ -1316,8 +1313,6 @@ export class GameService {
 
     const playerCount = this.playerService.players.length;
 
-
-
     if (
 
       playerCount === 0 ||
@@ -1333,8 +1328,6 @@ export class GameService {
       return [];
 
     }
-
-
 
     return Array.from(
 
