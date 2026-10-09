@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 
 import { getTokenDefinition } from '../data/token-definitions';
 import { Player } from '../models/player';
+import { PlayerService } from './player.service';
 import { PlacedTile } from '../models/tile';
 import { MonsterTokenDefinition } from '../models/token';
 
@@ -59,6 +60,8 @@ export interface CombatResult {
   providedIn: 'root',
 })
 export class CombatService {
+  constructor(private readonly playerService: PlayerService) {}
+
   readonly pendingCombat = signal<PendingCombat | null>(null);
 
   /**
@@ -191,7 +194,7 @@ export class CombatService {
     }
 
     if (outcome === 'defeat') {
-      combat.player.lives = Math.max(0, combat.player.lives - 1);
+      this.playerService.loseLife(combat.player);
     }
 
     combat.player.position = {

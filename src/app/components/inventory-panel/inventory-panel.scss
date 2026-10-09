@@ -123,3 +123,17 @@
 
   pointer-events: none;
 }
+
+/* Signal discret d'acquisition, sans inventer d'asset d'objet. */
+.inventory-panel--acquired .inventory-panel__board {
+  animation: inventory-acquired 1000ms ease-out both;
+}
+
+@keyframes inventory-acquired {
+  0%, 100% { filter: drop-shadow(0 6px 6px rgba(0, 0, 0, .55)); }
+  35% { filter: drop-shadow(0 0 12px rgba(245, 190, 65, .85)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inventory-panel__board { animation: none !important; }
+}

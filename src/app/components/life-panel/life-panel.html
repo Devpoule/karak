@@ -1,13 +1,9 @@
 <section
   class="life-panel"
+  [class.life-panel--damage]="feedback === 'damage'"
+  [class.life-panel--heal]="feedback === 'heal'"
   [attr.aria-label]="'Points de vie : ' + lives + ' sur 5'"
 >
-  <!--
-    Plateau de vie officiel.
-
-    Les marqueurs sont superposés aux cinq emplacements
-    déjà dessinés dans l'asset.
-  -->
   <img
     class="life-panel__board"
     src="/assets/board/life-panel.png"
@@ -15,18 +11,12 @@
     draggable="false"
   />
 
-  <div
-    class="life-panel__slots"
-    aria-hidden="true"
-  >
+  <div class="life-panel__slots" aria-hidden="true">
     @for (slot of lifeSlots; track slot.index) {
       <img
         class="life-panel__point"
-        [src]="
-          slot.active
-            ? '/assets/tokens/life-point.png'
-            : '/assets/tokens/dead-point.png'
-        "
+        [class.life-panel__point--changed]="isChangedSlot(slot.index)"
+        [src]="slot.active ? '/assets/tokens/life-point.png' : '/assets/tokens/dead-point.png'"
         alt=""
         draggable="false"
       />
