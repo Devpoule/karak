@@ -82,24 +82,14 @@
 
 .inventory-panel__item {
   display: block;
-  width: 96%;
-  height: 96%;
+  width: 90%;
+  max-width: 90%;
+  height: 90%;
+  max-height: 90%;
   object-fit: contain;
+  object-position: center;
   user-select: none;
   pointer-events: none;
-}
-
-/* key.png possède une marge transparente nettement plus large que les
- * illustrations d'équipement. La transformation augmente uniquement sa
- * présence visuelle, sans agrandir la case ni modifier la mise en page. */
-.inventory-panel__group--key .inventory-panel__item {
-  width: 96%;
-  height: 96%;
-  transform: scale(1.35);
-  transform-origin: center;
-  filter:
-    drop-shadow(0 0 1px rgba(255, 224, 135, 0.95))
-    drop-shadow(0 0 4px rgba(219, 153, 38, 0.72));
 }
 
 /* Retour visuel du panneau hérité de la version stabilisée. */

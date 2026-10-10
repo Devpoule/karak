@@ -46,15 +46,26 @@
               draggable="false"
             />
           }
-          @if (displayedAttack !== null) {
-            <span class="combat-overlay__fighter-score combat-overlay__fighter-score--hero">
-              {{ displayedAttack }}
-            </span>
+          @for (event of magicBoltFeedback(); track event) {
+            <div class="combat-overlay__magic-bolt-feedback" aria-live="polite">
+              <img src="/assets/tokens/fire-sword.png" alt="" draggable="false" />
+              <span>Tir magique +1</span>
+            </div>
           }
           @if (displayedWeaponBonus !== null && displayedWeaponBonus > 0) {
             <span class="combat-overlay__weapon-bonus">
               +{{ displayedWeaponBonus }}
             </span>
+          }
+          @if (displayedWeapons.length > 0) {
+            <div class="combat-overlay__weapon-list" aria-label="Armes utilisées pour le combat">
+              @for (weapon of displayedWeapons; track weapon.id + $index) {
+                <div class="combat-overlay__weapon-entry">
+                  <img [src]="weapon.image" [alt]="weapon.name" draggable="false" />
+                  <span>{{ weapon.name }} +{{ weapon.attackBonus }}</span>
+                </div>
+              }
+            </div>
           }
         </div>
 
@@ -80,6 +91,7 @@
             <div
               class="combat-overlay__dice"
               [class.combat-overlay__dice--rolling]="isRolling"
+              [class.combat-overlay__dice--magic-pulse]="magicBoltScorePulse()"
               aria-label="Dés du combat"
             >
               <div
@@ -124,9 +136,6 @@
             alt="Adversaire"
             draggable="false"
             />
-            <span class="combat-overlay__fighter-score combat-overlay__fighter-score--monster">
-              {{ currentCombat.monster.strength }}
-            </span>
         </div>
 
         <div class="combat-overlay__fighter-name">{{ getMonsterName() }}</div>

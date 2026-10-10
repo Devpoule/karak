@@ -189,6 +189,31 @@ describe('CombatService séparation du lancer et de la résolution', () => {
     vi.restoreAllMocks();
   });
 
+  it.each([
+    ['daggers', 'defeat'],
+    ['sword', 'tie'],
+    ['axe', 'victory'],
+  ] as const)('détermine le verdict 3 + 1 avec %s contre force 6', (weaponId, expectedOutcome) => {
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.4).mockReturnValueOnce(0);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const combatService = new CombatService(playerService);
+    const player = playerService.players[0];
+    playerService.addEquipment(player, getEquipmentDefinition(weaponId)!);
+    const spider = {
+      x: 1, y: 0, definitionId: 'room-1', tokenId: 'giant-spider', tokenFace: 'front',
+    } as PlacedTile;
+
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, spider);
+    const roll = combatService.rollPendingCombat();
+    const result = combatService.resolvePendingCombat();
+
+    expect(roll?.diceTotal).toBe(4);
+    expect(roll?.equipmentBonus).toBe({ daggers: 1, sword: 2, axe: 3 }[weaponId]);
+    expect(result?.outcome).toBe(expectedOutcome);
+    vi.restoreAllMocks();
+  });
+
   it('conserve le bonus d’armes enregistré malgré une modification ultérieure', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     const playerService = new PlayerService();
@@ -200,10 +225,13 @@ describe('CombatService séparation du lancer et de la résolution', () => {
 
     combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, tile);
     combatService.rollPendingCombat();
+    expect(combatService.pendingCombatRoll()?.weapons.map(weapon => weapon.id)).toEqual(['sword']);
     playerService.removeEquipment(player, 'weapon', 0);
 
     expect(combatService.pendingCombatRoll()?.equipmentBonus).toBe(2);
-    expect(combatService.resolvePendingCombat()?.attackPower).toBe(4);
+    const result = combatService.resolvePendingCombat();
+    expect(result?.weapons.map(weapon => weapon.id)).toEqual(['sword']);
+    expect(result?.attackPower).toBe(4);
     vi.restoreAllMocks();
   });
 

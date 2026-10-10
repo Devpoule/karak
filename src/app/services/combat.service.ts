@@ -1,8 +1,9 @@
 
-import { Injectable, signal } from '@angular/core';
+import { Injectable, isDevMode, signal } from '@angular/core';
 
 import { getTokenDefinition } from '../data/token-definitions';
 import { Player } from '../models/player';
+import { WeaponEquipment } from '../models/equipment';
 import { PlayerService } from './player.service';
 import { PlacedTile } from '../models/tile';
 import { MonsterTokenDefinition } from '../models/token';
@@ -31,6 +32,7 @@ export interface CombatRoll {
   diceTotal: number;
   equipmentBonus: number;
   heroBonus: number;
+  weapons: WeaponEquipment[];
   attackPower: number;
   monsterStrength: number;
   magicBoltsUsed: number;
@@ -47,6 +49,7 @@ export interface CombatResult {
   diceTotal: number;
   equipmentBonus: number;
   heroBonus: number;
+  weapons: WeaponEquipment[];
   attackPower: number;
   monsterStrength: number;
   magicBoltsUsed: number;
@@ -137,6 +140,9 @@ export class CombatService {
     const diceTotal = die1 + die2;
     const equipmentBonus = combat.player.inventory.weapons
       .reduce((total, weapon) => total + (weapon?.attackBonus ?? 0), 0);
+    const weapons = combat.player.inventory.weapons
+      .filter((weapon): weapon is WeaponEquipment => weapon !== null)
+      .map(weapon => ({ ...weapon }));
     const heroBonus = 0;
     const roll: CombatRoll = {
       player: combat.player,
@@ -146,11 +152,13 @@ export class CombatService {
       diceTotal,
       equipmentBonus,
       heroBonus,
+      weapons,
       attackPower: diceTotal + equipmentBonus + heroBonus,
       monsterStrength: combat.monster.strength,
       magicBoltsUsed: 0,
     };
     this.pendingCombatRoll.set(roll);
+    this.logCombatDiagnostic('roll', roll, combat.player.inventory.weapons);
     return roll;
   }
 
@@ -215,6 +223,8 @@ export class CombatService {
       outcome,
     };
 
+    this.logCombatDiagnostic('resolution', result, combat.player.inventory.weapons);
+
     this.consumeUsedMagicBolts(combat.player, roll.magicBoltsUsed);
 
     this.applyOutcome(combat, outcome);
@@ -269,6 +279,43 @@ export class CombatService {
    */
   private rollDie(): number {
     return Math.floor(Math.random() * 6) + 1;
+  }
+
+  /**
+   * Trace de diagnostic disponible uniquement hors production.
+   * Cette méthode observe les snapshots du combat et ne participe jamais
+   * au calcul ni à la mutation de son résultat.
+   */
+  private logCombatDiagnostic(
+    phase: 'roll' | 'resolution',
+    snapshot: CombatRoll | CombatResult,
+    weapons: Player['inventory']['weapons'],
+  ): void {
+    if (!isDevMode()) return;
+
+    const magicBonus = snapshot.magicBoltsUsed;
+    const weaponBonus = snapshot.equipmentBonus - magicBonus;
+    const calculatedAttack = snapshot.diceTotal + weaponBonus + snapshot.heroBonus + magicBonus;
+    const payload = {
+      phase,
+      heroId: snapshot.player.heroId ?? null,
+      weapons: weapons.map(weapon => weapon
+        ? { id: weapon.id, attackBonus: weapon.attackBonus ?? 0 }
+        : null),
+      diceTotal: snapshot.diceTotal,
+      equipmentBonus: weaponBonus,
+      heroBonus: snapshot.heroBonus,
+      magicBonus,
+      attackPower: snapshot.attackPower,
+      monsterStrength: snapshot.monsterStrength,
+      verdict: 'outcome' in snapshot ? snapshot.outcome : 'pending',
+      formulaMatches: calculatedAttack === snapshot.attackPower,
+    };
+
+    console.debug('[Karak combat diagnostic]', payload);
+    if (!payload.formulaMatches) {
+      console.warn('[Karak combat diagnostic] incohérence de formule', payload);
+    }
   }
 
   private countMagicBolts(player: Player): number {

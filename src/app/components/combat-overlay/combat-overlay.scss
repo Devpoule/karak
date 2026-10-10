@@ -189,25 +189,6 @@
   min-width: 0;
 }
 
-.combat-overlay__fighter-score {
-  position: absolute;
-  z-index: 4;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border: 2px solid rgba(255, 237, 170, 0.9);
-  border-radius: 50%;
-  color: #fff7c2;
-  background: rgba(31, 16, 10, 0.82);
-  box-shadow: 0 0 14px rgba(255, 207, 74, 0.7), 0 3px 8px rgba(0, 0, 0, 0.75);
-  font-size: 1.45rem;
-  font-weight: 950;
-}
-
-.combat-overlay__fighter-score--hero { left: 8%; bottom: 7%; }
-.combat-overlay__fighter-score--monster { right: 8%; bottom: 7%; color: #ffd7d0; border-color: rgba(255, 125, 106, 0.9); box-shadow: 0 0 14px rgba(255, 74, 55, 0.65), 0 3px 8px rgba(0, 0, 0, 0.75); }
-
 .combat-overlay__weapon-bonus {
   position: absolute;
   top: 4%;
@@ -222,6 +203,57 @@
   font-weight: 900;
   transform: translateX(-50%);
 }
+
+.combat-overlay__weapon-list {
+  position: absolute;
+  top: 7%;
+  left: 2%;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 46%;
+}
+
+.combat-overlay__weapon-entry {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 5px 2px 2px;
+  border-radius: 999px;
+  color: #ffe9a3;
+  background: rgba(34, 20, 12, .82);
+  box-shadow: 0 0 9px rgba(255, 196, 66, .5);
+  font-size: .68rem;
+  font-weight: 800;
+  white-space: nowrap;
+  animation: combat-weapon-entry 520ms ease-out both;
+}
+
+.combat-overlay__weapon-entry:nth-child(2) { animation-delay: 100ms; }
+.combat-overlay__weapon-entry img { width: 24px; height: 24px; object-fit: contain; border-radius: 4px; }
+
+.combat-overlay__magic-bolt-feedback {
+  position: absolute;
+  left: 50%;
+  bottom: 22%;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px 3px 4px;
+  border-radius: 999px;
+  color: #dffaff;
+  background: rgba(21, 39, 57, .9);
+  box-shadow: 0 0 14px rgba(67, 204, 255, .8);
+  font-size: .75rem;
+  font-weight: 900;
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: combat-magic-bolt-feedback 850ms ease-out both;
+}
+
+.combat-overlay__magic-bolt-feedback img { width: 28px; height: 28px; object-fit: contain; }
 
 .combat-overlay__fighter-image {
   display: block;
@@ -466,6 +498,10 @@
 
 .combat-overlay__dice--rolling .combat-overlay__die:nth-child(2) {
   animation-direction: alternate-reverse;
+}
+
+.combat-overlay__dice--magic-pulse {
+  animation: combat-score-pulse 520ms ease-out both;
 }
 
 .combat-overlay__die--stopped {
@@ -1089,6 +1125,24 @@
   18% { opacity: 1; }
   72% { opacity: .82; }
   100% { opacity: 0; transform: translateX(360%) scaleY(1); }
+}
+
+@keyframes combat-weapon-entry {
+  from { opacity: 0; transform: translateX(-8px) scale(.88); filter: brightness(1.8); }
+  65% { opacity: 1; transform: translateX(0) scale(1.04); filter: brightness(1.25); }
+  to { opacity: 1; transform: translateX(0) scale(1); filter: brightness(1); }
+}
+
+@keyframes combat-magic-bolt-feedback {
+  0% { opacity: 0; transform: translate(-50%, 8px) scale(.8); }
+  25% { opacity: 1; transform: translate(-50%, 0) scale(1.05); }
+  100% { opacity: 0; transform: translate(-50%, -12px) scale(1); }
+}
+
+@keyframes combat-score-pulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  35% { transform: scale(1.2); filter: brightness(1.7) drop-shadow(0 0 12px #62dcff); }
+  100% { transform: scale(1); filter: brightness(1); }
 }
 
 @keyframes combat-victory-glow {

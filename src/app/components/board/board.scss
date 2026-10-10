@@ -648,25 +648,34 @@
 .board__reward-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
 .board__reward-actions button:not(:disabled):hover { filter: brightness(1.2); }
 
-/* Équipements déposés : superposition sans modifier la géométrie des tuiles. */
+/*
+ * Équipements au sol : tous les objets utilisent la même référence visuelle,
+ * quelle que soit leur provenance. La taille reste proportionnelle à la tuile
+ * et ne dépend donc ni du contenu de l'image ni du nombre d'objets.
+ */
 .board__ground-items {
   position: absolute;
   right: 4%;
   bottom: 4%;
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+  align-content: flex-start;
   gap: 2px;
-  width: 70%;
+  width: calc((var(--ground-item-size) * 2) + 2px);
   pointer-events: none;
+
+  /* Une tuile de 144 px produit une case de 42 px, plafonnée pour
+   * préserver la lisibilité du décor et du héros. */
+  --ground-item-size: clamp(32px, calc(var(--tile-size) * 0.30), 42px);
 }
 
 .board__ground-item {
-  /* Une taille flex-basis stable évite qu'un objet échangé rétrécisse
-   * lorsque plusieurs équipements partagent la même tuile. */
-  flex: 0 0 clamp(28px, 38%, 42px);
-  width: clamp(28px, 38%, 42px);
-  max-width: 42px;
+  /* La taille est indépendante du type et de la provenance de l'objet. */
+  flex: 0 0 var(--ground-item-size);
+  width: var(--ground-item-size);
+  height: var(--ground-item-size);
   padding: 0;
   border: 0;
   background: transparent;

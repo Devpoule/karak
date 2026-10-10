@@ -56,6 +56,8 @@ export class CombatOverlay implements OnDestroy {
 
   readonly presentedResult =
     signal<CombatResult | null>(null);
+  readonly magicBoltFeedback = signal<number[]>([]);
+  readonly magicBoltScorePulse = signal(false);
 
   private trackedCombat: PendingCombat | null = null;
 
@@ -70,8 +72,8 @@ export class CombatOverlay implements OnDestroy {
    * Durée de lecture du verdict pour une IA.
    */
   private readonly aiResultDuration = 3600;
-  /** Lecture courte du verdict d'égalité avant reprise automatique. */
-  private readonly tieResultDuration = 1800;
+  /** Lecture brève du verdict d'égalité avant reprise automatique. */
+  private readonly tieResultDuration = 900;
 
   /**
    * Empêche deux résolutions simultanées.
@@ -138,13 +140,6 @@ export class CombatOverlay implements OnDestroy {
     return this.combatService.pendingCombatRoll()?.monsterStrength ?? null;
   }
 
-  /** Attaque actuellement enregistrée par le moteur de combat. */
-  get displayedAttack(): number | null {
-    return this.combatService.pendingCombatRoll()?.attackPower
-      ?? this.result?.attackPower
-      ?? null;
-  }
-
   /** Bonus d'armes enregistré, sans les Tirs magiques déjà utilisés. */
   get displayedWeaponBonus(): number | null {
     const roll = this.combatService.pendingCombatRoll();
@@ -152,6 +147,13 @@ export class CombatOverlay implements OnDestroy {
     return this.result
       ? this.result.equipmentBonus - this.result.magicBoltsUsed
       : null;
+  }
+
+  /** Armes capturées au lancer, indépendamment de l'inventaire courant. */
+  get displayedWeapons() {
+    return this.combatService.pendingCombatRoll()?.weapons
+      ?? this.result?.weapons
+      ?? [];
   }
 
   get initialAttack(): number | null {
@@ -169,9 +171,22 @@ export class CombatOverlay implements OnDestroy {
 
   useMagicBolt(): void {
     if (!this.isDecisionVisible || !this.resolving) return;
-    if (this.combatService.useMagicBolt() && this.remainingMagicBolts === 0) {
-      this.resolveCombatAfterRoll();
+    if (!this.combatService.useMagicBolt()) return;
+    this.triggerMagicBoltFeedback();
+    if (this.remainingMagicBolts === 0) this.resolveCombatAfterRoll();
+  }
+
+  private triggerMagicBoltFeedback(count = 1): void {
+    for (let index = 0; index < count; index++) {
+      const eventId = Date.now() + index + Math.random();
+      this.magicBoltFeedback.update(events => [...events, eventId]);
+      this.schedule(() => {
+        this.magicBoltFeedback.update(events => events.filter(event => event !== eventId));
+      }, 850 + index * 80);
     }
+    this.magicBoltScorePulse.set(false);
+    queueMicrotask(() => this.magicBoltScorePulse.set(true));
+    this.schedule(() => this.magicBoltScorePulse.set(false), 520 + count * 80);
   }
 
   // ==========================================================
@@ -304,6 +319,8 @@ export class CombatOverlay implements OnDestroy {
 
     this.presentedCombat.set(combat);
     this.presentedResult.set(null);
+    this.magicBoltFeedback.set([]);
+    this.magicBoltScorePulse.set(false);
 
     this.displayedDice.set({
       die1: this.randomDie(),
@@ -400,7 +417,10 @@ export class CombatOverlay implements OnDestroy {
       if (roll.player.controller === 'ai') {
         this.schedule(() => {
           if (this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() === roll) {
+            const boltsBefore = roll.magicBoltsUsed;
             this.aiService.resolveMagicBoltDecision();
+            const boltsUsed = (this.combatService.pendingCombatRoll()?.magicBoltsUsed ?? boltsBefore) - boltsBefore;
+            if (boltsUsed > 0) this.triggerMagicBoltFeedback(boltsUsed);
             this.resolveCombatAfterRoll();
           }
         }, this.aiResultDuration);
