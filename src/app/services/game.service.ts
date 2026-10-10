@@ -110,8 +110,7 @@ export class GameService {
   /**
    * Coffre actuellement en attente de résolution.
    *
-   * Cette tranche ne gère pas encore son ouverture : elle
-   * représente uniquement l'obligation de s'arrêter dessus.
+   * L'ouverture est résolue explicitement par `openPendingTreasure`.
    */
   readonly pendingTreasure = signal<PendingTreasure | null>(null);
 
@@ -132,6 +131,8 @@ export class GameService {
 
   /** Une transition bloque les actions jusqu'à l'arrivée du prochain joueur. */
   readonly turnTransitionPending = signal(false);
+  /** Révision UI émise lorsqu'un héros entre réellement en tour de repos. */
+  readonly recoveryRevision = signal(0);
   private readonly turnTransitionDelay = 2800;
   private turnTransitionTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -382,6 +383,7 @@ export class GameService {
     this.ensureStartTileExists();
     this.activePlayerIndex.set(firstPlayerIndex);
     this.turnService.resetMovements();
+    this.prepareActivePlayerTurn();
     this.phase.set('playing');
   }
 
@@ -452,6 +454,7 @@ export class GameService {
     destinationTile: PlacedTile,
     revealRoom = false,
   ): TileEntryResolution {
+    if (player.recoveryState === 'resting') return 'none';
     if (this.hasPendingTileResolution) {
       return 'none';
     }
@@ -477,11 +480,31 @@ export class GameService {
         sourceTile,
         remainingRewards: [...remainingRewards],
       });
+      const curseTargets = this.getPendingCurseTargets();
+      if (curseTargets.length === 1) {
+        this.resolvePendingCurse(curseTargets[0]);
+      }
+      if (player.controller === 'human') {
+        const equipmentReward = remainingRewards.find(reward => reward.kind === 'equipment');
+        if (equipmentReward?.kind === 'equipment') {
+          const equipment = getEquipmentDefinition(equipmentReward.equipmentId);
+          if (equipment && this.playerService.canAddEquipment(player, equipment)) {
+            this.collectPendingEquipment();
+          }
+        }
+      }
       return 'reward';
     }
     // Un coffre déjà retourné ne peut pas être ouvert à nouveau.
     if (token.kind === 'treasure' && destinationTile.tokenFace === 'back') {
       return this.offerGroundEquipment(player, destinationTile);
+    }
+    // Un coffre fermé sans clé ne constitue pas une résolution obligatoire.
+    // Le héros peut poursuivre son déplacement et reviendra l'ouvrir plus tard.
+    if (token.kind === 'treasure'
+      && token.id === 'closed-chest'
+      && player.inventory.key === null) {
+      return 'none';
     }
     this.turnService.stopMovements();
     if (token.kind === 'monster') {
@@ -496,6 +519,41 @@ export class GameService {
       sourceTile,
     });
     return 'treasure';
+  }
+
+  /**
+   * Ouvre le coffre fermé actuellement en attente.
+   *
+   * La clé est consommée définitivement avant que le jeton ne soit
+   * retiré de la tuile. Les équipements déposés sur cette tuile sont
+   * stockés séparément et restent donc inchangés.
+   */
+  openPendingTreasure(): boolean {
+    const pending = this.pendingTreasure();
+    if (
+      !pending
+      || this.phase() !== 'playing'
+      || pending.player !== this.activePlayer
+      || pending.treasure.id !== 'closed-chest'
+      || pending.treasureTile.tokenId !== 'closed-chest'
+    ) {
+      return false;
+    }
+
+    const key = this.playerService.removeEquipment(pending.player, 'key', 0);
+    if (!key) {
+      return false;
+    }
+
+    if (!this.playerService.addTreasure(pending.player, 'opened-chest')) {
+      return false;
+    }
+
+    pending.treasureTile.tokenId = undefined;
+    pending.treasureTile.tokenFace = undefined;
+    this.pendingTreasure.set(null);
+    this.endTurn();
+    return true;
   }
 
   // ==========================================================
@@ -539,6 +597,9 @@ export class GameService {
     if (!equipment) return 'none';
     this.turnService.stopMovements();
     this.pendingGroundEquipment.set({ player, tile, equipment, index: 0 });
+    if (player.controller === 'human' && this.playerService.canAddEquipment(player, equipment)) {
+      this.collectGroundEquipment();
+    }
     return 'equipment';
   }
 
@@ -572,6 +633,9 @@ export class GameService {
     if (!equipment) return false;
     this.turnService.stopMovements();
     this.pendingGroundEquipment.set({ player, tile, equipment, index });
+    if (this.playerService.canAddEquipment(player, equipment)) {
+      this.collectGroundEquipment();
+    }
     return true;
   }
 
@@ -643,6 +707,36 @@ export class GameService {
     return true;
   }
 
+  /**
+   * Récupère la récompense trésor révélée après une victoire.
+   *
+   * L'identifiant de la récompense reste celui du jeton physique ;
+   * le modèle joueur reçoit le type métier correspondant à son origine.
+   */
+  collectPendingTreasure(): boolean {
+    const pending = this.pendingReward();
+    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) {
+      return false;
+    }
+
+    const rewardIndex = pending.remainingRewards.findIndex(reward => reward.kind === 'treasure');
+    if (rewardIndex < 0) return false;
+    const reward = pending.remainingRewards[rewardIndex];
+    if (reward.kind !== 'treasure') return false;
+
+    const treasure = reward.tokenId === 'open-chest'
+      ? 'monster-treasure'
+      : reward.tokenId === 'treasure'
+        ? 'dragon-ruby'
+        : undefined;
+    if (!treasure || !this.playerService.addTreasure(pending.player, treasure)) {
+      return false;
+    }
+
+    this.consumePendingReward(pending, rewardIndex);
+    return true;
+  }
+
   /** Remplace un équipement plein et dépose l'ancien sur la tuile du combat. */
   replacePendingEquipment(slotIndex: number): boolean {
     const pending = this.pendingReward();
@@ -663,6 +757,17 @@ export class GameService {
   /** Détenteur actuel de l'unique malédiction. */
   get cursedPlayer(): Player | null {
     return this.playerService.players.find(player => player.isCursed) ?? null;
+  }
+
+  /** Retourne les cibles légales de la malédiction actuellement en attente. */
+  getPendingCurseTargets(): Player[] {
+    const pending = this.pendingReward();
+    if (!pending || !pending.remainingRewards.some(
+      reward => reward.kind === 'special' && reward.effect === 'curse',
+    )) {
+      return [];
+    }
+    return this.playerService.players.filter(player => player !== pending.player);
   }
 
   /**
@@ -760,6 +865,7 @@ export class GameService {
       return;
     }
     const nextPlayerIndex = (currentPlayerIndex + 1) % playerCount;
+    const currentPlayer = this.activePlayer;
     // Conserver le joueur sortant pendant la pause entre les tours.
     this.turnTransitionPending.set(true);
     this.turnService.stopMovements();
@@ -769,10 +875,37 @@ export class GameService {
         this.turnTransitionPending.set(false);
         return;
       }
+      if (currentPlayer) this.playerService.completeRecoveryTurn(currentPlayer);
       this.turnService.resetMovements();
       this.activePlayerIndex.set(nextPlayerIndex);
+      this.prepareActivePlayerTurn();
       this.turnTransitionPending.set(false);
+      this.scheduleRecoveryTurnCompletion(nextPlayerIndex);
     }, this.turnTransitionDelay);
+  }
+
+  /** Prépare le tour actif, y compris le tour obligatoire de récupération. */
+  private prepareActivePlayerTurn(): void {
+    const player = this.activePlayer;
+    if (!player || player.recoveryState !== 'pending') return;
+    if (this.playerService.beginRecoveryTurn(player)) {
+      this.recoveryRevision.update(revision => revision + 1);
+    }
+    this.turnService.stopMovements();
+  }
+
+  /** Termine automatiquement un tour consacré au repos, quel que soit le contrôleur. */
+  private scheduleRecoveryTurnCompletion(playerIndex: number): void {
+    queueMicrotask(() => {
+      if (
+        this.phase() === 'playing'
+        && !this.turnTransitionPending()
+        && this.activePlayerIndex() === playerIndex
+        && this.activePlayer?.recoveryState === 'resting'
+      ) {
+        this.endTurn();
+      }
+    });
   }
 
   /**

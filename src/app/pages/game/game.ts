@@ -3,6 +3,7 @@ import {
   OnDestroy,
   OnInit,
   effect,
+  signal,
 } from '@angular/core';
 
 import { GameHeader } from '../../components/game-header/game-header';
@@ -13,6 +14,8 @@ import { PlayerHud } from '../../components/player-hud/player-hud';
 import { AiService } from '../../services/ai.service';
 import { CombatService } from '../../services/combat.service';
 import { GameService } from '../../services/game.service';
+import { getHeroDefinition } from '../../data/hero-definitions';
+import { Player } from '../../models/player';
 
 /**
  * Page principale du jeu.
@@ -28,6 +31,7 @@ import { GameService } from '../../services/game.service';
   styleUrl: './game.scss',
 })
 export class Game implements OnInit, OnDestroy {
+  readonly turnAnnouncement = signal<{ player: Player; index: number; recovery: boolean } | null>(null);
   /** Pause entre deux actions du même joueur IA. */
   private readonly aiActionDelay = 1800;
 
@@ -40,6 +44,9 @@ export class Game implements OnInit, OnDestroy {
   private aiTurnRunning = false;
   private aiRunId = 0;
   private destroyed = false;
+  private unsupportedAiResolution: object | null = null;
+  private announcementTimer: ReturnType<typeof setTimeout> | null = null;
+  private announcedTurnKey: string | null = null;
 
   constructor(
     readonly gameService: GameService,
@@ -49,9 +56,22 @@ export class Game implements OnInit, OnDestroy {
     effect(() => {
       const phase = this.gameService.phase();
       const activePlayerIndex = this.gameService.activePlayerIndex();
+      const recoveryRevision = this.gameService.recoveryRevision();
 
-      if (phase !== 'playing' || activePlayerIndex === null || this.destroyed) {
+      if (phase !== 'playing') {
+        this.announcedTurnKey = null;
+        this.turnAnnouncement.set(null);
         return;
+      }
+      if (activePlayerIndex === null || this.destroyed) {
+        return;
+      }
+
+      const key = `${phase}:${activePlayerIndex}:${recoveryRevision}`;
+      if (key !== this.announcedTurnKey) {
+        this.announcedTurnKey = key;
+        const player = this.gameService.activePlayer;
+        if (player) this.showTurnAnnouncement(player, activePlayerIndex);
       }
 
       if (this.gameService.activePlayer?.controller !== 'ai') {
@@ -73,6 +93,39 @@ export class Game implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroyed = true;
     this.aiRunId++;
+    this.clearAnnouncementTimer();
+  }
+
+  getHeroName(player: Player): string {
+    return player.heroId ? (getHeroDefinition(player.heroId)?.name ?? 'Héros') : 'Héros';
+  }
+
+  getHeroPortrait(player: Player): string | undefined {
+    return player.heroId ? getHeroDefinition(player.heroId)?.character : undefined;
+  }
+
+  private showTurnAnnouncement(player: Player, index: number): void {
+    this.clearAnnouncementTimer();
+    queueMicrotask(() => {
+      if (this.destroyed || this.gameService.activePlayerIndex() !== index) return;
+      this.turnAnnouncement.set({
+        player,
+        index,
+        recovery: player.recoveryState === 'resting',
+      });
+      this.announcementTimer = setTimeout(() => {
+        this.turnAnnouncement.set(null);
+        this.announcementTimer = null;
+      }, 1400);
+    });
+  }
+
+  private clearAnnouncementTimer(): void {
+    if (this.announcementTimer !== null) {
+      clearTimeout(this.announcementTimer);
+      this.announcementTimer = null;
+    }
+    this.turnAnnouncement.set(null);
   }
 
   /** Le combat bloque l'IA jusqu'à la fermeture du résultat. */
@@ -91,6 +144,7 @@ export class Game implements OnInit, OnDestroy {
       && this.gameService.phase() === 'playing'
       && this.gameService.activePlayerIndex() === playerIndex
       && this.gameService.activePlayer?.controller === 'ai'
+      && !this.gameService.turnTransitionPending()
     );
   }
 
@@ -120,7 +174,27 @@ export class Game implements OnInit, OnDestroy {
     try {
       while (this.canContinue(runId, playerIndex)) {
         // L'overlay garde la maîtrise des combats et de leur résultat.
-        if (this.combatBlocksAi || this.gameService.hasPendingTileResolution) {
+        if (this.combatBlocksAi) {
+          await this.wait(this.aiBlockedCheckDelay);
+          continue;
+        }
+
+        if (this.gameService.hasPendingTileResolution) {
+          const resolution = this.aiService.resolveMandatoryAction();
+          if (resolution === 'resolved') {
+            this.unsupportedAiResolution = null;
+            await this.wait(this.aiBlockedCheckDelay);
+            continue;
+          }
+          if (resolution.startsWith('unsupported:')) {
+            const pending = this.gameService.pendingReward()
+              ?? this.gameService.pendingTreasure()
+              ?? this.gameService.pendingGroundEquipment();
+            if (pending !== this.unsupportedAiResolution) {
+              this.unsupportedAiResolution = pending;
+              console.warn(`Résolution obligatoire IA non prise en charge : ${resolution}.`, pending);
+            }
+          }
           await this.wait(this.aiBlockedCheckDelay);
           continue;
         }
@@ -149,6 +223,7 @@ export class Game implements OnInit, OnDestroy {
         && runId === this.aiRunId
         && this.gameService.phase() === 'playing'
         && this.gameService.activePlayer?.controller === 'ai'
+        && !this.gameService.turnTransitionPending()
       ) {
         queueMicrotask(() => {
           if (!this.destroyed) {

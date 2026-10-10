@@ -11,7 +11,8 @@ import { PlayerService } from '../../services/player.service';
 import { DungeonService } from '../../services/dungeon.service';
 import { TurnService } from '../../services/turn.service';
 import { ExplorationService, PendingTilePlacement } from '../../services/exploration.service';
-import { GameService, PendingReward } from '../../services/game.service';
+import { GameService, PendingReward, PendingTreasure } from '../../services/game.service';
+import { TREASURE_POINTS, Treasure } from '../../models/treasure';
 import { CombatOverlay } from '../combat-overlay/combat-overlay';
 
 /**
@@ -153,7 +154,9 @@ export class Board {
    * - si aucun combat obligatoire n'attend sa résolution.
    */
   get movementControlsEnabled(): boolean {
-    return this.turnService.canMove && !this.gameService.hasPendingTileResolution;
+    return this.turnService.canMove
+      && this.gameService.activePlayer?.recoveryState !== 'resting'
+      && !this.gameService.hasPendingTileResolution;
   }
 
   // ==========================================================
@@ -215,11 +218,61 @@ export class Board {
       : null;
   }
 
+  /** Expose la définition d'un jeton au template sans déplacer la logique métier. */
+  getTokenDefinition(tokenId: string) {
+    return getTokenDefinition(tokenId);
+  }
+
+  /** Coffre en attente appartenant au joueur humain actif. */
+  get humanPendingTreasure(): PendingTreasure | null {
+    const pending = this.gameService.pendingTreasure();
+    return pending?.player === this.gameService.activePlayer
+      && pending.player.controller === 'human'
+      ? pending
+      : null;
+  }
+
+  /** L'action est affichée uniquement si la clé est encore présente. */
+  get canOpenPendingTreasure(): boolean {
+    const pending = this.humanPendingTreasure;
+    return pending?.treasure.id === 'closed-chest'
+      && pending.treasureTile.tokenId === 'closed-chest'
+      && pending.player.inventory.key !== null;
+  }
+
+  openPendingTreasure(): void {
+    if (this.canOpenPendingTreasure) {
+      this.gameService.openPendingTreasure();
+    }
+  }
+
   /** Équipement récupérable, même si le monstre possède d'autres récompenses. */
   get pendingEquipment() {
     const pending = this.humanPendingReward;
     const reward = pending?.remainingRewards.find((item) => item.kind === 'equipment');
     return reward?.kind === 'equipment' ? getEquipmentDefinition(reward.equipmentId) : undefined;
+  }
+
+  /** Récompense trésor actuellement proposée après un combat. */
+  get pendingTreasureReward() {
+    const pending = this.humanPendingReward;
+    const reward = pending?.remainingRewards.find(item => item.kind === 'treasure');
+    return reward?.kind === 'treasure' ? reward : undefined;
+  }
+
+  get pendingTreasureRewardPoints(): number {
+    const reward = this.pendingTreasureReward;
+    if (!reward) return 0;
+    const treasure: Treasure = reward.tokenId === 'open-chest'
+      ? 'monster-treasure'
+      : 'dragon-ruby';
+    return TREASURE_POINTS[treasure];
+  }
+
+  collectPendingTreasure(): void {
+    if (this.pendingTreasureReward) {
+      this.gameService.collectPendingTreasure();
+    }
   }
 
   /** Indique si la récupération est possible sans remplacer un objet existant. */
@@ -303,10 +356,10 @@ export class Board {
 
   /** Joueurs pouvant recevoir la malédiction, hormis le vainqueur. */
   get curseTargets(): { player: Player; index: number }[] {
-    const winner = this.humanPendingReward?.player;
-    return winner
-      ? this.players.flatMap((player, index) => player === winner ? [] : [{ player, index }])
-      : [];
+    return this.gameService.getPendingCurseTargets().map(player => ({
+      player,
+      index: this.players.indexOf(player),
+    }));
   }
 
   resolvePendingCurse(player: Player | null): void {

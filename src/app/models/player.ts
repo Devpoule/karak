@@ -2,6 +2,7 @@
 import { HeroId } from './hero';
 import { PlayerInventory } from './inventory';
 import { Direction } from './tile';
+import { Treasure } from './treasure';
 
 /**
  * Type de contrôleur associé à un joueur.
@@ -31,6 +32,9 @@ export interface PlayerPosition {
   x: number;
   y: number;
 }
+
+/** Cycle de récupération d'un héros tombé à zéro point de vie. */
+export type RecoveryState = 'none' | 'pending' | 'resting';
 
 /**
  * État d'un joueur pendant une partie.
@@ -69,6 +73,9 @@ export interface Player {
    */
   lives: number;
 
+  /** Indique si le héros doit consacrer un tour à récupérer une vie. */
+  recoveryState: RecoveryState;
+
   /**
    * Inventaire personnel du joueur.
    *
@@ -77,6 +84,9 @@ export interface Player {
    * ne sont attribués au début de partie.
    */
   inventory: PlayerInventory;
+
+  /** Trésors collectés, séparés de l'inventaire des équipements. */
+  treasures: Treasure[];
 
   /**
    * Indique si le joueur est victime d'une malédiction.

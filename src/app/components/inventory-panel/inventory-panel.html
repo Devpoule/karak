@@ -58,7 +58,7 @@
 
 @if (selectedDrop; as selection) {
   <div class="inventory-panel__drop-confirmation" role="group" aria-label="Confirmer le dépôt">
-    <p>Déposer {{ selection.name }} sur cette tuile ?</p>
+    <p>Déposer {{ selection.equipment.name }} sur cette tuile ?</p>
     <button type="button" (click)="confirmDrop()" [disabled]="!canDropEquipment">Déposer</button>
     <button type="button" (click)="cancelDrop()">Annuler</button>
   </div>

@@ -1,0 +1,65 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.treasure-panel {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.35rem 0.45rem 0.45rem;
+  background: rgba(25, 20, 15, 0.82);
+  color: #f6e8c8;
+  font-size: 0.7rem;
+}
+
+.treasure-panel__header,
+.treasure-panel__group {
+  display: flex;
+  align-items: center;
+}
+
+.treasure-panel__header {
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(246, 232, 200, 0.25);
+  padding-bottom: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.treasure-panel__header strong {
+  color: #f5be41;
+  font-size: 0.75rem;
+}
+
+.treasure-panel__groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.treasure-panel__group {
+  min-width: 0;
+  gap: 0.15rem;
+}
+
+.treasure-panel__group img {
+  width: 1.35rem;
+  height: 1.35rem;
+  object-fit: contain;
+}
+
+.treasure-panel__count {
+  color: #fff;
+  font-weight: 700;
+}
+
+.treasure-panel__label {
+  display: none;
+}
+
+.treasure-panel__empty {
+  display: block;
+  padding-top: 0.25rem;
+  color: rgba(246, 232, 200, 0.65);
+}

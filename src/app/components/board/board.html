@@ -276,6 +276,20 @@
       }
     }
   </div>
+  @if (humanPendingTreasure; as pending) {
+    <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
+      <section class="board__reward-panel" role="dialog" aria-modal="true" aria-labelledby="treasure-title">
+        <h2 id="treasure-title">Coffre fermé</h2>
+        <img class="board__reward-image" [src]="pending.treasure.image" alt="Coffre fermé" draggable="false" />
+        <div class="board__reward-actions">
+          <button type="button" [disabled]="!canOpenPendingTreasure" (click)="openPendingTreasure()">
+            Ouvrir le coffre
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+
   <!-- Résolution d'une récompense : interface fixe, indépendante de la caméra. -->
   @if (humanPendingReward; as reward) {
     <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
@@ -294,6 +308,18 @@
           }
           <div class="board__reward-actions">
             <button type="button" [disabled]="!canCollectPendingEquipment" (click)="collectPendingEquipment()">Récupérer</button>
+          </div>
+        }
+        @if (pendingTreasureReward; as treasureReward) {
+          <img
+            class="board__reward-image"
+            [src]="getTokenDefinition(treasureReward.tokenId)?.image"
+            alt="Trésor"
+            draggable="false"
+          />
+          <p>Trésor — {{ pendingTreasureRewardPoints }} point{{ pendingTreasureRewardPoints === 1 ? '' : 's' }}</p>
+          <div class="board__reward-actions">
+            <button type="button" (click)="collectPendingTreasure()">Récupérer le trésor</button>
           </div>
         }
         @if (hasPendingCurse) {

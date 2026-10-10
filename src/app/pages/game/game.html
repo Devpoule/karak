@@ -48,6 +48,23 @@
       <!-- Interface superposée des joueurs -->
       <app-player-hud />
 
+      @if (turnAnnouncement(); as announcement) {
+        <div
+          class="game__turn-announcement"
+          [class.game__turn-announcement--recovery]="announcement.recovery"
+          aria-live="polite"
+        >
+          @if (getHeroPortrait(announcement.player); as portrait) {
+            <img [src]="portrait" alt="" draggable="false" />
+          }
+          @if (announcement.recovery) {
+            <span>Tour de repos — {{ getHeroName(announcement.player) }} récupère 1 PV</span>
+          } @else {
+            <span>Au tour de {{ getHeroName(announcement.player) }}</span>
+          }
+        </div>
+      }
+
     }
 
   </div>

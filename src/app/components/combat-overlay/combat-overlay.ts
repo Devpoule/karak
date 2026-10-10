@@ -10,12 +10,14 @@ import { getHeroDefinition } from '../../data/hero-definitions';
 
 import {
   CombatOutcome,
+  CombatRoll,
   CombatResult,
   CombatService,
   PendingCombat,
 } from '../../services/combat.service';
 
 import { GameService } from '../../services/game.service';
+import { AiService } from '../../services/ai.service';
 
 /**
  * Étapes visuelles de présentation d'un combat.
@@ -24,6 +26,7 @@ type CombatPresentationState =
   | 'intro'
   | 'ready'
   | 'rolling'
+  | 'decision'
   | 'result';
 
 @Component({
@@ -67,6 +70,8 @@ export class CombatOverlay implements OnDestroy {
    * Durée de lecture du verdict pour une IA.
    */
   private readonly aiResultDuration = 3600;
+  /** Lecture courte du verdict d'égalité avant reprise automatique. */
+  private readonly tieResultDuration = 1800;
 
   /**
    * Empêche deux résolutions simultanées.
@@ -76,6 +81,7 @@ export class CombatOverlay implements OnDestroy {
   constructor(
     private readonly combatService: CombatService,
     private readonly gameService: GameService,
+    private readonly aiService: AiService,
   ) {
     effect(() => {
       const combat = this.combatService.pendingCombat();
@@ -119,6 +125,55 @@ export class CombatOverlay implements OnDestroy {
     );
   }
 
+  /** Indique que le lancer est terminé et attend la confirmation du joueur. */
+  get isDecisionVisible(): boolean {
+    return this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() !== null;
+  }
+
+  get provisionalAttack(): number | null {
+    return this.combatService.pendingCombatRoll()?.attackPower ?? null;
+  }
+
+  get provisionalMonsterStrength(): number | null {
+    return this.combatService.pendingCombatRoll()?.monsterStrength ?? null;
+  }
+
+  /** Attaque actuellement enregistrée par le moteur de combat. */
+  get displayedAttack(): number | null {
+    return this.combatService.pendingCombatRoll()?.attackPower
+      ?? this.result?.attackPower
+      ?? null;
+  }
+
+  /** Bonus d'armes enregistré, sans les Tirs magiques déjà utilisés. */
+  get displayedWeaponBonus(): number | null {
+    const roll = this.combatService.pendingCombatRoll();
+    if (roll) return roll.equipmentBonus - roll.magicBoltsUsed;
+    return this.result
+      ? this.result.equipmentBonus - this.result.magicBoltsUsed
+      : null;
+  }
+
+  get initialAttack(): number | null {
+    const roll = this.combatService.pendingCombatRoll();
+    return roll ? roll.attackPower - roll.magicBoltsUsed : null;
+  }
+
+  get magicBoltsUsed(): number {
+    return this.combatService.pendingCombatRoll()?.magicBoltsUsed ?? 0;
+  }
+
+  get remainingMagicBolts(): number {
+    return this.combatService.getRemainingMagicBolts();
+  }
+
+  useMagicBolt(): void {
+    if (!this.isDecisionVisible || !this.resolving) return;
+    if (this.combatService.useMagicBolt() && this.remainingMagicBolts === 0) {
+      this.resolveCombatAfterRoll();
+    }
+  }
+
   // ==========================================================
   // ASSETS
   // ==========================================================
@@ -149,11 +204,15 @@ export class CombatOverlay implements OnDestroy {
 
   /** Nom de l'adversaire. */
   getMonsterName(): string {
-    const monster = this.combat?.monster as
-      | { name?: string }
-      | undefined;
+    return this.combat?.monster.name ?? 'Adversaire';
+  }
 
-    return monster?.name ?? 'Adversaire';
+  /** Verdict métier présenté avec l'identité du vainqueur. */
+  getVerdictLabel(outcome: CombatOutcome): string {
+    if (outcome === 'tie') return 'Égalité';
+    return outcome === 'victory'
+      ? `Victoire de ${this.result?.player.heroId ? this.getHeroName() : 'Héros'}`
+      : `Victoire de ${this.getMonsterName()}`;
   }
 
   // ==========================================================
@@ -171,11 +230,17 @@ export class CombatOverlay implements OnDestroy {
     this.performCombatResolution();
   }
 
+  /** Confirme la résolution définitive après l'animation des dés. */
+  confirmCombatResolution(): void {
+    if (!this.isDecisionVisible || !this.resolving) return;
+    this.resolveCombatAfterRoll();
+  }
+
   /**
    * Résolution commune aux humains et aux IA.
    *
-   * CombatService calcule les véritables dés
-   * et applique les conséquences du combat.
+   * CombatService lance les dés ; la résolution définitive
+   * intervient seulement après leur animation.
    *
    * L'overlay ne modifie jamais ces règles.
    */
@@ -194,18 +259,34 @@ export class CombatOverlay implements OnDestroy {
 
     this.resolving = true;
 
-    const result =
-      this.combatService.resolvePendingCombat();
+    const roll = this.combatService.rollPendingCombat();
 
-    if (!result) {
+    if (!roll) {
       this.resolving = false;
       return;
     }
 
-    this.presentedResult.set(result);
     this.presentationState.set('rolling');
 
-    this.animateDice(result);
+    this.animateDice(roll);
+  }
+
+  private resolveCombatAfterRoll(): void {
+    const result = this.combatService.resolvePendingCombat();
+    if (!result) {
+      this.resolving = false;
+      return;
+    }
+    this.presentedResult.set(result);
+    this.presentationState.set('result');
+
+    if (result.outcome === 'tie' || result.player.controller === 'ai') {
+      this.schedule(() => {
+        if (this.presentationState() === 'result' && this.presentedResult() === result) {
+          this.dismissResult();
+        }
+      }, result.outcome === 'tie' ? this.tieResultDuration : this.aiResultDuration);
+    }
   }
 
   // ==========================================================
@@ -268,7 +349,7 @@ export class CombatOverlay implements OnDestroy {
    * Les valeurs finales proviennent exclusivement
    * de CombatService.
    */
-  private animateDice(result: CombatResult): void {
+  private animateDice(roll: CombatRoll): void {
     const speeds = [
       70,
       70,
@@ -303,8 +384,8 @@ export class CombatOverlay implements OnDestroy {
 
     this.schedule(() => {
       this.displayedDice.set({
-        die1: result.die1,
-        die2: result.die2,
+        die1: roll.die1,
+        die2: roll.die2,
       });
     }, elapsed);
 
@@ -314,21 +395,21 @@ export class CombatOverlay implements OnDestroy {
     elapsed += 1050;
 
     this.schedule(() => {
-      this.presentationState.set('result');
+      this.presentationState.set('decision');
 
-      /**
-       * Le verdict reste visible avant toute
-       * transition vers le joueur suivant.
-       */
-      if (result.player.controller === 'ai') {
+      if (roll.player.controller === 'ai') {
         this.schedule(() => {
-          if (
-            this.presentationState() === 'result'
-            && this.presentedResult() === result
-          ) {
-            this.dismissResult();
+          if (this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() === roll) {
+            this.aiService.resolveMagicBoltDecision();
+            this.resolveCombatAfterRoll();
           }
         }, this.aiResultDuration);
+      } else if (this.remainingMagicBolts === 0) {
+        this.schedule(() => {
+          if (this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() === roll) {
+            this.resolveCombatAfterRoll();
+          }
+        }, 500);
       }
     }, elapsed);
   }

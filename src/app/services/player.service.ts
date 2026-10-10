@@ -4,6 +4,7 @@ import { HeroId } from '../models/hero';
 import { createEmptyPlayerInventory, PLAYER_INVENTORY_CAPACITY } from '../models/inventory';
 import { Equipment, EquipmentKind } from '../models/equipment';
 import { Player } from '../models/player';
+import { createEmptyTreasures, Treasure } from '../models/treasure';
 import { Direction } from '../models/tile';
 /**
  * Nombre minimal de joueurs participant
@@ -69,6 +70,8 @@ export class PlayerService {
   readonly livesRevision = signal(0);
   /** Notification réactive des changements d’inventaire. */
   readonly inventoryRevision = signal(0);
+  /** Notification réactive des changements de trésors. */
+  readonly treasuresRevision = signal(0);
   /** Notification réactive des changements de malédiction. */
   readonly curseRevision = signal(0);
   /** Applique ou lève la malédiction sans modifier les autres attributs du héros. */
@@ -84,7 +87,24 @@ export class PlayerService {
     const next = Math.max(0, player.lives - Math.floor(amount));
     if (next === player.lives) return;
     player.lives = next;
+    if (next === 0) player.recoveryState = 'pending';
     this.livesRevision.update((revision) => revision + 1);
+  }
+
+  /** Commence le tour obligatoire de récupération et soigne exactement une vie. */
+  beginRecoveryTurn(player: Player): boolean {
+    if (!this.players.includes(player) || player.recoveryState !== 'pending' || player.lives !== 0) return false;
+    player.lives = 1;
+    player.recoveryState = 'resting';
+    this.livesRevision.update(revision => revision + 1);
+    return true;
+  }
+
+  /** Libère le héros après son tour entièrement consacré à la récupération. */
+  completeRecoveryTurn(player: Player): boolean {
+    if (!this.players.includes(player) || player.recoveryState !== 'resting') return false;
+    player.recoveryState = 'none';
+    return true;
   }
   // ==========================================================
   // JOUEUR TEMPORAIRE DU PROTOTYPE
@@ -110,8 +130,10 @@ export class PlayerService {
   readonly player: Player = {
     controller: 'human',
     lives: 5,
+    recoveryState: 'none',
     isCursed: false,
     inventory: createEmptyPlayerInventory(),
+    treasures: createEmptyTreasures(),
     heroId: 'argentus',
     position: {
       x: 0,
@@ -219,6 +241,7 @@ export class PlayerService {
     this.players.length = 0;
     this.livesRevision.update((revision) => revision + 1);
     this.curseRevision.update(revision => revision + 1);
+    this.treasuresRevision.update(revision => revision + 1);
     /**
      * Les humains occupent toujours
      * les premières positions.
@@ -233,8 +256,10 @@ export class PlayerService {
       this.players.push({
         controller: playerIndex < humanPlayerCount ? 'human' : 'ai',
         lives: 5,
+        recoveryState: 'none',
         isCursed: false,
         inventory: createEmptyPlayerInventory(),
+        treasures: createEmptyTreasures(),
       });
     }
   }
@@ -399,6 +424,18 @@ export class PlayerService {
   // ==========================================================
   // INVENTAIRE DES JOUEURS
   // ==========================================================
+  /**
+   * Ajoute un trésor au joueur s'il appartient à la partie courante.
+   *
+   * Les doublons restent autorisés : plusieurs trésors identiques
+   * correspondent à plusieurs récompenses effectivement collectées.
+   */
+  addTreasure(player: Player, treasure: Treasure): boolean {
+    if (!this.players.includes(player)) return false;
+    player.treasures.push(treasure);
+    this.treasuresRevision.update(revision => revision + 1);
+    return true;
+  }
   /** Renvoie les emplacements correspondant au type d'équipement. */
   private getEquipmentSlots(player: Player, kind: 'weapon' | 'spell') {
     return kind === 'weapon'

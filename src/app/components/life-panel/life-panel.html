@@ -22,4 +22,13 @@
       />
     }
   </div>
+
+  <span
+    class="life-panel__impulse"
+    aria-hidden="true"
+  ></span>
+
+  @if (feedback === 'heal') {
+    <span class="life-panel__heal-label" aria-hidden="true">+1 PV</span>
+  }
 </section>

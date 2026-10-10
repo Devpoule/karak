@@ -93,6 +93,50 @@
   animation: life-damage 850ms ease-out both;
 }
 
+.life-panel--damage .life-panel__slots {
+  animation: life-impact 420ms ease-out both;
+}
+
+/* Décharge décorative indépendante des cœurs : elle ne modifie jamais la
+ * géométrie du panneau et est activée par le même feedback de dégât. */
+.life-panel__impulse {
+  position: absolute;
+  z-index: 2;
+  top: 17%;
+  bottom: 17%;
+  left: -24%;
+  width: 24%;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 78, 67, 0.15) 18%,
+    rgba(255, 224, 214, 0.95) 48%,
+    rgba(226, 35, 31, 0.8) 68%,
+    transparent
+  );
+  clip-path: polygon(0 42%, 25% 48%, 42% 25%, 61% 57%, 80% 37%, 100% 53%, 80% 64%, 62% 78%, 43% 54%, 22% 72%);
+  filter: drop-shadow(0 0 6px rgba(255, 44, 35, 0.95));
+}
+
+.life-panel--damage .life-panel__impulse {
+  animation: life-electric-impulse 760ms ease-out both;
+}
+
+.life-panel__heal-label {
+  position: absolute;
+  top: 4%;
+  right: 7%;
+  z-index: 3;
+  color: #a9f5b3;
+  font-size: clamp(.65rem, 1.4vw, .9rem);
+  font-weight: 900;
+  text-shadow: 0 0 8px rgba(72, 224, 104, .9), 0 2px 3px rgba(0, 0, 0, .8);
+  pointer-events: none;
+  animation: life-heal-label 850ms ease-out both;
+}
+
 .life-panel--heal .life-panel__point--changed {
   animation: life-heal 850ms ease-out both;
 }
@@ -102,11 +146,46 @@
   30% { transform: scale(1.15); filter: drop-shadow(0 0 10px rgba(220, 45, 40, .95)); }
 }
 
+@keyframes life-impact {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-2px); }
+  40% { transform: translateX(2px); }
+  60% { transform: translateX(-1px); }
+}
+
+@keyframes life-electric-impulse {
+  0% { opacity: 0; transform: translateX(0) scaleY(.7); }
+  12% { opacity: .95; }
+  72% { opacity: .75; }
+  100% { opacity: 0; transform: translateX(520%) scaleY(1); }
+}
+
 @keyframes life-heal {
   0%, 100% { transform: scale(1); filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .55)); }
   30% { transform: scale(1.15); filter: drop-shadow(0 0 10px rgba(80, 210, 115, .9)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .life-panel__point { animation: none !important; }
+  .life-panel__point,
+  .life-panel__slots { animation: none !important; }
+
+  .life-panel--damage .life-panel__impulse {
+    animation: life-electric-static 180ms ease-out both;
+  }
+
+  .life-panel__heal-label {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+@keyframes life-electric-static {
+  0% { opacity: 0; }
+  100% { opacity: .55; }
+}
+
+@keyframes life-heal-label {
+  0% { opacity: 0; transform: translateY(5px) scale(.9); }
+  25% { opacity: 1; transform: translateY(0) scale(1.05); }
+  100% { opacity: 0; transform: translateY(-5px) scale(1); }
 }

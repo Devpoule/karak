@@ -1,6 +1,7 @@
 import { Component, DoCheck, Input, OnDestroy } from '@angular/core';
 import { Player } from '../../models/player';
 import { PlayerService } from '../../services/player.service';
+import { CombatService } from '../../services/combat.service';
 
 const MAX_LIVES = 5;
 interface LifeSlot { index: number; active: boolean; }
@@ -18,8 +19,13 @@ export class LifePanel implements DoCheck, OnDestroy {
   private observedPlayer: Player | null = null;
   private observedLives: number | null = null;
   private feedbackTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingDamageSlots: number[] = [];
+  private combatResultWasVisible = false;
 
-  constructor(private readonly playerService: PlayerService) {}
+  constructor(
+    private readonly playerService: PlayerService,
+    private readonly combatService: CombatService,
+  ) {}
 
   get lives(): number {
     // Lecture du signal depuis le template : Angular est averti des dégâts.
@@ -35,25 +41,44 @@ export class LifePanel implements DoCheck, OnDestroy {
 
   ngDoCheck(): void {
     const currentLives = this.lives;
+    const combatResultVisible = this.combatService.lastCombatResult() !== null;
     if (this.player !== this.observedPlayer) {
       this.observedPlayer = this.player;
       this.observedLives = currentLives;
+      this.combatResultWasVisible = combatResultVisible;
+      this.pendingDamageSlots = [];
       this.resetFeedback();
       return;
     }
+    if (this.combatResultWasVisible && !combatResultVisible && this.pendingDamageSlots.length) {
+      const slots = this.pendingDamageSlots;
+      this.pendingDamageSlots = [];
+      this.showFeedback('damage', slots);
+    }
+    this.combatResultWasVisible = combatResultVisible;
     if (this.observedLives === null || currentLives === this.observedLives) return;
     const previousLives = this.observedLives;
     this.observedLives = currentLives;
     this.resetFeedback();
-    this.feedback = currentLives < previousLives ? 'damage' : 'heal';
-    this.changedSlots = Array.from(
+    const feedback = currentLives < previousLives ? 'damage' : 'heal';
+    const changedSlots = Array.from(
       { length: Math.abs(currentLives - previousLives) },
       (_, index) => Math.min(currentLives, previousLives) + index,
     );
-    this.feedbackTimer = setTimeout(() => this.resetFeedback(), 1100);
+    if (feedback === 'damage' && combatResultVisible && this.combatService.lastCombatResult()?.player === this.player) {
+      this.pendingDamageSlots = changedSlots;
+      return;
+    }
+    this.showFeedback(feedback, changedSlots);
   }
 
   isChangedSlot(index: number): boolean { return this.changedSlots.includes(index); }
+  private showFeedback(feedback: 'damage' | 'heal', changedSlots: number[]): void {
+    this.resetFeedback();
+    this.feedback = feedback;
+    this.changedSlots = changedSlots;
+    this.feedbackTimer = setTimeout(() => this.resetFeedback(), 1100);
+  }
   private resetFeedback(): void {
     if (this.feedbackTimer !== null) {
       clearTimeout(this.feedbackTimer);
@@ -62,5 +87,8 @@ export class LifePanel implements DoCheck, OnDestroy {
     this.feedback = null;
     this.changedSlots = [];
   }
-  ngOnDestroy(): void { this.resetFeedback(); }
+  ngOnDestroy(): void {
+    this.pendingDamageSlots = [];
+    this.resetFeedback();
+  }
 }

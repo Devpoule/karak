@@ -6,7 +6,10 @@ import {
   DIRECTIONS,
   PlacedTile,
 } from '../models/tile';
+import { getEquipmentDefinition } from '../data/equipment-definitions';
 import { Player } from '../models/player';
+import { Equipment } from '../models/equipment';
+import { calculateTreasurePoints } from '../models/treasure';
 
 import { DungeonService } from './dungeon.service';
 import { ExplorationService } from './exploration.service';
@@ -22,6 +25,18 @@ interface AiAction {
   direction: Direction;
   type: 'move' | 'explore';
 }
+
+/** Résultat d'une tentative de résolution obligatoire par l'IA. */
+export type AiMandatoryResolutionResult =
+  | 'resolved'
+  | 'waiting'
+  | `unsupported:${string}`
+  | 'none';
+
+type AiEquipmentDecision =
+  | { action: 'collect' }
+  | { action: 'replace'; slotIndex: number }
+  | { action: 'leave' };
 
 /**
  * Service de décision des joueurs IA.
@@ -51,6 +66,159 @@ export class AiService {
   // ==========================================================
 
   /**
+   * Résout au plus une action obligatoire du joueur IA actif.
+   *
+   * Les règles et mutations restent dans GameService. Cette méthode
+   * ne couvre volontairement que les coffres et les trésors ; les
+   * autres résolutions sont signalées comme non prises en charge.
+   */
+  resolveMandatoryAction(): AiMandatoryResolutionResult {
+    const player = this.gameService.activePlayer;
+    if (!player || player.controller !== 'ai' || this.gameService.phase() !== 'playing') {
+      return 'none';
+    }
+    if (this.combatService.hasPendingCombat || this.combatService.lastCombatResult() !== null) {
+      return 'waiting';
+    }
+
+    const pendingTreasure = this.gameService.pendingTreasure();
+    if (pendingTreasure?.player === player) {
+      return pendingTreasure.treasure.id === 'closed-chest'
+        && player.inventory.key !== null
+        && this.gameService.openPendingTreasure()
+        ? 'resolved'
+        : 'unsupported:chest-unavailable';
+    }
+
+    const pendingReward = this.gameService.pendingReward();
+    if (pendingReward?.player === player) {
+      const hasTreasureReward = pendingReward.remainingRewards.some(reward => reward.kind === 'treasure');
+      if (hasTreasureReward) {
+        return this.gameService.collectPendingTreasure()
+          ? 'resolved'
+          : 'unsupported:treasure-rejected';
+      }
+
+      const equipmentReward = pendingReward.remainingRewards.find(reward => reward.kind === 'equipment');
+      if (equipmentReward?.kind === 'equipment') {
+        const equipment = this.getEquipmentDefinition(equipmentReward.equipmentId);
+        if (!equipment) return 'unsupported:equipment-definition';
+        const equipmentDecision = this.chooseEquipmentDecision(player, equipment);
+        if (equipmentDecision.action !== 'leave') {
+          return this.applyPendingEquipmentDecision(equipmentDecision);
+        }
+
+        if (pendingReward.remainingRewards.some(reward => reward.kind === 'special' && reward.effect === 'curse')) {
+          return this.resolvePendingCurseForAi(player);
+        }
+
+        return this.applyPendingEquipmentDecision(equipmentDecision);
+      }
+
+      if (pendingReward.remainingRewards.some(reward => reward.kind === 'special' && reward.effect === 'curse')) {
+        return this.resolvePendingCurseForAi(player);
+      }
+
+      return this.gameService.leavePendingReward()
+        ? 'resolved'
+        : 'unsupported:reward-decision';
+    }
+
+    const pendingGroundEquipment = this.gameService.pendingGroundEquipment();
+    if (pendingGroundEquipment?.player === player) {
+      return this.applyGroundEquipmentDecision(
+        this.chooseEquipmentDecision(player, pendingGroundEquipment.equipment),
+      );
+    }
+
+    return 'none';
+  }
+
+  /** Applique la décision post-lancer de l'IA sans résoudre le combat. */
+  resolveMagicBoltDecision(): boolean {
+    const player = this.gameService.activePlayer;
+    const roll = this.combatService.pendingCombatRoll();
+    const combat = this.combatService.pendingCombat();
+    if (!player || player.controller !== 'ai' || !combat || combat.player !== player || !roll) {
+      return false;
+    }
+
+    const required = Math.max(0, combat.monster.strength - roll.attackPower + 1);
+    const available = this.combatService.getRemainingMagicBolts();
+    if (required === 0 || required > available) return true;
+
+    for (let index = 0; index < required; index++) {
+      if (!this.combatService.useMagicBolt()) return false;
+    }
+    return true;
+  }
+
+  private getEquipmentDefinition(equipmentId: string) {
+    // Le catalogue reste la source de vérité ; aucune règle d'inventaire
+    // n'est dupliquée ici.
+    return getEquipmentDefinition(equipmentId);
+  }
+
+  /** Retourne le premier emplacement portant le bonus minimal strictement inférieur. */
+  private findStrictlyWeakerWeapon(player: Player, attackBonus: number): number | null {
+    let weakestIndex = -1;
+    let weakestBonus = Number.POSITIVE_INFINITY;
+    player.inventory.weapons.forEach((weapon, index) => {
+      if (weapon && weapon.attackBonus < weakestBonus) {
+        weakestBonus = weapon.attackBonus;
+        weakestIndex = index;
+      }
+    });
+    return weakestIndex >= 0 && attackBonus > weakestBonus ? weakestIndex : null;
+  }
+
+  /** Choisit une action sans modifier l'inventaire ni l'état du jeu. */
+  private chooseEquipmentDecision(player: Player, equipment: Equipment): AiEquipmentDecision {
+    if (this.playerService.canAddEquipment(player, equipment)) {
+      return { action: 'collect' };
+    }
+    if (equipment.kind === 'weapon') {
+      const slotIndex = this.findStrictlyWeakerWeapon(player, equipment.attackBonus);
+      if (slotIndex !== null) return { action: 'replace', slotIndex };
+    }
+    return { action: 'leave' };
+  }
+
+  private applyPendingEquipmentDecision(decision: AiEquipmentDecision): AiMandatoryResolutionResult {
+    const resolved = decision.action === 'collect'
+      ? this.gameService.collectPendingEquipment()
+      : decision.action === 'replace'
+        ? this.gameService.replacePendingEquipment(decision.slotIndex)
+        : this.gameService.leavePendingReward();
+    return resolved ? 'resolved' : 'unsupported:equipment-rejected';
+  }
+
+  private applyGroundEquipmentDecision(decision: AiEquipmentDecision): AiMandatoryResolutionResult {
+    const resolved = decision.action === 'collect'
+      ? this.gameService.collectGroundEquipment()
+      : decision.action === 'replace'
+        ? this.gameService.replaceGroundEquipment(decision.slotIndex)
+        : this.gameService.leaveGroundEquipment();
+    return resolved ? 'resolved' : 'unsupported:ground-equipment-rejected';
+  }
+
+  /** Choisit puis délègue la résolution de la malédiction au moteur métier. */
+  private resolvePendingCurseForAi(player: Player): AiMandatoryResolutionResult {
+    const target = this.gameService.getPendingCurseTargets()
+      .map((candidate, index) => ({ candidate, index }))
+      .sort((left, right) => {
+        const pointsDifference = calculateTreasurePoints(right.candidate.treasures)
+          - calculateTreasurePoints(left.candidate.treasures);
+        return pointsDifference || left.index - right.index;
+      })[0]?.candidate;
+
+    if (!target) return 'unsupported:curse-target';
+    return this.gameService.resolvePendingCurse(target)
+      ? 'resolved'
+      : 'unsupported:curse-rejected';
+  }
+
+  /**
    * Exécute au maximum une action pour le joueur IA actif.
    *
    * @returns true si un déplacement ou une exploration
@@ -60,6 +228,10 @@ export class AiService {
     const player = this.gameService.activePlayer;
 
     if (!player || player.controller !== 'ai') {
+      return false;
+    }
+    if (player.recoveryState === 'resting') {
+      this.gameService.endTurn();
       return false;
     }
 

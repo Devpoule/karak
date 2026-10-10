@@ -22,6 +22,20 @@ export interface PendingCombat {
 
 export type CombatOutcome = 'victory' | 'tie' | 'defeat';
 
+/** Résultat provisoire du lancer, avant toute conséquence métier. */
+export interface CombatRoll {
+  player: Player;
+  monster: MonsterTokenDefinition;
+  die1: number;
+  die2: number;
+  diceTotal: number;
+  equipmentBonus: number;
+  heroBonus: number;
+  attackPower: number;
+  monsterStrength: number;
+  magicBoltsUsed: number;
+}
+
 /**
  * Résultat complet du dernier combat résolu.
  */
@@ -35,6 +49,7 @@ export interface CombatResult {
   heroBonus: number;
   attackPower: number;
   monsterStrength: number;
+  magicBoltsUsed: number;
   outcome: CombatOutcome;
 }
 
@@ -55,6 +70,7 @@ export class CombatService {
   readonly pendingCombat = signal<PendingCombat | null>(null);
 
   readonly lastCombatResult = signal<CombatResult | null>(null);
+  readonly pendingCombatRoll = signal<CombatRoll | null>(null);
 
   get hasPendingCombat(): boolean {
     return this.pendingCombat() !== null;
@@ -63,6 +79,7 @@ export class CombatService {
   initialize(): void {
     this.pendingCombat.set(null);
     this.lastCombatResult.set(null);
+    this.pendingCombatRoll.set(null);
   }
 
   /**
@@ -107,8 +124,66 @@ export class CombatService {
     return true;
   }
 
+  /** Lance les dés sans appliquer la moindre conséquence au combat.
+   *
+   * Un second appel est ignoré tant que le combat n'est pas résolu.
+   */
+  rollPendingCombat(): CombatRoll | null {
+    const combat = this.pendingCombat();
+    if (!combat || this.pendingCombatRoll() !== null) return null;
+
+    const die1 = this.rollDie();
+    const die2 = this.rollDie();
+    const diceTotal = die1 + die2;
+    const equipmentBonus = combat.player.inventory.weapons
+      .reduce((total, weapon) => total + (weapon?.attackBonus ?? 0), 0);
+    const heroBonus = 0;
+    const roll: CombatRoll = {
+      player: combat.player,
+      monster: combat.monster,
+      die1,
+      die2,
+      diceTotal,
+      equipmentBonus,
+      heroBonus,
+      attackPower: diceTotal + equipmentBonus + heroBonus,
+      monsterStrength: combat.monster.strength,
+      magicBoltsUsed: 0,
+    };
+    this.pendingCombatRoll.set(roll);
+    return roll;
+  }
+
+  /** Utilise un Tir magique réservé pour le combat post-lancer. */
+  useMagicBolt(): boolean {
+    const combat = this.pendingCombat();
+    const roll = this.pendingCombatRoll();
+    if (!combat || !roll) return false;
+
+    const available = combat.player.inventory.spells.some(
+      spell => spell?.effect === 'magic-attack',
+    );
+    if (!available || roll.magicBoltsUsed >= this.countMagicBolts(combat.player)) return false;
+
+    this.pendingCombatRoll.set({
+      ...roll,
+      magicBoltsUsed: roll.magicBoltsUsed + 1,
+      attackPower: roll.attackPower + 1,
+      equipmentBonus: roll.equipmentBonus + 1,
+    });
+    return true;
+  }
+
+  /** Nombre de Tirs magiques encore utilisables dans le combat en attente. */
+  getRemainingMagicBolts(): number {
+    const combat = this.pendingCombat();
+    const roll = this.pendingCombatRoll();
+    if (!combat || !roll) return 0;
+    return Math.max(0, this.countMagicBolts(combat.player) - roll.magicBoltsUsed);
+  }
+
   /**
-   * Lance deux dés et résout le combat obligatoire.
+   * Résout définitivement le combat à partir du lancer enregistré.
    *
    * attaque > monstre : victoire
    * attaque = monstre : égalité
@@ -119,46 +194,33 @@ export class CombatService {
    */
   resolvePendingCombat(): CombatResult | null {
     const combat = this.pendingCombat();
+    const roll = this.pendingCombatRoll();
 
-    if (!combat) {
+    if (!combat || !roll) {
       return null;
     }
 
-    const die1 = this.rollDie();
-    const die2 = this.rollDie();
-    const diceTotal = die1 + die2;
-
-    const equipmentBonus = 0;
-    const heroBonus = 0;
-    const attackPower =
-      diceTotal + equipmentBonus + heroBonus;
-
     let outcome: CombatOutcome;
 
-    if (attackPower > combat.monster.strength) {
+    if (roll.attackPower > combat.monster.strength) {
       outcome = 'victory';
-    } else if (attackPower === combat.monster.strength) {
+    } else if (roll.attackPower === combat.monster.strength) {
       outcome = 'tie';
     } else {
       outcome = 'defeat';
     }
 
     const result: CombatResult = {
-      player: combat.player,
-      monster: combat.monster,
-      die1,
-      die2,
-      diceTotal,
-      equipmentBonus,
-      heroBonus,
-      attackPower,
-      monsterStrength: combat.monster.strength,
+      ...roll,
       outcome,
     };
+
+    this.consumeUsedMagicBolts(combat.player, roll.magicBoltsUsed);
 
     this.applyOutcome(combat, outcome);
 
     this.pendingCombat.set(null);
+    this.pendingCombatRoll.set(null);
     this.lastCombatResult.set(result);
 
     return result;
@@ -207,5 +269,18 @@ export class CombatService {
    */
   private rollDie(): number {
     return Math.floor(Math.random() * 6) + 1;
+  }
+
+  private countMagicBolts(player: Player): number {
+    return player.inventory.spells.filter(spell => spell?.effect === 'magic-attack').length;
+  }
+
+  private consumeUsedMagicBolts(player: Player, count: number): void {
+    if (player.heroId === 'argentus' && !player.isCursed) return;
+    for (let consumed = 0; consumed < count; consumed++) {
+      const index = player.inventory.spells.findIndex(spell => spell?.effect === 'magic-attack');
+      if (index < 0) return;
+      this.playerService.removeEquipment(player, 'spell', index);
+    }
   }
 }

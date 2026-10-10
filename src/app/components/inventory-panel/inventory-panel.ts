@@ -1,10 +1,20 @@
 import { Component, DoCheck, Input, OnDestroy } from '@angular/core';
 import { GameService } from '../../services/game.service';
 import { PLAYER_INVENTORY_CAPACITY, PlayerInventory } from '../../models/inventory';
-import { Player } from '../../models/player';
+import { Player, PlayerPosition } from '../../models/player';
 import { Equipment, KeyEquipment, SpellEquipment, WeaponEquipment } from '../../models/equipment';
+import { PlayerService } from '../../services/player.service';
+import { ExplorationService } from '../../services/exploration.service';
 
 type InventoryGroup = 'weapons' | 'spells' | 'key';
+
+interface DropSelection {
+  readonly player: Player;
+  readonly kind: Equipment['kind'];
+  readonly index: number;
+  readonly equipment: Equipment;
+  readonly position: PlayerPosition;
+}
 
 /** Affichage de l’inventaire et demande de dépôt volontaire via GameService. */
 @Component({
@@ -16,30 +26,52 @@ type InventoryGroup = 'weapons' | 'spells' | 'key';
 export class InventoryPanel implements DoCheck, OnDestroy {
   @Input() player: Player | null = null;
 
-  constructor(private readonly gameService: GameService) {}
+  constructor(
+    private readonly gameService: GameService,
+    private readonly playerService: PlayerService,
+    private readonly explorationService: ExplorationService,
+  ) {}
 
-  selectedDrop: { kind: Equipment['kind']; index: number; name: string } | null = null;
+  private dropSelection: DropSelection | null = null;
+
+  get selectedDrop(): DropSelection | null {
+    if (this.dropSelection && !this.isSelectionCurrent(this.dropSelection)) {
+      this.dropSelection = null;
+    }
+    return this.dropSelection;
+  }
 
   get canDropEquipment(): boolean {
     return !!this.player && this.player === this.gameService.activePlayer
       && this.player.controller === 'human' && this.gameService.phase() === 'playing'
-      && !this.gameService.turnTransitionPending() && !this.gameService.hasPendingTileResolution;
+      && !this.gameService.turnTransitionPending()
+      && !this.gameService.hasPendingTileResolution
+      && !this.explorationService.pendingTile;
   }
 
   selectDrop(kind: Equipment['kind'], index: number, equipment: Equipment): void {
-    if (!this.canDropEquipment) return;
-    this.selectedDrop = { kind, index, name: equipment.name };
+    if (!this.canDropEquipment || !this.player?.position) return;
+    this.dropSelection = {
+      player: this.player,
+      kind,
+      index,
+      equipment,
+      position: { ...this.player.position },
+    };
   }
 
   cancelDrop(): void {
-    this.selectedDrop = null;
+    this.dropSelection = null;
   }
 
   confirmDrop(): void {
     const selected = this.selectedDrop;
-    if (!selected || !this.player || !this.canDropEquipment) return;
-    if (this.gameService.dropInventoryEquipment(this.player, selected.kind, selected.index)) {
-      this.selectedDrop = null;
+    if (!selected || !this.player || !this.isSelectionCurrent(selected)) {
+      this.dropSelection = null;
+      return;
+    }
+    if (this.gameService.dropInventoryEquipment(selected.player, selected.kind, selected.index)) {
+      this.dropSelection = null;
     }
   }
 
@@ -51,6 +83,8 @@ export class InventoryPanel implements DoCheck, OnDestroy {
   private feedbackTimer: ReturnType<typeof setTimeout> | null = null;
 
   get inventory(): PlayerInventory | null {
+    // La lecture du signal lie le template aux mutations métier de l'inventaire.
+    this.playerService.inventoryRevision();
     return this.player?.inventory ?? null;
   }
 
@@ -71,10 +105,14 @@ export class InventoryPanel implements DoCheck, OnDestroy {
   }
 
   ngDoCheck(): void {
+    if (this.dropSelection && !this.isSelectionCurrent(this.dropSelection)) {
+      this.dropSelection = null;
+    }
+
     const current = [...this.weaponSlots, ...this.spellSlots, this.keyItem];
 
     if (this.player !== this.observedPlayer) {
-      this.selectedDrop = null;
+      this.dropSelection = null;
       this.observedPlayer = this.player;
       this.observedItems = current;
       this.clearFeedback();
@@ -118,5 +156,27 @@ export class InventoryPanel implements DoCheck, OnDestroy {
 
   ngOnDestroy(): void {
     this.clearFeedback();
+  }
+
+  /** Vérifie qu'une confirmation vise encore exactement le contexte sélectionné. */
+  private isSelectionCurrent(selection: DropSelection): boolean {
+    const player = this.player;
+    if (!player || player !== selection.player || !player.position) return false;
+    if (!this.canDropEquipment) return false;
+    if (player.position.x !== selection.position.x || player.position.y !== selection.position.y) {
+      return false;
+    }
+
+    const currentEquipment = this.getEquipmentAt(player, selection.kind, selection.index);
+    return currentEquipment === selection.equipment;
+  }
+
+  private getEquipmentAt(
+    player: Player,
+    kind: Equipment['kind'],
+    index: number,
+  ): Equipment | null {
+    if (kind === 'key') return index === 0 ? player.inventory.key : null;
+    return player.inventory[kind === 'weapon' ? 'weapons' : 'spells'][index] ?? null;
   }
 }

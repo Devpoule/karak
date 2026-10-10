@@ -178,6 +178,7 @@
    ========================================================== */
 
 .combat-overlay__visual {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -186,6 +187,40 @@
   height: 360px;
 
   min-width: 0;
+}
+
+.combat-overlay__fighter-score {
+  position: absolute;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 2px solid rgba(255, 237, 170, 0.9);
+  border-radius: 50%;
+  color: #fff7c2;
+  background: rgba(31, 16, 10, 0.82);
+  box-shadow: 0 0 14px rgba(255, 207, 74, 0.7), 0 3px 8px rgba(0, 0, 0, 0.75);
+  font-size: 1.45rem;
+  font-weight: 950;
+}
+
+.combat-overlay__fighter-score--hero { left: 8%; bottom: 7%; }
+.combat-overlay__fighter-score--monster { right: 8%; bottom: 7%; color: #ffd7d0; border-color: rgba(255, 125, 106, 0.9); box-shadow: 0 0 14px rgba(255, 74, 55, 0.65), 0 3px 8px rgba(0, 0, 0, 0.75); }
+
+.combat-overlay__weapon-bonus {
+  position: absolute;
+  top: 4%;
+  left: 50%;
+  z-index: 5;
+  padding: 3px 9px;
+  border-radius: 999px;
+  color: #ffe98a;
+  background: rgba(78, 35, 15, 0.9);
+  box-shadow: 0 0 12px rgba(255, 185, 45, 0.72);
+  font-size: 1rem;
+  font-weight: 900;
+  transform: translateX(-50%);
 }
 
 .combat-overlay__fighter-image {
@@ -489,6 +524,30 @@
    VERDICT
    ========================================================== */
 
+/* La décision reste hors du flux pour ne jamais déplacer l'arène. */
+.combat-overlay__decision {
+  position: absolute;
+  z-index: 30;
+
+  left: 50%;
+  top: calc(50% + 190px);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: min(360px, 92vw);
+
+  transform: translateX(-50%);
+  color: rgba(244, 232, 207, 0.95);
+  font-size: .9rem;
+  text-align: center;
+}
+
+.combat-overlay__decision .combat-overlay__result-score {
+  margin: 2px 0;
+}
+
 .combat-overlay__verdict {
   position: absolute;
   z-index: 30;
@@ -558,6 +617,34 @@
 .combat-overlay--victory
 .combat-overlay__fighter--monster {
   filter: brightness(0.48);
+}
+
+/* L'impact est activé uniquement après la résolution métier définitive. */
+.combat-overlay--victory
+.combat-overlay__fighter-image--monster {
+  animation: combat-monster-defeated 900ms ease-out both;
+}
+
+.combat-overlay--victory
+.combat-overlay__fighter--monster
+.combat-overlay__visual::after {
+  content: '';
+  position: absolute;
+  inset: 18% -8%;
+  z-index: 5;
+  width: 32%;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(199, 244, 255, 0.95) 42%,
+    rgba(52, 177, 255, 0.88) 58%,
+    transparent
+  );
+  clip-path: polygon(0 44%, 22% 50%, 38% 28%, 57% 62%, 76% 35%, 100% 51%, 77% 66%, 58% 54%, 39% 78%, 21% 56%);
+  filter: drop-shadow(0 0 8px rgba(57, 188, 255, 0.95));
+  animation: combat-monster-electric-pulse 760ms ease-out both;
 }
 
 .combat-overlay__verdict--victory
@@ -967,6 +1054,43 @@
   100% { transform: scale(1.055); }
 }
 
+@keyframes combat-monster-defeated {
+  0% {
+    transform: translate(0, 0);
+    filter: drop-shadow(0 0 0 rgba(86, 204, 255, 0));
+  }
+
+  18% {
+    transform: translate(-4px, 1px);
+    filter:
+      drop-shadow(0 0 7px rgba(117, 225, 255, 0.95))
+      drop-shadow(0 0 18px rgba(34, 157, 255, 0.85));
+  }
+
+  32% { transform: translate(4px, -1px); }
+
+  46% {
+    transform: translate(-2px, 1px);
+    filter:
+      drop-shadow(0 0 10px rgba(117, 225, 255, 0.82))
+      drop-shadow(0 0 24px rgba(34, 157, 255, 0.68));
+  }
+
+  62% { transform: translate(2px, 0); }
+
+  100% {
+    transform: translate(0, 0);
+    filter: drop-shadow(0 0 0 rgba(86, 204, 255, 0));
+  }
+}
+
+@keyframes combat-monster-electric-pulse {
+  0% { opacity: 0; transform: translateX(-320%) scaleY(.7); }
+  18% { opacity: 1; }
+  72% { opacity: .82; }
+  100% { opacity: 0; transform: translateX(360%) scaleY(1); }
+}
+
 @keyframes combat-victory-glow {
   from {
     filter: brightness(1);
@@ -1136,6 +1260,16 @@
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
   }
+
+  .combat-overlay--victory .combat-overlay__fighter-image--monster {
+    animation: none !important;
+    filter: drop-shadow(0 0 7px rgba(117, 225, 255, 0.65));
+  }
+
+  .combat-overlay--victory .combat-overlay__fighter--monster .combat-overlay__visual::after {
+    animation: none !important;
+    opacity: .5;
+  }
 }
 /* ==========================================================
    NOMS DES COMBATTANTS — TYPOGRAPHIE ARCADE
@@ -1164,9 +1298,11 @@
 }
 
 @media (max-width: 900px) {
+  .combat-overlay__decision { top: calc(50% + 165px); }
   .combat-overlay__verdict { top: calc(50% + 100px); }
 }
 @media (max-width: 620px) {
+  .combat-overlay__decision { top: calc(50% + 135px); font-size: .8rem; }
   .combat-overlay__verdict { top: calc(50% + 82px); }
   .combat-overlay__fighter-name { font-size: .95rem; }
   .combat-overlay__verdict-title { font-size: clamp(2rem, 9vw, 3.1rem); }

@@ -29,6 +29,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'giant-rat',
+    name: 'Le Rat Géant',
     kind: 'monster',
     strength: 5,
     image: `${TOKEN_ASSET_PATH}/giant-rat.png`,
@@ -39,6 +40,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'giant-spider',
+    name: 'L\'Araignée Géante',
     kind: 'monster',
     strength: 6,
     image: `${TOKEN_ASSET_PATH}/giant-spider.png`,
@@ -49,6 +51,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'skeleton-mummy',
+    name: 'La Momie',
     kind: 'monster',
     strength: 7,
     image: `${TOKEN_ASSET_PATH}/skeleton-mummy.png`,
@@ -60,6 +63,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'skeleton-key-guardian',
+    name: 'Le Squelette – Gardien De Clé',
     kind: 'monster',
     strength: 8,
     image: `${TOKEN_ASSET_PATH}/skeleton-key-guardian.png`,
@@ -70,6 +74,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'skeleton-swordsman',
+    name: 'Le Squelette – Épéiste',
     kind: 'monster',
     strength: 9,
     image: `${TOKEN_ASSET_PATH}/skeleton-swordsman.png`,
@@ -80,6 +85,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'skeleton-king',
+    name: 'Le Roi Squelette',
     kind: 'monster',
     strength: 10,
     image: `${TOKEN_ASSET_PATH}/skeleton-king.png`,
@@ -90,6 +96,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'fallen',
+    name: 'Le Spectre De Mort',
     kind: 'monster',
     strength: 12,
     image: `${TOKEN_ASSET_PATH}/fallen.png`,
@@ -100,6 +107,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'dragon',
+    name: 'Le Dragon',
     kind: 'monster',
     strength: 15,
     image: `${TOKEN_ASSET_PATH}/dragon.png`,
@@ -114,6 +122,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'giant-bat',
+    name: 'La Chauve-Souris Géante',
     kind: 'monster',
     strength: 6,
     image: `${TOKEN_ASSET_PATH}/giant-bat.png`,
@@ -124,6 +133,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'skeleton-ice-magician',
+    name: 'Le Squelette – Magicien De Glace',
     kind: 'monster',
     strength: 11,
     image: `${TOKEN_ASSET_PATH}/skeleton-ice-magician.png`,

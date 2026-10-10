@@ -662,8 +662,11 @@
 }
 
 .board__ground-item {
-  width: 28%;
-  max-width: 34px;
+  /* Une taille flex-basis stable évite qu'un objet échangé rétrécisse
+   * lorsque plusieurs équipements partagent la même tuile. */
+  flex: 0 0 clamp(28px, 38%, 42px);
+  width: clamp(28px, 38%, 42px);
+  max-width: 42px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -675,6 +678,7 @@
 .board__ground-item:focus-visible { outline: 2px solid #f5be41; }
 
 .board__ground-items img {
+  display: block;
   width: 100%;
   aspect-ratio: 1;
   object-fit: contain;

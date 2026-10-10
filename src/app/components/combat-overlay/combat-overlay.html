@@ -46,6 +46,16 @@
               draggable="false"
             />
           }
+          @if (displayedAttack !== null) {
+            <span class="combat-overlay__fighter-score combat-overlay__fighter-score--hero">
+              {{ displayedAttack }}
+            </span>
+          }
+          @if (displayedWeaponBonus !== null && displayedWeaponBonus > 0) {
+            <span class="combat-overlay__weapon-bonus">
+              +{{ displayedWeaponBonus }}
+            </span>
+          }
         </div>
 
         <div class="combat-overlay__fighter-name">{{ getHeroName() }}</div>
@@ -64,6 +74,7 @@
 
           @if (
             presentationState() === 'rolling'
+            || presentationState() === 'decision'
             || presentationState() === 'result'
           ) {
             <div
@@ -112,7 +123,10 @@
             [src]="currentCombat.monster.image"
             alt="Adversaire"
             draggable="false"
-          />
+            />
+            <span class="combat-overlay__fighter-score combat-overlay__fighter-score--monster">
+              {{ currentCombat.monster.strength }}
+            </span>
         </div>
 
         <div class="combat-overlay__fighter-name">{{ getMonsterName() }}</div>
@@ -130,6 +144,29 @@
       </section>
     </div>
 
+    @if (isDecisionVisible && currentCombat.player.controller === 'human') {
+      <div class="combat-overlay__decision">
+        @if (remainingMagicBolts > 0) {
+          <button
+            type="button"
+            class="combat-overlay__continue"
+            (click)="useMagicBolt()"
+          >
+            Utiliser Tir magique ({{ remainingMagicBolts }})
+          </button>
+        }
+        @if (remainingMagicBolts > 0) {
+          <button
+            type="button"
+            class="combat-overlay__continue"
+            (click)="confirmCombatResolution()"
+          >
+            Terminer sans autre sort
+          </button>
+        }
+      </div>
+    }
+
     <!-- VERDICT -->
     @if (isResultVisible && result; as combatResult) {
       <div
@@ -145,14 +182,8 @@
           ></span>
 
           <strong class="combat-overlay__verdict-title">
-            {{ getOutcomeLabel(combatResult.outcome) }}
+            {{ getVerdictLabel(combatResult.outcome) }}
           </strong>
-        </div>
-
-        <div class="combat-overlay__result-score">
-          <span>{{ combatResult.attackPower }}</span>
-          <b>—</b>
-          <span>{{ combatResult.monsterStrength }}</span>
         </div>
 
         <!--
@@ -162,7 +193,7 @@
           Pour une IA, CombatOverlay ferme automatiquement
           le résultat après le délai prévu.
         -->
-        @if (currentCombat.player.controller === 'human') {
+        @if (currentCombat.player.controller === 'human' && combatResult.outcome !== 'tie') {
           <button
             type="button"
             class="combat-overlay__continue"

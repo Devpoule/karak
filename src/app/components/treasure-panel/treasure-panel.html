@@ -1,0 +1,20 @@
+<section class="treasure-panel" aria-label="Trésors collectés">
+  <div class="treasure-panel__header">
+    <span>Trésors</span>
+    <strong>{{ points }} pt{{ points === 1 ? '' : 's' }}</strong>
+  </div>
+
+  @if (groups.length) {
+    <div class="treasure-panel__groups">
+      @for (group of groups; track group.type) {
+        <div class="treasure-panel__group">
+          <img [src]="group.image" [alt]="group.label" draggable="false" />
+          <span class="treasure-panel__count" aria-label="Nombre">×{{ group.count }}</span>
+          <span class="treasure-panel__label">{{ group.label }}</span>
+        </div>
+      }
+    </div>
+  } @else {
+    <span class="treasure-panel__empty">Aucun trésor</span>
+  }
+</section>

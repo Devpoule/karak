@@ -5,6 +5,7 @@ import { LifePanel } from '../life-panel/life-panel';
 import { HeroPanel } from '../hero-panel/hero-panel';
 import { InventoryPanel } from '../inventory-panel/inventory-panel';
 import { MessagePanel } from '../message-panel/message-panel';
+import { TreasurePanel } from '../treasure-panel/treasure-panel';
 
 /**
  * Position de la fiche joueur dans l'interface.
@@ -37,6 +38,7 @@ export type PlayerSide = 'left' | 'right';
     HeroPanel,
     InventoryPanel,
     MessagePanel,
+    TreasurePanel,
   ],
   templateUrl: './player-sidebar.html',
   styleUrl: './player-sidebar.scss',

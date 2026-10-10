@@ -82,6 +82,8 @@ export interface MonsterTokenDefinition
   extends BaseTokenDefinition {
 
   readonly kind: 'monster';
+  /** Nom affiché dans les interactions de combat. */
+  readonly name: string;
   readonly strength: number;
   readonly rewards?: readonly MonsterReward[];
 }
