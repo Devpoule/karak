@@ -49,7 +49,7 @@
 
 ## Priorités proposées
 
-1. Rejouer les scénarios navigateur des pouvoirs, du Portail, du repos, des récompenses et des objets au sol ; corriger uniquement les anomalies reproduites.
+1. Étendre la recette navigateur aux pouvoirs, au Portail, au repos, aux récompenses, aux objets au sol et à l'IA ; le parcours intégral Dragon est maintenant couvert dans `docs/FULL_GAME_RECIPE.md`.
 2. Réduire progressivement les avertissements SCSS sans refonte visuelle.
 3. Préparer ultérieurement une architecture de synchronisation en ligne, après stabilisation du jeu local.
 

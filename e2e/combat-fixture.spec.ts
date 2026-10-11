@@ -1,6 +1,13 @@
 import { expect, test } from '@playwright/test';
 
 async function openBoard(page: import('@playwright/test').Page): Promise<void> {
+  await page.addInitScript(() => {
+    let state = 0x5eed;
+    Math.random = () => {
+      state = (state * 1664525 + 1013904223) >>> 0;
+      return state / 0x1_0000_0000;
+    };
+  });
   await page.goto('/game');
   await page.getByRole('button', { name: 'Jouer' }).click();
   await page.getByRole('button', { name: 'Continuer' }).click();
@@ -8,13 +15,14 @@ async function openBoard(page: import('@playwright/test').Page): Promise<void> {
   await page.getByRole('button', { name: 'Tirer les héros' }).click({ force: true });
   await expect(page.getByRole('heading', { name: 'Qui commence ?' })).toBeVisible();
 
-  for (let attempt = 0; attempt < 20; attempt++) {
+  for (let attempt = 0; attempt < 40; attempt++) {
     const roll = page.locator('button[aria-label^="Lancer les dés du joueur"], button[aria-label^="Relancer les dés du joueur"]').first();
     if (await roll.isVisible().catch(() => false)) await roll.click({ force: true });
     if (await page.getByRole('button', { name: 'Entrer dans le donjon' }).isVisible().catch(() => false)) break;
     await page.waitForTimeout(250);
   }
 
+  await expect(page.getByRole('button', { name: 'Entrer dans le donjon' })).toBeVisible({ timeout: 10_000 });
   await page.getByRole('button', { name: 'Entrer dans le donjon' }).click();
   await expect(page.locator('app-board')).toBeVisible();
 }
