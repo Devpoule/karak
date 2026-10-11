@@ -1,0 +1,21 @@
+/** Réduction des mouvements tout en conservant les feedbacks de combat. */
+@media (prefers-reduced-motion: reduce) {
+  .combat-overlay *,
+  .combat-overlay *::before,
+  .combat-overlay *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+
+  .combat-overlay--victory .combat-overlay__fighter-image--monster {
+    animation: none !important;
+    filter: drop-shadow(0 0 7px rgba(117, 225, 255, 0.65));
+  }
+
+  .combat-overlay--victory .combat-overlay__fighter--monster .combat-overlay__visual::after {
+    animation: none !important;
+    opacity: .5;
+  }
+}

@@ -1,3 +1,5 @@
+@use './accessibility';
+
 :host {
   display: block;
 
@@ -388,25 +390,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-/**
- * Respect des préférences système concernant
- * la réduction des animations.
- */
-@media (prefers-reduced-motion: reduce) {
-  .game-setup__welcome,
-  .game-setup__content,
-  .game-setup__setup,
-  .game-setup__play,
-  .game-setup__play::before,
-  .game-setup__play::after {
-    animation: none;
-  }
-
-  .game-setup__play {
-    transition: none;
   }
 }
 
