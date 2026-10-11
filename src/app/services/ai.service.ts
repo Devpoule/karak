@@ -349,7 +349,7 @@ export class AiService {
     const actions: AiAction[] = [];
 
     for (const direction of DIRECTIONS) {
-      if (this.dungeonService.canMoveTo(tile, direction)) {
+      if (this.canMoveTo(tile, direction)) {
         actions.push({
           direction,
           type: 'move',
@@ -386,6 +386,15 @@ export class AiService {
     return actions[randomIndex];
   }
 
+  /** Argentus peut franchir une séparation entre deux tuiles découvertes. */
+  private canMoveTo(tile: PlacedTile, direction: Direction): boolean {
+    if (this.dungeonService.canMoveTo(tile, direction)) return true;
+    const player = this.gameService.activePlayer;
+    return player?.heroId === 'argentus'
+      && !player.isCursed
+      && this.dungeonService.getNeighbor(tile, direction) !== undefined;
+  }
+
   // ==========================================================
   // ORIENTATION DU HÉROS
   // ==========================================================
@@ -412,7 +421,7 @@ export class AiService {
     currentTile: PlacedTile,
     direction: Direction,
   ): boolean {
-    if (!this.dungeonService.canMoveTo(currentTile, direction)) {
+    if (!this.canMoveTo(currentTile, direction)) {
       return false;
     }
 

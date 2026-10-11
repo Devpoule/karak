@@ -762,7 +762,7 @@ export class Board {
       return;
     }
 
-    if (!this.dungeonService.canMoveTo(currentTile, direction)) {
+    if (!this.canMoveTo(currentTile, direction)) {
       return;
     }
 
@@ -846,7 +846,7 @@ export class Board {
     /*
      * Déplacement dans une partie déjà explorée du donjon.
      */
-    if (this.dungeonService.canMoveTo(currentTile, direction)) {
+    if (this.canMoveTo(currentTile, direction)) {
       const destination = this.dungeonService.getNeighborPosition(currentTile, direction);
 
       const destinationTile = this.dungeonService.getTileAt(destination.x, destination.y);
@@ -1055,7 +1055,11 @@ export class Board {
   }
 
   canMoveTo(tile: PlacedTile, direction: Direction): boolean {
-    return this.dungeonService.canMoveTo(tile, direction);
+    if (this.dungeonService.canMoveTo(tile, direction)) return true;
+
+    const player = this.gameService.activePlayer;
+    if (!player || player.heroId !== 'argentus' || player.isCursed) return false;
+    return this.dungeonService.getNeighbor(tile, direction) !== undefined;
   }
 
   // ==========================================================
