@@ -81,6 +81,12 @@ export class AiService {
       return 'waiting';
     }
 
+    const pendingTokenChoice = this.gameService.pendingTokenChoice();
+    if (pendingTokenChoice?.player === player) {
+      // Choix déterministe : conserver le premier jeton tiré.
+      return this.gameService.choosePendingToken(0) ? 'resolved' : 'unsupported:token-choice';
+    }
+
     const pendingTreasure = this.gameService.pendingTreasure();
     if (pendingTreasure?.player === player) {
       return pendingTreasure.treasure.id === 'closed-chest'

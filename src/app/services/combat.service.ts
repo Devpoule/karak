@@ -39,6 +39,7 @@ export interface CombatRoll {
   magicBoltsUsed: number;
   heroRerollsUsed: number;
   sacrificeUsed: boolean;
+  canContinueTurn: boolean;
 }
 
 /**
@@ -58,6 +59,7 @@ export interface CombatResult {
   magicBoltsUsed: number;
   heroRerollsUsed: number;
   sacrificeUsed: boolean;
+  canContinueTurn: boolean;
   outcome: CombatOutcome;
 }
 
@@ -168,6 +170,7 @@ export class CombatService {
       magicBoltsUsed: 0,
       heroRerollsUsed: 0,
       sacrificeUsed: false,
+      canContinueTurn: false,
     };
     this.pendingCombatRoll.set(roll);
     this.logCombatDiagnostic('roll', roll, combat.player.inventory.weapons);
@@ -283,6 +286,10 @@ export class CombatService {
 
     const result: CombatResult = {
       ...roll,
+      canContinueTurn: combat.player.heroId === 'victorius'
+        && !combat.player.isCursed
+        && (roll.die1 === 6 || roll.die2 === 6)
+        && outcome !== 'victory',
       outcome,
     };
 

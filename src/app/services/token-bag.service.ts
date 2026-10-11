@@ -113,6 +113,13 @@ export class TokenBagService {
     return definition;
   }
 
+  /** Replace un exemplaire non retenu par le choix de Taia dans le sachet. */
+  returnToken(definitionId: TokenDefinitionId): void {
+    if (!getTokenDefinition(definitionId)) return;
+    this.bag.push(definitionId);
+    this.updateRemainingTokens();
+  }
+
 
   /**
    * Indique si le sachet est vide.

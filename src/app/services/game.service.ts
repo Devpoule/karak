@@ -6,7 +6,7 @@ import { getEquipmentDefinition } from '../data/equipment-definitions';
 import { Equipment } from '../models/equipment';
 import { PlacedTile } from '../models/tile';
 import { Player } from '../models/player';
-import { MonsterReward, MonsterTokenDefinition, TreasureTokenDefinition } from '../models/token';
+import { MonsterReward, MonsterTokenDefinition, TreasureTokenDefinition, TokenDefinition } from '../models/token';
 import { DungeonService } from './dungeon.service';
 import { ExplorationService } from './exploration.service';
 import { PlayerService } from './player.service';
@@ -47,7 +47,7 @@ export interface PendingReward {
   sourceTile: PlacedTile;
   remainingRewards: readonly MonsterReward[];
 }
-export type TileEntryResolution = 'none' | 'combat' | 'treasure' | 'reward' | 'equipment';
+export type TileEntryResolution = 'none' | 'combat' | 'treasure' | 'reward' | 'equipment' | 'token-choice';
 
 /** Objet au sol en attente d'une décision du joueur. */
 export interface PendingGroundEquipment {
@@ -55,6 +55,13 @@ export interface PendingGroundEquipment {
   tile: PlacedTile;
   equipment: Equipment;
   index: number;
+}
+
+export interface PendingTokenChoice {
+  player: Player;
+  tile: PlacedTile;
+  sourceTile: PlacedTile;
+  tokens: readonly [TokenDefinition, TokenDefinition];
 }
 @Injectable({
   providedIn: 'root',
@@ -126,6 +133,7 @@ export class GameService {
 
   /** Équipement présent sur la tuile et proposé au joueur actif. */
   readonly pendingGroundEquipment = signal<PendingGroundEquipment | null>(null);
+  readonly pendingTokenChoice = signal<PendingTokenChoice | null>(null);
 
   /** Objets déposés indépendamment des jetons monstres/trésors. */
   private groundEquipmentByTile = new Map<string, Equipment[]>();
@@ -156,7 +164,8 @@ export class GameService {
     return this.combatService.hasPendingCombat
       || this.pendingTreasure() !== null
       || this.pendingReward() !== null
-      || this.pendingGroundEquipment() !== null;
+      || this.pendingGroundEquipment() !== null
+      || this.pendingTokenChoice() !== null;
   }
 
   /** Joueurs vers lesquels Xanros peut actuellement se substituer. */
@@ -187,6 +196,12 @@ export class GameService {
 
   cancelXanrosSubstitution(): void {
     this.xanrosSubstitutionSelectionOpen.set(false);
+  }
+
+  resumeMovementsAfterUnstoppable(): boolean {
+    const player = this.activePlayer;
+    if (this.phase() !== 'playing' || player?.heroId !== 'victorius' || player.isCursed) return false;
+    return this.turnService.resumeSuspendedMovements();
   }
 
   confirmXanrosSubstitution(target: Player): boolean {
@@ -248,6 +263,7 @@ export class GameService {
     this.pendingTreasure.set(null);
     this.pendingReward.set(null);
     this.pendingGroundEquipment.set(null);
+    this.pendingTokenChoice.set(null);
     this.groundEquipmentByTile = new Map<string, Equipment[]>();
     this.groundEquipmentRevision.update(value => value + 1);
     this.remainingRewardsByTile = new WeakMap<PlacedTile, readonly MonsterReward[]>();
@@ -473,7 +489,7 @@ export class GameService {
    * - l'ouverture d'un coffre ;
    * - la récupération d'un trésor.
    */
-  revealNewRoom(tile: PlacedTile): void {
+  revealNewRoom(tile: PlacedTile, player?: Player, sourceTile?: PlacedTile): void {
     const definition = this.dungeonService.getTileDefinition(tile);
     if (!definition || definition.kind !== 'room') {
       return;
@@ -484,12 +500,40 @@ export class GameService {
     if (tile.tokenId) {
       return;
     }
-    const token = this.tokenBagService.draw();
-    if (!token) {
+    const firstToken = this.tokenBagService.draw();
+    if (!firstToken) {
       return;
     }
-    tile.tokenId = token.id;
+    const canUseFateWeaver = player?.heroId === 'taia'
+      && !player.isCursed
+      && sourceTile !== undefined;
+    const secondToken = canUseFateWeaver ? this.tokenBagService.draw() : undefined;
+    if (secondToken && player && sourceTile) {
+      this.turnService.stopMovements();
+      this.pendingTokenChoice.set({
+        player,
+        tile,
+        sourceTile,
+        tokens: [firstToken, secondToken],
+      });
+      return;
+    }
+    tile.tokenId = firstToken.id;
     tile.tokenFace = 'front';
+  }
+
+  choosePendingToken(index: 0 | 1): boolean {
+    const pending = this.pendingTokenChoice();
+    if (!pending || pending.player !== this.activePlayer || pending.player.isCursed) return false;
+    const selected = pending.tokens[index];
+    const rejected = pending.tokens[index === 0 ? 1 : 0];
+    if (!selected || !rejected) return false;
+    this.tokenBagService.returnToken(rejected.id);
+    pending.tile.tokenId = selected.id;
+    pending.tile.tokenFace = 'front';
+    this.pendingTokenChoice.set(null);
+    this.resolveTileEntry(pending.player, pending.sourceTile, pending.tile);
+    return true;
   }
 
   /**
@@ -520,7 +564,8 @@ export class GameService {
       return 'none';
     }
     if (revealRoom) {
-      this.revealNewRoom(destinationTile);
+      this.revealNewRoom(destinationTile, player, sourceTile);
+      if (this.pendingTokenChoice()) return 'token-choice';
     }
     if (!destinationTile.tokenId) {
       return this.offerGroundEquipment(player, destinationTile);
@@ -700,6 +745,15 @@ export class GameService {
     this.playerService.movePlayerTo(target, destination.x, destination.y, target.facing ?? 'north');
     this.playerService.restoreCompletely(target, 5);
     return true;
+  }
+
+  /** Applique la Réincarnation de Horan après une défaite à 0 PV. */
+  resolveHoranReincarnation(player: Player): boolean {
+    if (this.phase() !== 'playing' || player.heroId !== 'horan' || player.isCursed || player.lives !== 0) return false;
+    const fountain = this.getHealingFountains()[0];
+    if (!fountain) return false;
+    this.playerService.movePlayerTo(player, fountain.x, fountain.y, player.facing ?? 'north');
+    return this.playerService.restoreCompletely(player, 5);
   }
 
   /** Vérifie que la proposition correspond toujours à l'objet présent au sol. */

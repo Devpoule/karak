@@ -18,9 +18,11 @@ La référence locale est `public/assets/rules/karak-base.pdf`, accompagnée de 
 - Une victoire contre une momie peut produire une malédiction ; son attribution et sa résolution passent par les états métier dédiés.
 - Aderyn remporte également un combat à égalité et peut traverser une tuile occupée par un monstre ; ces deux pouvoirs sont désactivés lorsqu'elle est maudite.
 - Horan peut relancer les deux dés une fois par combat ; Victorius peut relancer une fois chaque dé affichant 1, dans la limite d'une relance par combat. Ces relances sont indisponibles lorsqu'ils sont maudits.
+- Horan non maudit se réincarne après une défaite à 0 PV en rejoignant une fontaine découverte et en récupérant tous ses PV ; sans fontaine disponible ou sous malédiction, le repos ordinaire reste appliqué.
 - Taia reçoit `+1` à l'attaque après son premier déplacement du tour ; ce bonus est capturé au lancer et désactivé par la malédiction. Son choix de jetons à l'exploration reste à intégrer.
 - Argentus peut franchir une séparation entre deux tuiles déjà découvertes et adjacentes ; la Marche astrale est désactivée par la malédiction. Le déplacement consomme un mouvement comme les autres déplacements.
 - Xanros peut sacrifier une vie après le lancer pour obtenir `+1` une seule fois par combat, y compris avec une seule vie restante ; la malédiction désactive ce pouvoir. Il peut aussi échanger sa position avec un autre héros au début du tour, en consommant les quatre mouvements ; la cible et les tuiles doivent être valides.
+- Victorius peut poursuivre son tour après une défaite ou une égalité lorsqu'un de ses dés affiche 6 ; les mouvements suspendus sont restaurés sans dépasser le compteur du tour. La malédiction désactive ce pouvoir.
 
 ## Adaptation numérique
 

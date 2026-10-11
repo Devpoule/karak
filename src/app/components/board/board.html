@@ -299,6 +299,24 @@
       }
     }
   </div>
+  @if (gameService.pendingTokenChoice(); as choice) {
+    @if (choice.player.controller === 'human') {
+      <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
+        <section class="board__reward-panel" role="dialog" aria-modal="true" aria-labelledby="token-choice-title">
+          <h2 id="token-choice-title">Choisir un jeton</h2>
+          <p>Taia choisit le jeton placé dans la nouvelle pièce.</p>
+          <div class="board__reward-actions">
+            @for (token of choice.tokens; track token.id + $index) {
+              <button type="button" (click)="gameService.choosePendingToken($index === 0 ? 0 : 1)">
+                <img class="board__reward-image" [src]="token.image" [alt]="token.id" draggable="false" />
+                <span>{{ token.id }}</span>
+              </button>
+            }
+          </div>
+        </section>
+      </div>
+    }
+  }
   @if (humanPendingTreasure; as pending) {
     <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
       <section class="board__reward-panel" role="dialog" aria-modal="true" aria-labelledby="treasure-title">

@@ -25,6 +25,7 @@ import { GAME_CONSTANTS } from '../constants/game.constants';
   providedIn: 'root',
 })
 export class TurnService {
+  private suspendedMovements: number | null = null;
 
   // ==========================================================
   // ÉTAT DU TOUR
@@ -95,7 +96,18 @@ export class TurnService {
    * résolution obligatoire, par exemple un combat ou un coffre.
    */
   stopMovements(): void {
+    if (this.suspendedMovements === null) {
+      this.suspendedMovements = this.remainingMovements();
+    }
     this.remainingMovements.set(0);
+  }
+
+  /** Restaure uniquement les mouvements suspendus par une résolution de tuile. */
+  resumeSuspendedMovements(): boolean {
+    if (this.suspendedMovements === null) return false;
+    this.remainingMovements.set(this.suspendedMovements);
+    this.suspendedMovements = null;
+    return true;
   }
 
 
@@ -104,6 +116,7 @@ export class TurnService {
    * pour un nouveau tour.
    */
   resetMovements(): void {
+    this.suspendedMovements = null;
     this.remainingMovements.set(
       GAME_CONSTANTS.movement.perTurn,
     );

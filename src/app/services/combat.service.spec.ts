@@ -341,6 +341,28 @@ describe('CombatService séparation du lancer et de la résolution', () => {
     vi.restoreAllMocks();
   });
 
+  it('Victorius peut continuer après une défaite avec un 6 et pas lorsqu’il est maudit', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const combatService = new CombatService(playerService);
+    const player = playerService.players[0];
+    player.heroId = 'victorius';
+    const monster = createTile();
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, monster);
+    (combatService.pendingCombat()!.monster as { strength: number }).strength = 20;
+    combatService.rollPendingCombat();
+    expect(combatService.resolvePendingCombat()?.canContinueTurn).toBe(true);
+
+    combatService.initialize();
+    player.isCursed = true;
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, createTile());
+    (combatService.pendingCombat()!.monster as { strength: number }).strength = 20;
+    combatService.rollPendingCombat();
+    expect(combatService.resolvePendingCombat()?.canContinueTurn).toBe(false);
+    vi.restoreAllMocks();
+  });
+
   it('conserve le bonus d’armes enregistré malgré une modification ultérieure', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     const playerService = new PlayerService();

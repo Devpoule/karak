@@ -9,6 +9,7 @@ import { GameService, PendingReward } from './game.service';
 import { PlayerService } from './player.service';
 import { TurnService } from './turn.service';
 import { DungeonService } from './dungeon.service';
+import { TokenBagService } from './token-bag.service';
 
 describe('GameService Portail de guérison', () => {
   let gameService: GameService;
@@ -136,6 +137,91 @@ describe('GameService substitution de Xanros', () => {
     expect(target.position).toEqual({ x: 0, y: 0 });
     expect(turnService.remainingMovements()).toBe(0);
     expect(gameService.xanrosSubstitutionSelectionOpen()).toBe(false);
+  });
+});
+
+describe('GameService Tisseuse de destin de Taia', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
+  });
+
+  it('tire deux jetons, place le choix et remet l’autre dans le sachet', () => {
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const dungeonService = TestBed.inject(DungeonService);
+    const tokenBagService = TestBed.inject(TokenBagService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const taia = playerService.players[0];
+    taia.heroId = 'taia';
+    const source = { definitionId: 'start', x: 0, y: 0, rotation: 0 } as PlacedTile;
+    const destination = { definitionId: 'straight-room', x: 1, y: 0, rotation: 0 } as PlacedTile;
+    dungeonService.tiles.push(source, destination);
+    const rat = getTokenDefinition('giant-rat')!;
+    const chest = getTokenDefinition('closed-chest')!;
+    vi.spyOn(tokenBagService, 'draw')
+      .mockReturnValueOnce(rat)
+      .mockReturnValueOnce(chest);
+    const returned = vi.spyOn(tokenBagService, 'returnToken');
+
+    expect(gameService.resolveTileEntry(taia, source, destination, true)).toBe('token-choice');
+    expect(destination.tokenId).toBeUndefined();
+    expect(gameService.pendingTokenChoice()?.tokens.map(token => token.id)).toEqual(['giant-rat', 'closed-chest']);
+    expect(gameService.choosePendingToken(1)).toBe(true);
+    expect(destination.tokenId).toBe('closed-chest');
+    expect(returned).toHaveBeenCalledWith('giant-rat');
+    expect(gameService.pendingTokenChoice()).toBeNull();
+    vi.restoreAllMocks();
+  });
+});
+
+describe('GameService Inarrêtable de Victorius', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
+  });
+
+  it('restaure les mouvements suspendus après un combat autorisé', () => {
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const turnService = TestBed.inject(TurnService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    playerService.players[0].heroId = 'victorius';
+    turnService.consumeMovement();
+    turnService.stopMovements();
+
+    expect(gameService.resumeMovementsAfterUnstoppable()).toBe(true);
+    expect(turnService.remainingMovements()).toBe(3);
+  });
+});
+
+describe('GameService Réincarnation de Horan', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
+  });
+
+  it('téléporte Horan à 0 PV vers une fontaine et le restaure complètement', () => {
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const dungeonService = TestBed.inject(DungeonService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    const horan = playerService.players[0];
+    horan.heroId = 'horan';
+    horan.lives = 0;
+    horan.recoveryState = 'pending';
+    const fountain = { definitionId: 'healing-corner', x: 2, y: 1, rotation: 0 } as PlacedTile;
+    dungeonService.tiles.push(fountain);
+
+    expect(gameService.resolveHoranReincarnation(horan)).toBe(true);
+    expect(horan.position).toEqual({ x: 0, y: 0 });
+    expect(horan.lives).toBe(5);
+    expect(horan.recoveryState).toBe('none');
   });
 });
 

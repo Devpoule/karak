@@ -19,7 +19,7 @@
 - La couverture des composants visuels et des effets CSS est limitée par rapport aux tests métier.
 - La compilation passe avec des avertissements de budget SCSS, notamment sur `CombatOverlay` et `GameSetup`.
 - `GameService` reste une façade large ; toute extraction doit être motivée par des usages concrets.
-- Aderyn : égalité gagnante et Marche rampante sont intégrées et couvertes par les tests. Horan et Victorius disposent maintenant de leur relance post-lancer, avec commandes humaines et décision IA. Taia dispose de son bonus post-déplacement, Argentus de sa Marche astrale et Xanros de son sacrifice et de sa substitution.
+- Les six héros disposent maintenant de leurs pouvoirs documentés et couverts par les tests : Aderyn, Argentus, Horan, Taia, Victorius et Xanros. Les relances, la Tisseuse de destin, la Réincarnation et Inarrêtable sont intégrés avec désactivation par malédiction.
 - Les extensions, le son et le multijoueur en ligne ne sont pas prioritaires.
 
 ## Dernière recette technique
@@ -49,11 +49,10 @@
 
 ## Priorités proposées
 
-1. Implémenter le choix de deux jetons de Taia lors de l'exploration.
-2. Rejouer les scénarios navigateur du Portail, du repos, des récompenses et des objets au sol ; corriger uniquement les anomalies reproduites.
-3. Réduire progressivement les avertissements SCSS sans refonte visuelle.
-4. Préparer ultérieurement une architecture de synchronisation en ligne, après stabilisation du jeu local.
+1. Rejouer les scénarios navigateur des pouvoirs, du Portail, du repos, des récompenses et des objets au sol ; corriger uniquement les anomalies reproduites.
+2. Réduire progressivement les avertissements SCSS sans refonte visuelle.
+3. Préparer ultérieurement une architecture de synchronisation en ligne, après stabilisation du jeu local.
 
 ## Prochain chantier autonome proposé
 
-Le prochain lot autonome est le choix de deux jetons de Taia à l'exploration, puis une recette navigateur des pouvoirs spécifiques et des parcours de récompense.
+Le prochain lot autonome est une recette navigateur dédiée aux pouvoirs spécifiques et aux parcours de récompense.

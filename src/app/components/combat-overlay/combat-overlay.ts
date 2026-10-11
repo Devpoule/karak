@@ -511,6 +511,10 @@ export class CombatOverlay implements OnDestroy {
     this.trackedCombat = null;
     this.resolving = false;
 
+    if (result.outcome === 'defeat' && result.player.lives === 0) {
+      this.gameService.resolveHoranReincarnation(result.player);
+    }
+
     /**
      * Le héros est déjà présent sur la tuile
      * du monstre vaincu.
@@ -533,6 +537,11 @@ export class CombatOverlay implements OnDestroy {
      * GameService reste responsable de cette règle.
      */
     if (this.gameService.hasPendingTileResolution) {
+      return;
+    }
+
+    if (result.canContinueTurn) {
+      this.gameService.resumeMovementsAfterUnstoppable();
       return;
     }
 
