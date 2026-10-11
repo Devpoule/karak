@@ -106,6 +106,19 @@ export class PlayerService {
     player.recoveryState = 'none';
     return true;
   }
+
+  /** Restaure complètement un héros et lève son éventuelle malédiction. */
+  restoreCompletely(player: Player, maximumLives: number): boolean {
+    if (!this.players.includes(player) || !Number.isInteger(maximumLives) || maximumLives <= 0) return false;
+    const changed = player.lives !== maximumLives || player.isCursed || player.recoveryState !== 'none';
+    if (!changed) return false;
+    player.lives = maximumLives;
+    player.isCursed = false;
+    player.recoveryState = 'none';
+    this.livesRevision.update(revision => revision + 1);
+    this.curseRevision.update(revision => revision + 1);
+    return true;
+  }
   // ==========================================================
   // JOUEUR TEMPORAIRE DU PROTOTYPE
   // ==========================================================

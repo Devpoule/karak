@@ -18,6 +18,12 @@ export type GamePhase =
   | 'playing'
   | 'game-over';
 
+/** Entrée du classement final, calculée uniquement à la fin de partie. */
+export interface GameRankingEntry {
+  readonly player: Player;
+  readonly points: number;
+}
+
 /**
  * Étapes interactives de la préparation d'une partie.
  *
@@ -32,3 +38,4 @@ export type SetupStep =
   | 'player-count'
   | 'hero-draw'
   | 'first-player-roll';
+import { Player } from './player';

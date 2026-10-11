@@ -16,7 +16,9 @@
         <div class="inventory-panel__slot">
           @if (weapon) {
             <button type="button" class="inventory-panel__item-button" [disabled]="!canDropEquipment"
-              [attr.aria-label]="'Déposer ' + weapon.name" (click)="selectDrop('weapon', slotIndex, weapon)">
+              [attr.aria-label]="'Déposer volontairement ' + weapon.name"
+              [attr.title]="'Déposer volontairement ' + weapon.name"
+              (click)="selectDrop('weapon', slotIndex, weapon)">
               <img class="inventory-panel__item" [src]="weapon.image" [alt]="weapon.name" draggable="false" />
             </button>
           }
@@ -32,7 +34,9 @@
         <div class="inventory-panel__slot">
           @if (spell) {
             <button type="button" class="inventory-panel__item-button" [disabled]="!canDropEquipment"
-              [attr.aria-label]="'Déposer ' + spell.name" (click)="selectDrop('spell', slotIndex, spell)">
+              [attr.aria-label]="'Déposer volontairement ' + spell.name"
+              [attr.title]="'Déposer volontairement ' + spell.name"
+              (click)="selectDrop('spell', slotIndex, spell)">
               <img class="inventory-panel__item" [src]="spell.image" [alt]="spell.name" draggable="false" />
             </button>
           }
@@ -47,13 +51,50 @@
       <div class="inventory-panel__slot">
         @if (keyItem; as key) {
           <button type="button" class="inventory-panel__item-button" [disabled]="!canDropEquipment"
-            [attr.aria-label]="'Déposer ' + key.name" (click)="selectDrop('key', 0, key)">
+            [attr.aria-label]="'Déposer volontairement ' + key.name"
+            [attr.title]="'Déposer volontairement ' + key.name"
+            (click)="selectDrop('key', 0, key)">
             <img class="inventory-panel__item" [src]="key.image" [alt]="key.name" draggable="false" />
           </button>
         }
       </div>
     </div>
   </div>
+
+  @if (canUseHealingPortal) {
+    <div class="inventory-panel__portal" aria-label="Utiliser le Portail de guérison">
+      @if (!isHealingPortalSelectionOpen) {
+        <button type="button" (click)="openHealingPortalSelection()">
+          Utiliser Portail de guérison
+        </button>
+      } @else {
+        <p>Choisir le héros et la fontaine</p>
+        <div class="inventory-panel__portal-options">
+          <div>
+            <span>Héros cible</span>
+            @for (target of healingTargets; track $index) {
+              <button type="button" (click)="selectHealingPortalTarget(target)">
+                {{ target.heroId ?? 'Héros ' + ($index + 1) }}
+              </button>
+            }
+          </div>
+          <div>
+            <span>Fontaine</span>
+            @for (fountain of healingFountains; track fountain.x + ':' + fountain.y) {
+              <button type="button" (click)="selectHealingPortalDestination(fountain)">
+                ({{ fountain.x }}, {{ fountain.y }})
+              </button>
+            }
+          </div>
+        </div>
+        @if (healingPortalSelection; as selection) {
+          <p>Déplacer {{ selection.target?.heroId ?? 'le héros sélectionné' }} vers la fontaine ({{ selection.destination?.x }}, {{ selection.destination?.y }}) ?</p>
+        }
+        <button type="button" (click)="confirmHealingPortal()" [disabled]="!healingPortalSelection">Confirmer</button>
+        <button type="button" (click)="cancelHealingPortal()">Annuler</button>
+      }
+    </div>
+  }
 </section>
 
 @if (selectedDrop; as selection) {

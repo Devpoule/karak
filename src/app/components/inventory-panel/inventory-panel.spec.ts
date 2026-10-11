@@ -184,4 +184,61 @@ describe('InventoryPanel', () => {
     expect(fixture.componentInstance.selectedDrop).toBeNull();
     expect(player.inventory.spells[0]).toBe(spell);
   });
+
+  it('annule la sélection du Portail sans modifier la partie', () => {
+    const { fixture, playerService, dungeonService } = createReadyPanel();
+    const player = playerService.players[0];
+    player.position = { x: 0, y: 0 };
+    playerService.addEquipment(player, getEquipmentDefinition('heart')!);
+    dungeonService.tiles.push({ definitionId: 'healing-corner', x: 1, y: 0, rotation: 0 });
+    fixture.componentInstance.player = player;
+    fixture.detectChanges();
+
+    fixture.componentInstance.openHealingPortalSelection();
+    fixture.componentInstance.cancelHealingPortal();
+
+    expect(fixture.componentInstance.isHealingPortalSelectionOpen).toBe(false);
+    expect(player.inventory.spells.some(spell => spell?.effect === 'healing-portal')).toBe(true);
+  });
+
+  it('ne consomme le Portail qu après une sélection confirmée', () => {
+    const { fixture, playerService, dungeonService, gameService } = createReadyPanel();
+    const user = playerService.players[0];
+    const target = playerService.players[1];
+    user.position = { x: 0, y: 0 };
+    target.position = { x: 1, y: 0 };
+    playerService.addEquipment(user, getEquipmentDefinition('heart')!);
+    const fountain = { definitionId: 'healing-corner', x: 2, y: 0, rotation: 0 } as const;
+    dungeonService.tiles.push(fountain);
+    fixture.componentInstance.player = user;
+    fixture.detectChanges();
+
+    fixture.componentInstance.openHealingPortalSelection();
+    expect(user.inventory.spells.some(spell => spell?.effect === 'healing-portal')).toBe(true);
+    fixture.componentInstance.selectHealingPortalTarget(target);
+    fixture.componentInstance.selectHealingPortalDestination(fountain);
+    fixture.componentInstance.confirmHealingPortal();
+
+    expect(gameService.getHealingFountains()).toContain(fountain);
+    expect(user.inventory.spells.some(spell => spell?.effect === 'healing-portal')).toBe(false);
+  });
+
+  it('invalide une confirmation lorsque la partie est terminée', () => {
+    const { fixture, gameService, playerService } = createReadyPanel();
+    const player = playerService.players[0];
+    const spell = getEquipmentDefinition('fire-sword')!;
+    player.position = { x: 0, y: 0 };
+    playerService.addEquipment(player, spell);
+    fixture.componentInstance.player = player;
+    fixture.detectChanges();
+
+    fixture.componentInstance.selectDrop('spell', 0, spell);
+    expect(fixture.componentInstance.selectedDrop).not.toBeNull();
+
+    gameService.phase.set('game-over');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.selectedDrop).toBeNull();
+    expect(player.inventory.spells[0]).toBe(spell);
+  });
 });

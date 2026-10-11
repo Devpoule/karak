@@ -113,6 +113,27 @@
   pointer-events: none;
 }
 
+.game__game-over {
+  position: relative;
+  z-index: 20;
+  width: min(520px, 90vw);
+  margin: auto;
+  padding: 2rem;
+  border: 1px solid rgba(245, 216, 132, .65);
+  border-radius: 12px;
+  background: rgba(25, 18, 14, .94);
+  color: #f4ead1;
+  text-align: center;
+  box-shadow: 0 0 28px rgba(245, 190, 65, .25);
+}
+
+.game__game-over h1,
+.game__game-over h2 { color: #f5d884; }
+.game__game-over ol { margin: 1rem 0; padding-left: 1.5rem; text-align: left; }
+.game__game-over li { display: flex; justify-content: space-between; gap: 1rem; padding: .35rem .5rem; }
+.game__game-over .game__winner { color: #ffe98a; font-weight: 800; }
+.game__winner-label { color: #ffe98a; font-weight: 800; }
+
 .game__turn-announcement {
   position: absolute;
   top: 18px;

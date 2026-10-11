@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
-import { GamePhase, SetupStep } from '../models/game';
+import { GamePhase, GameRankingEntry, SetupStep } from '../models/game';
+import { calculateTreasurePoints } from '../models/treasure';
 import { getTokenDefinition } from '../data/token-definitions';
 import { getEquipmentDefinition } from '../data/equipment-definitions';
 import { Equipment } from '../models/equipment';
@@ -64,6 +65,12 @@ export class GameService {
    * Phase globale actuelle de la partie.
    */
   readonly phase = signal<GamePhase>('setup');
+
+  /** Classement figé lorsque la partie se termine. */
+  readonly finalRanking = signal<readonly GameRankingEntry[]>([]);
+
+  /** Joueurs partageant le meilleur score final. */
+  readonly winners = signal<readonly Player[]>([]);
 
   /**
    * Étape actuellement présentée pendant la préparation.
@@ -179,6 +186,8 @@ export class GameService {
     }
     this.turnTransitionPending.set(false);
     this.phase.set('setup');
+    this.finalRanking.set([]);
+    this.winners.set([]);
     this.setupStep.set('player-count');
     this.firstPlayerRolls.set([]);
     this.firstPlayerContenders.set([]);
@@ -595,12 +604,42 @@ export class GameService {
   private offerGroundEquipment(player: Player, tile: PlacedTile): TileEntryResolution {
     const equipment = this.getGroundEquipment(tile)[0];
     if (!equipment) return 'none';
-    this.turnService.stopMovements();
     this.pendingGroundEquipment.set({ player, tile, equipment, index: 0 });
     if (player.controller === 'human' && this.playerService.canAddEquipment(player, equipment)) {
       this.collectGroundEquipment();
     }
     return 'equipment';
+  }
+
+  /** Retourne les fontaines déjà découvertes et accessibles par le portail. */
+  getHealingFountains(): readonly PlacedTile[] {
+    return this.dungeonService.tiles.filter(tile =>
+      this.dungeonService.getTileDefinition(tile)?.feature === 'healing-fountain',
+    );
+  }
+
+  /**
+   * Téléporte un héros vers une fontaine et consomme un Portail de guérison.
+   * Aucun état n'est modifié avant la validation complète de l'action.
+   */
+  useHealingPortal(target: Player, destination: PlacedTile): boolean {
+    const user = this.activePlayer;
+    if (this.phase() !== 'playing' || !user || user.recoveryState !== 'none') return false;
+    if (this.turnTransitionPending() || this.hasPendingTileResolution || this.explorationService.pendingTile) return false;
+    if (!this.playerService.players.includes(target) || !this.playerService.players.includes(user)) return false;
+    if (!user.inventory.spells.some(spell => spell?.effect === 'healing-portal')) return false;
+    const validDestination = this.dungeonService.tiles.includes(destination)
+      && this.dungeonService.getTileDefinition(destination)?.feature === 'healing-fountain';
+    if (!validDestination) return false;
+
+    const portalIndex = user.inventory.spells.findIndex(spell => spell?.effect === 'healing-portal');
+    if (portalIndex < 0 || !target.position) return false;
+    const portal = this.playerService.removeEquipment(user, 'spell', portalIndex);
+    if (!portal) return false;
+
+    this.playerService.movePlayerTo(target, destination.x, destination.y, target.facing ?? 'north');
+    this.playerService.restoreCompletely(target, 5);
+    return true;
   }
 
   /** Vérifie que la proposition correspond toujours à l'objet présent au sol. */
@@ -631,7 +670,6 @@ export class GameService {
     if (!Number.isInteger(index) || index < 0) return false;
     const equipment = this.getGroundEquipment(tile)[index];
     if (!equipment) return false;
-    this.turnService.stopMovements();
     this.pendingGroundEquipment.set({ player, tile, equipment, index });
     if (this.playerService.canAddEquipment(player, equipment)) {
       this.collectGroundEquipment();
@@ -666,7 +704,12 @@ export class GameService {
     const pending = this.pendingGroundEquipment();
     if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
     this.pendingGroundEquipment.set(null);
-    this.endTurn();
+    // Refuser un objet n'est pas une fin de tour : les mouvements restants
+    // restent disponibles. Si le héros avait déjà consommé son dernier
+    // mouvement, la fin automatique du tour reste toutefois applicable.
+    if (!this.turnService.canMove) {
+      this.endTurn();
+    }
     return true;
   }
 
@@ -690,7 +733,30 @@ export class GameService {
     pending.rewardTile.tokenId = undefined;
     pending.rewardTile.tokenFace = undefined;
     this.pendingReward.set(null);
+    if (pending.monster.id === 'dragon') {
+      this.finishGame();
+      return;
+    }
     this.endTurn();
+  }
+
+  /** Termine la partie une seule fois et fige le classement des trésors. */
+  private finishGame(): void {
+    if (this.phase() === 'game-over') return;
+    const ranking = this.playerService.players
+      .map(player => ({ player, points: calculateTreasurePoints(player.treasures) }))
+      .sort((left, right) => right.points - left.points);
+    const bestScore = ranking[0]?.points ?? 0;
+
+    this.finalRanking.set(ranking);
+    this.winners.set(ranking.filter(entry => entry.points === bestScore).map(entry => entry.player));
+    if (this.turnTransitionTimer !== null) {
+      clearTimeout(this.turnTransitionTimer);
+      this.turnTransitionTimer = null;
+    }
+    this.turnTransitionPending.set(false);
+    this.turnService.stopMovements();
+    this.phase.set('game-over');
   }
 
   /** Récupère un équipement sans appliquer les autres récompenses implicitement. */

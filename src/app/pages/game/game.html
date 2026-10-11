@@ -67,6 +67,26 @@
 
     }
 
+    @if (gameService.phase() === 'game-over') {
+      <section class="game__game-over" aria-labelledby="game-over-title">
+        <h1 id="game-over-title">Fin de la partie</h1>
+        <p>Le Dragon a été vaincu. Le rubis du Dragon vaut 1,5 point.</p>
+        <h2>Classement</h2>
+        <ol>
+          @for (entry of gameService.finalRanking(); track entry.player) {
+            <li [class.game__winner]="gameService.winners().includes(entry.player)">
+              <span>{{ getHeroName(entry.player) }}</span>
+              <strong>{{ entry.points }} pt{{ entry.points === 1 ? '' : 's' }}</strong>
+            </li>
+          }
+        </ol>
+        <p class="game__winner-label">
+          Vainqueur{{ gameService.winners().length > 1 ? 's' : '' }} :
+          {{ gameService.winners().map(player => getHeroName(player)).join(', ') }}
+        </p>
+      </section>
+    }
+
   </div>
 
 </section>

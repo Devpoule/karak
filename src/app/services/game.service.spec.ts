@@ -8,6 +8,102 @@ import { MonsterReward, MonsterTokenDefinition } from '../models/token';
 import { GameService, PendingReward } from './game.service';
 import { PlayerService } from './player.service';
 import { TurnService } from './turn.service';
+import { DungeonService } from './dungeon.service';
+
+describe('GameService Portail de guérison', () => {
+  let gameService: GameService;
+  let playerService: PlayerService;
+  let dungeonService: DungeonService;
+  let turnService: TurnService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
+    gameService = TestBed.inject(GameService);
+    playerService = TestBed.inject(PlayerService);
+    dungeonService = TestBed.inject(DungeonService);
+    turnService = TestBed.inject(TurnService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+  });
+
+  function preparePortal(): { user: (typeof playerService.players)[number]; target: (typeof playerService.players)[number]; fountain: PlacedTile } {
+    const user = playerService.players[0];
+    const target = playerService.players[1];
+    user.position = { x: 0, y: 0 };
+    target.position = { x: 1, y: 0 };
+    user.lives = 2;
+    target.lives = 1;
+    target.isCursed = true;
+    playerService.addEquipment(user, getEquipmentDefinition('heart')!);
+    const fountain: PlacedTile = {
+      definitionId: 'healing-corner',
+      x: 2,
+      y: 0,
+      rotation: 0,
+    };
+    dungeonService.tiles.push(fountain);
+    return { user, target, fountain };
+  }
+
+  it('téléporte, soigne complètement, lève la malédiction et consomme le portail sans terminer le tour', () => {
+    const { user, target, fountain } = preparePortal();
+    turnService.remainingMovements.set(2);
+
+    expect(gameService.useHealingPortal(target, fountain)).toBe(true);
+    expect(target.position).toEqual({ x: 2, y: 0 });
+    expect(target.lives).toBe(5);
+    expect(target.isCursed).toBe(false);
+    expect(user.inventory.spells.some(spell => spell?.effect === 'healing-portal')).toBe(false);
+    expect(gameService.turnTransitionPending()).toBe(false);
+    expect(turnService.remainingMovements()).toBe(2);
+  });
+
+  it('refuse une destination qui ne possède pas de fontaine sans consommer le portail', () => {
+    const { user, target } = preparePortal();
+    const invalidDestination: PlacedTile = { definitionId: 'straight-01', x: 3, y: 0, rotation: 0 };
+
+    expect(gameService.useHealingPortal(target, invalidDestination)).toBe(false);
+    expect(user.inventory.spells[0]?.effect).toBe('healing-portal');
+    expect(target.position).toEqual({ x: 1, y: 0 });
+  });
+
+  it('refuse le portail pendant une résolution ou après la fin de partie', () => {
+    const { target, fountain } = preparePortal();
+    gameService.phase.set('game-over');
+
+    expect(gameService.useHealingPortal(target, fountain)).toBe(false);
+    expect(target.position).toEqual({ x: 1, y: 0 });
+  });
+
+  it('résout une inconscience pending sans accorder de tour ni de mouvement supplémentaire', () => {
+    const { user, target, fountain } = preparePortal();
+    target.lives = 0;
+    target.recoveryState = 'pending';
+    turnService.remainingMovements.set(1);
+
+    expect(gameService.useHealingPortal(target, fountain)).toBe(true);
+    expect(target.lives).toBe(5);
+    expect(target.recoveryState).toBe('none');
+    expect(turnService.remainingMovements()).toBe(1);
+    expect(gameService.turnTransitionPending()).toBe(false);
+    expect(user.inventory.spells.some(spell => spell?.effect === 'healing-portal')).toBe(false);
+  });
+
+  it('lève l’état resting sans déclencher un second tour', () => {
+    const { target, fountain } = preparePortal();
+    target.lives = 0;
+    target.recoveryState = 'pending';
+    expect(playerService.beginRecoveryTurn(target)).toBe(true);
+    expect(target.recoveryState).toBe('resting');
+
+    expect(gameService.useHealingPortal(target, fountain)).toBe(true);
+    expect(target.lives).toBe(5);
+    expect(target.recoveryState).toBe('none');
+    expect(gameService.turnTransitionPending()).toBe(false);
+  });
+});
 
 describe('GameService coffre fermé', () => {
   let gameService: GameService;
@@ -232,6 +328,7 @@ describe('GameService récompenses trésor', () => {
     expect(playerService.players[0].treasures).toEqual(['monster-treasure']);
     expect(gameService.pendingReward()).toBeNull();
     expect(gameService.collectPendingTreasure()).toBe(false);
+    expect(gameService.phase()).toBe('playing');
   });
 
   it('attribue le rubis du dragon avec sa valeur correcte', () => {
@@ -239,6 +336,19 @@ describe('GameService récompenses trésor', () => {
     expect(gameService.collectPendingTreasure()).toBe(true);
     expect(playerService.players[0].treasures).toEqual(['dragon-ruby']);
     expect(calculateTreasurePoints(playerService.players[0].treasures)).toBe(1.5);
+    expect(gameService.phase()).toBe('game-over');
+    expect(gameService.winners()).toEqual([playerService.players[0]]);
+    expect(gameService.collectPendingTreasure()).toBe(false);
+  });
+
+  it('classe les joueurs selon leurs trésors, même si un autre joueur est premier', () => {
+    playerService.addTreasure(playerService.players[1], 'opened-chest');
+    playerService.addTreasure(playerService.players[1], 'monster-treasure');
+    prepareReward('dragon', [{ kind: 'treasure', tokenId: 'treasure' }]);
+
+    expect(gameService.collectPendingTreasure()).toBe(true);
+    expect(gameService.finalRanking().map(entry => entry.points)).toEqual([2, 1.5]);
+    expect(gameService.winners()).toEqual([playerService.players[1]]);
   });
 
   it('préserve les autres récompenses du jeton', () => {
@@ -371,5 +481,18 @@ describe('GameService audit coffre inaccessible', () => {
     expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile)).toBe('none');
     expect(gameService.pendingTreasure()).toBeNull();
     expect(turnService.remainingMovements()).toBe(4);
+  });
+
+  it('conserve les mouvements restants lorsqu’un équipement au sol est refusé', () => {
+    const player = playerService.players[0];
+    const equipment = getEquipmentDefinition('sword')!;
+    const tile = { x: 0, y: 0, definitionId: 'start' } as PlacedTile;
+    gameService.pendingGroundEquipment.set({ player, tile, equipment, index: 0 });
+    turnService.consumeMovement();
+
+    expect(gameService.leaveGroundEquipment()).toBe(true);
+    expect(gameService.pendingGroundEquipment()).toBeNull();
+    expect(turnService.remainingMovements()).toBe(3);
+    expect(gameService.turnTransitionPending()).toBe(false);
   });
 });

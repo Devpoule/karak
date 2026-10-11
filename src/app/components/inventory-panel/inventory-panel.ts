@@ -2,6 +2,7 @@ import { Component, DoCheck, Input, OnDestroy } from '@angular/core';
 import { GameService } from '../../services/game.service';
 import { PLAYER_INVENTORY_CAPACITY, PlayerInventory } from '../../models/inventory';
 import { Player, PlayerPosition } from '../../models/player';
+import { PlacedTile } from '../../models/tile';
 import { Equipment, KeyEquipment, SpellEquipment, WeaponEquipment } from '../../models/equipment';
 import { PlayerService } from '../../services/player.service';
 import { ExplorationService } from '../../services/exploration.service';
@@ -14,6 +15,12 @@ interface DropSelection {
   readonly index: number;
   readonly equipment: Equipment;
   readonly position: PlayerPosition;
+}
+
+interface HealingPortalSelection {
+  readonly player: Player;
+  readonly target: Player | null;
+  readonly destination: PlacedTile | null;
 }
 
 /** Affichage de l’inventaire et demande de dépôt volontaire via GameService. */
@@ -33,6 +40,8 @@ export class InventoryPanel implements DoCheck, OnDestroy {
   ) {}
 
   private dropSelection: DropSelection | null = null;
+  private pendingHealingPortalSelection: HealingPortalSelection | null = null;
+  private healingPortalSelectionOpen = false;
 
   get selectedDrop(): DropSelection | null {
     if (this.dropSelection && !this.isSelectionCurrent(this.dropSelection)) {
@@ -62,6 +71,67 @@ export class InventoryPanel implements DoCheck, OnDestroy {
 
   cancelDrop(): void {
     this.dropSelection = null;
+  }
+
+  get canUseHealingPortal(): boolean {
+    return !!this.player && this.player === this.gameService.activePlayer
+      && this.player.controller === 'human' && this.gameService.phase() === 'playing'
+      && !this.gameService.turnTransitionPending() && !this.gameService.hasPendingTileResolution
+      && !this.explorationService.pendingTile
+      && this.player.recoveryState === 'none'
+      && this.player.inventory.spells.some(spell => spell?.effect === 'healing-portal')
+      && this.gameService.getHealingFountains().length > 0;
+  }
+
+  get isHealingPortalSelectionOpen(): boolean {
+    if (this.healingPortalSelectionOpen && !this.isHealingPortalSelectionCurrent()) {
+      this.resetHealingPortalSelection();
+    }
+    return this.healingPortalSelectionOpen;
+  }
+
+  get healingPortalSelection(): HealingPortalSelection | null {
+    return this.pendingHealingPortalSelection;
+  }
+
+  get healingTargets(): readonly Player[] {
+    return this.playerService.players;
+  }
+
+  get healingFountains(): readonly PlacedTile[] {
+    return this.gameService.getHealingFountains();
+  }
+
+  openHealingPortalSelection(): void {
+    if (!this.canUseHealingPortal) return;
+    this.healingPortalSelectionOpen = true;
+    this.pendingHealingPortalSelection = { player: this.player!, target: null, destination: null };
+  }
+
+  selectHealingPortalTarget(target: Player): void {
+    if (!this.isHealingPortalSelectionOpen || !this.healingTargets.includes(target)) return;
+    if (!this.pendingHealingPortalSelection) return;
+    this.pendingHealingPortalSelection = { ...this.pendingHealingPortalSelection, target };
+  }
+
+  selectHealingPortalDestination(destination: PlacedTile): void {
+    if (!this.isHealingPortalSelectionOpen || !this.healingFountains.includes(destination)) return;
+    if (!this.pendingHealingPortalSelection) return;
+    this.pendingHealingPortalSelection = { ...this.pendingHealingPortalSelection, destination };
+  }
+
+  confirmHealingPortal(): void {
+    const selection = this.healingPortalSelection;
+    if (!selection?.target || !selection.destination || !this.isHealingPortalSelectionCurrent()) {
+      this.resetHealingPortalSelection();
+      return;
+    }
+    this.gameService.useHealingPortal(selection.target, selection.destination);
+    this.resetHealingPortalSelection();
+  }
+
+  cancelHealingPortal(): void {
+    this.resetHealingPortalSelection();
   }
 
   confirmDrop(): void {
@@ -107,6 +177,9 @@ export class InventoryPanel implements DoCheck, OnDestroy {
   ngDoCheck(): void {
     if (this.dropSelection && !this.isSelectionCurrent(this.dropSelection)) {
       this.dropSelection = null;
+    }
+    if (this.healingPortalSelectionOpen && !this.isHealingPortalSelectionCurrent()) {
+      this.resetHealingPortalSelection();
     }
 
     const current = [...this.weaponSlots, ...this.spellSlots, this.keyItem];
@@ -156,6 +229,23 @@ export class InventoryPanel implements DoCheck, OnDestroy {
 
   ngOnDestroy(): void {
     this.clearFeedback();
+    this.resetHealingPortalSelection();
+  }
+
+  private resetHealingPortalSelection(): void {
+    this.pendingHealingPortalSelection = null;
+    this.healingPortalSelectionOpen = false;
+  }
+
+  private isHealingPortalSelectionCurrent(): boolean {
+    if (!this.healingPortalSelectionOpen || !this.player || this.player !== this.gameService.activePlayer) {
+      return false;
+    }
+    if (!this.canUseHealingPortal) return false;
+    const selection = this.pendingHealingPortalSelection;
+    if (!selection) return true;
+    return (!selection.target || this.healingTargets.includes(selection.target))
+      && (!selection.destination || this.healingFountains.includes(selection.destination));
   }
 
   /** Vérifie qu'une confirmation vise encore exactement le contexte sélectionné. */
