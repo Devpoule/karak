@@ -6,6 +6,7 @@ import { PlacedTile } from '../../models/tile';
 import { Equipment, KeyEquipment, SpellEquipment, WeaponEquipment } from '../../models/equipment';
 import { PlayerService } from '../../services/player.service';
 import { ExplorationService } from '../../services/exploration.service';
+import { getHeroDefinition } from '../../data/hero-definitions';
 
 type InventoryGroup = 'weapons' | 'spells' | 'key';
 
@@ -96,6 +97,12 @@ export class InventoryPanel implements DoCheck, OnDestroy {
 
   get healingTargets(): readonly Player[] {
     return this.playerService.players;
+  }
+
+  /** Nom lisible d'une cible du Portail, sans exposer son identifiant technique. */
+  getPlayerDisplayName(player: Player, index?: number): string {
+    const name = player.heroId ? getHeroDefinition(player.heroId)?.name : undefined;
+    return name ?? `Héros ${(index ?? 0) + 1}`;
   }
 
   get healingFountains(): readonly PlacedTile[] {

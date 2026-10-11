@@ -74,7 +74,7 @@
             <span>Héros cible</span>
             @for (target of healingTargets; track $index) {
               <button type="button" (click)="selectHealingPortalTarget(target)">
-                {{ target.heroId ?? 'Héros ' + ($index + 1) }}
+                {{ getPlayerDisplayName(target, $index) }}
               </button>
             }
           </div>
@@ -88,7 +88,7 @@
           </div>
         </div>
         @if (healingPortalSelection; as selection) {
-          <p>Déplacer {{ selection.target?.heroId ?? 'le héros sélectionné' }} vers la fontaine ({{ selection.destination?.x }}, {{ selection.destination?.y }}) ?</p>
+          <p>Déplacer {{ selection.target ? getPlayerDisplayName(selection.target) : 'le héros sélectionné' }} vers la fontaine ({{ selection.destination?.x }}, {{ selection.destination?.y }}) ?</p>
         }
         <button type="button" (click)="confirmHealingPortal()" [disabled]="!healingPortalSelection">Confirmer</button>
         <button type="button" (click)="cancelHealingPortal()">Annuler</button>
