@@ -159,12 +159,31 @@ export class CombatOverlay implements OnDestroy {
     return this.combatService.getRemainingMagicBolts();
   }
 
+  get displayedSacrificeBonus(): number {
+    return this.combatService.pendingCombatRoll()?.sacrificeUsed ? 1 : 0;
+  }
+
   get availableHeroRerolls(): Array<'both' | 'die1' | 'die2'> {
     return this.combatService.getAvailableHeroRerolls();
   }
 
   get canUseHeroReroll(): boolean {
     return this.isDecisionVisible && this.availableHeroRerolls.length > 0;
+  }
+
+  get canUseXanrosSacrifice(): boolean {
+    const combat = this.combatService.pendingCombat();
+    const roll = this.combatService.pendingCombatRoll();
+    return this.isDecisionVisible
+      && combat?.player.heroId === 'xanros'
+      && !combat.player.isCursed
+      && !!roll
+      && !roll.sacrificeUsed;
+  }
+
+  useXanrosSacrifice(): void {
+    if (!this.canUseXanrosSacrifice || !this.combatService.useXanrosSacrifice()) return;
+    if (this.remainingMagicBolts === 0) this.resolveCombatAfterRoll();
   }
 
   useHeroReroll(kind: 'both' | 'die1' | 'die2'): void {
@@ -426,6 +445,7 @@ export class CombatOverlay implements OnDestroy {
           if (this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() === roll) {
             const boltsBefore = roll.magicBoltsUsed;
             this.aiService.resolveHeroRerollDecision();
+            this.aiService.resolveXanrosSacrificeDecision();
             this.aiService.resolveMagicBoltDecision();
             const boltsUsed = (this.combatService.pendingCombatRoll()?.magicBoltsUsed ?? boltsBefore) - boltsBefore;
             if (boltsUsed > 0) this.triggerMagicBoltFeedback(boltsUsed);

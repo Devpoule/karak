@@ -105,6 +105,40 @@ describe('GameService Portail de guérison', () => {
   });
 });
 
+describe('GameService substitution de Xanros', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
+  });
+
+  it('échange les positions au début du tour et consomme les quatre mouvements', () => {
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const dungeonService = TestBed.inject(DungeonService);
+    const turnService = TestBed.inject(TurnService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const xanros = playerService.players[0];
+    const target = playerService.players[1];
+    xanros.heroId = 'xanros';
+    xanros.position = { x: 0, y: 0 };
+    target.position = { x: 1, y: 0 };
+    dungeonService.tiles.push(
+      { definitionId: 'start', x: 0, y: 0, rotation: 0 },
+      { definitionId: 'room-1', x: 1, y: 0, rotation: 0 },
+    );
+
+    expect(gameService.canUseXanrosSubstitution).toBe(true);
+    expect(gameService.openXanrosSubstitution()).toBe(true);
+    expect(gameService.confirmXanrosSubstitution(target)).toBe(true);
+    expect(xanros.position).toEqual({ x: 1, y: 0 });
+    expect(target.position).toEqual({ x: 0, y: 0 });
+    expect(turnService.remainingMovements()).toBe(0);
+    expect(gameService.xanrosSubstitutionSelectionOpen()).toBe(false);
+  });
+});
+
 describe('GameService coffre fermé', () => {
   let gameService: GameService;
   let playerService: PlayerService;

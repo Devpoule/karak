@@ -20,6 +20,7 @@ La référence locale est `public/assets/rules/karak-base.pdf`, accompagnée de 
 - Horan peut relancer les deux dés une fois par combat ; Victorius peut relancer une fois chaque dé affichant 1, dans la limite d'une relance par combat. Ces relances sont indisponibles lorsqu'ils sont maudits.
 - Taia reçoit `+1` à l'attaque après son premier déplacement du tour ; ce bonus est capturé au lancer et désactivé par la malédiction. Son choix de jetons à l'exploration reste à intégrer.
 - Argentus peut franchir une séparation entre deux tuiles déjà découvertes et adjacentes ; la Marche astrale est désactivée par la malédiction. Le déplacement consomme un mouvement comme les autres déplacements.
+- Xanros peut sacrifier une vie après le lancer pour obtenir `+1` une seule fois par combat, y compris avec une seule vie restante ; la malédiction désactive ce pouvoir. Il peut aussi échanger sa position avec un autre héros au début du tour, en consommant les quatre mouvements ; la cible et les tuiles doivent être valides.
 
 ## Adaptation numérique
 

@@ -322,6 +322,25 @@ describe('CombatService séparation du lancer et de la résolution', () => {
     vi.restoreAllMocks();
   });
 
+  it('Xanros peut sacrifier sa dernière vie une seule fois après le lancer', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const combatService = new CombatService(playerService);
+    const player = playerService.players[0];
+    player.heroId = 'xanros';
+    player.lives = 1;
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, createTile());
+    combatService.rollPendingCombat();
+
+    expect(combatService.useXanrosSacrifice()).toBe(true);
+    expect(player.lives).toBe(0);
+    expect(player.recoveryState).toBe('pending');
+    expect(combatService.pendingCombatRoll()?.heroBonus).toBe(1);
+    expect(combatService.useXanrosSacrifice()).toBe(false);
+    vi.restoreAllMocks();
+  });
+
   it('conserve le bonus d’armes enregistré malgré une modification ultérieure', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     const playerService = new PlayerService();

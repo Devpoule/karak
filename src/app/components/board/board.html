@@ -260,6 +260,18 @@
               </button>
             }
             @if (!pendingTile) {
+              @if (gameService.canUseXanrosSubstitution && !gameService.xanrosSubstitutionSelectionOpen()) {
+                <button
+                  type="button"
+                  class="board__end-turn"
+                  aria-label="Utiliser la substitution de Xanros"
+                  title="Substitution de Xanros"
+                  (pointerdown)="$event.stopPropagation()"
+                  (click)="gameService.openXanrosSubstitution()"
+                >
+                  ⇄
+                </button>
+              }
               <button
                 type="button"
                 class="board__end-turn"
@@ -270,6 +282,17 @@
               >
                 <span aria-hidden="true">✓</span>
               </button>
+            }
+            @if (gameService.xanrosSubstitutionSelectionOpen()) {
+              <div class="board__substitution-options" role="dialog" aria-label="Choisir un héros pour la substitution">
+                <span>Échanger avec :</span>
+                @for (target of gameService.xanrosSubstitutionTargets; track $index) {
+                  <button type="button" (click)="gameService.confirmXanrosSubstitution(target)">
+                    {{ target.heroId ?? 'Héros ' + ($index + 1) }}
+                  </button>
+                }
+                <button type="button" (click)="gameService.cancelXanrosSubstitution()">Annuler</button>
+              </div>
             }
           </div>
         }

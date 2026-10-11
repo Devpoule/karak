@@ -138,6 +138,8 @@ export class GameService {
 
   /** Une transition bloque les actions jusqu'à l'arrivée du prochain joueur. */
   readonly turnTransitionPending = signal(false);
+  /** Sélection temporaire de cible pour la Substitution de Xanros. */
+  readonly xanrosSubstitutionSelectionOpen = signal(false);
   /** Révision UI émise lorsqu'un héros entre réellement en tour de repos. */
   readonly recoveryRevision = signal(0);
   private readonly turnTransitionDelay = 2800;
@@ -155,6 +157,55 @@ export class GameService {
       || this.pendingTreasure() !== null
       || this.pendingReward() !== null
       || this.pendingGroundEquipment() !== null;
+  }
+
+  /** Joueurs vers lesquels Xanros peut actuellement se substituer. */
+  get xanrosSubstitutionTargets(): Player[] {
+    const player = this.activePlayer;
+    if (!player) return [];
+    return this.playerService.players.filter(candidate =>
+      candidate !== player && candidate.position !== undefined,
+    );
+  }
+
+  get canUseXanrosSubstitution(): boolean {
+    const player = this.activePlayer;
+    return this.phase() === 'playing'
+      && !this.turnTransitionPending()
+      && !this.hasPendingTileResolution
+      && this.turnService.remainingMovements() === 4
+      && player?.heroId === 'xanros'
+      && !player.isCursed
+      && this.xanrosSubstitutionTargets.length > 0;
+  }
+
+  openXanrosSubstitution(): boolean {
+    if (!this.canUseXanrosSubstitution) return false;
+    this.xanrosSubstitutionSelectionOpen.set(true);
+    return true;
+  }
+
+  cancelXanrosSubstitution(): void {
+    this.xanrosSubstitutionSelectionOpen.set(false);
+  }
+
+  confirmXanrosSubstitution(target: Player): boolean {
+    const player = this.activePlayer;
+    if (!this.xanrosSubstitutionSelectionOpen() || !this.canUseXanrosSubstitution) return false;
+    if (!this.xanrosSubstitutionTargets.includes(target) || !player?.position || !target.position) return false;
+
+    const playerPosition = { ...player.position };
+    player.position = { ...target.position };
+    target.position = playerPosition;
+    this.xanrosSubstitutionSelectionOpen.set(false);
+    this.turnService.stopMovements();
+
+    const sourceTile = this.dungeonService.getTileAt(playerPosition.x, playerPosition.y);
+    const destinationTile = this.dungeonService.getTileAt(player.position.x, player.position.y);
+    if (sourceTile && destinationTile) {
+      this.resolveTileEntry(player, sourceTile, destinationTile);
+    }
+    return true;
   }
   constructor(
     private readonly dungeonService: DungeonService,
@@ -185,6 +236,7 @@ export class GameService {
       this.turnTransitionTimer = null;
     }
     this.turnTransitionPending.set(false);
+    this.xanrosSubstitutionSelectionOpen.set(false);
     this.phase.set('setup');
     this.finalRanking.set([]);
     this.winners.set([]);

@@ -168,6 +168,15 @@ export class AiService {
     return choice ? this.combatService.useHeroReroll(choice) : false;
   }
 
+  resolveXanrosSacrificeDecision(): boolean {
+    const player = this.gameService.activePlayer;
+    const combat = this.combatService.pendingCombat();
+    const roll = this.combatService.pendingCombatRoll();
+    if (!player || player.controller !== 'ai' || !combat || combat.player !== player || !roll) return false;
+    if (roll.attackPower > combat.monster.strength) return false;
+    return this.combatService.useXanrosSacrifice();
+  }
+
   private getEquipmentDefinition(equipmentId: string) {
     // Le catalogue reste la source de vérité ; aucune règle d'inventaire
     // n'est dupliquée ici.
@@ -248,6 +257,14 @@ export class AiService {
     if (player.recoveryState === 'resting') {
       this.gameService.endTurn();
       return false;
+    }
+
+    if (this.gameService.canUseXanrosSubstitution) {
+      const target = this.gameService.xanrosSubstitutionTargets[0];
+      if (target) {
+        this.gameService.openXanrosSubstitution();
+        return this.gameService.confirmXanrosSubstitution(target);
+      }
     }
 
     /**

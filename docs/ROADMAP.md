@@ -19,7 +19,7 @@
 - La couverture des composants visuels et des effets CSS est limitée par rapport aux tests métier.
 - La compilation passe avec des avertissements de budget SCSS, notamment sur `CombatOverlay` et `GameSetup`.
 - `GameService` reste une façade large ; toute extraction doit être motivée par des usages concrets.
-- Aderyn : égalité gagnante et Marche rampante sont intégrées et couvertes par les tests. Horan et Victorius disposent maintenant de leur relance post-lancer, avec commandes humaines et décision IA. Taia dispose de son bonus post-déplacement et Argentus de sa Marche astrale ; le choix de jetons de Taia et Xanros restent à traiter.
+- Aderyn : égalité gagnante et Marche rampante sont intégrées et couvertes par les tests. Horan et Victorius disposent maintenant de leur relance post-lancer, avec commandes humaines et décision IA. Taia dispose de son bonus post-déplacement, Argentus de sa Marche astrale et Xanros de son sacrifice et de sa substitution.
 - Les extensions, le son et le multijoueur en ligne ne sont pas prioritaires.
 
 ## Dernière recette technique
@@ -50,11 +50,10 @@
 ## Priorités proposées
 
 1. Implémenter le choix de deux jetons de Taia lors de l'exploration.
-2. Implémenter le sacrifice/substitution de Xanros.
-3. Rejouer les scénarios navigateur du Portail, du repos, des récompenses et des objets au sol ; corriger uniquement les anomalies reproduites.
-4. Réduire progressivement les avertissements SCSS sans refonte visuelle.
-5. Préparer ultérieurement une architecture de synchronisation en ligne, après stabilisation du jeu local.
+2. Rejouer les scénarios navigateur du Portail, du repos, des récompenses et des objets au sol ; corriger uniquement les anomalies reproduites.
+3. Réduire progressivement les avertissements SCSS sans refonte visuelle.
+4. Préparer ultérieurement une architecture de synchronisation en ligne, après stabilisation du jeu local.
 
 ## Prochain chantier autonome proposé
 
-Un premier lot de pouvoirs spécifiques de héros, en commençant par une capacité dont la règle et le point d'intégration sont confirmés par le manuel. Les fixtures E2E pourront être étendues ensuite aux récompenses, au repos, au Portail et à la fin de partie.
+Le prochain lot autonome est le choix de deux jetons de Taia à l'exploration, puis une recette navigateur des pouvoirs spécifiques et des parcours de récompense.

@@ -38,6 +38,7 @@ export interface CombatRoll {
   monsterStrength: number;
   magicBoltsUsed: number;
   heroRerollsUsed: number;
+  sacrificeUsed: boolean;
 }
 
 /**
@@ -56,6 +57,7 @@ export interface CombatResult {
   monsterStrength: number;
   magicBoltsUsed: number;
   heroRerollsUsed: number;
+  sacrificeUsed: boolean;
   outcome: CombatOutcome;
 }
 
@@ -165,10 +167,26 @@ export class CombatService {
       monsterStrength: combat.monster.strength,
       magicBoltsUsed: 0,
       heroRerollsUsed: 0,
+      sacrificeUsed: false,
     };
     this.pendingCombatRoll.set(roll);
     this.logCombatDiagnostic('roll', roll, combat.player.inventory.weapons);
     return roll;
+  }
+
+  /** Sacrifie une vie de Xanros pour ajouter +1 après le lancer. */
+  useXanrosSacrifice(): boolean {
+    const combat = this.pendingCombat();
+    const roll = this.pendingCombatRoll();
+    if (!combat || !roll || roll.sacrificeUsed || combat.player.heroId !== 'xanros' || combat.player.isCursed) return false;
+    this.playerService.loseLife(combat.player);
+    this.pendingCombatRoll.set({
+      ...roll,
+      heroBonus: roll.heroBonus + 1,
+      attackPower: roll.attackPower + 1,
+      sacrificeUsed: true,
+    });
+    return true;
   }
 
   /** Retourne les relances actuellement autorisées par le pouvoir du héros. */

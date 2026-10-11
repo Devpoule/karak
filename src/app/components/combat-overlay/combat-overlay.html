@@ -119,6 +119,11 @@
                     +1pt
                   </span>
                 }
+                @if (displayedSacrificeBonus > 0) {
+                  <span class="combat-overlay__bonus combat-overlay__bonus--hero" aria-label="Bonus de sacrifice : +1 point">
+                    +1pt
+                  </span>
+                }
               </div>
             }
           }
@@ -198,6 +203,11 @@
               Relancer le dé 2
             </button>
           }
+        }
+        @if (canUseXanrosSacrifice) {
+          <button type="button" class="combat-overlay__continue" (click)="useXanrosSacrifice()">
+            Sacrifier 1 PV (+1 attaque)
+          </button>
         }
         @if (remainingMagicBolts > 0) {
           <button
