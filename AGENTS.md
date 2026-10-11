@@ -17,6 +17,15 @@
 13. Maintenir la documentation à jour lorsqu'une évolution importante est validée.
 14. Documenter les décisions non évidentes et les contraintes métier dans le code ou la documentation appropriée.
 
+## Convention SCSS
+
+- Conserver les styles dans le composant Angular concerné pour préserver l'encapsulation.
+- Garder une feuille unique pour les composants simples ; pour les composants complexes, extraire uniquement des responsabilités autonomes dans des partiels locaux (`_layout.scss`, `_responsive.scss`, `_animations.scss`, `_accessibility.scss`, etc.).
+- Charger les partiels depuis la feuille principale avec `@use`, jamais avec les anciens `@import`.
+- Garder les animations et le responsive près du composant, sauf s'ils sont réellement partagés.
+- Réutiliser les tokens transversaux de `src/styles.scss` sans déplacer des styles locaux dans la feuille globale pour contourner les budgets.
+- Comparer les tailles CSS compilées avant/après et conserver les avertissements de budget visibles lorsqu'ils restent justifiés.
+
 ## Références et règles
 
 Le manuel local est la source de vérité pour les règles officielles :

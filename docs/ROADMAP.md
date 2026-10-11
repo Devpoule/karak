@@ -56,3 +56,12 @@
 ## Prochain chantier autonome proposé
 
 Le prochain lot autonome est une recette navigateur dédiée aux pouvoirs spécifiques et aux parcours de récompense.
+
+## Refactorisation SCSS — 11 octobre 2026
+
+- Branche locale `refactor/scss-architecture` créée depuis `main`.
+- Convention SCSS documentée dans `docs/SCSS.md` et ajoutée aux consignes agents.
+- `GameSetup` et `CombatOverlay` chargent leurs règles `prefers-reduced-motion` depuis des partiels locaux via `@use`.
+- L'audit des autres composants n'a pas révélé de mutualisation sûre justifiant une extraction supplémentaire sans risque visuel.
+- Les budgets compilés restent inchangés : `GameSetup` 22,20 kB et `CombatOverlay` 20,26 kB, avec les avertissements existants à 16 kB.
+- La prochaine priorité reste la réduction ciblée de règles réellement redondantes, uniquement si une comparaison visuelle et compilée confirme l'absence de régression.
