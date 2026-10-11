@@ -79,25 +79,6 @@
   transform: translateX(0);
 }
 
-.player-hud__close,
-.player-hud__palette-close {
-  position: absolute;
-  z-index: 40;
-  width: 2rem;
-  height: 2rem;
-  color: #fff8df;
-  background: #352719;
-  border: 1px solid #d6b36a;
-  border-radius: 50%;
-  cursor: pointer;
-  pointer-events: auto;
-  font-size: 1.25rem;
-}
-
-.player-hud__close { top: 0.35rem; }
-.player-hud__side--left .player-hud__close { right: -0.6rem; }
-.player-hud__side--right .player-hud__close { left: -0.6rem; }
-
 .player-hud__hero-palette-button {
   padding: 0.35rem 0.55rem;
   color: #fff8df;

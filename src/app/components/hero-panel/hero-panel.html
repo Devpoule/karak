@@ -3,6 +3,9 @@
   [class.hero-panel--unconscious]="isUnconscious"
   [attr.aria-label]="isUnconscious ? 'Héros inconscient : récupération obligatoire' : null"
 >
+  @if (heroDefinition; as hero) {
+    <h2 class="hero-panel__name">{{ hero.name }}</h2>
+  }
   <!--
     Support visuel du héros.
 
@@ -38,17 +41,5 @@
         />
       }
     </div>
-    <details class="hero-panel__details">
-      <summary>{{ hero.name }}</summary>
-      <div class="hero-panel__powers">
-        <p class="hero-panel__description">{{ hero.description }}</p>
-        @for (power of hero.powers; track power.id) {
-          <article>
-            <h3>Pouvoir {{ $index + 1 }} — {{ power.name }}</h3>
-            <p>{{ power.description }}</p>
-          </article>
-        }
-      </div>
-    </details>
   }
 </section>

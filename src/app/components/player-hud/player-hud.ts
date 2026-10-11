@@ -525,16 +525,6 @@ export class PlayerHud {
 
   }
 
-  closeLeftPanel(): void {
-    this.pendingLeftPlayerIndex = null;
-    this.leftPanelOpen = false;
-  }
-
-  closeRightPanel(): void {
-    this.pendingRightPlayerIndex = null;
-    this.rightPanelOpen = false;
-  }
-
 
 
 

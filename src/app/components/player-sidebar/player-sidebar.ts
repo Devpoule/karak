@@ -1,5 +1,7 @@
 import { Component, Input } from '@angular/core';
 
+import { getHeroDefinition } from '../../data/hero-definitions';
+import { HeroPowerId } from '../../models/hero';
 import { Player } from '../../models/player';
 import { LifePanel } from '../life-panel/life-panel';
 import { HeroPanel } from '../hero-panel/hero-panel';
@@ -42,6 +44,7 @@ export type PlayerSide = 'left' | 'right';
   styleUrl: './player-sidebar.scss',
 })
 export class PlayerSidebar {
+  selectedPowerId: HeroPowerId | null = null;
 
   // ==========================================================
   // CONFIGURATION DU JOUEUR
@@ -74,6 +77,18 @@ export class PlayerSidebar {
    * Affiche le panneau d'inventaire.
    */
   @Input() showInventory = true;
+
+  get heroDefinition() {
+    return this.player?.heroId ? getHeroDefinition(this.player.heroId) ?? null : null;
+  }
+
+  togglePower(powerId: HeroPowerId): void {
+    this.selectedPowerId = this.selectedPowerId === powerId ? null : powerId;
+  }
+
+  get selectedPower() {
+    return this.heroDefinition?.powers.find(power => power.id === this.selectedPowerId) ?? null;
+  }
 
 
 }
