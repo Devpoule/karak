@@ -31,14 +31,29 @@
 - avertissements de budget SCSS conservés sur `CombatOverlay` et `GameSetup` ;
 - aucune anomalie fonctionnelle confirmée pendant cette recette.
 
+## Validation combat Chromium — 11 octobre 2026
+
+- Fixture E2E déterministe ajoutée dans `e2e/combat-fixture.spec.ts` ; elle utilise
+  uniquement l'API Angular de développement exposée par Chromium et n'ajoute aucun
+  accès de test au build de production.
+- Cinq scénarios Chromium validés : bonus d'épée `+2pts`, victoire, égalité,
+  défaite, écran étroit et Tir magique `+1pt`.
+- Captures inspectées dans `playwright-report/` : `combat-roll-victory.png`,
+  `combat-victory.png`, `combat-tie.png`, `combat-defeat.png`,
+  `combat-roll-magic.png`, `combat-magic.png` et `combat-roll-narrow.png`.
+- L'interface de combat est considérée comme clôturée pour ce périmètre : aucun
+  débordement ni chevauchement bloquant n'a été observé ; les badges restent sur
+  les cartes et les bonus restent distincts près des dés.
+- La prochaine priorité est l'implémentation progressive des pouvoirs spécifiques
+  des héros, en commençant par les règles explicitement vérifiables dans le manuel.
+
 ## Priorités proposées
 
-1. Ajouter un mécanisme de fixture E2E isolé du build de production, uniquement si son intégration Angular reste simple et sûre.
-2. Rejouer les scénarios navigateur du Portail, des combats, du repos et des objets au sol ; corriger uniquement les anomalies reproduites.
-3. Auditer puis implémenter les pouvoirs de héros par petits lots validés par les règles officielles.
-4. Réduire progressivement les avertissements SCSS sans refonte visuelle.
-5. Préparer ultérieurement une architecture de synchronisation en ligne, après stabilisation du jeu local.
+1. Auditer puis implémenter les pouvoirs de héros par petits lots validés par les règles officielles.
+2. Rejouer les scénarios navigateur du Portail, du repos, des récompenses et des objets au sol ; corriger uniquement les anomalies reproduites.
+3. Réduire progressivement les avertissements SCSS sans refonte visuelle.
+4. Préparer ultérieurement une architecture de synchronisation en ligne, après stabilisation du jeu local.
 
 ## Prochain chantier autonome proposé
 
-Une fixture E2E explicitement exclue des builds de production pour préparer les états Portail, récompenses, repos et fin de partie. Si cette isolation exige une refonte de l'injection Angular, conserver la recette métier unitaire et documenter la limite plutôt que créer une porte dérobée.
+Un premier lot de pouvoirs spécifiques de héros, en commençant par une capacité dont la règle et le point d'intégration sont confirmés par le manuel. Les fixtures E2E pourront être étendues ensuite aux récompenses, au repos, au Portail et à la fin de partie.
