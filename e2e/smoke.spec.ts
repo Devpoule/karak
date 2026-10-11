@@ -37,3 +37,19 @@ test('la préparation reste lisible sur écran étroit', async ({ page }) => {
     fullPage: true,
   });
 });
+
+test('la préparation progresse jusqu’à la détermination du premier joueur', async ({ page }) => {
+  await page.goto('/game');
+  await page.getByRole('button', { name: 'Jouer' }).click();
+  await page.getByRole('button', { name: 'Continuer' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Tirage des héros' })).toBeVisible();
+  // Le bouton arrive avec l'animation d'entrée du panneau de préparation.
+  await page.waitForTimeout(600);
+  await page.getByRole('button', { name: 'Tirer les héros' }).click();
+  await expect(page.getByRole('heading', { name: 'Qui commence ?' })).toBeVisible({ timeout: 10_000 });
+  await page.screenshot({
+    path: 'playwright-report/karak-first-player.png',
+    fullPage: true,
+  });
+});
