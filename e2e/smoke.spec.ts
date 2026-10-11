@@ -55,6 +55,15 @@ test('la préparation progresse jusqu’à la détermination du premier joueur',
 });
 
 test('une partie atteint le plateau après les lancers de préparation', async ({ page }) => {
+  // Le générateur est limité à ce test navigateur : aucune logique de production
+  // n'est modifiée, mais la partie jouée devient reproductible pour la recette.
+  await page.addInitScript(() => {
+    let state = 0x5eed;
+    Math.random = () => {
+      state = (state * 1664525 + 1013904223) >>> 0;
+      return state / 0x1_0000_0000;
+    };
+  });
   await page.goto('/game');
   await page.getByRole('button', { name: 'Jouer' }).click();
   await page.getByRole('button', { name: 'Continuer' }).click();
@@ -62,7 +71,7 @@ test('une partie atteint le plateau après les lancers de préparation', async (
   await page.getByRole('button', { name: 'Tirer les héros' }).click({ force: true });
   await expect(page.getByRole('heading', { name: 'Qui commence ?' })).toBeVisible({ timeout: 10_000 });
 
-  for (let attempt = 0; attempt < 8; attempt++) {
+  for (let attempt = 0; attempt < 20; attempt++) {
     const rollButton = page.locator('button[aria-label^="Lancer les dés du joueur"], button[aria-label^="Relancer les dés du joueur"]').first();
     if (await rollButton.count() > 0 && await rollButton.isVisible()) {
       await rollButton.click({ force: true });

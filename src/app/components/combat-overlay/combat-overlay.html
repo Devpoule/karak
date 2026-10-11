@@ -104,13 +104,19 @@
             @if (displayedWeapons.length > 0 || displayedMagicBonus > 0) {
               <div class="combat-overlay__bonus-list" aria-label="Bonus appliqués au combat">
                 @for (weapon of displayedWeapons; track weapon.id + $index) {
-                  <span class="combat-overlay__bonus combat-overlay__bonus--weapon">
-                    {{ weapon.name }} : +{{ weapon.attackBonus }} pt
+                  <span
+                    class="combat-overlay__bonus combat-overlay__bonus--weapon"
+                    [attr.aria-label]="'Bonus d’équipement : +' + weapon.attackBonus + ' points'"
+                  >
+                    +{{ weapon.attackBonus }}pts
                   </span>
                 }
                 @for (bolt of displayedMagicBonusEntries; track bolt) {
-                  <span class="combat-overlay__bonus combat-overlay__bonus--magic">
-                    Tir magique : +1 pt
+                  <span
+                    class="combat-overlay__bonus combat-overlay__bonus--magic"
+                    aria-label="Bonus magique : +1 point"
+                  >
+                    +1pt
                   </span>
                 }
               </div>
