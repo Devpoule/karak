@@ -1,0 +1,17 @@
+/** Animations propres aux éléments visuels du plateau. */
+@keyframes active-hero-arrival {
+  0% {
+    transform: translate(var(--hero-offset-x), var(--hero-offset-y)) scale(0.92);
+    filter: brightness(1);
+  }
+
+  45% {
+    transform: translate(var(--hero-offset-x), var(--hero-offset-y)) scale(1.1);
+    filter: brightness(1.25);
+  }
+
+  100% {
+    transform: translate(var(--hero-offset-x), var(--hero-offset-y)) scale(1);
+    filter: brightness(1);
+  }
+}

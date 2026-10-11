@@ -1,3 +1,5 @@
+@use './animations';
+
 :host {
   display: block;
   width: 100%;
@@ -211,20 +213,6 @@
 }
 .board__hero--active > img {
   animation: active-hero-arrival 700ms ease-out;
-}
-@keyframes active-hero-arrival {
-  0% {
-    transform: translate(var(--hero-offset-x), var(--hero-offset-y)) scale(0.92);
-    filter: brightness(1);
-  }
-  45% {
-    transform: translate(var(--hero-offset-x), var(--hero-offset-y)) scale(1.1);
-    filter: brightness(1.25);
-  }
-  100% {
-    transform: translate(var(--hero-offset-x), var(--hero-offset-y)) scale(1);
-    filter: brightness(1);
-  }
 }
 /*
  * Marqueurs des joueurs partageant la tuile du pion principal.

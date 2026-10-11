@@ -62,6 +62,8 @@ Le prochain lot autonome est une recette navigateur dédiée aux pouvoirs spéci
 - Branche locale `refactor/scss-architecture` créée depuis `main`.
 - Convention SCSS documentée dans `docs/SCSS.md` et ajoutée aux consignes agents.
 - `GameSetup` et `CombatOverlay` chargent leurs règles `prefers-reduced-motion` depuis des partiels locaux via `@use`.
+- `Board` charge son animation de héros actif depuis `_animations.scss` via `@use` ; les styles de tuile, de caméra et de superposition restent ensemble car ils partagent le même contexte d'empilement.
+- Le doublon de dimensionnement du verdict de `CombatOverlay` a été supprimé sans modifier le rendu.
 - L'audit des autres composants n'a pas révélé de mutualisation sûre justifiant une extraction supplémentaire sans risque visuel.
-- Les budgets compilés restent inchangés : `GameSetup` 22,20 kB et `CombatOverlay` 20,26 kB, avec les avertissements existants à 16 kB.
+- Les budgets compilés restent dépassés mais légèrement réduits pour `CombatOverlay` : `GameSetup` 22,20 kB et `CombatOverlay` 20,24 kB, avec les avertissements existants à 16 kB.
 - La prochaine priorité reste la réduction ciblée de règles réellement redondantes, uniquement si une comparaison visuelle et compilée confirme l'absence de régression.

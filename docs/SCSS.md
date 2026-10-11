@@ -13,7 +13,7 @@
 
 Créer un partiel lorsqu'un bloc est autonome, suffisamment volumineux et possède une responsabilité identifiable. Ne pas extraire quelques déclarations simplement pour augmenter le nombre de fichiers.
 
-Les composants `GameSetup` et `CombatOverlay` utilisent déjà cette convention pour leur bloc `prefers-reduced-motion`. Les autres composants restent volontairement monolithiques tant qu'un découpage n'apporte pas un bénéfice démontré.
+Les composants `GameSetup` et `CombatOverlay` utilisent cette convention pour leur bloc `prefers-reduced-motion`. Le `Board` utilise également un partiel local pour l'animation du héros actif. Les autres composants restent volontairement monolithiques tant qu'un découpage n'apporte pas un bénéfice démontré.
 
 ## Responsive et accessibilité
 
