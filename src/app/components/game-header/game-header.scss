@@ -140,3 +140,36 @@
   text-shadow:
     0 2px 2px rgba(0, 0, 0, 0.9);
 }
+
+@media (max-width: 600px) {
+  .game-header {
+    padding: 0 0.5rem;
+    grid-template-columns: auto minmax(72px, 1fr) auto;
+  }
+
+  .game-header__home,
+  .game-header__link {
+    padding: 0.4rem 0.55rem;
+    white-space: nowrap;
+  }
+
+  .game-header__logo {
+    width: clamp(90px, 25vw, 130px);
+  }
+
+  .game-header__actions {
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .game-header__turn {
+    max-width: 5ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .game-header__separator {
+    display: none;
+  }
+}
