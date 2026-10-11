@@ -56,6 +56,9 @@ export interface HeroDefinition {
   id: HeroId;
   name: string;
 
+  /** Présentation courte affichée dans le glossaire et la fiche joueur. */
+  description: string;
+
   /**
    * Carte utilisée pendant le tirage des héros.
    */

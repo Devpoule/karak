@@ -4,7 +4,6 @@ import { Player } from '../../models/player';
 import { LifePanel } from '../life-panel/life-panel';
 import { HeroPanel } from '../hero-panel/hero-panel';
 import { InventoryPanel } from '../inventory-panel/inventory-panel';
-import { MessagePanel } from '../message-panel/message-panel';
 import { TreasurePanel } from '../treasure-panel/treasure-panel';
 
 /**
@@ -25,7 +24,7 @@ export type PlayerSide = 'left' | 'right';
  * - points de vie ;
  * - héros ;
  * - inventaire ;
- * - messages.
+ * - trésors.
  *
  * Le composant ne contient aucune logique de jeu.
  * Il reçoit les informations préparées par le HUD et
@@ -37,7 +36,6 @@ export type PlayerSide = 'left' | 'right';
     LifePanel,
     HeroPanel,
     InventoryPanel,
-    MessagePanel,
     TreasurePanel,
   ],
   templateUrl: './player-sidebar.html',
@@ -61,17 +59,6 @@ export class PlayerSidebar {
   @Input() player: Player | null = null;
 
 
-  /**
-   * Couleur UI associée au joueur.
-   *
-   * Elle provient de PLAYER_UI_CONFIG via PlayerHud.
-   *
-   * La sidebar ne cherche volontairement pas à déterminer
-   * elle-même l'identité ou la couleur du joueur.
-   */
-  @Input() playerColor = 'transparent';
-
-
   // ==========================================================
   // PANNEAUX VISIBLES
   // ==========================================================
@@ -89,8 +76,4 @@ export class PlayerSidebar {
   @Input() showInventory = true;
 
 
-  /**
-   * Affiche l'encadré réservé aux messages du joueur.
-   */
-  @Input() showMessage = true;
 }

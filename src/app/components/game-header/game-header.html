@@ -13,6 +13,38 @@
     draggable="false"
   />
 
+  @if (showHeroGlossary) {
+    <button
+      class="game-header__crystal"
+      type="button"
+      [attr.aria-expanded]="heroGlossaryOpen()"
+      aria-controls="hero-glossary"
+      aria-label="Afficher ou replier le glossaire des héros"
+      (click)="toggleHeroGlossary()"
+    >
+      <span aria-hidden="true">✦</span>
+    </button>
+  }
+
+  @if (heroGlossaryOpen() && showHeroGlossary) {
+  <nav id="hero-glossary" class="game-header__hero-wheel" aria-label="Consulter les héros">
+    @for (hero of heroes; track hero.id; let index = $index) {
+      <button
+        type="button"
+        class="game-header__hero-button"
+        [class.game-header__hero-button--selected]="selectedHero()?.id === hero.id"
+        [style.--hero-index]="index"
+        [attr.aria-label]="'Consulter ' + hero.name"
+        [attr.aria-pressed]="selectedHero()?.id === hero.id"
+        (click)="selectHero(hero)"
+      >
+        <img [src]="hero.characterTransparent" [alt]="hero.name" />
+        <span>{{ hero.name }}</span>
+      </button>
+    }
+  </nav>
+  }
+
   <div class="game-header__actions">
     @if (context === 'game') {
       <a
@@ -36,4 +68,21 @@
       </a>
     }
   </div>
+
+  @if (selectedHero(); as hero) {
+    <section class="game-header__hero-details" role="dialog" aria-label="Détails du héros">
+      <button type="button" class="game-header__hero-close" aria-label="Fermer les détails" (click)="closeHeroDetails()">×</button>
+      <img [src]="hero.characterStats" [alt]="hero.name" />
+      <div>
+        <h2>{{ hero.name }}</h2>
+        <p class="game-header__hero-description">{{ hero.description }}</p>
+        @for (power of hero.powers; track power.id) {
+          <article>
+            <h3>Pouvoir {{ $index + 1 }} — {{ power.name }}</h3>
+            <p>{{ power.description }}</p>
+          </article>
+        }
+      </div>
+    </section>
+  }
 </header>

@@ -125,3 +125,33 @@ test('une partie atteint le plateau après les lancers de préparation', async (
     fullPage: true,
   });
 });
+
+test('le grimoire est réservé à la partie et se replie avec la boule de cristal', async ({ page }) => {
+  await page.goto('/game');
+  const crystal = page.getByRole('button', { name: 'Afficher ou replier le glossaire des héros' });
+  await expect(crystal).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Jouer' }).click();
+  await page.getByRole('button', { name: 'Continuer' }).click();
+  await page.waitForTimeout(600);
+  await page.getByRole('button', { name: 'Tirer les héros' }).click({ force: true });
+  await expect(page.getByRole('heading', { name: 'Qui commence ?' })).toBeVisible();
+
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const roll = page.locator(
+      'button[aria-label^="Lancer les dés du joueur"], button[aria-label^="Relancer les dés du joueur"]',
+    ).first();
+    if (await roll.isVisible().catch(() => false)) await roll.click({ force: true });
+    if (await page.getByRole('button', { name: 'Entrer dans le donjon' }).isVisible().catch(() => false)) break;
+    await page.waitForTimeout(250);
+  }
+
+  await page.getByRole('button', { name: 'Entrer dans le donjon' }).click();
+  await expect(page.locator('app-board')).toBeVisible();
+  await expect(crystal).toBeVisible();
+  await crystal.click();
+  await expect(page.getByRole('button', { name: /Consulter / })).toHaveCount(6);
+  await expect(page.getByRole('button', { name: 'Consulter Aderyn' })).toBeVisible();
+  await crystal.click();
+  await expect(page.getByRole('button', { name: 'Consulter Aderyn' })).toHaveCount(0);
+});

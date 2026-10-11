@@ -135,6 +135,7 @@ const HERO_POWERS: Readonly<
 function createHeroDefinition(
   id: HeroId,
   name: string,
+  description: string,
 ): HeroDefinition {
   const path = `${HERO_ASSETS_PATH}/${id}`;
   const [firstPower, secondPower] = HERO_POWERS[id];
@@ -142,6 +143,7 @@ function createHeroDefinition(
   return {
     id,
     name,
+    description,
 
     /**
      * La carte du tirage correspond à l'illustration
@@ -180,12 +182,12 @@ function createHeroDefinition(
  * statiques : aucune information propre à une partie.
  */
 export const HERO_DEFINITIONS: readonly HeroDefinition[] = [
-  createHeroDefinition('aderyn', 'Aderyn'),
-  createHeroDefinition('argentus', 'Argentus'),
-  createHeroDefinition('horan', 'Horan'),
-  createHeroDefinition('taia', 'Taia'),
-  createHeroDefinition('victorius', 'Victorius'),
-  createHeroDefinition('xanros', 'Xanros'),
+  createHeroDefinition('aderyn', 'Aderyn', 'Une éclaireuse vive et rusée, experte dans les approches discrètes.'),
+  createHeroDefinition('argentus', 'Argentus', 'Un aventurier lié aux forces magiques et aux chemins de l’astral.'),
+  createHeroDefinition('horan', 'Horan', 'Un combattant instinctif qui sait recommencer lorsque le destin lui résiste.'),
+  createHeroDefinition('taia', 'Taia', 'Une héroïne attentive aux signes, capable de lire les possibilités à venir.'),
+  createHeroDefinition('victorius', 'Victorius', 'Un guerrier discipliné qui transforme chaque lancer en occasion de combattre.'),
+  createHeroDefinition('xanros', 'Xanros', 'Un aventurier audacieux prêt à payer le prix nécessaire pour protéger le groupe.'),
 ];
 
 /**

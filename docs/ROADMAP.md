@@ -50,6 +50,14 @@
 ## Priorités proposées
 
 1. Étendre la recette navigateur aux pouvoirs, au Portail, au repos, aux récompenses, aux objets au sol et à l'IA ; le parcours intégral Dragon est maintenant couvert dans `docs/FULL_GAME_RECIPE.md`.
+
+## Refonte UI/UX — panneaux et grimoire
+
+- Branche dédiée : `feat/game-ui-hero-grimoire`.
+- Le grimoire des six héros est disponible uniquement pendant la phase `playing`, via une boule de cristal sous le logo de la partie.
+- Les portraits se déploient sous la boule et ouvrent des fiches consultatives sans modifier l'état métier.
+- Les descriptions et pouvoirs sont centralisés dans `HeroDefinition` et réutilisés dans le grimoire et la fiche latérale.
+- Les commandes J1 à J5 restent le mécanisme de sélection et de repli des panneaux latéraux.
 2. Réduire progressivement les avertissements SCSS sans refonte visuelle.
 3. Préparer ultérieurement une architecture de synchronisation en ligne, après stabilisation du jeu local.
 

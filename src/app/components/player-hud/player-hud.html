@@ -26,13 +26,12 @@
       [attr.aria-hidden]="!leftPanelOpen"
       (transitionend)="onLeftPanelTransitionEnd($event)"
     >
+      <button class="player-hud__close" type="button" aria-label="Replier la fiche gauche" (click)="closeLeftPanel()">×</button>
       <app-player-sidebar
         side="left"
         [player]="player"
-        [playerColor]="getPlayerColor(leftPlayerIndex)"
         [showPlayer]="true"
         [showInventory]="true"
-        [showMessage]="true"
       />
     </aside>
   }
@@ -62,13 +61,12 @@
       [attr.aria-hidden]="!rightPanelOpen"
       (transitionend)="onRightPanelTransitionEnd($event)"
     >
+      <button class="player-hud__close" type="button" aria-label="Replier la fiche droite" (click)="closeRightPanel()">×</button>
       <app-player-sidebar
         side="right"
         [player]="player"
-        [playerColor]="getPlayerColor(rightPlayerIndex)"
         [showPlayer]="true"
         [showInventory]="true"
-        [showMessage]="true"
       />
     </aside>
   }
@@ -205,4 +203,5 @@
       }
     </div>
   </div>
+
 </div>

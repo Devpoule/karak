@@ -13,7 +13,7 @@
 
 <section class="game">
 
-  <app-game-header />
+  <app-game-header [showHeroGlossary]="gameService.phase() === 'playing'" />
 
   <div class="game__play-area">
 

@@ -50,7 +50,7 @@
 }
 
 .inventory-panel__group--key {
-  top: 60%;
+  top: 64%;
   left: 13.5%;
   height: 24%;
 }
@@ -82,12 +82,11 @@
 
 .inventory-panel__item {
   display: block;
-  /* Les assets possèdent désormais leur propre cadre graphique et peuvent
-   * remplir davantage la case sans modifier sa géométrie. */
-  width: 96%;
-  max-width: 96%;
-  height: 96%;
-  max-height: 96%;
+  /* Laisser visibles les bords de la case évite les chevauchements. */
+  width: 92%;
+  max-width: 92%;
+  height: 92%;
+  max-height: 92%;
   object-fit: contain;
   object-position: center;
   user-select: none;

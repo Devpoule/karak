@@ -101,6 +101,7 @@ interface HudPlayerEntry {
 
 export class PlayerHud {
 
+
   // ==========================================================
 
   // PANNEAU GAUCHE — JOUEURS HUMAINS
@@ -523,6 +524,17 @@ export class PlayerHud {
     this.toggleRightPlayer(playerIndex);
 
   }
+
+  closeLeftPanel(): void {
+    this.pendingLeftPlayerIndex = null;
+    this.leftPanelOpen = false;
+  }
+
+  closeRightPanel(): void {
+    this.pendingRightPlayerIndex = null;
+    this.rightPanelOpen = false;
+  }
+
 
 
 
