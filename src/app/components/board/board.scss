@@ -693,3 +693,14 @@
   object-fit: contain;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .8));
 }
+
+/* ==========================================================
+   HARMONISATION COLORIMÉTRIQUE DES TUILES
+   ========================================================== */
+
+.board__tile-image {
+  filter:
+    sepia(0.15)
+    saturate(0.85)
+    brightness(0.98);
+}

@@ -115,7 +115,7 @@ export class PlayerHud {
 
    */
 
-  leftPanelOpen = false;
+  leftPanelOpen = true;
 
 
 
@@ -163,7 +163,7 @@ export class PlayerHud {
 
    */
 
-  rightPanelOpen = false;
+  rightPanelOpen = true;
 
 
 
@@ -238,7 +238,7 @@ export class PlayerHud {
   }
   /**
 
-   * Ouvre la fiche du joueur actif et replie le panneau opposé.
+   * Ouvre la fiche du joueur actif sans fermer le panneau opposé.
 
    * Les changements de fiche sur un même côté respectent transitionend.
 
@@ -259,19 +259,9 @@ export class PlayerHud {
 
 
     if (player.controller === 'human') {
-
-      this.pendingRightPlayerIndex = null;
-
-      this.rightPanelOpen = false;
-
       this.openLeftPlayer(playerIndex);
 
     } else {
-
-      this.pendingLeftPlayerIndex = null;
-
-      this.leftPanelOpen = false;
-
       this.openRightPlayer(playerIndex);
 
     }

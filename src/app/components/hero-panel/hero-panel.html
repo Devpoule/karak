@@ -1,4 +1,8 @@
-<section class="hero-panel">
+<section
+  class="hero-panel"
+  [class.hero-panel--unconscious]="isUnconscious"
+  [attr.aria-label]="isUnconscious ? 'Héros inconscient : récupération obligatoire' : null"
+>
   <!--
     Support visuel du héros.
 

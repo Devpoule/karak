@@ -78,6 +78,29 @@
   pointer-events: none;
 }
 
+/*
+ * Brouillard d'inconscience : le pseudo-élément reste dans la zone du
+ * portrait et ne participe jamais à la géométrie du panneau.
+ */
+.hero-panel__hero::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: 6px;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(45, 67, 112, 0.12), rgba(8, 16, 39, 0.62)),
+    linear-gradient(135deg, rgba(18, 29, 64, 0.18), rgba(5, 12, 31, 0.52));
+  box-shadow: inset 0 0 18px rgba(91, 128, 201, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 280ms ease-out;
+}
+
+.hero-panel--unconscious .hero-panel__hero::after {
+  opacity: 1;
+}
+
 
 /* ==========================================================
    CARTE DU HÉROS
@@ -92,6 +115,9 @@
  */
 .hero-panel__card {
   display: block;
+
+  position: relative;
+  z-index: 1;
 
   width: 90%;
   height: 95%;
@@ -114,6 +140,7 @@
 /* Médaillon de malédiction superposé à la carte, sans affecter sa taille. */
 .hero-panel__curse {
   position: absolute;
+  z-index: 3;
   top: 50%;
   left: 50%;
   width: 34%;
@@ -124,4 +151,10 @@
   filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7));
   pointer-events: none;
   user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-panel__hero::after {
+    transition: none;
+  }
 }

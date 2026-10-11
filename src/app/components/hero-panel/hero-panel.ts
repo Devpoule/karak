@@ -36,6 +36,15 @@ export class HeroPanel {
     return this.player?.isCursed === true;
   }
 
+  /**
+   * Le voile reste actif pendant l'attente et le tour de récupération.
+   * Il ne disparaît qu'une fois que le moteur libère réellement le héros.
+   */
+  get isUnconscious(): boolean {
+    return this.player?.recoveryState !== undefined
+      && this.player.recoveryState !== 'none';
+  }
+
   get heroDefinition(): HeroDefinition | null {
     const heroId = this.player?.heroId;
 

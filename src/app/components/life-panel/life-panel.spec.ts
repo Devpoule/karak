@@ -67,4 +67,38 @@ describe('LifePanel feedback de perte de vie', () => {
 
     expect(fixture.componentInstance.feedback).toBeNull();
   });
+
+  it('anime le cœur réellement restauré et affiche +1 PV', () => {
+    const { fixture, playerService, player } = createPanel();
+    player.lives = 4;
+    playerService.livesRevision.update(value => value + 1);
+    fixture.componentInstance.ngDoCheck();
+    player.lives = 5;
+    playerService.livesRevision.update(value => value + 1);
+    fixture.componentInstance.ngDoCheck();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.feedback).toBe('heal');
+    expect(fixture.nativeElement.querySelector('.life-panel__heal-label')?.textContent).toContain('+1 PV');
+    expect(fixture.nativeElement.querySelectorAll('.life-panel__point--changed')).toHaveLength(1);
+    expect(fixture.componentInstance.changedSlots).toEqual([4]);
+  });
+
+  it('ne répète pas l’animation sans nouvelle récupération', () => {
+    const { fixture, playerService, player } = createPanel();
+    player.lives = 4;
+    playerService.livesRevision.update(value => value + 1);
+    fixture.componentInstance.ngDoCheck();
+    player.lives = 5;
+    playerService.livesRevision.update(value => value + 1);
+    fixture.componentInstance.ngDoCheck();
+    fixture.detectChanges();
+    const firstSlots = [...fixture.componentInstance.changedSlots];
+
+    fixture.componentInstance.ngDoCheck();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.feedback).toBe('heal');
+    expect(fixture.componentInstance.changedSlots).toEqual(firstSlots);
+  });
 });

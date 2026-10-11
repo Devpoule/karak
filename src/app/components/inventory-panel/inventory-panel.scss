@@ -82,10 +82,12 @@
 
 .inventory-panel__item {
   display: block;
-  width: 90%;
-  max-width: 90%;
-  height: 90%;
-  max-height: 90%;
+  /* Les assets possèdent désormais leur propre cadre graphique et peuvent
+   * remplir davantage la case sans modifier sa géométrie. */
+  width: 96%;
+  max-width: 96%;
+  height: 96%;
+  max-height: 96%;
   object-fit: contain;
   object-position: center;
   user-select: none;

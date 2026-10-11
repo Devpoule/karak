@@ -652,6 +652,12 @@
 
 .combat-overlay--victory
 .combat-overlay__fighter--monster {
+  /* Le conteneur ne doit pas assombrir le halo ni l'impulsion bleue. */
+  filter: none;
+}
+
+.combat-overlay--victory
+.combat-overlay__fighter-image--monster {
   filter: brightness(0.48);
 }
 
@@ -681,6 +687,10 @@
   clip-path: polygon(0 44%, 22% 50%, 38% 28%, 57% 62%, 76% 35%, 100% 51%, 77% 66%, 58% 54%, 39% 78%, 21% 56%);
   filter: drop-shadow(0 0 8px rgba(57, 188, 255, 0.95));
   animation: combat-monster-electric-pulse 760ms ease-out both;
+}
+
+.combat-overlay--victory .combat-overlay__fighter--monster .combat-overlay__visual {
+  isolation: isolate;
 }
 
 .combat-overlay__verdict--victory
