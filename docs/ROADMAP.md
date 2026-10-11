@@ -14,7 +14,7 @@
 
 ## Incomplet ou à risque
 
-- La recette navigateur des combats, récompenses et fin de partie doit encore être étendue. Playwright/Chromium est opérationnel ; le serveur existant sur `http://127.0.0.1:4200` est réutilisé.
+- La recette navigateur des récompenses, équipements, repos, Portail et fin de partie doit encore être étendue. Playwright/Chromium est opérationnel ; le serveur existant sur `http://127.0.0.1:4200` est réutilisé.
 - La stratégie IA spécifique au Portail de guérison reste à auditer avant de la considérer complète.
 - La couverture des composants visuels et des effets CSS est limitée par rapport aux tests métier.
 - La compilation passe avec des avertissements de budget SCSS, notamment sur `CombatOverlay` et `GameSetup`.
@@ -27,7 +27,7 @@
 - 89 tests réussis sur 8 fichiers avec `npx ng test --no-watch --no-progress` ;
 - compilation Angular réussie avec `npx ng build` ;
 - `git diff --check` réussi ;
-- recette Playwright Chromium étendue : 4 scénarios E2E, dont une vérification à 390 px et la progression jusqu'à l'écran du premier joueur ;
+- recette Playwright Chromium étendue : 4 scénarios E2E, dont une vérification à 390 px, la progression jusqu'à l'écran du premier joueur et l'accès naturel au plateau/combat ;
 - avertissements de budget SCSS conservés sur `CombatOverlay` et `GameSetup` ;
 - aucune anomalie fonctionnelle confirmée pendant cette recette.
 
