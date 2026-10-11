@@ -1,5 +1,5 @@
 
-import { Injectable, isDevMode, signal } from '@angular/core';
+import { Injectable, isDevMode, Optional, signal } from '@angular/core';
 
 import { getTokenDefinition } from '../data/token-definitions';
 import { Player } from '../models/player';
@@ -7,6 +7,7 @@ import { WeaponEquipment } from '../models/equipment';
 import { PlayerService } from './player.service';
 import { PlacedTile } from '../models/tile';
 import { MonsterTokenDefinition } from '../models/token';
+import { TurnService } from './turn.service';
 
 /**
  * État d'un combat obligatoire en cours.
@@ -36,6 +37,7 @@ export interface CombatRoll {
   attackPower: number;
   monsterStrength: number;
   magicBoltsUsed: number;
+  heroRerollsUsed: number;
 }
 
 /**
@@ -53,6 +55,7 @@ export interface CombatResult {
   attackPower: number;
   monsterStrength: number;
   magicBoltsUsed: number;
+  heroRerollsUsed: number;
   outcome: CombatOutcome;
 }
 
@@ -68,6 +71,7 @@ export interface CombatResult {
 export class CombatService {
   constructor(
     private readonly playerService: PlayerService,
+    @Optional() private readonly turnService?: TurnService,
   ) {}
 
   readonly pendingCombat = signal<PendingCombat | null>(null);
@@ -143,7 +147,11 @@ export class CombatService {
     const weapons = combat.player.inventory.weapons
       .filter((weapon): weapon is WeaponEquipment => weapon !== null)
       .map(weapon => ({ ...weapon }));
-    const heroBonus = 0;
+    const heroBonus = combat.player.heroId === 'taia'
+      && !combat.player.isCursed
+      && (this.turnService?.movementsMadeThisTurn() ?? 0) > 0
+      ? 1
+      : 0;
     const roll: CombatRoll = {
       player: combat.player,
       monster: combat.monster,
@@ -156,10 +164,45 @@ export class CombatService {
       attackPower: diceTotal + equipmentBonus + heroBonus,
       monsterStrength: combat.monster.strength,
       magicBoltsUsed: 0,
+      heroRerollsUsed: 0,
     };
     this.pendingCombatRoll.set(roll);
     this.logCombatDiagnostic('roll', roll, combat.player.inventory.weapons);
     return roll;
+  }
+
+  /** Retourne les relances actuellement autorisées par le pouvoir du héros. */
+  getAvailableHeroRerolls(): Array<'both' | 'die1' | 'die2'> {
+    const combat = this.pendingCombat();
+    const roll = this.pendingCombatRoll();
+    if (!combat || !roll || roll.heroRerollsUsed > 0 || combat.player.isCursed) return [];
+    if (combat.player.heroId === 'horan') return ['both'];
+    if (combat.player.heroId !== 'victorius') return [];
+
+    const available: Array<'die1' | 'die2'> = [];
+    if (roll.die1 === 1) available.push('die1');
+    if (roll.die2 === 1) available.push('die2');
+    return available;
+  }
+
+  /** Relance le ou les dés autorisés, une seule fois par combat. */
+  useHeroReroll(kind: 'both' | 'die1' | 'die2'): boolean {
+    const combat = this.pendingCombat();
+    const roll = this.pendingCombatRoll();
+    if (!combat || !roll || !this.getAvailableHeroRerolls().includes(kind)) return false;
+
+    const die1 = kind === 'die2' ? roll.die1 : this.rollDie();
+    const die2 = kind === 'die1' ? roll.die2 : this.rollDie();
+    const diceTotal = die1 + die2;
+    this.pendingCombatRoll.set({
+      ...roll,
+      die1,
+      die2,
+      diceTotal,
+      attackPower: diceTotal + roll.equipmentBonus + roll.heroBonus,
+      heroRerollsUsed: 1,
+    });
+    return true;
   }
 
   /** Utilise un Tir magique réservé pour le combat post-lancer. */

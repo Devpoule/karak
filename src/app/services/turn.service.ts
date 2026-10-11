@@ -49,6 +49,9 @@ export class TurnService {
     GAME_CONSTANTS.movement.perTurn,
   );
 
+  /** Nombre de déplacements déjà réalisés pendant le tour courant. */
+  readonly movementsMadeThisTurn = signal<number>(0);
+
 
   // ==========================================================
   // ÉTAT DÉRIVÉ
@@ -81,6 +84,7 @@ export class TurnService {
     this.remainingMovements.update(
       (remaining) => remaining - 1,
     );
+    this.movementsMadeThisTurn.update((made) => made + 1);
   }
 
 
@@ -103,5 +107,6 @@ export class TurnService {
     this.remainingMovements.set(
       GAME_CONSTANTS.movement.perTurn,
     );
+    this.movementsMadeThisTurn.set(0);
   }
 }

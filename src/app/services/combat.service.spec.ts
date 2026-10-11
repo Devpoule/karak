@@ -3,6 +3,7 @@ import { getEquipmentDefinition } from '../data/equipment-definitions';
 import { PlacedTile } from '../models/tile';
 import { CombatService } from './combat.service';
 import { PlayerService } from './player.service';
+import { TurnService } from './turn.service';
 
 describe('CombatService séparation du lancer et de la résolution', () => {
   function createTile(tokenFace: 'front' | 'back' = 'front'): PlacedTile {
@@ -247,6 +248,77 @@ describe('CombatService séparation du lancer et de la résolution', () => {
     combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, monster);
     combatService.rollPendingCombat();
     expect(combatService.resolvePendingCombat()?.outcome).toBe('tie');
+    vi.restoreAllMocks();
+  });
+
+  it('Horan peut relancer les deux dés une seule fois', () => {
+    vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.999)
+      .mockReturnValueOnce(0.999);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const combatService = new CombatService(playerService);
+    const player = playerService.players[0];
+    player.heroId = 'horan';
+    const monster = {
+      x: 1, y: 0, definitionId: 'room-1', tokenId: 'giant-spider', tokenFace: 'front',
+    } as PlacedTile;
+
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, monster);
+    combatService.rollPendingCombat();
+    expect(combatService.getAvailableHeroRerolls()).toEqual(['both']);
+    expect(combatService.useHeroReroll('both')).toBe(true);
+    expect(combatService.pendingCombatRoll()?.diceTotal).toBe(12);
+    expect(combatService.useHeroReroll('both')).toBe(false);
+    vi.restoreAllMocks();
+  });
+
+  it('Victorius ne relance qu’un dé affichant 1 et ses pouvoirs maudits sont désactivés', () => {
+    vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.4)
+      .mockReturnValueOnce(0.999);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const combatService = new CombatService(playerService);
+    const player = playerService.players[0];
+    player.heroId = 'victorius';
+    const monster = {
+      x: 1, y: 0, definitionId: 'room-1', tokenId: 'giant-spider', tokenFace: 'front',
+    } as PlacedTile;
+
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, monster);
+    combatService.rollPendingCombat();
+    expect(combatService.getAvailableHeroRerolls()).toEqual(['die1']);
+    expect(combatService.useHeroReroll('die2')).toBe(false);
+    expect(combatService.useHeroReroll('die1')).toBe(true);
+    expect(combatService.pendingCombatRoll()?.die1).toBe(6);
+
+    player.isCursed = true;
+    expect(combatService.getAvailableHeroRerolls()).toEqual([]);
+    vi.restoreAllMocks();
+  });
+
+  it('Taia reçoit +1 après un déplacement et pas lorsqu’elle est maudite', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const turnService = new TurnService();
+    const combatService = new CombatService(playerService, turnService);
+    const player = playerService.players[0];
+    player.heroId = 'taia';
+    const monster = createTile();
+
+    turnService.consumeMovement();
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, monster);
+    expect(combatService.rollPendingCombat()?.heroBonus).toBe(1);
+
+    combatService.initialize();
+    player.isCursed = true;
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, monster);
+    expect(combatService.rollPendingCombat()?.heroBonus).toBe(0);
     vi.restoreAllMocks();
   });
 

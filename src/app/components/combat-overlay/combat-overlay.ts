@@ -159,6 +159,23 @@ export class CombatOverlay implements OnDestroy {
     return this.combatService.getRemainingMagicBolts();
   }
 
+  get availableHeroRerolls(): Array<'both' | 'die1' | 'die2'> {
+    return this.combatService.getAvailableHeroRerolls();
+  }
+
+  get canUseHeroReroll(): boolean {
+    return this.isDecisionVisible && this.availableHeroRerolls.length > 0;
+  }
+
+  useHeroReroll(kind: 'both' | 'die1' | 'die2'): void {
+    if (!this.canUseHeroReroll || !this.combatService.useHeroReroll(kind)) return;
+    const roll = this.combatService.pendingCombatRoll();
+    if (roll) this.displayedDice.set({ die1: roll.die1, die2: roll.die2 });
+    if (this.remainingMagicBolts === 0 && this.availableHeroRerolls.length === 0) {
+      this.resolveCombatAfterRoll();
+    }
+  }
+
   useMagicBolt(): void {
     if (!this.isDecisionVisible || !this.resolving) return;
     if (!this.combatService.useMagicBolt()) return;
@@ -408,13 +425,14 @@ export class CombatOverlay implements OnDestroy {
         this.schedule(() => {
           if (this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() === roll) {
             const boltsBefore = roll.magicBoltsUsed;
+            this.aiService.resolveHeroRerollDecision();
             this.aiService.resolveMagicBoltDecision();
             const boltsUsed = (this.combatService.pendingCombatRoll()?.magicBoltsUsed ?? boltsBefore) - boltsBefore;
             if (boltsUsed > 0) this.triggerMagicBoltFeedback(boltsUsed);
             this.resolveCombatAfterRoll();
           }
         }, this.aiResultDuration);
-      } else if (this.remainingMagicBolts === 0) {
+      } else if (this.remainingMagicBolts === 0 && this.availableHeroRerolls.length === 0) {
         this.schedule(() => {
           if (this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() === roll) {
             this.resolveCombatAfterRoll();

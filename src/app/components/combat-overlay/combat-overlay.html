@@ -170,6 +170,35 @@
 
     @if (isDecisionVisible && currentCombat.player.controller === 'human') {
       <div class="combat-overlay__decision">
+        @if (canUseHeroReroll) {
+          @if (availableHeroRerolls.includes('both')) {
+            <button
+              type="button"
+              class="combat-overlay__continue"
+              (click)="useHeroReroll('both')"
+            >
+              Relancer les deux dés
+            </button>
+          }
+          @if (availableHeroRerolls.includes('die1')) {
+            <button
+              type="button"
+              class="combat-overlay__continue"
+              (click)="useHeroReroll('die1')"
+            >
+              Relancer le dé 1
+            </button>
+          }
+          @if (availableHeroRerolls.includes('die2')) {
+            <button
+              type="button"
+              class="combat-overlay__continue"
+              (click)="useHeroReroll('die2')"
+            >
+              Relancer le dé 2
+            </button>
+          }
+        }
         @if (remainingMagicBolts > 0) {
           <button
             type="button"

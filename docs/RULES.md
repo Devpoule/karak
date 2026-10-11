@@ -17,6 +17,8 @@ La référence locale est `public/assets/rules/karak-base.pdf`, accompagnée de 
 - Les états `pending`, `resting` et `none` représentent respectivement une récupération attendue, le tour de repos en cours et la possibilité de jouer normalement.
 - Une victoire contre une momie peut produire une malédiction ; son attribution et sa résolution passent par les états métier dédiés.
 - Aderyn remporte également un combat à égalité et peut traverser une tuile occupée par un monstre ; ces deux pouvoirs sont désactivés lorsqu'elle est maudite.
+- Horan peut relancer les deux dés une fois par combat ; Victorius peut relancer une fois chaque dé affichant 1, dans la limite d'une relance par combat. Ces relances sont indisponibles lorsqu'ils sont maudits.
+- Taia reçoit `+1` à l'attaque après son premier déplacement du tour ; ce bonus est capturé au lancer et désactivé par la malédiction. Son choix de jetons à l'exploration reste à intégrer.
 
 ## Adaptation numérique
 
