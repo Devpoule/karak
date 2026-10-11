@@ -35,6 +35,8 @@ async function prepareCombat(page: import('@playwright/test').Page, strength: nu
     game.gameService.activePlayerIndex.set(humanIndex);
     const player = playerService.players[humanIndex];
     if (!player) throw new Error('No active player available');
+    // Keep the generic combat fixture neutral: Aderyn legitimately wins ties.
+    player.heroId = 'horan';
 
     player.inventory.weapons[0] = {
       id: 'sword',

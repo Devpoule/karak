@@ -477,6 +477,14 @@ export class GameService {
     if (!token) {
       return 'none';
     }
+    // Aderyn's Sneak lets her cross a live monster tile without combat.
+    // The curse disables hero powers but does not alter ordinary movement.
+    if (token.kind === 'monster'
+      && destinationTile.tokenFace !== 'back'
+      && player.heroId === 'aderyn'
+      && !player.isCursed) {
+      return 'none';
+    }
     // Le verso d'un monstre contient une récompense, pas un adversaire.
     if (token.kind === 'monster' && destinationTile.tokenFace === 'back') {
       const remainingRewards = this.remainingRewardsByTile.get(destinationTile) ?? token.rewards ?? [];

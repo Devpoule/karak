@@ -214,6 +214,42 @@ describe('CombatService séparation du lancer et de la résolution', () => {
     vi.restoreAllMocks();
   });
 
+  it('Aderyn remporte une égalité lorsqu’elle n’est pas maudite', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.4);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const combatService = new CombatService(playerService);
+    const player = playerService.players[0];
+    player.heroId = 'aderyn';
+    const monster = {
+      x: 1, y: 0, definitionId: 'room-1', tokenId: 'giant-spider', tokenFace: 'front',
+    } as PlacedTile;
+
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, monster);
+    const roll = combatService.rollPendingCombat();
+    expect(roll?.attackPower).toBe(monster.tokenId === 'giant-spider' ? 6 : 0);
+    expect(combatService.resolvePendingCombat()?.outcome).toBe('victory');
+    vi.restoreAllMocks();
+  });
+
+  it('Aderyn maudite ne bénéficie pas de son égalité', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.4);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const combatService = new CombatService(playerService);
+    const player = playerService.players[0];
+    player.heroId = 'aderyn';
+    player.isCursed = true;
+    const monster = {
+      x: 1, y: 0, definitionId: 'room-1', tokenId: 'giant-spider', tokenFace: 'front',
+    } as PlacedTile;
+
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, monster);
+    combatService.rollPendingCombat();
+    expect(combatService.resolvePendingCombat()?.outcome).toBe('tie');
+    vi.restoreAllMocks();
+  });
+
   it('conserve le bonus d’armes enregistré malgré une modification ultérieure', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     const playerService = new PlayerService();

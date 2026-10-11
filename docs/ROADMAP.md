@@ -19,7 +19,7 @@
 - La couverture des composants visuels et des effets CSS est limitée par rapport aux tests métier.
 - La compilation passe avec des avertissements de budget SCSS, notamment sur `CombatOverlay` et `GameSetup`.
 - `GameService` reste une façade large ; toute extraction doit être motivée par des usages concrets.
-- Plusieurs pouvoirs sont encore descriptifs mais non intégrés au moteur : relances de Horan/Victorius, bonus et choix de Taia, sacrifice/substitution de Xanros, pouvoirs de déplacement d'Aderyn et Argentus. Ils nécessitent un chantier métier séparé.
+- Aderyn : égalité gagnante et Marche rampante sont intégrées et couvertes par les tests ; les autres pouvoirs restent à traiter. Horan/Victorius, Taia, Xanros et Argentus nécessitent encore des fenêtres de décision ou un état de tour dédié.
 - Les extensions, le son et le multijoueur en ligne ne sont pas prioritaires.
 
 ## Dernière recette technique
@@ -49,10 +49,12 @@
 
 ## Priorités proposées
 
-1. Auditer puis implémenter les pouvoirs de héros par petits lots validés par les règles officielles.
-2. Rejouer les scénarios navigateur du Portail, du repos, des récompenses et des objets au sol ; corriger uniquement les anomalies reproduites.
-3. Réduire progressivement les avertissements SCSS sans refonte visuelle.
-4. Préparer ultérieurement une architecture de synchronisation en ligne, après stabilisation du jeu local.
+1. Implémenter les relances de Horan et Victorius dans la fenêtre post-lancer, après confirmation de la présentation officielle.
+2. Implémenter le bonus de Taia, puis son choix de jetons, avec un état de déplacement par tour.
+3. Implémenter le sacrifice/substitution de Xanros et la Marche astrale d'Argentus.
+4. Rejouer les scénarios navigateur du Portail, du repos, des récompenses et des objets au sol ; corriger uniquement les anomalies reproduites.
+5. Réduire progressivement les avertissements SCSS sans refonte visuelle.
+6. Préparer ultérieurement une architecture de synchronisation en ligne, après stabilisation du jeu local.
 
 ## Prochain chantier autonome proposé
 

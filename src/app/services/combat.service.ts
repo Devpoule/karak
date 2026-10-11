@@ -210,7 +210,9 @@ export class CombatService {
 
     let outcome: CombatOutcome;
 
-    if (roll.attackPower > combat.monster.strength) {
+    const winsTie = combat.player.heroId === 'aderyn' && !combat.player.isCursed;
+    if (roll.attackPower > combat.monster.strength
+      || (winsTie && roll.attackPower === combat.monster.strength)) {
       outcome = 'victory';
     } else if (roll.attackPower === combat.monster.strength) {
       outcome = 'tie';

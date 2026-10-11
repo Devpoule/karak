@@ -16,6 +16,7 @@ La référence locale est `public/assets/rules/karak-base.pdf`, accompagnée de 
 - Le Portail de guérison est distinct d'une tuile `healing-fountain`. Il téléporte un héros choisi vers une fontaine découverte, restaure tous ses PV, retire sa malédiction, consomme un exemplaire et ne termine pas le tour. Argentus ne conserve pas ce portail.
 - Les états `pending`, `resting` et `none` représentent respectivement une récupération attendue, le tour de repos en cours et la possibilité de jouer normalement.
 - Une victoire contre une momie peut produire une malédiction ; son attribution et sa résolution passent par les états métier dédiés.
+- Aderyn remporte également un combat à égalité et peut traverser une tuile occupée par un monstre ; ces deux pouvoirs sont désactivés lorsqu'elle est maudite.
 
 ## Adaptation numérique
 
