@@ -23,6 +23,13 @@
   gap: 0;
 }
 
+/* Les supports PNG incluent une marge d'ombre transparente. Un léger
+ * chevauchement visuel raccorde leurs bords sans modifier leur géométrie
+ * interne ni les zones interactives de l'inventaire. */
+.player-sidebar > * + * {
+  margin-top: -0.8rem;
+}
+
 /* ==========================================================
    PANNEAUX DE LA FICHE
    ========================================================== */
@@ -37,7 +44,9 @@
 .player-sidebar app-life-panel,
 .player-sidebar app-hero-panel,
 .player-sidebar app-inventory-panel,
-.player-sidebar app-treasure-panel {
+.player-sidebar app-treasure-panel,
+.player-sidebar__name-panel,
+.player-sidebar__technical {
   display: block;
 
   width: 100%;
