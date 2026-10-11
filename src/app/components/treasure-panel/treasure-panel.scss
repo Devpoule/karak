@@ -4,13 +4,13 @@
 }
 
 .treasure-panel {
+  position: relative;
   box-sizing: border-box;
   width: 100%;
-  padding: 0.35rem 0.45rem 0.45rem;
-  background: rgba(25, 20, 15, 0.82);
-  color: #f6e8c8;
-  font-size: 0.7rem;
+  line-height: 0;
 }
+.treasure-panel__board { display: block; width: 100%; height: auto; }
+.treasure-panel__content { position: absolute; inset: 10% 7%; color: #f6e8c8; font-size: 0.7rem; line-height: normal; }
 
 .treasure-panel__header,
 .treasure-panel__group {

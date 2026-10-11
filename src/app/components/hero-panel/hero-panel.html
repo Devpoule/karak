@@ -3,9 +3,6 @@
   [class.hero-panel--unconscious]="isUnconscious"
   [attr.aria-label]="isUnconscious ? 'Héros inconscient : récupération obligatoire' : null"
 >
-  @if (heroDefinition; as hero) {
-    <h2 class="hero-panel__name">{{ hero.name }}</h2>
-  }
   <!--
     Support visuel du héros.
 

@@ -1,8 +1,7 @@
 <section class="treasure-panel" aria-label="Trésors collectés">
-  <div class="treasure-panel__header">
-    <span>Trésors</span>
-    <strong>{{ points }} pt{{ points === 1 ? '' : 's' }}</strong>
-  </div>
+  <img class="treasure-panel__board" src="/assets/board/hero-points-panel.png" alt="" draggable="false" />
+  <div class="treasure-panel__content">
+    <div class="treasure-panel__header"><span>Trésors</span><strong>{{ points }} pt{{ points === 1 ? '' : 's' }}</strong></div>
 
   @if (groups.length) {
     <div class="treasure-panel__groups">
@@ -17,4 +16,5 @@
   } @else {
     <span class="treasure-panel__empty">Aucun trésor</span>
   }
+  </div>
 </section>

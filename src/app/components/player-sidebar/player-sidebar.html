@@ -5,14 +5,16 @@
        Points de vie + héros
        ===================================================== -->
 
-  @if (showPlayer) {
-    <app-life-panel
-      [player]="player"
-    />
+  @if (heroDefinition; as hero) {
+    <section class="player-sidebar__name-panel" aria-label="Héros sélectionné">
+      <img src="/assets/board/hero-name-panel.png" alt="" draggable="false" />
+      <h2>{{ hero.name }}</h2>
+    </section>
+  }
 
-    <app-hero-panel
-      [player]="player"
-    />
+  @if (showPlayer) {
+    <app-hero-panel [player]="player" />
+    <app-life-panel [player]="player" />
   }
 
 
@@ -27,31 +29,28 @@
 
     @if (heroDefinition; as hero) {
       <section class="player-sidebar__technical" aria-labelledby="technical-sheet-title">
-        <h2 id="technical-sheet-title">Fiche technique</h2>
-        <p class="player-sidebar__description">{{ hero.description }}</p>
-        <div class="player-sidebar__powers" role="group" aria-label="Pouvoirs du héros">
-          @for (power of hero.powers; track power.id; let index = $index) {
-            <button
-              type="button"
-              class="player-sidebar__power-badge"
-              [class.player-sidebar__power-badge--selected]="selectedPowerId === power.id"
-              [class.player-sidebar__power-badge--disabled]="player?.isCursed"
-              [attr.aria-pressed]="selectedPowerId === power.id"
-              (click)="togglePower(power.id)"
-            >
-              Pouvoir {{ index + 1 }}
-            </button>
+        <img src="/assets/board/hero-description-panel.png" alt="" draggable="false" />
+        <div class="player-sidebar__technical-content">
+          <h2 id="technical-sheet-title">Fiche technique</h2>
+          <p class="player-sidebar__description">{{ hero.description }}</p>
+          <div class="player-sidebar__powers" role="group" aria-label="Pouvoirs du héros">
+            @for (power of hero.powers; track power.id; let index = $index) {
+              <button type="button" class="player-sidebar__power-badge"
+                [class.player-sidebar__power-badge--selected]="selectedPowerId === power.id"
+                [class.player-sidebar__power-badge--disabled]="player?.isCursed"
+                [attr.aria-pressed]="selectedPowerId === power.id"
+                (click)="togglePower(power.id)">
+                Pouvoir {{ index + 1 }}
+              </button>
+            }
+          </div>
+          @if (selectedPower; as power) {
+            <article class="player-sidebar__power-detail">
+              <h3>{{ power.name }}</h3><p>{{ power.description }}</p>
+              @if (player?.isCursed) { <span class="player-sidebar__cursed-note">Désactivé par la malédiction</span> }
+            </article>
           }
         </div>
-        @if (selectedPower; as power) {
-          <article class="player-sidebar__power-detail">
-            <h3>{{ power.name }}</h3>
-            <p>{{ power.description }}</p>
-            @if (player?.isCursed) {
-              <span class="player-sidebar__cursed-note">Désactivé par la malédiction</span>
-            }
-          </article>
-        }
       </section>
     }
 
