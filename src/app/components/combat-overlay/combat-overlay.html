@@ -101,20 +101,18 @@
                 [attr.data-value]="displayedDice().die2"
               ></div>
             </div>
-            @if (isScoreSummaryVisible) {
-              <div class="combat-overlay__score-summary" aria-label="Synthèse de l'attaque">
-                <span class="combat-overlay__score-line">
-                  Dés <strong>{{ displayedDiceTotal }}</strong>
-                  <span>+</span>
-                  Armes <strong>{{ displayedWeaponBonus ?? 0 }}</strong>
-                  <span>+</span>
-                  Magie <strong>{{ displayedMagicBonus }}</strong>
-                  <span>=</span>
-                  Attaque <strong class="combat-overlay__score-total">{{ provisionalAttack ?? result?.attackPower }}</strong>
-                </span>
-                <span class="combat-overlay__score-opponent">
-                  Force adverse <strong>{{ displayedMonsterStrength }}</strong>
-                </span>
+            @if (displayedWeapons.length > 0 || displayedMagicBonus > 0) {
+              <div class="combat-overlay__bonus-list" aria-label="Bonus appliqués au combat">
+                @for (weapon of displayedWeapons; track weapon.id + $index) {
+                  <span class="combat-overlay__bonus combat-overlay__bonus--weapon">
+                    {{ weapon.name }} : +{{ weapon.attackBonus }} pt
+                  </span>
+                }
+                @for (bolt of displayedMagicBonusEntries; track bolt) {
+                  <span class="combat-overlay__bonus combat-overlay__bonus--magic">
+                    Tir magique : +1 pt
+                  </span>
+                }
               </div>
             }
           }

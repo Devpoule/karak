@@ -132,40 +132,11 @@ export class CombatOverlay implements OnDestroy {
     return this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() !== null;
   }
 
-  get provisionalAttack(): number | null {
-    return this.combatService.pendingCombatRoll()?.attackPower ?? null;
-  }
-
-  get provisionalMonsterStrength(): number | null {
-    return this.combatService.pendingCombatRoll()?.monsterStrength ?? null;
-  }
-
-  /** Bonus d'armes enregistré, sans les Tirs magiques déjà utilisés. */
-  get displayedWeaponBonus(): number | null {
-    const roll = this.combatService.pendingCombatRoll();
-    if (roll) return roll.equipmentBonus - roll.magicBoltsUsed;
-    return this.result
-      ? this.result.equipmentBonus - this.result.magicBoltsUsed
-      : null;
-  }
-
   /** Armes capturées au lancer, indépendamment de l'inventaire courant. */
   get displayedWeapons() {
     return this.combatService.pendingCombatRoll()?.weapons
       ?? this.result?.weapons
       ?? [];
-  }
-
-  get initialAttack(): number | null {
-    const roll = this.combatService.pendingCombatRoll();
-    return roll ? roll.attackPower - roll.magicBoltsUsed : null;
-  }
-
-  /** Total des dés capturé par le moteur pour l'affichage du combat. */
-  get displayedDiceTotal(): number | null {
-    return this.combatService.pendingCombatRoll()?.diceTotal
-      ?? this.result?.diceTotal
-      ?? null;
   }
 
   /** Bonus magique déjà réservé dans le combat en cours. */
@@ -175,16 +146,9 @@ export class CombatOverlay implements OnDestroy {
       ?? 0;
   }
 
-  /** Force du monstre provenant du lancer ou du résultat métier. */
-  get displayedMonsterStrength(): number | null {
-    return this.combatService.pendingCombatRoll()?.monsterStrength
-      ?? this.result?.monsterStrength
-      ?? null;
-  }
-
-  /** Indique si la synthèse métier peut être affichée. */
-  get isScoreSummaryVisible(): boolean {
-    return this.displayedDiceTotal !== null && this.displayedMonsterStrength !== null;
+  /** Une entrée par Tir magique utilisé, pour conserver leur lisibilité individuelle. */
+  get displayedMagicBonusEntries(): number[] {
+    return Array.from({ length: this.displayedMagicBonus }, (_, index) => index);
   }
 
   get magicBoltsUsed(): number {
@@ -252,8 +216,8 @@ export class CombatOverlay implements OnDestroy {
   getVerdictLabel(outcome: CombatOutcome): string {
     if (outcome === 'tie') return 'Égalité';
     return outcome === 'victory'
-      ? `Victoire de ${this.result?.player.heroId ? this.getHeroName() : 'Héros'}`
-      : `Victoire de ${this.getMonsterName()}`;
+      ? `${this.getHeroName()} gagne`
+      : `${this.getMonsterName()} gagne`;
   }
 
   // ==========================================================

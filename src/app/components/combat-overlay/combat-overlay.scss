@@ -489,26 +489,38 @@
   animation: combat-score-pulse 520ms ease-out both;
 }
 
-.combat-overlay__score-summary {
-  display: grid;
-  gap: 3px;
-  width: min(100%, 290px);
+.combat-overlay__bonus-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 6px;
+  width: min(100%, 330px);
   margin-top: 6px;
-  padding: 4px 8px;
-  border: 1px solid rgba(245, 213, 138, .45);
-  border-radius: 8px;
-  color: #f8edcf;
-  background: rgba(25, 18, 13, .78);
   font-size: .72rem;
-  line-height: 1.25;
+  line-height: 1.2;
   text-align: center;
+}
+
+.combat-overlay__bonus {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 6px;
+  border: 1px solid rgba(245, 213, 138, .5);
+  border-radius: 999px;
+  color: #fff8e7;
+  background: rgba(25, 18, 13, .82);
   text-shadow: 0 1px 3px rgba(0, 0, 0, .8);
 }
-.combat-overlay__score-line { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; }
-.combat-overlay__score-line strong { color: #ffe98a; }
-.combat-overlay__score-total { font-size: .95rem; color: #fff4b0 !important; }
-.combat-overlay__score-opponent { color: #ffc4bc; }
-.combat-overlay__score-opponent strong { color: #ffddd7; }
+
+.combat-overlay__bonus--weapon {
+  border-color: rgba(255, 105, 105, .7);
+  color: #ffd4d0;
+}
+
+.combat-overlay__bonus--magic {
+  border-color: rgba(100, 220, 140, .75);
+  color: #c8ffd7;
+}
 
 .combat-overlay__die--stopped {
   animation: none;
@@ -619,8 +631,8 @@
   align-items: center;
   justify-content: center;
 
-  min-width: min(330px, 90vw);
-  min-height: 70px;
+  min-width: min(260px, 88vw);
+  min-height: 48px;
 
   isolation: isolate;
 }
@@ -629,7 +641,7 @@
   position: relative;
   z-index: 5;
 
-  font-size: clamp(2.2rem, 5vw, 4.3rem);
+  font-size: clamp(1.35rem, 3.2vw, 2.4rem);
   font-weight: 950;
   font-style: italic;
   line-height: 1;
@@ -1375,5 +1387,5 @@
   .combat-overlay__decision { top: calc(50% + 135px); font-size: .8rem; }
   .combat-overlay__verdict { top: calc(50% + 82px); }
   .combat-overlay__fighter-name { font-size: .95rem; }
-  .combat-overlay__verdict-title { font-size: clamp(2rem, 9vw, 3.1rem); }
+  .combat-overlay__verdict-title { font-size: clamp(1.25rem, 7vw, 2rem); }
 }

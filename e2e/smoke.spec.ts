@@ -82,7 +82,9 @@ test('une partie atteint le plateau après les lancers de préparation', async (
     const rollButton = page.getByRole('button', { name: 'Lancer les dés' });
     await expect(rollButton).toBeVisible({ timeout: 5_000 });
     await rollButton.click({ force: true });
-    await expect(page.locator('.combat-overlay__score-summary')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.combat-overlay__dice')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.combat-overlay__score-summary')).toHaveCount(0);
+    await page.screenshot({ path: 'playwright-report/karak-combat-roll.png', fullPage: true });
 
     await expect.poll(async () => {
       const decision = await page.getByRole('button', { name: /Terminer sans autre sort/ }).count();
