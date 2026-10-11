@@ -189,21 +189,6 @@
   min-width: 0;
 }
 
-.combat-overlay__weapon-bonus {
-  position: absolute;
-  top: 4%;
-  left: 50%;
-  z-index: 5;
-  padding: 3px 9px;
-  border-radius: 999px;
-  color: #ffe98a;
-  background: rgba(78, 35, 15, 0.9);
-  box-shadow: 0 0 12px rgba(255, 185, 45, 0.72);
-  font-size: 1rem;
-  font-weight: 900;
-  transform: translateX(-50%);
-}
-
 .combat-overlay__weapon-list {
   position: absolute;
   top: 7%;
@@ -503,6 +488,27 @@
 .combat-overlay__dice--magic-pulse {
   animation: combat-score-pulse 520ms ease-out both;
 }
+
+.combat-overlay__score-summary {
+  display: grid;
+  gap: 3px;
+  width: min(100%, 290px);
+  margin-top: 6px;
+  padding: 4px 8px;
+  border: 1px solid rgba(245, 213, 138, .45);
+  border-radius: 8px;
+  color: #f8edcf;
+  background: rgba(25, 18, 13, .78);
+  font-size: .72rem;
+  line-height: 1.25;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .8);
+}
+.combat-overlay__score-line { display: flex; justify-content: center; gap: 4px; flex-wrap: wrap; }
+.combat-overlay__score-line strong { color: #ffe98a; }
+.combat-overlay__score-total { font-size: .95rem; color: #fff4b0 !important; }
+.combat-overlay__score-opponent { color: #ffc4bc; }
+.combat-overlay__score-opponent strong { color: #ffddd7; }
 
 .combat-overlay__die--stopped {
   animation: none;

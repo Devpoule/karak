@@ -63,7 +63,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'skeleton-key-guardian',
-    name: 'Le Squelette – Gardien De Clé',
+    name: 'Le Gardien De Clé',
     kind: 'monster',
     strength: 8,
     image: `${TOKEN_ASSET_PATH}/skeleton-key-guardian.png`,
@@ -74,7 +74,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'skeleton-swordsman',
-    name: 'Le Squelette – Épéiste',
+    name: 'L\'Épéiste',
     kind: 'monster',
     strength: 9,
     image: `${TOKEN_ASSET_PATH}/skeleton-swordsman.png`,
@@ -85,7 +85,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'skeleton-king',
-    name: 'Le Roi Squelette',
+    name: 'Le Roi',
     kind: 'monster',
     strength: 10,
     image: `${TOKEN_ASSET_PATH}/skeleton-king.png`,
@@ -133,7 +133,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'skeleton-ice-magician',
-    name: 'Le Squelette – Magicien De Glace',
+    name: 'Le Magicien De Glace',
     kind: 'monster',
     strength: 11,
     image: `${TOKEN_ASSET_PATH}/skeleton-ice-magician.png`,

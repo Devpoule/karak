@@ -161,6 +161,32 @@ export class CombatOverlay implements OnDestroy {
     return roll ? roll.attackPower - roll.magicBoltsUsed : null;
   }
 
+  /** Total des dés capturé par le moteur pour l'affichage du combat. */
+  get displayedDiceTotal(): number | null {
+    return this.combatService.pendingCombatRoll()?.diceTotal
+      ?? this.result?.diceTotal
+      ?? null;
+  }
+
+  /** Bonus magique déjà réservé dans le combat en cours. */
+  get displayedMagicBonus(): number {
+    return this.combatService.pendingCombatRoll()?.magicBoltsUsed
+      ?? this.result?.magicBoltsUsed
+      ?? 0;
+  }
+
+  /** Force du monstre provenant du lancer ou du résultat métier. */
+  get displayedMonsterStrength(): number | null {
+    return this.combatService.pendingCombatRoll()?.monsterStrength
+      ?? this.result?.monsterStrength
+      ?? null;
+  }
+
+  /** Indique si la synthèse métier peut être affichée. */
+  get isScoreSummaryVisible(): boolean {
+    return this.displayedDiceTotal !== null && this.displayedMonsterStrength !== null;
+  }
+
   get magicBoltsUsed(): number {
     return this.combatService.pendingCombatRoll()?.magicBoltsUsed ?? 0;
   }
