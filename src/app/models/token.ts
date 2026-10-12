@@ -1,4 +1,6 @@
 
+import { ContentOrigin } from './content-origin';
+
 /**
  * Nature d'un jeton tiré depuis le sachet.
  */
@@ -70,6 +72,7 @@ interface BaseTokenDefinition {
   readonly id: TokenDefinitionId;
   readonly kind: TokenKind;
   readonly image: string;
+  readonly origin: ContentOrigin;
 }
 
 /**

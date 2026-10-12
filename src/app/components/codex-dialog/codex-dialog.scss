@@ -66,6 +66,9 @@
 }
 
 .codex-dialog__body p { margin: 0; white-space: pre-line; }
+.codex-dialog__powers { margin-top: 1.25rem; }
+.codex-dialog__power + .codex-dialog__power { margin-top: 1rem; }
+.codex-dialog__power h3 { margin: 0 0 .3rem; color: #f5d884; font: 700 1rem/1.3 Georgia, 'Times New Roman', serif; }
 .codex-dialog__note { margin-top: 1rem !important; color: #ffb8ad; font-weight: 700; }
 
 .codex-dialog__close {

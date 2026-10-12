@@ -29,6 +29,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'giant-rat',
+    origin: 'base',
     name: 'Le Rat Géant',
     kind: 'monster',
     strength: 5,
@@ -40,6 +41,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'giant-spider',
+    origin: 'base',
     name: 'L\'Araignée Géante',
     kind: 'monster',
     strength: 6,
@@ -51,6 +53,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'skeleton-mummy',
+    origin: 'base',
     name: 'La Momie',
     kind: 'monster',
     strength: 7,
@@ -63,6 +66,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'skeleton-key-guardian',
+    origin: 'base',
     name: 'Le Gardien De Clé',
     kind: 'monster',
     strength: 8,
@@ -74,6 +78,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'skeleton-swordsman',
+    origin: 'base',
     name: 'L\'Épéiste',
     kind: 'monster',
     strength: 9,
@@ -85,6 +90,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'skeleton-king',
+    origin: 'base',
     name: 'Le Roi',
     kind: 'monster',
     strength: 10,
@@ -96,6 +102,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'fallen',
+    origin: 'base',
     name: 'Le Spectre De Mort',
     kind: 'monster',
     strength: 12,
@@ -107,6 +114,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'dragon',
+    origin: 'base',
     name: 'Le Dragon',
     kind: 'monster',
     strength: 15,
@@ -122,6 +130,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'giant-bat',
+    origin: 'regent',
     name: 'La Chauve-Souris Géante',
     kind: 'monster',
     strength: 6,
@@ -133,6 +142,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'skeleton-ice-magician',
+    origin: 'regent',
     name: 'Le Magicien De Glace',
     kind: 'monster',
     strength: 11,
@@ -148,6 +158,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'closed-chest',
+    origin: 'base',
     kind: 'treasure',
     image: `${TOKEN_ASSET_PATH}/closed-chest.png`,
     backTokenId: 'open-chest',
@@ -155,12 +166,14 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
 
   {
     id: 'open-chest',
+    origin: 'base',
     kind: 'treasure',
     image: `${TOKEN_ASSET_PATH}/open-chest.png`,
   },
 
   {
     id: 'treasure',
+    origin: 'base',
     kind: 'treasure',
     image: `${TOKEN_ASSET_PATH}/treasure.png`,
   },

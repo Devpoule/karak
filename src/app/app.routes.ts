@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 
 import { Home } from './pages/home/home';
 import { Game } from './pages/game/game';
-import { Rules } from './pages/rules/rules';
+import { Codex } from './pages/codex/codex';
 
 
 /**
@@ -26,6 +26,11 @@ export const routes: Routes = [
   },
   {
     path: 'rules',
-    component: Rules,
+    redirectTo: 'codex',
+    pathMatch: 'full',
+  },
+  {
+    path: 'codex',
+    component: Codex,
   },
 ];

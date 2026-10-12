@@ -141,6 +141,7 @@ function createHeroDefinition(
 
   return {
     id,
+    origin: 'base',
     name,
     nickname,
     description,

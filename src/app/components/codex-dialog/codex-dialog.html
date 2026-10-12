@@ -16,6 +16,16 @@
     </header>
     <div class="codex-dialog__body">
       <p>{{ body }}</p>
+      @if (powers.length) {
+        <div class="codex-dialog__powers" aria-label="Pouvoirs du héros">
+          @for (power of powers; track power.id; let index = $index) {
+            <article class="codex-dialog__power">
+              <h3>Pouvoir {{ index + 1 }} — {{ power.name }}</h3>
+              <p>{{ power.description }}</p>
+            </article>
+          }
+        </div>
+      }
       @if (note) { <p class="codex-dialog__note">{{ note }}</p> }
     </div>
   </section>

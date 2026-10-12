@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 import { getHeroDefinition } from '../../data/hero-definitions';
 import { HeroDefinition } from '../../models/hero';
@@ -26,6 +26,9 @@ import { Player } from '../../models/player';
   templateUrl: './hero-panel.html',
 })
 export class HeroPanel {
+  /** Notifie la fiche latérale que le portrait doit ouvrir la biographie. */
+  @Output() readonly portraitClicked = new EventEmitter<void>();
+
   /**
    * Joueur dont le héros est représenté.
    */
@@ -56,5 +59,9 @@ export class HeroPanel {
       getHeroDefinition(heroId)
       ?? null
     );
+  }
+
+  openBiography(): void {
+    this.portraitClicked.emit();
   }
 }

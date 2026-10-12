@@ -87,7 +87,9 @@ export class Game implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.gameService.initialize();
+    if (!this.gameService.isInitialized()) {
+      this.gameService.initialize();
+    }
   }
 
   ngOnDestroy(): void {

@@ -1,0 +1,101 @@
+<main class="codex-page">
+  <header class="codex-page__header">
+    <button type="button" class="codex-page__back" (click)="goBack()">← Retour</button>
+    <div>
+      <p class="codex-page__eyebrow">Encyclopédie de Karak</p>
+      <h1>Codex</h1>
+      <p>Les héros et les créatures qui peuplent les catacombes.</p>
+    </div>
+  </header>
+
+  <nav class="codex-page__sections" aria-label="Rubriques du Codex">
+    <button type="button" [class.codex-page__section--selected]="section === 'heroes'" [attr.aria-pressed]="section === 'heroes'" (click)="selectSection('heroes')">Héros</button>
+    <button type="button" [class.codex-page__section--selected]="section === 'bestiary'" [attr.aria-pressed]="section === 'bestiary'" (click)="selectSection('bestiary')">Bestiaire</button>
+    <button type="button" [class.codex-page__section--selected]="section === 'rules'" [attr.aria-pressed]="section === 'rules'" (click)="selectSection('rules')">Règles et mécaniques</button>
+  </nav>
+
+  @if (section === 'heroes') {
+  <div class="codex-page__layout">
+    <nav class="codex-page__gallery" aria-label="Choisir un héros">
+      @for (hero of heroes; track hero.id) {
+        <button
+          type="button"
+          class="codex-page__hero-card"
+          [class.codex-page__hero-card--selected]="selectedHero.id === hero.id"
+          [attr.aria-pressed]="selectedHero.id === hero.id"
+          (click)="selectHero(hero)"
+        >
+          <img [src]="hero.characterTransparent" [alt]="hero.name" draggable="false" />
+          <span>{{ hero.name }}</span><small>{{ originLabel(hero.origin) }}</small>
+        </button>
+      }
+    </nav>
+
+    <article class="codex-page__entry" aria-live="polite">
+      <header class="codex-page__entry-header">
+        <img [src]="selectedHero.characterTransparent" [alt]="selectedHero.name" draggable="false" />
+        <div>
+          <p>{{ selectedHero.nickname }} · {{ originLabel(selectedHero.origin) }}</p>
+          <h2>{{ selectedHero.name }}</h2>
+        </div>
+      </header>
+
+      <div class="codex-page__entry-body">
+        <section>
+          <h3>Histoire</h3>
+          <p>{{ selectedHero.description }}</p>
+        </section>
+
+        <section>
+          <h3>Pouvoirs</h3>
+          <div class="codex-page__powers">
+            @for (power of selectedHero.powers; track power.id; let index = $index) {
+              <article>
+                <h4>Pouvoir {{ index + 1 }} — {{ power.name }}</h4>
+                <p>{{ power.description }}</p>
+              </article>
+            }
+          </div>
+        </section>
+      </div>
+    </article>
+  </div>
+  } @else if (section === 'bestiary') {
+  <div class="codex-page__layout">
+    <nav class="codex-page__gallery" aria-label="Choisir une créature">
+      @for (monster of bestiary; track monster.tokenId) {
+        @if (monsterDefinition(monster); as definition) {
+          <button type="button" class="codex-page__hero-card" [class.codex-page__hero-card--selected]="selectedMonster.tokenId === monster.tokenId" [attr.aria-pressed]="selectedMonster.tokenId === monster.tokenId" (click)="selectMonster(monster)">
+            <img [src]="definition.image" [alt]="definition.name" draggable="false" />
+            <span>{{ definition.name }}</span><small>{{ originLabel(definition.origin) }}</small>
+          </button>
+        }
+      }
+    </nav>
+    @if (monsterDefinition(selectedMonster); as monster) {
+      <article class="codex-page__entry" aria-live="polite">
+        <header class="codex-page__entry-header">
+          <img [src]="monster.image" [alt]="monster.name" draggable="false" />
+          <div><p>{{ originLabel(monster.origin) }}</p><h2>{{ monster.name }}</h2></div>
+        </header>
+        <div class="codex-page__entry-body">
+          <section><h3>Description officielle</h3><p>{{ selectedMonster.description }}</p></section>
+          <section class="codex-page__stats"><h3>Caractéristique du jeu</h3><p><strong>Force :</strong> {{ monster.strength }}</p></section>
+        </div>
+      </article>
+    }
+  </div>
+  }
+  @else {
+    <div class="codex-page__rules" aria-label="Règles et mécaniques">
+      @for (rule of rules; track rule.title) {
+        <article class="codex-page__rule">
+          <p class="codex-page__official-label">Règle officielle</p>
+          <h2>{{ rule.title }}</h2>
+          <p>{{ rule.official }}</p>
+          @if (rule.complement) { <p class="codex-page__complement"><strong>Complément :</strong> {{ rule.complement }}</p> }
+        </article>
+      }
+    </div>
+  }
+</main>

@@ -60,10 +60,10 @@
    * Ces valeurs suivent le dessin de hero-life-panel.png et pourront
    * être ajustées très légèrement après contrôle visuel.
    */
-  top: 17%;
+  top: 19%;
   left: 8%;
   right: 8%;
-  bottom: 17%;
+  bottom: 19%;
 
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -82,9 +82,9 @@
 .life-panel__point {
   display: block;
 
-  width: 82%;
-  max-width: 42px;
-  height: auto;
+  width: 89%;
+  max-width: 44px;
+  height: 88%;
 
   object-fit: contain;
 
