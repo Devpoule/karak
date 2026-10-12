@@ -20,7 +20,9 @@
   position: relative;
 
   width: 100%;
-  aspect-ratio: 1024 / 1386;
+  height: 0;
+  padding-bottom: 135.35%;
+  box-sizing: border-box;
   overflow: hidden;
 }
 

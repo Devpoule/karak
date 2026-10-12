@@ -8,7 +8,9 @@
   box-sizing: border-box;
   width: 100%;
   line-height: 0;
-  aspect-ratio: 2172 / 511;
+  height: 0;
+  padding-bottom: 23.52%;
+  box-sizing: border-box;
   overflow: hidden;
 }
 .treasure-panel__board { position: absolute; top: -20.55%; left: 0; display: block; width: 100%; height: auto; }

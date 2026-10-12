@@ -7,7 +7,9 @@
 .inventory-panel {
   position: relative;
   width: 100%;
-  aspect-ratio: 1024 / 1357;
+  height: 0;
+  padding-bottom: 132.52%;
+  box-sizing: border-box;
   overflow: hidden;
 }
 
