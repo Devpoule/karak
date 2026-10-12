@@ -71,25 +71,6 @@
 .codex-dialog__power h3 { margin: 0 0 .3rem; color: #f5d884; font: 700 1rem/1.3 Georgia, 'Times New Roman', serif; }
 .codex-dialog__note { margin-top: 1rem !important; color: #ffb8ad; font-weight: 700; }
 
-.codex-dialog__close {
-  position: absolute;
-  top: .75rem;
-  right: .75rem;
-  z-index: 1;
-  width: 2rem;
-  height: 2rem;
-  color: #fff8df;
-  background: rgba(26, 30, 39, .9);
-  border: 1px solid #d5ae62;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 1.35rem;
-  line-height: 1;
-}
-
-.codex-dialog__close:hover,
-.codex-dialog__close:focus-visible { color: #1d2633; background: #f5d884; }
-
 @media (max-width: 600px) {
   .codex-dialog__backdrop { padding: .75rem; }
   .codex-dialog__backdrop--left,

@@ -9,12 +9,30 @@
   </header>
 
   <nav class="codex-page__sections" aria-label="Rubriques du Codex">
+    <button type="button" [class.codex-page__section--selected]="section === 'universe'" [attr.aria-pressed]="section === 'universe'" (click)="selectSection('universe')">L'univers de Karak</button>
     <button type="button" [class.codex-page__section--selected]="section === 'heroes'" [attr.aria-pressed]="section === 'heroes'" (click)="selectSection('heroes')">Héros</button>
     <button type="button" [class.codex-page__section--selected]="section === 'bestiary'" [attr.aria-pressed]="section === 'bestiary'" (click)="selectSection('bestiary')">Bestiaire</button>
     <button type="button" [class.codex-page__section--selected]="section === 'rules'" [attr.aria-pressed]="section === 'rules'" (click)="selectSection('rules')">Règles et mécaniques</button>
   </nav>
 
-  @if (section === 'heroes') {
+  @if (section === 'universe') {
+    <article class="codex-page__universe">
+      <header class="codex-page__universe-hero">
+        <img src="/assets/home-page.png" alt="Les héros face aux créatures de Karak" draggable="false" />
+        <div>
+          <p class="codex-page__eyebrow">Le lore de Karak</p>
+          <h2>Bienvenue sous le château</h2>
+          <p>Un château en ruines, un labyrinthe oublié et des trésors qui attirent autant les héros que les dangers.</p>
+        </div>
+      </header>
+      @for (entry of lore; track entry.id) {
+        <section class="codex-page__lore-section" [attr.id]="entry.id">
+          <h2>{{ entry.title }}</h2>
+          @for (paragraph of entry.paragraphs; track paragraph) { <p>{{ paragraph }}</p> }
+        </section>
+      }
+    </article>
+  } @else if (section === 'heroes') {
   <div class="codex-page__layout">
     <nav class="codex-page__gallery" aria-label="Choisir un héros">
       @for (hero of heroes; track hero.id) {
@@ -89,7 +107,7 @@
   @else {
     <div class="codex-page__rules" aria-label="Règles et mécaniques">
       @for (rule of rules; track rule.title) {
-        <article class="codex-page__rule">
+        <article class="codex-page__rule" [attr.id]="rule.id">
           <p class="codex-page__official-label">Règle officielle</p>
           <h2>{{ rule.title }}</h2>
           <p>{{ rule.official }}</p>
@@ -98,4 +116,6 @@
       }
     </div>
   }
+
+  <app-scroll-top-button />
 </main>

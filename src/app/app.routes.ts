@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 import { Home } from './pages/home/home';
 import { Game } from './pages/game/game';
 import { Codex } from './pages/codex/codex';
+import { Entry } from './pages/entry/entry';
 
 
 /**
@@ -22,6 +23,10 @@ export const routes: Routes = [
   },
   {
     path: 'game',
+    component: Entry,
+  },
+  {
+    path: 'play',
     component: Game,
   },
   {

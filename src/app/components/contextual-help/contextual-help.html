@@ -1,0 +1,19 @@
+<div class="contextual-help">
+  <button
+    type="button"
+    class="contextual-help__trigger"
+    [attr.aria-expanded]="isOpen"
+    [attr.aria-controls]="help().id"
+    [attr.aria-label]="'Afficher l’aide : ' + help().title"
+    (click)="toggle()"
+  >
+    ?
+  </button>
+
+  @if (isOpen) {
+    <aside class="contextual-help__popover" [style.top.px]="popoverTop" [style.left.px]="popoverLeft" [id]="help().id" role="dialog" aria-modal="false" [attr.aria-label]="help().title">
+      <h2>{{ help().title }}</h2>
+      <p>{{ help().summary }}</p>
+    </aside>
+  }
+</div>

@@ -19,6 +19,9 @@ import {
   MAX_PLAYER_COUNT,
   MIN_PLAYER_COUNT,
 } from '../../services/player.service';
+import { SetupStep } from '../../models/game';
+import { ContextualHelpComponent } from '../contextual-help/contextual-help';
+import { PREPARATION_HELP } from '../../data/contextual-help';
 
 /**
  * Vue actuellement affichée dans le panneau principal.
@@ -54,11 +57,12 @@ type FirstPlayerResolutionState =
 
 @Component({
   selector: 'app-game-setup',
-  imports: [],
+  imports: [ContextualHelpComponent],
   templateUrl: './game-setup.html',
   styleUrl: './game-setup.scss',
 })
 export class GameSetup {
+  readonly preparationHelp = PREPARATION_HELP;
   /**
    * Vue initiale du jeu.
    *
@@ -67,8 +71,7 @@ export class GameSetup {
    *
    * Le joueur découvre d'abord uniquement l'action "Jouer".
    */
-  readonly setupView =
-    signal<SetupView>('welcome');
+  readonly setupView = signal<SetupView>('setup');
 
   /**
    * Ouvre la préparation d'une nouvelle partie.
@@ -398,6 +401,41 @@ export class GameSetup {
       this.selectedPlayerCount,
       this.humanPlayerCount,
     );
+  }
+
+  goToSetupStep(step: 'players' | 'heroes'): void {
+    const target: SetupStep = step === 'players' ? 'player-count' : 'hero-draw';
+    this.gameService.goBackToSetupStep(target);
+    this.heroDrawState.set(step === 'heroes' ? 'revealed' : 'hidden');
+    this.displayedDice.set({});
+    this.revealedPlayerIndexes.set([]);
+    this.rollingPlayerIndex.set(null);
+    this.firstPlayerResolutionState.set('waiting');
+    this.aiRollScheduled = false;
+  }
+
+  continueAfterHeroDraw(): void {
+    this.gameService.continueAfterHeroDraw();
+    this.firstPlayerResolutionState.set('waiting');
+  }
+
+  get canNavigatePrevious(): boolean { return this.gameService.setupStep() !== 'player-count'; }
+
+  get canNavigateNext(): boolean {
+    return this.gameService.setupStep() === 'player-count'
+      ? this.gameService.playerCount > 0
+      : this.gameService.setupStep() === 'hero-draw' && this.heroDrawState() === 'revealed';
+  }
+
+  navigatePrevious(): void {
+    if (this.gameService.setupStep() === 'first-player-roll') this.goToSetupStep('heroes');
+    else if (this.gameService.setupStep() === 'hero-draw') this.goToSetupStep('players');
+  }
+
+  navigateNext(): void {
+    if (!this.canNavigateNext) return;
+    if (this.gameService.setupStep() === 'hero-draw') this.continueAfterHeroDraw();
+    else this.gameService.goToNextSetupStep();
   }
 
   // ==========================================================
