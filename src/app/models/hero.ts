@@ -43,6 +43,8 @@ export type HeroPowerId =
 export interface HeroPowerDefinition {
   id: HeroPowerId;
   name: string;
+  /** Résumé court affiché dans l’aide contextuelle au survol. */
+  summary: string;
   description: string;
 }
 
@@ -55,6 +57,9 @@ export interface HeroPowerDefinition {
 export interface HeroDefinition {
   id: HeroId;
   name: string;
+
+  /** Surnom utilisé dans les fiches de consultation du héros. */
+  nickname: string;
 
   /** Présentation courte affichée dans le glossaire et la fiche joueur. */
   description: string;

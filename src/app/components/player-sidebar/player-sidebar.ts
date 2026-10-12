@@ -7,6 +7,7 @@ import { LifePanel } from '../life-panel/life-panel';
 import { HeroPanel } from '../hero-panel/hero-panel';
 import { InventoryPanel } from '../inventory-panel/inventory-panel';
 import { TreasurePanel } from '../treasure-panel/treasure-panel';
+import { CodexDialog } from '../codex-dialog/codex-dialog';
 
 /**
  * Position de la fiche joueur dans l'interface.
@@ -39,6 +40,7 @@ export type PlayerSide = 'left' | 'right';
     HeroPanel,
     InventoryPanel,
     TreasurePanel,
+    CodexDialog,
   ],
   templateUrl: './player-sidebar.html',
   styleUrl: './player-sidebar.scss',

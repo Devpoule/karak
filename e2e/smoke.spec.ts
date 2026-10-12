@@ -149,17 +149,18 @@ test('le grimoire est réservé à la partie et se replie avec la boule de crist
   await page.getByRole('button', { name: 'Entrer dans le donjon' }).click();
   await expect(page.locator('app-board')).toBeVisible();
   await expect(crystal).toBeVisible();
-  const storyButton = page.getByRole('button', { name: 'Lire son histoire' }).first();
-  await expect(storyButton).toBeVisible();
-  await storyButton.click();
-  await expect(page.getByRole('dialog', { name: /histoire de/i }).first()).toBeVisible();
-  await page.getByRole('button', { name: "Fermer l'histoire" }).first().click();
+  const infoButton = page.getByRole('button', { name: /Afficher les informations de/ }).first();
+  await expect(infoButton).toBeVisible();
+  await infoButton.click();
+  await expect(page.getByRole('dialog').first()).toBeVisible();
+  await page.getByRole('button', { name: 'Fermer la fiche' }).first().click();
 
   const powerButton = page.getByRole('button', { name: /^Pouvoir 1 :/ }).first();
   await expect(powerButton).toBeVisible();
   await powerButton.click();
-  await expect(page.getByRole('dialog', { name: /Pouvoir/i }).last()).toBeVisible();
-  await page.getByRole('button', { name: /Fermer le pouvoir/ }).first().click();
+  await expect(page.getByRole('dialog').first()).toBeVisible();
+  await page.screenshot({ path: 'playwright-report/hero-codex-dialog.png', fullPage: true });
+  await page.getByRole('button', { name: 'Fermer la fiche' }).first().click();
 
   await crystal.click();
   await expect(page.getByRole('button', { name: /Consulter / })).toHaveCount(6);

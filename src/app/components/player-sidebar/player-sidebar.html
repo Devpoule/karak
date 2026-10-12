@@ -9,6 +9,15 @@
     <section class="player-sidebar__name-panel" aria-label="Héros sélectionné">
       <img src="/assets/board/hero-name-panel.png" alt="" draggable="false" />
       <h2>{{ hero.name }}</h2>
+      <button
+        type="button"
+        class="player-sidebar__info-button"
+        aria-label="Afficher les informations de {{ hero.name }}"
+        [attr.aria-expanded]="biographyOpen"
+        (click)="toggleBiography()"
+      >
+        <span aria-hidden="true">i</span>
+      </button>
     </section>
   }
 
@@ -33,17 +42,8 @@
 
     @if (heroDefinition; as hero) {
       <section class="player-sidebar__technical" aria-label="Informations du héros">
-        <img src="/assets/board/hero-description-panel.png" alt="" draggable="false" />
+        <img src="/assets/board/hero-powers-panel.png" alt="" draggable="false" />
         <div class="player-sidebar__technical-content">
-          <p class="player-sidebar__description">{{ hero.description }}</p>
-          <button
-            type="button"
-            class="player-sidebar__story-button"
-            [attr.aria-expanded]="biographyOpen"
-            (click)="toggleBiography()"
-          >
-            {{ biographyOpen ? 'Fermer son histoire' : 'Lire son histoire' }}
-          </button>
           <div class="player-sidebar__powers" role="group" aria-label="Pouvoirs du héros">
             @for (power of hero.powers; track power.id; let index = $index) {
               <button
@@ -53,7 +53,8 @@
                 [class.player-sidebar__power-badge--disabled]="player?.isCursed"
                 [attr.aria-pressed]="selectedPowerId === power.id"
                 [attr.aria-label]="'Pouvoir ' + (index + 1) + ' : ' + power.name"
-                [attr.title]="power.name"
+                [attr.title]="power.name + ' — ' + power.summary"
+                [attr.data-tooltip]="power.name + ' — ' + power.description"
                 (click)="togglePower(power.id)"
               >
                 <img [src]="powerImage(index)" alt="" draggable="false" />
@@ -65,23 +66,28 @@
       </section>
 
       @if (biographyOpen) {
-        <article class="player-sidebar__codex-sheet" role="dialog" aria-label="Histoire de {{ hero.name }}">
-          <button type="button" class="player-sidebar__sheet-close" aria-label="Fermer l'histoire" (click)="closeDetails()">×</button>
-          <h3>{{ hero.name }} — son histoire</h3>
-          <p>{{ hero.description }}</p>
-        </article>
+        <app-codex-dialog
+          [title]="hero.name"
+          [subtitle]="hero.nickname"
+          [icon]="hero.characterTransparent"
+          [iconAlt]="hero.name"
+          [body]="hero.description"
+          [placement]="side"
+          (closed)="closeDetails()"
+        />
       }
 
       @if (selectedPower; as power) {
-        <article class="player-sidebar__codex-sheet player-sidebar__codex-sheet--power" role="dialog" aria-label="Pouvoir {{ power.name }}">
-          <button type="button" class="player-sidebar__sheet-close" aria-label="Fermer le pouvoir" (click)="closeDetails()">×</button>
-          <img [src]="powerImage(hero.powers.indexOf(power))" [alt]="power.name" draggable="false" />
-          <div>
-            <h3>{{ power.name }}</h3>
-            <p>{{ power.description }}</p>
-            @if (player?.isCursed) { <span class="player-sidebar__cursed-note">Pouvoir indisponible sous malédiction — consultation uniquement</span> }
-          </div>
-        </article>
+        <app-codex-dialog
+          [title]="power.name"
+          [subtitle]="hero.name + ' — ' + hero.nickname"
+          [icon]="powerImage(hero.powers.indexOf(power))"
+          [iconAlt]="power.name"
+          [body]="power.description"
+          [note]="player?.isCursed ? 'Pouvoir indisponible sous malédiction — consultation uniquement' : ''"
+          [placement]="side"
+          (closed)="closeDetails()"
+        />
       }
     }
   }

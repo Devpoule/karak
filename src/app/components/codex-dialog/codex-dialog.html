@@ -1,0 +1,22 @@
+<div class="codex-dialog__backdrop" [class.codex-dialog__backdrop--left]="placement === 'left'" [class.codex-dialog__backdrop--right]="placement === 'right'" (click)="close()">
+  <section
+    class="codex-dialog"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="title"
+    (click)="$event.stopPropagation()"
+  >
+    <button type="button" class="codex-dialog__close" aria-label="Fermer la fiche" (click)="close()">×</button>
+    <header class="codex-dialog__header">
+      @if (icon) { <img [src]="icon" [alt]="iconAlt" draggable="false" /> }
+      <div>
+        @if (subtitle) { <p class="codex-dialog__eyebrow">{{ subtitle }}</p> }
+        <h2>{{ title }}</h2>
+      </div>
+    </header>
+    <div class="codex-dialog__body">
+      <p>{{ body }}</p>
+      @if (note) { <p class="codex-dialog__note">{{ note }}</p> }
+    </div>
+  </section>
+</div>

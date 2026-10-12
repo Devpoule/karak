@@ -17,6 +17,7 @@ describe('PlayerSidebar codex', () => {
     const sidebar = createSidebar();
     const heroId = sidebar.heroDefinition!.id;
 
+    expect(sidebar.heroDefinition!.nickname).toBeTruthy();
     expect(sidebar.powerImage(0)).toBe(`/assets/heroes/${heroId}/character-primary-power.png`);
     expect(sidebar.powerImage(1)).toBe(`/assets/heroes/${heroId}/character-secondary-power.png`);
   });
