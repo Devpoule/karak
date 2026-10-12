@@ -84,7 +84,24 @@
    * malédiction doit pouvoir franchir son bord supérieur vers le nom. */
   overflow: visible;
 
-  pointer-events: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: filter 140ms ease, transform 140ms ease;
+}
+
+.hero-panel__hero:hover {
+  filter: brightness(1.08);
+}
+
+.hero-panel__hero:hover { transform: scale(1.01); }
+
+.hero-panel__hero:focus-visible {
+  filter: brightness(1.08);
+  outline: 2px solid rgba(245, 216, 132, .85);
+  outline-offset: -2px;
 }
 
 /*

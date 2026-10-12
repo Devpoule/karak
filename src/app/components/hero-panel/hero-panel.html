@@ -19,9 +19,11 @@
   />
 
   @if (heroDefinition; as hero) {
-    <div
+    <button
       class="hero-panel__hero"
-      [attr.aria-label]="hero.name"
+      type="button"
+      [attr.aria-label]="'Afficher les informations de ' + hero.name"
+      (click)="openBiography()"
     >
       <img
         class="hero-panel__card"
@@ -37,6 +39,6 @@
           draggable="false"
         />
       }
-    </div>
+    </button>
   }
 </section>

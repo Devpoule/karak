@@ -175,32 +175,6 @@
   white-space: nowrap;
 }
 
-.player-sidebar__info-button {
-  position: absolute;
-  top: 50%;
-  right: 7%;
-  display: grid;
-  width: clamp(.95rem, 2.4vw, 1.2rem);
-  height: clamp(.95rem, 2.4vw, 1.2rem);
-  place-items: center;
-  transform: translateY(-50%);
-  color: #f8edcf;
-  background: radial-gradient(circle at 35% 30%, #6d91b1, #263c55 72%);
-  border: 1px solid #efd083;
-  border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .8);
-  cursor: pointer;
-  font: 700 .68rem/1 Georgia, serif;
-}
-
-.player-sidebar__info-button:hover,
-.player-sidebar__info-button:focus-visible {
-  color: #243548;
-  background: #f5d884;
-  outline: 2px solid #fff4c7;
-  outline-offset: 2px;
-}
-
 .player-sidebar__technical {
   position: relative;
   z-index: 1;

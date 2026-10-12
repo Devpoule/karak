@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, ElementRef, EventEmitter, Input, Output, Renderer2 } from '@angular/core';
+import { HeroPowerDefinition } from '../../models/hero';
 
 /** Fiche de consultation commune aux biographies et aux pouvoirs. */
 @Component({
@@ -16,7 +17,8 @@ export class CodexDialog implements AfterViewInit {
   @Input() iconAlt = '';
   @Input() body = '';
   @Input() note = '';
-  @Input() placement: 'left' | 'right' = 'left';
+  @Input() powers: readonly HeroPowerDefinition[] = [];
+  @Input() placement: 'left' | 'right' | 'center' = 'center';
   @Output() closed = new EventEmitter<void>();
 
   /** Sort la modale du contexte transformé de la sidebar pour la rattacher au viewport. */

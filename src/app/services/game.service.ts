@@ -67,6 +67,7 @@ export interface PendingTokenChoice {
   providedIn: 'root',
 })
 export class GameService {
+  private initialized = false;
 
   /**
    * Phase globale actuelle de la partie.
@@ -272,6 +273,12 @@ export class GameService {
     this.initializeTileDeck();
     this.initializeTokenBag();
     this.initializeCombat();
+    this.initialized = true;
+  }
+
+  /** Indique si une partie ou sa préparation existe déjà en mémoire. */
+  isInitialized(): boolean {
+    return this.initialized;
   }
 
   /**

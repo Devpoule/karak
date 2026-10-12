@@ -23,21 +23,12 @@
         </button>
         }
 
-        <button
-          type="button"
-          class="player-sidebar__info-button"
-          aria-label="Afficher les informations de {{ hero.name }}"
-          [attr.aria-expanded]="biographyOpen"
-          (click)="toggleBiography()"
-        >
-          <span aria-hidden="true">i</span>
-        </button>
       </section>
     </div>
   }
 
   @if (showPlayer) {
-    <app-hero-panel [player]="player" />
+    <app-hero-panel [player]="player" (portraitClicked)="toggleBiography()" />
     <app-life-panel [player]="player" />
   }
 

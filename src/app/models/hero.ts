@@ -1,5 +1,6 @@
 
 import { Direction } from './tile';
+import { ContentOrigin } from './content-origin';
 
 /**
  * Identifiants des héros disponibles dans le jeu de base.
@@ -56,6 +57,7 @@ export interface HeroPowerDefinition {
  */
 export interface HeroDefinition {
   id: HeroId;
+  readonly origin: ContentOrigin;
   name: string;
 
   /** Surnom utilisé dans les fiches de consultation du héros. */
