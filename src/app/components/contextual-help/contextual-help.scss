@@ -9,8 +9,8 @@
 }
 
 .contextual-help__trigger {
-  width: 1.65rem;
-  height: 1.65rem;
+  width: 1.35rem;
+  height: 1.35rem;
   padding: 0;
   border: 1px solid #e8bd58;
   border-radius: 50%;
@@ -18,6 +18,7 @@
   color: #f6d77d;
   cursor: pointer;
   font: inherit;
+  font-size: .82rem;
   font-weight: 700;
 }
 
@@ -27,10 +28,12 @@
 }
 
 .contextual-help__popover {
-  position: fixed;
+  position: absolute;
+  top: calc(100% + .55rem);
+  right: 0;
   z-index: 5;
   box-sizing: border-box;
-  width: min(20rem, calc(100vw - 1rem));
+  width: min(18rem, 70vw);
   max-height: min(18rem, calc(100vh - 1rem));
   overflow-y: auto;
   padding: .9rem 1rem 1rem;

@@ -14,6 +14,8 @@ import { TileDeckService } from './tile-deck.service';
 import { TokenBagService } from './token-bag.service';
 import { TurnService } from './turn.service';
 import { CombatService } from './combat.service';
+import { ToastService } from './toast.service';
+import { getHeroDefinition } from '../data/hero-definitions';
 
 /**
  * Résultat du lancer effectué par un joueur
@@ -231,7 +233,27 @@ export class GameService {
     private readonly playerService: PlayerService,
     private readonly turnService: TurnService,
     private readonly combatService: CombatService,
+    private readonly toastService: ToastService,
   ) {}
+
+  private actorLabel(player: Player): string {
+    return player.controller === 'human'
+      ? 'Vous'
+      : (player.heroId ? getHeroDefinition(player.heroId)?.name : undefined) ?? 'L’IA';
+  }
+
+  /**
+   * Accorde le verbe des notifications avec le nom de l'équipement.
+   *
+   * Les données métier conservent le libellé officiel de chaque objet ;
+   * cet accord reste donc limité à la présentation des toasts.
+   */
+  private equipmentToastLabel(equipment: Equipment, verb: 'récupéré' | 'équipé'): string {
+    const plural = equipment.name.endsWith('s');
+    const feminine = ['sword', 'axe', 'key'].includes(equipment.id);
+    const ending = plural ? 's' : feminine ? 'e' : '';
+    return `${equipment.name} ${verb}${ending}`;
+  }
 
   /**
    * Commence la préparation d'une nouvelle partie.
@@ -705,6 +727,7 @@ export class GameService {
     pending.treasureTile.tokenFace = undefined;
     this.pendingTreasure.set(null);
     this.endTurn();
+    this.toastService.show(`${this.actorLabel(pending.player)} : coffre ouvert, trésor récupéré.`, 'success');
     return true;
   }
 
@@ -782,6 +805,7 @@ export class GameService {
 
     this.playerService.movePlayerTo(target, destination.x, destination.y, target.facing ?? 'north');
     this.playerService.restoreCompletely(target, 5);
+    this.toastService.show(`${this.actorLabel(user)} : Portail de guérison utilisé, ${this.actorLabel(target)} récupère tous ses points de vie.`, 'success');
     return true;
   }
 
@@ -791,7 +815,9 @@ export class GameService {
     const fountain = this.getHealingFountains()[0];
     if (!fountain) return false;
     this.playerService.movePlayerTo(player, fountain.x, fountain.y, player.facing ?? 'north');
-    return this.playerService.restoreCompletely(player, 5);
+    const restored = this.playerService.restoreCompletely(player, 5);
+    if (restored) this.toastService.show(`${this.actorLabel(player)} : Horan revient avec tous ses points de vie.`, 'success');
+    return restored;
   }
 
   /** Vérifie que la proposition correspond toujours à l'objet présent au sol. */
@@ -836,6 +862,7 @@ export class GameService {
     if (!this.isGroundEquipmentAvailable(pending)) return false;
     if (!this.playerService.addEquipment(pending.player, pending.equipment)) return false;
     this.consumeGroundEquipment(pending);
+    this.toastService.show(`${this.actorLabel(pending.player)} : ${this.equipmentToastLabel(pending.equipment, 'récupéré')}.`, 'success');
     return true;
   }
 
@@ -848,6 +875,7 @@ export class GameService {
     if (!previous) return false;
     this.consumeGroundEquipment(pending);
     this.dropEquipment(pending.tile, previous);
+    this.toastService.show(`${this.actorLabel(pending.player)} : ${this.equipmentToastLabel(pending.equipment, 'équipé')} à la place de ${previous.name}.`, 'success');
     return true;
   }
 
@@ -922,6 +950,7 @@ export class GameService {
     const equipment = getEquipmentDefinition(reward.equipmentId);
     if (!equipment || !this.playerService.addEquipment(pending.player, equipment)) return false;
     this.consumePendingReward(pending, rewardIndex);
+    this.toastService.show(`${this.actorLabel(pending.player)} : ${this.equipmentToastLabel(equipment, 'récupéré')}.`, 'success');
     return true;
   }
 
@@ -952,6 +981,7 @@ export class GameService {
     }
 
     this.consumePendingReward(pending, rewardIndex);
+    this.toastService.show(`${this.actorLabel(pending.player)} : trésor obtenu.`, 'success');
     return true;
   }
 
@@ -969,6 +999,7 @@ export class GameService {
     if (!previous) return false;
     this.dropEquipment(pending.rewardTile, previous);
     this.consumePendingReward(pending, rewardIndex);
+    this.toastService.show(`${this.actorLabel(pending.player)} : ${this.equipmentToastLabel(equipment, 'équipé')} à la place de ${previous.name}.`, 'success');
     return true;
   }
 
@@ -1010,6 +1041,7 @@ export class GameService {
       this.playerService.setCursed(target, true);
     }
     this.consumePendingReward(pending, rewardIndex);
+    this.toastService.show(`${this.actorLabel(target ?? pending.player)} est maudit.`, 'warning');
     return true;
   }
 

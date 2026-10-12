@@ -1,0 +1,6 @@
+@if (toastService.current(); as toast) {
+  <div class="toast-container" [class]="'toast-container toast-container--' + toast.tone" role="status" aria-live="polite" aria-atomic="true">
+    <span aria-hidden="true">{{ toast.tone === 'combat' ? '⚔' : '✦' }}</span>
+    <p>{{ toast.text }}</p>
+  </div>
+}

@@ -299,6 +299,7 @@ export class CombatService {
 
     this.applyOutcome(combat, outcome);
 
+
     this.pendingCombat.set(null);
     this.pendingCombatRoll.set(null);
     this.lastCombatResult.set(result);

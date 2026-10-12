@@ -1,10 +1,9 @@
 <header class="game-header">
-  <a
-    class="game-header__home"
-    routerLink="/"
-  >
-    ← Accueil
-  </a>
+  @if (context === 'game' && navigationLocked) {
+    <span class="game-header__home game-header__home--disabled" aria-disabled="true">← Accueil</span>
+  } @else {
+    <a class="game-header__home" routerLink="/">← Accueil</a>
+  }
 
   <img
     class="game-header__logo"
@@ -15,7 +14,11 @@
 
   <div class="game-header__actions">
     @if (context === 'game') {
-      <a class="game-header__link" routerLink="/codex">Codex</a>
+      @if (navigationLocked) {
+        <span class="game-header__link game-header__link--disabled" aria-disabled="true">Codex</span>
+      } @else {
+        <a class="game-header__link" routerLink="/codex">Codex</a>
+      }
 
       <span class="game-header__separator">|</span>
 

@@ -11,7 +11,7 @@
   </button>
 
   @if (isOpen) {
-    <aside class="contextual-help__popover" [style.top.px]="popoverTop" [style.left.px]="popoverLeft" [id]="help().id" role="dialog" aria-modal="false" [attr.aria-label]="help().title">
+    <aside class="contextual-help__popover" [id]="help().id" role="dialog" aria-modal="false" [attr.aria-label]="help().title">
       <h2>{{ help().title }}</h2>
       <p>{{ help().summary }}</p>
     </aside>

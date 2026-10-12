@@ -1,5 +1,7 @@
 <section
   class="hero-panel"
+  [class.hero-panel--left]="side === 'left'"
+  [class.hero-panel--right]="side === 'right'"
   [class.hero-panel--unconscious]="isUnconscious"
   [attr.aria-label]="isUnconscious ? 'Héros inconscient : récupération obligatoire' : null"
 >
