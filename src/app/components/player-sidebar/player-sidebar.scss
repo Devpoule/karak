@@ -23,12 +23,7 @@
   gap: 0;
 }
 
-/* Les supports PNG incluent une marge d'ombre transparente. Un léger
- * chevauchement visuel raccorde leurs bords sans modifier leur géométrie
- * interne ni les zones interactives de l'inventaire. */
-.player-sidebar > * + * {
-  margin-top: -0.8rem;
-}
+.player-sidebar > * + * { margin-top: 0; }
 
 /* ==========================================================
    PANNEAUX DE LA FICHE
@@ -54,8 +49,8 @@
   flex: 0 0 auto;
 }
 
-.player-sidebar__name-panel { position: relative; width: 100%; line-height: 0; }
-.player-sidebar__name-panel img { display: block; width: 100%; height: auto; }
+.player-sidebar__name-panel { position: relative; width: 100%; aspect-ratio: 2172 / 431; overflow: hidden; line-height: 0; }
+.player-sidebar__name-panel img { position: absolute; top: -34.80%; left: 0; display: block; width: 100%; height: auto; }
 .player-sidebar__name-panel h2 { position: absolute; inset: 50% .5rem auto; margin: 0; transform: translateY(-50%); color: #f5d884; font: 700 clamp(.8rem, 2vw, 1.1rem) Georgia, 'Times New Roman', serif; line-height: 1; text-align: center; text-shadow: 0 2px 3px #1b120c; }
 
 .player-sidebar__technical {
@@ -63,8 +58,10 @@
   z-index: 1;
   width: 100%;
   line-height: 0;
+  aspect-ratio: 1536 / 896;
+  overflow: hidden;
 }
-.player-sidebar__technical > img { display: block; width: 100%; height: auto; }
+.player-sidebar__technical > img { position: absolute; top: -7.25%; left: 0; display: block; width: 100%; height: auto; }
 .player-sidebar__technical-content { position: absolute; inset: 8% 8%; color: #f5ead0; line-height: normal; }
 .player-sidebar__technical h2 {
   margin: 0 0 0.45rem;
@@ -78,6 +75,8 @@
 }
 .player-sidebar__description {
   margin: 0 0 0.55rem;
+  max-height: 3.9em;
+  overflow: hidden;
   font-size: 0.75rem;
   line-height: 1.3;
   color: #ead8ae;

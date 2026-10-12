@@ -26,12 +26,16 @@
 .player-hud__side {
   position: absolute;
 
-  top: 0;
-  bottom: 1rem;
+  top: 50%;
+  bottom: auto;
 
   z-index: 5;
 
   width: var(--sidebar-width);
+  max-height: calc(100% - 1rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
 
   box-sizing: border-box;
 
@@ -56,7 +60,7 @@
 .player-hud__side--left {
   left: var(--sidebar-edge);
 
-  transform: translateX(calc(-100% - var(--sidebar-edge)));
+  transform: translateY(-50%) translateX(calc(-100% - var(--sidebar-edge)));
 }
 
 /* ==========================================================
@@ -66,7 +70,7 @@
 .player-hud__side--right {
   right: var(--sidebar-edge);
 
-  transform: translateX(calc(100% + var(--sidebar-edge)));
+  transform: translateY(-50%) translateX(calc(100% + var(--sidebar-edge)));
 }
 
 /* ==========================================================
@@ -76,7 +80,7 @@
 .player-hud__side--open {
   opacity: 1;
 
-  transform: translateX(0);
+  transform: translateY(-50%) translateX(0);
 }
 
 .player-hud__hero-palette-button {

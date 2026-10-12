@@ -27,11 +27,14 @@
       [player]="player"
     />
 
+    <app-treasure-panel
+      [player]="player"
+    />
+
     @if (heroDefinition; as hero) {
-      <section class="player-sidebar__technical" aria-labelledby="technical-sheet-title">
+      <section class="player-sidebar__technical" aria-label="Informations du héros">
         <img src="/assets/board/hero-description-panel.png" alt="" draggable="false" />
         <div class="player-sidebar__technical-content">
-          <h2 id="technical-sheet-title">Fiche technique</h2>
           <p class="player-sidebar__description">{{ hero.description }}</p>
           <div class="player-sidebar__powers" role="group" aria-label="Pouvoirs du héros">
             @for (power of hero.powers; track power.id; let index = $index) {
@@ -39,9 +42,7 @@
                 [class.player-sidebar__power-badge--selected]="selectedPowerId === power.id"
                 [class.player-sidebar__power-badge--disabled]="player?.isCursed"
                 [attr.aria-pressed]="selectedPowerId === power.id"
-                (click)="togglePower(power.id)">
-                Pouvoir {{ index + 1 }}
-              </button>
+                (click)="togglePower(power.id)">Pouvoir {{ index + 1 }}</button>
             }
           </div>
           @if (selectedPower; as power) {
@@ -53,10 +54,6 @@
         </div>
       </section>
     }
-
-    <app-treasure-panel
-      [player]="player"
-    />
   }
 
 

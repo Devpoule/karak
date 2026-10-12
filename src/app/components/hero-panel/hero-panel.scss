@@ -20,6 +20,8 @@
   position: relative;
 
   width: 100%;
+  aspect-ratio: 1024 / 1386;
+  overflow: hidden;
 }
 
 
@@ -30,6 +32,9 @@
 .hero-panel__board {
   display: block;
 
+  position: absolute;
+  top: -4.11%;
+  left: 0;
   width: 100%;
   height: auto;
 
@@ -73,7 +78,9 @@
   align-items: center;
   justify-content: center;
 
-  overflow: hidden;
+  /* Le portrait reste contenu par le support, mais le médaillon de
+   * malédiction doit pouvoir franchir son bord supérieur vers le nom. */
+  overflow: visible;
 
   pointer-events: none;
 }
@@ -119,11 +126,14 @@
   position: relative;
   z-index: 1;
 
-  width: 90%;
-  height: 95%;
+  width: 100%;
+  height: 100%;
 
   max-width: none;
   max-height: none;
+
+  object-fit: contain;
+  object-position: center;
 
   margin: 0;
   padding: 0;
@@ -141,10 +151,10 @@
 .hero-panel__curse {
   position: absolute;
   z-index: 3;
-  top: 50%;
+  top: 0;
   left: 50%;
-  width: 34%;
-  max-height: 50%;
+  width: 38%;
+  max-height: 42%;
   height: auto;
   object-fit: contain;
   transform: translate(-50%, -50%);

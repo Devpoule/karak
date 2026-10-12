@@ -12,6 +12,8 @@
   position: relative;
 
   width: 100%;
+  aspect-ratio: 1913 / 471;
+  overflow: hidden;
 }
 
 
@@ -22,6 +24,9 @@
 .life-panel__board {
   display: block;
 
+  position: absolute;
+  top: -37.37%;
+  left: 0;
   width: 100%;
   height: auto;
 

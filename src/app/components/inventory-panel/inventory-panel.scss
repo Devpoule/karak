@@ -7,9 +7,14 @@
 .inventory-panel {
   position: relative;
   width: 100%;
+  aspect-ratio: 1024 / 1357;
+  overflow: hidden;
 }
 
 .inventory-panel__board {
+  position: absolute;
+  top: -6.12%;
+  left: 0;
   display: block;
   width: 100%;
   height: auto;
@@ -38,21 +43,21 @@
 }
 
 .inventory-panel__group--weapons {
-  top: 12%;
+  top: 7.5%;
   left: 13.5%;
-  height: 48%;
+  height: 58%;
 }
 
 .inventory-panel__group--spells {
-  top: 12%;
+  top: 7.5%;
   left: 52.5%;
-  height: 72%;
+  height: 88%;
 }
 
 .inventory-panel__group--key {
-  top: 64%;
+  top: 66.5%;
   left: 13.5%;
-  height: 24%;
+  height: 25%;
 }
 
 .inventory-panel__slot {
@@ -91,6 +96,7 @@
   object-position: center;
   user-select: none;
   pointer-events: none;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .6));
 }
 
 /* Retour visuel du panneau hérité de la version stabilisée. */

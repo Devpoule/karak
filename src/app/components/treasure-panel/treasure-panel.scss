@@ -8,9 +8,11 @@
   box-sizing: border-box;
   width: 100%;
   line-height: 0;
+  aspect-ratio: 2172 / 511;
+  overflow: hidden;
 }
-.treasure-panel__board { display: block; width: 100%; height: auto; }
-.treasure-panel__content { position: absolute; inset: 10% 7%; color: #f6e8c8; font-size: 0.7rem; line-height: normal; }
+.treasure-panel__board { position: absolute; top: -20.55%; left: 0; display: block; width: 100%; height: auto; }
+.treasure-panel__content { position: absolute; inset: 0; overflow: hidden; color: #f6e8c8; font-size: 0.7rem; line-height: normal; }
 
 .treasure-panel__header,
 .treasure-panel__group {
@@ -19,28 +21,49 @@
 }
 
 .treasure-panel__header {
-  justify-content: space-between;
-  border-bottom: 1px solid rgba(246, 232, 200, 0.25);
-  padding-bottom: 0.2rem;
+  position: absolute;
+  top: 28%;
+  left: 8.5%;
+  width: 83%;
+  height: 25%;
+  border: 0;
+  padding: 0;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
+.treasure-panel__header span { position: absolute; left: 0; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .treasure-panel__header strong {
+  position: absolute;
+  right: 0;
+  max-width: 35%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: #f5be41;
   font-size: 0.75rem;
 }
 
 .treasure-panel__groups {
+  position: absolute;
+  top: 52%;
+  left: 8.5%;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem 0.5rem;
-  padding-top: 0.25rem;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.25rem;
+  width: 55%;
+  max-width: 55%;
+  overflow: hidden;
+  padding: 0;
 }
 
 .treasure-panel__group {
   min-width: 0;
   gap: 0.15rem;
+  flex: 0 1 auto;
+  overflow: hidden;
 }
 
 .treasure-panel__group img {
@@ -50,6 +73,9 @@
 }
 
 .treasure-panel__count {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: #fff;
   font-weight: 700;
 }
@@ -59,7 +85,13 @@
 }
 
 .treasure-panel__empty {
+  position: absolute;
+  top: 52%;
+  left: 8.5%;
   display: block;
-  padding-top: 0.25rem;
+  width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: rgba(246, 232, 200, 0.65);
 }
