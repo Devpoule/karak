@@ -149,6 +149,18 @@ test('le grimoire est réservé à la partie et se replie avec la boule de crist
   await page.getByRole('button', { name: 'Entrer dans le donjon' }).click();
   await expect(page.locator('app-board')).toBeVisible();
   await expect(crystal).toBeVisible();
+  const storyButton = page.getByRole('button', { name: 'Lire son histoire' }).first();
+  await expect(storyButton).toBeVisible();
+  await storyButton.click();
+  await expect(page.getByRole('dialog', { name: /histoire de/i }).first()).toBeVisible();
+  await page.getByRole('button', { name: "Fermer l'histoire" }).first().click();
+
+  const powerButton = page.getByRole('button', { name: /^Pouvoir 1 :/ }).first();
+  await expect(powerButton).toBeVisible();
+  await powerButton.click();
+  await expect(page.getByRole('dialog', { name: /Pouvoir/i }).last()).toBeVisible();
+  await page.getByRole('button', { name: /Fermer le pouvoir/ }).first().click();
+
   await crystal.click();
   await expect(page.getByRole('button', { name: /Consulter / })).toHaveCount(6);
   await expect(page.getByRole('button', { name: 'Consulter Aderyn' })).toBeVisible();

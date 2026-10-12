@@ -33,8 +33,7 @@
 
   width: var(--sidebar-width);
   max-height: calc(100% - 1rem);
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: visible;
   scrollbar-width: thin;
 
   box-sizing: border-box;
@@ -79,6 +78,10 @@
 
 .player-hud__side--open {
   opacity: 1;
+
+  /* Les panneaux fermés laissent le plateau recevoir les clics.
+     Un panneau ouvert doit en revanche rendre ses commandes utilisables. */
+  pointer-events: auto;
 
   transform: translateY(-50%) translateX(0);
 }

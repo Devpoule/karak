@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, HostListener, Input } from '@angular/core';
 
 import { getHeroDefinition } from '../../data/hero-definitions';
 import { HeroPowerId } from '../../models/hero';
@@ -45,6 +45,7 @@ export type PlayerSide = 'left' | 'right';
 })
 export class PlayerSidebar {
   selectedPowerId: HeroPowerId | null = null;
+  biographyOpen = false;
 
   // ==========================================================
   // CONFIGURATION DU JOUEUR
@@ -83,7 +84,31 @@ export class PlayerSidebar {
   }
 
   togglePower(powerId: HeroPowerId): void {
+    this.biographyOpen = false;
     this.selectedPowerId = this.selectedPowerId === powerId ? null : powerId;
+  }
+
+  toggleBiography(): void {
+    this.selectedPowerId = null;
+    this.biographyOpen = !this.biographyOpen;
+  }
+
+  closeDetails(): void {
+    this.selectedPowerId = null;
+    this.biographyOpen = false;
+  }
+
+  powerImage(powerIndex: number): string {
+    const hero = this.heroDefinition;
+    const powerKind = powerIndex === 0 ? 'primary' : 'secondary';
+    return hero
+      ? `/assets/heroes/${hero.id}/character-${powerKind}-power.png`
+      : '';
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.closeDetails();
   }
 
   get selectedPower() {
