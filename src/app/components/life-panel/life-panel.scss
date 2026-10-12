@@ -46,7 +46,7 @@
 
 /*
  * Les cinq marqueurs sont superposés aux cinq emplacements
- * dessinés directement dans life-panel.png.
+ * dessinés directement dans hero-life-panel.png.
  *
  * Leur positionnement est purement visuel :
  * Player.lives reste l'unique source de vérité métier.
@@ -57,7 +57,7 @@
   /*
    * Zone intérieure contenant les cinq emplacements.
    *
-   * Ces valeurs suivent le dessin de life-panel.png et pourront
+   * Ces valeurs suivent le dessin de hero-life-panel.png et pourront
    * être ajustées très légèrement après contrôle visuel.
    */
   top: 17%;
