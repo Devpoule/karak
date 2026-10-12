@@ -6,19 +6,34 @@
        ===================================================== -->
 
   @if (heroDefinition; as hero) {
-    <section class="player-sidebar__name-panel" aria-label="Héros sélectionné">
-      <img src="/assets/board/hero-name-panel.png" alt="" draggable="false" />
-      <h2>{{ hero.name }}</h2>
-      <button
-        type="button"
-        class="player-sidebar__info-button"
-        aria-label="Afficher les informations de {{ hero.name }}"
-        [attr.aria-expanded]="biographyOpen"
-        (click)="toggleBiography()"
-      >
-        <span aria-hidden="true">i</span>
-      </button>
-    </section>
+    <div class="player-sidebar__name-row">
+      <section class="player-sidebar__name-panel" aria-label="Héros sélectionné">
+        <img src="/assets/board/hero-name-panel.png" alt="" draggable="false" />
+        <h2>{{ hero.name }}</h2>
+        @if (playerIndex !== null) {
+        <button
+          type="button"
+          class="player-sidebar__player-tab"
+          [class.player-sidebar__player-tab--active]="isActive"
+          [attr.aria-label]="'Masquer la fiche du joueur ' + (playerIndex + 1)"
+          (click)="playerTabClicked.emit()"
+        >
+          <span class="player-sidebar__player-chevron" aria-hidden="true">▼</span>
+          <span class="player-sidebar__player-label">J{{ playerIndex + 1 }}</span>
+        </button>
+        }
+
+        <button
+          type="button"
+          class="player-sidebar__info-button"
+          aria-label="Afficher les informations de {{ hero.name }}"
+          [attr.aria-expanded]="biographyOpen"
+          (click)="toggleBiography()"
+        >
+          <span aria-hidden="true">i</span>
+        </button>
+      </section>
+    </div>
   }
 
   @if (showPlayer) {

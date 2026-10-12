@@ -29,8 +29,11 @@
       <app-player-sidebar
         side="left"
         [player]="player"
+        [playerIndex]="leftPlayerIndex"
+        [isActive]="isActivePlayer(leftPlayerIndex)"
         [showPlayer]="true"
         [showInventory]="true"
+        (playerTabClicked)="togglePlayerPanel(leftPlayerIndex)"
       />
     </aside>
   }
@@ -63,8 +66,11 @@
       <app-player-sidebar
         side="right"
         [player]="player"
+        [playerIndex]="rightPlayerIndex"
+        [isActive]="isActivePlayer(rightPlayerIndex)"
         [showPlayer]="true"
         [showInventory]="true"
+        (playerTabClicked)="togglePlayerPanel(rightPlayerIndex)"
       />
     </aside>
   }

@@ -1,4 +1,4 @@
-import { Component, HostListener, Input } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 
 import { getHeroDefinition } from '../../data/hero-definitions';
 import { HeroPowerId } from '../../models/hero';
@@ -63,6 +63,21 @@ export class PlayerSidebar {
    * Joueur représenté par la fiche.
    */
   @Input() player: Player | null = null;
+
+  /**
+   * Index réel du joueur dans la partie, utilisé pour afficher J1...J5.
+   */
+  @Input() playerIndex: number | null = null;
+
+  /**
+   * Indique si le joueur représenté est celui dont c'est le tour.
+   */
+  @Input() isActive = false;
+
+  /**
+   * Demande au HUD d'appliquer le même comportement que la languette basse.
+   */
+  @Output() playerTabClicked = new EventEmitter<void>();
 
 
   // ==========================================================
