@@ -685,6 +685,11 @@ export class GameSetup {
       return;
     }
 
+    // Masque immédiatement l'action manuelle avant toute mutation métier
+    // afin d'éviter un rendu transitoire du bouton pendant l'animation.
+    this.rollingPlayerIndex.set(playerIndex);
+    this.firstPlayerResolutionState.set('rolling');
+
     this.gameService
       .rollPlayerForFirstPlayer(
         playerIndex,
@@ -700,16 +705,10 @@ export class GameSetup {
         );
 
     if (!finalRoll) {
+      this.rollingPlayerIndex.set(null);
+      this.firstPlayerResolutionState.set('waiting');
       return;
     }
-
-    this.rollingPlayerIndex.set(
-      playerIndex,
-    );
-
-    this.firstPlayerResolutionState.set(
-      'rolling',
-    );
 
     const speeds = [
       70,

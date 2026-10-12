@@ -18,6 +18,23 @@
   overflow: hidden;
 }
 
+/* Impact visuel bref, déclenché uniquement lorsqu'un cœur est retiré. */
+.life-panel--damage {
+  animation: life-panel-shake 480ms ease-out both;
+}
+
+.life-panel--damage::after {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  inset: 4%;
+  border: 2px solid rgba(255, 47, 39, 0);
+  border-radius: 10%;
+  pointer-events: none;
+  box-shadow: 0 0 0 rgba(255, 42, 35, 0);
+  animation: life-electric-wave 760ms ease-out both;
+}
+
 
 /* ==========================================================
    ASSET DU PLATEAU
@@ -160,6 +177,20 @@
   60% { transform: translateX(-1px); }
 }
 
+@keyframes life-panel-shake {
+  0%, 100% { transform: translateX(0); }
+  18% { transform: translateX(-3px) rotate(-.25deg); }
+  36% { transform: translateX(3px) rotate(.25deg); }
+  54% { transform: translateX(-2px); }
+  72% { transform: translateX(1px); }
+}
+
+@keyframes life-electric-wave {
+  0% { opacity: 0; border-color: rgba(255, 47, 39, 0); box-shadow: 0 0 0 rgba(255, 42, 35, 0); transform: scale(.94); }
+  22% { opacity: 1; border-color: rgba(255, 47, 39, .95); box-shadow: 0 0 12px rgba(255, 42, 35, .95), inset 0 0 10px rgba(255, 55, 45, .75); }
+  100% { opacity: 0; border-color: rgba(255, 47, 39, 0); box-shadow: 0 0 24px rgba(255, 42, 35, 0), inset 0 0 18px rgba(255, 55, 45, 0); transform: scale(1.03); }
+}
+
 @keyframes life-electric-impulse {
   0% { opacity: 0; transform: translateX(0) scaleY(.7); }
   12% { opacity: .95; }
@@ -173,6 +204,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .life-panel,
   .life-panel__point,
   .life-panel__slots { animation: none !important; }
 
@@ -183,6 +215,11 @@
   .life-panel__heal-label {
     animation: none;
     opacity: 1;
+  }
+
+  .life-panel--damage::after {
+    animation: life-electric-static 180ms ease-out both;
+    border-color: rgba(255, 47, 39, .75);
   }
 }
 

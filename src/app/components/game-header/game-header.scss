@@ -112,6 +112,13 @@
   }
 }
 
+.game-header__home--disabled,
+.game-header__link--disabled {
+  cursor: not-allowed;
+  opacity: .55;
+  pointer-events: none;
+}
+
 .game-header__home {
   justify-self: start;
   align-self: center;

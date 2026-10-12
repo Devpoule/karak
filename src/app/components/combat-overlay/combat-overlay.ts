@@ -18,6 +18,7 @@ import {
 
 import { GameService } from '../../services/game.service';
 import { AiService } from '../../services/ai.service';
+import { ToastService } from '../../services/toast.service';
 
 /**
  * Étapes visuelles de présentation d'un combat.
@@ -68,10 +69,8 @@ export class CombatOverlay implements OnDestroy {
    */
   private readonly introDuration = 1900;
 
-  /**
-   * Durée de lecture du verdict pour une IA.
-   */
-  private readonly aiResultDuration = 3600;
+  /** Durée commune de lecture du verdict avant fermeture automatique. */
+  private readonly resultDuration = 1800;
   /** Lecture brève du verdict d'égalité avant reprise automatique. */
   private readonly tieResultDuration = 900;
 
@@ -84,6 +83,7 @@ export class CombatOverlay implements OnDestroy {
     private readonly combatService: CombatService,
     private readonly gameService: GameService,
     private readonly aiService: AiService,
+    private readonly toastService: ToastService,
   ) {
     effect(() => {
       const combat = this.combatService.pendingCombat();
@@ -321,13 +321,11 @@ export class CombatOverlay implements OnDestroy {
     this.presentedResult.set(result);
     this.presentationState.set('result');
 
-    if (result.outcome === 'tie' || result.player.controller === 'ai') {
-      this.schedule(() => {
-        if (this.presentationState() === 'result' && this.presentedResult() === result) {
-          this.dismissResult();
-        }
-      }, result.outcome === 'tie' ? this.tieResultDuration : this.aiResultDuration);
-    }
+    this.schedule(() => {
+      if (this.presentationState() === 'result' && this.presentedResult() === result) {
+        this.dismissResult();
+      }
+    }, result.outcome === 'tie' ? this.tieResultDuration : this.resultDuration);
   }
 
   // ==========================================================
@@ -451,7 +449,7 @@ export class CombatOverlay implements OnDestroy {
             if (boltsUsed > 0) this.triggerMagicBoltFeedback(boltsUsed);
             this.resolveCombatAfterRoll();
           }
-        }, this.aiResultDuration);
+        }, this.resultDuration);
       } else if (this.remainingMagicBolts === 0 && this.availableHeroRerolls.length === 0) {
         this.schedule(() => {
           if (this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() === roll) {
@@ -507,6 +505,18 @@ export class CombatOverlay implements OnDestroy {
     this.presentedCombat.set(null);
     this.presentedResult.set(null);
     this.presentationState.set('intro');
+
+    const combatMessage = result.outcome === 'victory'
+      ? `Victoire contre ${result.monster.name}.`
+      : result.outcome === 'defeat'
+        ? `${result.player.heroId ? getHeroDefinition(result.player.heroId)?.name ?? 'Le héros' : 'Le héros'} perd 1 pt de vie.`
+        : `Égalité contre ${result.monster.name}.`;
+    const combatTone = result.outcome === 'victory'
+      ? 'success'
+      : result.outcome === 'defeat'
+        ? 'combat'
+        : 'warning';
+    queueMicrotask(() => this.toastService.show(combatMessage, combatTone));
 
     this.trackedCombat = null;
     this.resolving = false;

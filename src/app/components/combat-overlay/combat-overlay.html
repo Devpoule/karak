@@ -7,6 +7,7 @@
     [class.combat-overlay--victory]="result?.outcome === 'victory'"
     [class.combat-overlay--tie]="result?.outcome === 'tie'"
     [class.combat-overlay--defeat]="result?.outcome === 'defeat'"
+    [class.combat-overlay--high-power]="result && result.attackPower >= result.monsterStrength + 3"
     (pointerdown)="$event.stopPropagation()"
     (pointermove)="$event.stopPropagation()"
     (pointerup)="$event.stopPropagation()"
@@ -108,7 +109,7 @@
                     class="combat-overlay__bonus combat-overlay__bonus--weapon"
                     [attr.aria-label]="'Bonus d’équipement : +' + weapon.attackBonus + ' points'"
                   >
-                    +{{ weapon.attackBonus }}pts
+                    +{{ weapon.attackBonus }} pt{{ weapon.attackBonus === 1 ? '' : 's' }}
                   </span>
                 }
                 @for (bolt of displayedMagicBonusEntries; track bolt) {
@@ -249,22 +250,6 @@
           </strong>
         </div>
 
-        <!--
-          Seul un joueur humain peut fermer manuellement
-          le résultat du combat.
-
-          Pour une IA, CombatOverlay ferme automatiquement
-          le résultat après le délai prévu.
-        -->
-        @if (currentCombat.player.controller === 'human' && combatResult.outcome !== 'tie') {
-          <button
-            type="button"
-            class="combat-overlay__continue"
-            (click)="dismissResult()"
-          >
-            Continuer
-          </button>
-        }
       </div>
     }
   </div>

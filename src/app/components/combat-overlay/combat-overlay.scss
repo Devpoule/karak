@@ -118,6 +118,17 @@
   animation: combat-shockwave 650ms 980ms ease-out both;
 }
 
+.combat-overlay--high-power .combat-overlay__shockwave {
+  border-width: 5px;
+  box-shadow: 0 0 28px rgba(255, 185, 62, .95), inset 0 0 22px rgba(255, 218, 111, .8);
+  animation-duration: 900ms;
+}
+
+.combat-overlay--high-power .combat-overlay__flash {
+  background: radial-gradient(circle at center, rgba(255, 255, 240, .98), rgba(255, 175, 45, .62) 16%, transparent 48%);
+  animation-duration: 700ms;
+}
+
 /* ==========================================================
    ARÈNE — GÉOMÉTRIE STRICTEMENT SYMÉTRIQUE
    ========================================================== */
@@ -1200,6 +1211,16 @@
   0% { opacity: 0; transform: translate(-50%, 8px) scale(.8); }
   25% { opacity: 1; transform: translate(-50%, 0) scale(1.05); }
   100% { opacity: 0; transform: translate(-50%, -12px) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .combat-overlay *,
+  .combat-overlay::before,
+  .combat-overlay::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
 }
 
 @keyframes combat-score-pulse {

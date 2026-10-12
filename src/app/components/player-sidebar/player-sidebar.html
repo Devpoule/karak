@@ -28,7 +28,7 @@
   }
 
   @if (showPlayer) {
-    <app-hero-panel [player]="player" (portraitClicked)="toggleBiography()" />
+    <app-hero-panel [player]="player" [side]="side" (portraitClicked)="toggleBiography()" />
     <app-life-panel [player]="player" />
   }
 

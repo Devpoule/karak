@@ -1,8 +1,9 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 
 import { getHeroDefinition } from '../../data/hero-definitions';
 import { HeroDefinition } from '../../models/hero';
 import { Player } from '../../models/player';
+import { PlayerService } from '../../services/player.service';
 
 
 /**
@@ -26,6 +27,11 @@ import { Player } from '../../models/player';
   templateUrl: './hero-panel.html',
 })
 export class HeroPanel {
+  private readonly playerService = inject(PlayerService);
+
+  /** Côté d'affichage, utilisé pour placer le médaillon vers le centre du plateau. */
+  @Input() side: 'left' | 'right' = 'left';
+
   /** Notifie la fiche latérale que le portrait doit ouvrir la biographie. */
   @Output() readonly portraitClicked = new EventEmitter<void>();
 
@@ -36,6 +42,8 @@ export class HeroPanel {
   @Input() curseImagePath = '/assets/tokens/curse.png';
 
   get isCursed(): boolean {
+    // Rend le médaillon dépendant de la notification métier de la malédiction.
+    this.playerService.curseRevision();
     return this.player?.isCursed === true;
   }
 

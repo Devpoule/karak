@@ -145,8 +145,8 @@
   align-items: center;
   gap: 10px;
   width: max-content;
-  max-width: min(92vw, 430px);
-  padding: 8px 16px;
+  max-width: min(92vw, 520px);
+  padding: 12px 20px;
 
   color: var(--combat-cream, #f4ead1);
   background: rgba(24, 15, 11, .92);
@@ -165,6 +165,7 @@
 
 .game__turn-announcement span {
   overflow: hidden;
+  font-size: 1.05rem;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;

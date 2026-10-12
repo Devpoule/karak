@@ -16,6 +16,7 @@ import { CombatService } from '../../services/combat.service';
 import { GameService } from '../../services/game.service';
 import { getHeroDefinition } from '../../data/hero-definitions';
 import { Player } from '../../models/player';
+import { ToastContainer } from '../../components/toast-container/toast-container';
 
 /**
  * Page principale du jeu.
@@ -26,7 +27,7 @@ import { Player } from '../../models/player';
  */
 @Component({
   selector: 'app-game',
-  imports: [GameHeader, GameSetup, Board, PlayerHud],
+  imports: [GameHeader, GameSetup, Board, PlayerHud, ToastContainer],
   templateUrl: './game.html',
   styleUrl: './game.scss',
 })
