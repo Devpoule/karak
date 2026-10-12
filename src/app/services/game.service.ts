@@ -318,6 +318,37 @@ export class GameService {
     this.setupStep.set('hero-draw');
   }
 
+  /** Revient à une étape déjà franchie sans relancer de hasard. */
+  goBackToSetupStep(step: SetupStep): void {
+    if (this.phase() !== 'setup') return;
+    if (step === 'player-count' && this.playerService.players.length > 0) {
+      this.setupStep.set('player-count');
+      return;
+    }
+    if (step === 'hero-draw' && this.playerService.players.every(player => player.heroId)) {
+      this.setupStep.set('hero-draw');
+    }
+  }
+
+  /** Reprend la détermination du premier joueur sans tirer de nouveau héros. */
+  continueAfterHeroDraw(): void {
+    if (this.phase() !== 'setup' || this.setupStep() !== 'hero-draw') return;
+    if (!this.playerService.players.every(player => player.heroId)) return;
+    this.playerService.placeHeroesOnStart();
+    this.firstPlayerContenders.set(this.playerService.players.map((_, index) => index));
+    this.setupStep.set('first-player-roll');
+  }
+
+  /** Avance uniquement vers une étape dont les prérequis sont déjà validés. */
+  goToNextSetupStep(): void {
+    if (this.phase() !== 'setup') return;
+    if (this.setupStep() === 'player-count' && this.playerService.players.length > 0) {
+      this.setupStep.set('hero-draw');
+      return;
+    }
+    if (this.setupStep() === 'hero-draw') this.continueAfterHeroDraw();
+  }
+
   /**
    * Réinitialise l'état de combat pour une nouvelle partie.
    */

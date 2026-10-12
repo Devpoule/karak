@@ -1,0 +1,46 @@
+:host {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 10;
+}
+
+.scroll-top-button {
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid #e8bd58;
+  border-radius: 50%;
+  background: #192333;
+  color: #f6d77d;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.35rem;
+  line-height: 1;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, .35);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(.5rem);
+  transition: opacity .2s ease, transform .2s ease, background-color .2s ease;
+}
+
+.scroll-top-button--visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.scroll-top-button:hover {
+  background: #27364a;
+}
+
+.scroll-top-button:focus-visible {
+  outline: 3px solid #fff0ad;
+  outline-offset: 3px;
+}
+
+@media (max-width: 700px) {
+  :host {
+    right: .75rem;
+    bottom: .75rem;
+  }
+}

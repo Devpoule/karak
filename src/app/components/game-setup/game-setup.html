@@ -21,18 +21,6 @@
        Le panneau de préparation n'apparaît qu'après le clic.
        ========================================================= -->
 
-  @if (setupView() === 'welcome') {
-    <div class="game-setup__welcome">
-      <button
-        type="button"
-        class="game-setup__play"
-        (click)="startNewGame()"
-      >
-        Jouer
-      </button>
-    </div>
-  }
-
   <!-- =========================================================
        PANNEAU DE PRÉPARATION
 
@@ -53,31 +41,38 @@
              ===================================================== -->
 
         <div class="game-setup__progress">
-          <div
+          <button type="button" class="game-setup__chevron" aria-label="Étape précédente" [disabled]="!canNavigatePrevious" (click)="navigatePrevious()">‹</button>
+          <button
+            type="button"
             class="game-setup__progress-step"
             [class.game-setup__progress-step--completed]="isSetupStepCompleted('players')"
             [class.game-setup__progress-step--current]="gameService.setupStep() === 'player-count'"
+            [disabled]="!isSetupStepCompleted('players')"
+            (click)="goToSetupStep('players')"
           >
             <span class="game-setup__progress-marker">
               {{ isSetupStepCompleted('players') ? '✓' : '○' }}
             </span>
 
             <span>Joueurs</span>
-          </div>
+          </button>
 
           <span class="game-setup__progress-line"></span>
 
-          <div
+          <button
+            type="button"
             class="game-setup__progress-step"
             [class.game-setup__progress-step--completed]="isSetupStepCompleted('heroes')"
             [class.game-setup__progress-step--current]="gameService.setupStep() === 'hero-draw'"
+            [disabled]="!isSetupStepCompleted('heroes')"
+            (click)="goToSetupStep('heroes')"
           >
             <span class="game-setup__progress-marker">
               {{ isSetupStepCompleted('heroes') ? '✓' : '○' }}
             </span>
 
             <span>Héros</span>
-          </div>
+          </button>
 
           <span class="game-setup__progress-line"></span>
 
@@ -106,6 +101,7 @@
 
             <span>Aventure</span>
           </div>
+          <button type="button" class="game-setup__chevron" aria-label="Étape suivante" [disabled]="!canNavigateNext" (click)="navigateNext()">›</button>
         </div>
 
         <!-- =====================================================
@@ -128,7 +124,7 @@
         @if (gameService.setupStep() === 'player-count') {
           <div class="game-setup__stage">
             <div class="game-setup__stage-header">
-              <h1>Nouvelle partie</h1>
+              <h1>Nouvelle partie <app-contextual-help [help]="preparationHelp.players" /></h1>
 
               <p>Combien d'aventuriers entrent dans le donjon ?</p>
             </div>
@@ -264,7 +260,7 @@
         @if (gameService.setupStep() === 'hero-draw') {
           <div class="game-setup__stage game-setup__stage--player-cards">
             <div class="game-setup__stage-header">
-              <h1>Tirage des héros</h1>
+              <h1>Tirage des héros <app-contextual-help [help]="preparationHelp.heroes" /></h1>
 
               @if (heroDrawState() === 'hidden') {
                 <p>
@@ -274,6 +270,10 @@
 
               @if (heroDrawState() === 'drawing') {
                 <p>Le destin choisit les héros...</p>
+              }
+
+              @if (heroDrawState() === 'revealed') {
+                <button type="button" class="game-setup__continue" (click)="continueAfterHeroDraw()">Continuer</button>
               }
 
               @if (heroDrawState() === 'revealed') {
@@ -359,7 +359,7 @@
         @if (gameService.setupStep() === 'first-player-roll') {
           <div class="game-setup__stage game-setup__stage--player-cards">
             <div class="game-setup__stage-header">
-              <h1>Qui commence ?</h1>
+              <h1>Qui commence ? <app-contextual-help [help]="preparationHelp.firstPlayer" /></h1>
 
               @if (firstPlayerResolutionState() === 'tie') {
                 <p>

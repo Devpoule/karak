@@ -423,6 +423,11 @@
 
 .game-setup__progress-step {
   display: flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: inherit;
 
   align-items: center;
 
@@ -440,6 +445,9 @@
     transform 180ms ease,
     text-shadow 180ms ease;
 }
+
+.game-setup__progress-step:not(:disabled) { cursor: pointer; }
+.game-setup__progress-step:disabled { cursor: default; }
 
 .game-setup__progress-marker {
   display: flex;
@@ -467,6 +475,23 @@
 
   background: rgba(224, 177, 93, 0.24);
 }
+
+.game-setup__chevron {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  min-width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  color: #f0cf8a;
+  background: rgba(12, 10, 12, .42);
+  border: 1px solid rgba(224, 177, 93, .5);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 2rem;
+  line-height: 1;
+}
+.game-setup__chevron:disabled { opacity: .3; cursor: default; }
 
 .game-setup__progress-step--completed {
   color: #f4ead6;
@@ -590,6 +615,8 @@
   padding: 0 1rem 0.35rem;
 
   h1 {
+    position: relative;
+    width: 100%;
     margin: 0 0 0.55rem;
 
     color: #f0cf8a;

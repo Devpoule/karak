@@ -6,7 +6,6 @@
     [attr.aria-label]="title"
     (click)="$event.stopPropagation()"
   >
-    <button type="button" class="codex-dialog__close" aria-label="Fermer la fiche" (click)="close()">×</button>
     <header class="codex-dialog__header">
       @if (icon) { <img [src]="icon" [alt]="iconAlt" draggable="false" /> }
       <div>
