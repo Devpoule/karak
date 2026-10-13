@@ -125,12 +125,13 @@ describe('AiService résolutions obligatoires', () => {
     const player = playerService.players[1];
     playerService.addEquipment(player, getEquipmentDefinition('key')!);
     const tile = chestTile();
-    gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile);
+    expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile)).toBe('treasure');
 
-    expect(aiService.resolveMandatoryAction()).toBe('resolved');
+    expect(aiService.resolveMandatoryAction()).toBe('none');
     expect(player.inventory.key).toBeNull();
     expect(player.treasures).toEqual(['opened-chest']);
     expect(tile.tokenId).toBeUndefined();
+    expect(gameService.pendingTreasure()).toBeNull();
   });
 
   it('ne déplace pas une IA tant qu une résolution obligatoire est active', () => {
@@ -142,7 +143,8 @@ describe('AiService résolutions obligatoires', () => {
 
     expect(aiService.playAction()).toBe(false);
     expect(player.position).toBe(positionBefore);
-    expect(gameService.pendingTreasure()).not.toBeNull();
+    expect(gameService.pendingTreasure()).toBeNull();
+    expect(gameService.turnTransitionPending()).toBe(true);
   });
 
   it('récupère le trésor du Mort puis le rubis du dragon', () => {
@@ -576,6 +578,7 @@ describe('AiService déplacements et exploration', () => {
 
     expect(aiService.playAction()).toBe(false);
     expect(turnService.remainingMovements()).toBe(movementsBefore);
-    expect(gameService.pendingTreasure()).not.toBeNull();
+    expect(gameService.pendingTreasure()).toBeNull();
+    expect(gameService.turnTransitionPending()).toBe(true);
   });
 });

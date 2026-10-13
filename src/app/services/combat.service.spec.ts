@@ -272,6 +272,30 @@ describe('CombatService séparation du lancer et de la résolution', () => {
     vi.restoreAllMocks();
   });
 
+  it('refuse le Tir magique lorsque les bonus rendent déjà la victoire acquise', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.2);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const combatService = new CombatService(playerService);
+    const player = playerService.players[0];
+    playerService.addEquipment(player, getEquipmentDefinition('axe')!);
+    playerService.addEquipment(player, getEquipmentDefinition('fire-sword')!);
+    const monster = {
+      x: 1, y: 0, definitionId: 'room-1', tokenId: 'giant-spider', tokenFace: 'front',
+    } as PlacedTile;
+
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, monster);
+    combatService.rollPendingCombat();
+
+    const roll = combatService.pendingCombatRoll()!;
+    expect(roll.diceTotal).toBeLessThanOrEqual(roll.monsterStrength);
+    expect(roll.attackPower).toBeGreaterThan(roll.monsterStrength);
+    expect(combatService.useMagicBolt()).toBe(false);
+    expect(combatService.pendingCombatRoll()?.magicBoltsUsed).toBe(0);
+
+    vi.restoreAllMocks();
+  });
+
   it('Horan peut relancer les deux dés une seule fois', () => {
     vi.spyOn(Math, 'random')
       .mockReturnValueOnce(0)

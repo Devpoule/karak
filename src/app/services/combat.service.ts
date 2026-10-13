@@ -239,8 +239,9 @@ export class CombatService {
     const roll = this.pendingCombatRoll();
     if (!combat || !roll) return false;
 
-    // Le tir magique est inutile lorsque les dés ont déjà dépassé le monstre.
-    if (roll.diceTotal > roll.monsterStrength) return false;
+    // Le tir magique est inutile lorsque l'attaque effective gagne déjà.
+    // Les bonus d'équipement et de héros font partie du résultat à comparer.
+    if (roll.attackPower > roll.monsterStrength) return false;
 
     const available = combat.player.inventory.spells.some(
       spell => spell?.effect === 'magic-attack',

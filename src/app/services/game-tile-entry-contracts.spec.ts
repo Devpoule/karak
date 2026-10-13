@@ -76,6 +76,23 @@ describe('GameService contrat d entrée dans une tuile', () => {
     expect(turnService.remainingMovements()).toBe(0);
   });
 
+  it('applique Sneak à Aderyn sur un monstre découvert, sans neutraliser un coffre découvert', () => {
+    player.heroId = 'aderyn';
+    const room = { ...tile(), definitionId: 'straight-room' };
+    (tokenBagService as unknown as { bag: string[] }).bag = ['closed-chest', 'giant-rat'];
+    tokenBagService.remainingTokens.set(2);
+
+    expect(gameService.resolveTileEntry(player, tile(), room, true)).toBe('none');
+    expect(room.tokenId).toBe('giant-rat');
+    expect(combatService.hasPendingCombat).toBe(false);
+
+    const chestRoom = { ...tile('closed-chest'), definitionId: 'straight-room' };
+    playerService.addEquipment(player, getEquipmentDefinition('key')!);
+    expect(gameService.resolveTileEntry(player, tile(), chestRoom)).toBe('treasure');
+    expect(chestRoom.tokenId).toBeUndefined();
+    expect(gameService.pendingTreasure()).toBeNull();
+  });
+
   it('ne déclenche pas deux combats sur le même état pending', () => {
     const destination = tile('giant-rat');
     const source = tile();
@@ -103,15 +120,13 @@ describe('GameService contrat d entrée dans une tuile', () => {
     expect(turnService.remainingMovements()).toBe(4);
   });
 
-  it('met en attente un coffre fermé avec une clé et la consomme à son ouverture', () => {
+  it('ouvre automatiquement un coffre fermé avec une clé', () => {
     const destination = tile('closed-chest');
     playerService.addEquipment(player, getEquipmentDefinition('key')!);
 
     expect(gameService.resolveTileEntry(player, tile(), destination)).toBe('treasure');
-    expect(gameService.pendingTreasure()?.treasureTile).toBe(destination);
+    expect(gameService.pendingTreasure()).toBeNull();
     expect(turnService.remainingMovements()).toBe(0);
-
-    expect(gameService.openPendingTreasure()).toBe(true);
     expect(player.inventory.key).toBeNull();
     expect(player.treasures).toContain('opened-chest');
     expect(destination.tokenId).toBeUndefined();
@@ -152,7 +167,7 @@ describe('GameService contrat d entrée dans une tuile', () => {
     expect(gameService.pendingTreasure()).toBeNull();
     expect(gameService.pendingReward()).toBeNull();
     expect(gameService.hasPendingTileResolution).toBe(false);
-    expect(destination.tokenId).toBe('closed-chest');
+    expect(destination.tokenId).toBeUndefined();
   });
 
   it('refuse la récupération directe lorsque l inventaire est plein', () => {
@@ -250,6 +265,6 @@ describe('GameService contrat d entrée dans une tuile', () => {
 
     expect(gameService.resolveTileEntry(player, tile(), destination)).toBe('treasure');
     expect(gameService.resolveTileEntry(player, tile(), tile('giant-rat'))).toBe('none');
-    expect(gameService.pendingTreasure()?.treasureTile).toBe(destination);
+    expect(gameService.pendingTreasure()).toBeNull();
   });
 });
