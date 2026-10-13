@@ -202,19 +202,45 @@ describe('GameService contrat d entrée dans une tuile', () => {
     expect(gameService.pendingReward()).toBeNull();
   });
 
-  it('caractérise l entrée en phase setup sans masquer un combat déclenché par le code actuel', () => {
+  it('ignore toute entrée en phase setup sans révéler ni déclencher de combat', () => {
     gameService.phase.set('setup');
+    const destination = tile('giant-rat');
+    const movementsBefore = turnService.remainingMovements();
 
-    const result = gameService.resolveTileEntry(player, tile(), tile('giant-rat'));
+    const result = gameService.resolveTileEntry(player, tile(), destination);
 
-    expect(result).toBe('combat');
+    expect(result).toBe('none');
+    expect(combatService.hasPendingCombat).toBe(false);
+    expect(gameService.hasPendingTileResolution).toBe(false);
+    expect(destination.tokenId).toBe('giant-rat');
+    expect(turnService.remainingMovements()).toBe(movementsBefore);
+  });
+
+  it('ignore toute entrée en phase game-over sans créer de résolution', () => {
+    gameService.phase.set('game-over');
+    const destination = tile('giant-rat');
+
+    expect(gameService.resolveTileEntry(player, tile(), destination, true)).toBe('none');
+    expect(combatService.hasPendingCombat).toBe(false);
+    expect(gameService.hasPendingTileResolution).toBe(false);
+    expect(destination.tokenId).toBe('giant-rat');
+    expect(turnService.remainingMovements()).toBe(4);
+  });
+
+  it('conserve la résolution normale pendant playing', () => {
+    gameService.phase.set('playing');
+
+    expect(gameService.resolveTileEntry(player, tile(), tile('giant-rat'))).toBe('combat');
     expect(combatService.hasPendingCombat).toBe(true);
   });
 
-  it('ne déclenche pas de nouvelle résolution depuis une partie terminée sans jeton', () => {
-    gameService.phase.set('game-over');
+  it('ignore une entrée devenue obsolète après réinitialisation', () => {
+    const destination = tile('giant-rat');
+    gameService.phase.set('setup');
+    gameService.initialize();
 
-    expect(gameService.resolveTileEntry(player, tile(), tile())).toBe('none');
+    expect(gameService.resolveTileEntry(player, tile(), destination)).toBe('none');
+    expect(combatService.hasPendingCombat).toBe(false);
     expect(gameService.hasPendingTileResolution).toBe(false);
   });
 

@@ -635,6 +635,9 @@ export class GameService {
     destinationTile: PlacedTile,
     revealRoom = false,
   ): TileEntryResolution {
+    // Une entrée de tuile est une résolution de partie : elle n'est
+    // valide qu'après la fin de la préparation et avant la fin de partie.
+    if (this.phase() !== 'playing') return 'none';
     if (player.recoveryState === 'resting') return 'none';
     if (this.hasPendingTileResolution) {
       return 'none';
