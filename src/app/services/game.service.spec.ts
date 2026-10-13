@@ -262,7 +262,7 @@ describe('GameService coffre fermé', () => {
     playerService.addEquipment(playerService.players[0], key!);
     const { player, tile } = preparePendingChest();
 
-    expect(gameService.openPendingTreasure()).toBe(true);
+    expect(gameService.pendingTreasure()).toBeNull();
     expect(player.inventory.key).toBeNull();
     expect(player.treasures).toEqual(['opened-chest']);
     expect(tile.tokenId).toBeUndefined();
@@ -283,6 +283,7 @@ describe('GameService coffre fermé', () => {
   it('refuse une résolution par un joueur inactif', () => {
     const key = getEquipmentDefinition('key');
     playerService.addEquipment(playerService.players[0], key!);
+    gameService.activePlayerIndex.set(1);
     preparePendingChest();
     gameService.activePlayerIndex.set(1);
 
@@ -300,7 +301,7 @@ describe('GameService coffre fermé', () => {
     expect(gameService.dropInventoryEquipment(playerService.players[0], 'weapon', 0)).toBe(true);
     const { tile } = preparePendingChest();
     const groundBefore = gameService.getGroundEquipment(tile);
-    expect(gameService.openPendingTreasure()).toBe(true);
+    expect(gameService.pendingTreasure()).toBeNull();
     expect(gameService.openPendingTreasure()).toBe(false);
     expect(tile.tokenId).toBeUndefined();
     expect(gameService.getGroundEquipment(tile)).toEqual(groundBefore);
@@ -587,6 +588,30 @@ describe('GameService récupération automatique des équipements humains', () =
     expect(gameService.pendingReward()).not.toBeNull();
     expect(player.inventory.weapons.map(item => item?.id)).toEqual(['daggers', 'sword']);
   });
+
+  it('remplace automatiquement l’arme la plus faible par une amélioration stricte', () => {
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const player = playerService.players[0];
+    playerService.addEquipment(player, getEquipmentDefinition('daggers')!);
+    playerService.addEquipment(player, getEquipmentDefinition('sword')!);
+    const tile = {
+      x: 1,
+      y: 0,
+      definitionId: 'room-1',
+      tokenId: 'skeleton-king',
+      tokenFace: 'back',
+    } as PlacedTile;
+
+    expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile)).toBe('reward');
+    expect(player.inventory.weapons.map(item => item?.id)).toEqual(['axe', 'sword']);
+    expect(gameService.pendingReward()).toBeNull();
+    expect(tile.tokenId).toBeUndefined();
+  });
 });
 
 describe('GameService audit coffre inaccessible', () => {
@@ -634,7 +659,8 @@ describe('GameService audit coffre inaccessible', () => {
     const tile = chestTile();
 
     expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile)).toBe('treasure');
-    expect(gameService.pendingTreasure()).not.toBeNull();
+    expect(gameService.pendingTreasure()).toBeNull();
+    expect(tile.tokenId).toBeUndefined();
     expect(turnService.remainingMovements()).toBe(0);
   });
 

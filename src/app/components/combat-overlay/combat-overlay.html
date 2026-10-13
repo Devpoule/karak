@@ -219,7 +219,7 @@
             Utiliser Tir magique ({{ remainingMagicBolts }})
           </button>
         }
-        @if (remainingMagicBolts > 0) {
+        @if (canUseMagicBolt) {
           <button
             type="button"
             class="combat-overlay__continue"

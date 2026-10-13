@@ -164,7 +164,7 @@ export class CombatOverlay implements OnDestroy {
     const roll = this.combatService.pendingCombatRoll();
     return this.remainingMagicBolts > 0
       && !!roll
-      && roll.diceTotal <= roll.monsterStrength;
+      && roll.attackPower <= roll.monsterStrength;
   }
 
   get displayedSacrificeBonus(): number {
@@ -458,7 +458,7 @@ export class CombatOverlay implements OnDestroy {
             this.resolveCombatAfterRoll();
           }
         }, this.resultDuration);
-      } else if (this.remainingMagicBolts === 0 && this.availableHeroRerolls.length === 0) {
+      } else if (!this.canUseMagicBolt && this.availableHeroRerolls.length === 0 && !this.canUseXanrosSacrifice) {
         this.schedule(() => {
           if (this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() === roll) {
             this.resolveCombatAfterRoll();

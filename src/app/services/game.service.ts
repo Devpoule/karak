@@ -639,7 +639,7 @@ export class GameService {
     // valide qu'après la fin de la préparation et avant la fin de partie.
     if (this.phase() !== 'playing') return 'none';
     if (player.recoveryState === 'resting') return 'none';
-    if (this.hasPendingTileResolution) {
+    if (this.turnTransitionPending() || this.hasPendingTileResolution) {
       return 'none';
     }
     if (revealRoom) {
@@ -680,6 +680,9 @@ export class GameService {
           const equipment = getEquipmentDefinition(equipmentReward.equipmentId);
           if (equipment && this.playerService.canAddEquipment(player, equipment)) {
             this.collectPendingEquipment();
+          } else if (equipment) {
+            const slotIndex = this.findStrictlyWeakerWeapon(player, equipment);
+            if (slotIndex !== null) this.replacePendingEquipment(slotIndex);
           }
         }
       }
@@ -698,6 +701,9 @@ export class GameService {
       treasureTile: destinationTile,
       sourceTile,
     });
+    if (classification.token.id === 'closed-chest' && player.inventory.key !== null) {
+      this.openPendingTreasure();
+    }
     return 'treasure';
   }
 
@@ -817,8 +823,13 @@ export class GameService {
     const equipment = this.getGroundEquipment(tile)[0];
     if (!equipment) return 'none';
     this.pendingGroundEquipment.set({ player, tile, equipment, index: 0 });
-    if (player.controller === 'human' && this.playerService.canAddEquipment(player, equipment)) {
-      this.collectGroundEquipment();
+    if (player.controller === 'human') {
+      if (this.playerService.canAddEquipment(player, equipment)) {
+        this.collectGroundEquipment();
+      } else {
+        const slotIndex = this.findStrictlyWeakerWeapon(player, equipment);
+        if (slotIndex !== null) this.replaceGroundEquipment(slotIndex);
+      }
     }
     return 'equipment';
   }
@@ -871,6 +882,20 @@ export class GameService {
     return this.getGroundEquipment(pending.tile)[pending.index] === pending.equipment;
   }
 
+  /** Retourne l'arme la plus faible uniquement pour une amélioration stricte. */
+  private findStrictlyWeakerWeapon(player: Player, equipment: Equipment): number | null {
+    if (equipment.kind !== 'weapon') return null;
+    let weakestIndex = -1;
+    let weakestBonus = Number.POSITIVE_INFINITY;
+    player.inventory.weapons.forEach((weapon, index) => {
+      if (weapon && weapon.attackBonus < weakestBonus) {
+        weakestBonus = weapon.attackBonus;
+        weakestIndex = index;
+      }
+    });
+    return weakestIndex >= 0 && equipment.attackBonus > weakestBonus ? weakestIndex : null;
+  }
+
   /** Retire exactement l'objet récupéré et notifie immédiatement le plateau. */
   private consumeGroundEquipment(pending: PendingGroundEquipment): boolean {
     const key = this.groundKey(pending.tile);
@@ -897,6 +922,9 @@ export class GameService {
     this.pendingGroundEquipment.set({ player, tile, equipment, index });
     if (this.playerService.canAddEquipment(player, equipment)) {
       this.collectGroundEquipment();
+    } else {
+      const slotIndex = this.findStrictlyWeakerWeapon(player, equipment);
+      if (slotIndex !== null) this.replaceGroundEquipment(slotIndex);
     }
     return true;
   }
