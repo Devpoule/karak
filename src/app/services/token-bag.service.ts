@@ -113,10 +113,15 @@ export class TokenBagService {
     return definition;
   }
 
-  /** Replace un exemplaire non retenu par le choix de Taia dans le sachet. */
+  /**
+   * Replace un exemplaire non retenu par le choix de Taia dans le sachet.
+   *
+   * Le sachet est remélangé immédiatement afin que le token refusé
+   * ne soit pas automatiquement proposé au tirage suivant.
+   */
   returnToken(definitionId: TokenDefinitionId): void {
     if (!getTokenDefinition(definitionId)) return;
-    this.bag.push(definitionId);
+    this.bag = this.shuffle([...this.bag, definitionId]);
     this.updateRemainingTokens();
   }
 

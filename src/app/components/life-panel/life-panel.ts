@@ -21,6 +21,8 @@ export class LifePanel implements DoCheck, OnDestroy {
   private feedbackTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingDamageSlots: number[] = [];
   private combatResultWasVisible = false;
+  private destroyed = false;
+  private observedLifeLossRevision = 0;
 
   constructor(
     private readonly playerService: PlayerService,
@@ -47,13 +49,34 @@ export class LifePanel implements DoCheck, OnDestroy {
       this.observedLives = currentLives;
       this.combatResultWasVisible = combatResultVisible;
       this.pendingDamageSlots = [];
+      this.observedLifeLossRevision = this.playerService.lastLifeLoss()?.revision ?? 0;
       this.resetFeedback();
       return;
+    }
+    const lifeLoss = this.playerService.lastLifeLoss();
+    if (lifeLoss && lifeLoss.player === this.player && lifeLoss.revision > this.observedLifeLossRevision) {
+      this.observedLifeLossRevision = lifeLoss.revision;
+      const slots = Array.from(
+        { length: lifeLoss.amount },
+        (_, index) => currentLives + index,
+      );
+      if (combatResultVisible) {
+        this.pendingDamageSlots = slots;
+      } else {
+        this.showFeedback('damage', slots);
+      }
     }
     if (this.combatResultWasVisible && !combatResultVisible && this.pendingDamageSlots.length) {
       const slots = this.pendingDamageSlots;
       this.pendingDamageSlots = [];
-      this.showFeedback('damage', slots);
+      // L'overlay vient seulement d'être retiré. Attendre le prochain
+      // micro-cycle garantit que l'animation démarre sur la vue de la carte,
+      // en même temps que le toast du résultat de combat.
+      queueMicrotask(() => {
+        if (!this.destroyed && !this.combatService.lastCombatResult()) {
+          this.showFeedback('damage', slots);
+        }
+      });
     }
     this.combatResultWasVisible = combatResultVisible;
     if (this.observedLives === null || currentLives === this.observedLives) return;
@@ -77,7 +100,8 @@ export class LifePanel implements DoCheck, OnDestroy {
     this.resetFeedback();
     this.feedback = feedback;
     this.changedSlots = changedSlots;
-    this.feedbackTimer = setTimeout(() => this.resetFeedback(), 1100);
+    const duration = feedback === 'damage' ? 2800 : 1100;
+    this.feedbackTimer = setTimeout(() => this.resetFeedback(), duration);
   }
   private resetFeedback(): void {
     if (this.feedbackTimer !== null) {
@@ -88,6 +112,7 @@ export class LifePanel implements DoCheck, OnDestroy {
     this.changedSlots = [];
   }
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.pendingDamageSlots = [];
     this.resetFeedback();
   }

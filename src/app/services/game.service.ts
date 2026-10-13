@@ -871,6 +871,7 @@ export class GameService {
     const pending = this.pendingGroundEquipment();
     if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
     if (!this.isGroundEquipmentAvailable(pending)) return false;
+    if (!this.playerService.canReplaceEquipment(pending.player, pending.equipment)) return false;
     const previous = this.playerService.replaceEquipment(pending.player, pending.equipment, slotIndex);
     if (!previous) return false;
     this.consumeGroundEquipment(pending);
@@ -995,6 +996,7 @@ export class GameService {
     if (reward.kind !== 'equipment') return false;
     const equipment = getEquipmentDefinition(reward.equipmentId);
     if (!equipment) return false;
+    if (!this.playerService.canReplaceEquipment(pending.player, equipment)) return false;
     const previous = this.playerService.replaceEquipment(pending.player, equipment, slotIndex);
     if (!previous) return false;
     this.dropEquipment(pending.rewardTile, previous);

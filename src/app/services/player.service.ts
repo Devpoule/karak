@@ -68,6 +68,8 @@ export class PlayerService {
   readonly players: Player[] = [];
   /** Notification réactive des changements de points de vie. */
   readonly livesRevision = signal(0);
+  /** Dernière perte de vie, consommée par les composants d'affichage. */
+  readonly lastLifeLoss = signal<{ player: Player; amount: number; revision: number } | null>(null);
   /** Notification réactive des changements d’inventaire. */
   readonly inventoryRevision = signal(0);
   /** Notification réactive des changements de trésors. */
@@ -84,11 +86,17 @@ export class PlayerService {
   /** Applique les dégâts au joueur réel, sans remplacer sa référence. */
   loseLife(player: Player, amount = 1): void {
     if (!this.players.includes(player) || !Number.isFinite(amount) || amount <= 0) return;
-    const next = Math.max(0, player.lives - Math.floor(amount));
+    const previous = player.lives;
+    const next = Math.max(0, previous - Math.floor(amount));
     if (next === player.lives) return;
     player.lives = next;
     if (next === 0) player.recoveryState = 'pending';
     this.livesRevision.update((revision) => revision + 1);
+    this.lastLifeLoss.set({
+      player,
+      amount: previous - next,
+      revision: this.livesRevision(),
+    });
   }
 
   /** Commence le tour obligatoire de récupération et soigne exactement une vie. */
@@ -463,6 +471,20 @@ export class PlayerService {
     }
     return this.getEquipmentSlots(player, equipment.kind)
       .some((item) => item === null);
+  }
+
+  /**
+   * Indique si un équipement peut légalement remplacer un objet existant.
+   *
+   * Un doublon déjà présent dans l'inventaire n'est jamais proposé :
+   * remplacer un objet par un exemplaire identique n'apporte aucun bénéfice.
+   */
+  canReplaceEquipment(player: Player, equipment: Equipment): boolean {
+    if (!this.players.includes(player) || this.canAddEquipment(player, equipment)) return false;
+    const slots = equipment.kind === 'key'
+      ? [player.inventory.key]
+      : this.getEquipmentSlots(player, equipment.kind);
+    return !slots.some(item => item?.id === equipment.id);
   }
   /**
    * Place un équipement dans le premier emplacement libre.

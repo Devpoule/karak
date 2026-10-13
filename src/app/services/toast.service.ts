@@ -6,6 +6,10 @@ export interface ToastMessage { readonly id: number; readonly text: string; read
 /** File unique de notifications informatives, non bloquantes. */
 @Injectable({ providedIn: 'root' })
 export class ToastService {
+  private readonly toastDurationMinimum = 4400;
+  private readonly toastDurationMaximum = 10400;
+  private readonly toastCharactersPerSecond = 42;
+
   readonly current = signal<ToastMessage | null>(null);
   private readonly queue: ToastMessage[] = [];
   private nextId = 0;
@@ -37,6 +41,12 @@ export class ToastService {
   private schedule(message: ToastMessage): void {
     this.timer = setTimeout(() => {
       if (this.current()?.id === message.id) this.dismiss();
-    }, Math.min(5200, Math.max(2200, message.text.length * 42)));
+    }, Math.min(
+      this.toastDurationMaximum,
+      Math.max(
+        this.toastDurationMinimum,
+        message.text.length * this.toastCharactersPerSecond * 2,
+      ),
+    ));
   }
 }

@@ -9,8 +9,11 @@
 }
 
 .contextual-help__trigger {
-  width: 1.35rem;
-  height: 1.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.55rem;
+  height: 1.55rem;
   padding: 0;
   border: 1px solid #e8bd58;
   border-radius: 50%;
@@ -20,6 +23,25 @@
   font: inherit;
   font-size: .82rem;
   font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.contextual-help__trigger:hover {
+  transform: translateY(-2px);
+  background: #24334a;
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.42),
+    0 0 8px rgba(232, 189, 88, 0.3);
+}
+
+.contextual-help__trigger:active {
+  transform: scale(.96);
 }
 
 .contextual-help__trigger:focus-visible {
@@ -60,6 +82,10 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .contextual-help__popover { animation: contextual-help-in .16s ease-out; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contextual-help__trigger { transition: none; }
 }
 
 @keyframes contextual-help-in { from { opacity: 0; transform: translateY(-.3rem); } to { opacity: 1; transform: translateY(0); } }

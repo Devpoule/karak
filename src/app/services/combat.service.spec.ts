@@ -251,6 +251,27 @@ describe('CombatService séparation du lancer et de la résolution', () => {
     vi.restoreAllMocks();
   });
 
+  it('refuse le Tir magique lorsque les dés dépassent déjà la force du monstre', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const combatService = new CombatService(playerService);
+    const player = playerService.players[0];
+    const bolt = getEquipmentDefinition('fire-sword')!;
+    playerService.addEquipment(player, bolt);
+    const tile = createTile();
+
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, tile);
+    combatService.rollPendingCombat();
+
+    const roll = combatService.pendingCombatRoll();
+    expect(roll?.diceTotal).toBeGreaterThan(roll?.monsterStrength ?? 0);
+    expect(combatService.useMagicBolt()).toBe(false);
+    expect(combatService.pendingCombatRoll()?.magicBoltsUsed).toBe(0);
+
+    vi.restoreAllMocks();
+  });
+
   it('Horan peut relancer les deux dés une seule fois', () => {
     vi.spyOn(Math, 'random')
       .mockReturnValueOnce(0)
@@ -272,6 +293,26 @@ describe('CombatService séparation du lancer et de la résolution', () => {
     expect(combatService.useHeroReroll('both')).toBe(true);
     expect(combatService.pendingCombatRoll()?.diceTotal).toBe(12);
     expect(combatService.useHeroReroll('both')).toBe(false);
+    vi.restoreAllMocks();
+  });
+
+  it('ne propose pas à Horan de relancer lorsqu’il dépasse déjà le monstre', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const combatService = new CombatService(playerService);
+    const player = playerService.players[0];
+    player.heroId = 'horan';
+
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, createTile());
+    combatService.rollPendingCombat();
+
+    expect(combatService.pendingCombatRoll()?.diceTotal).toBeGreaterThan(
+      combatService.pendingCombatRoll()?.monsterStrength ?? 0,
+    );
+    expect(combatService.getAvailableHeroRerolls()).toEqual([]);
+    expect(combatService.useHeroReroll('both')).toBe(false);
+
     vi.restoreAllMocks();
   });
 
@@ -298,6 +339,30 @@ describe('CombatService séparation du lancer et de la résolution', () => {
 
     player.isCursed = true;
     expect(combatService.getAvailableHeroRerolls()).toEqual([]);
+    vi.restoreAllMocks();
+  });
+
+  it('Victorius peut relancer séparément ses deux dés lorsqu’ils affichent 1', () => {
+    vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.999)
+      .mockReturnValueOnce(0.999);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const combatService = new CombatService(playerService);
+    const player = playerService.players[0];
+    player.heroId = 'victorius';
+    const monster = createTile();
+
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, monster);
+    combatService.rollPendingCombat();
+    expect(combatService.getAvailableHeroRerolls()).toEqual(['die1', 'die2']);
+    expect(combatService.useHeroReroll('die1')).toBe(true);
+    expect(combatService.getAvailableHeroRerolls()).toEqual(['die2']);
+    expect(combatService.useHeroReroll('die2')).toBe(true);
+    expect(combatService.getAvailableHeroRerolls()).toEqual([]);
+
     vi.restoreAllMocks();
   });
 

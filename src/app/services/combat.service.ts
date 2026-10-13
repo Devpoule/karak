@@ -196,17 +196,21 @@ export class CombatService {
   getAvailableHeroRerolls(): Array<'both' | 'die1' | 'die2'> {
     const combat = this.pendingCombat();
     const roll = this.pendingCombatRoll();
-    if (!combat || !roll || roll.heroRerollsUsed > 0 || combat.player.isCursed) return [];
-    if (combat.player.heroId === 'horan') return ['both'];
+    if (!combat || !roll || combat.player.isCursed) return [];
+    if (combat.player.heroId === 'horan') {
+      return roll.diceTotal <= roll.monsterStrength && roll.heroRerollsUsed === 0
+        ? ['both']
+        : [];
+    }
     if (combat.player.heroId !== 'victorius') return [];
 
     const available: Array<'die1' | 'die2'> = [];
-    if (roll.die1 === 1) available.push('die1');
-    if (roll.die2 === 1) available.push('die2');
+    if (roll.die1 === 1 && (roll.heroRerollsUsed & 1) === 0) available.push('die1');
+    if (roll.die2 === 1 && (roll.heroRerollsUsed & 2) === 0) available.push('die2');
     return available;
   }
 
-  /** Relance le ou les dés autorisés, une seule fois par combat. */
+  /** Relance les dés autorisés par le pouvoir du héros. */
   useHeroReroll(kind: 'both' | 'die1' | 'die2'): boolean {
     const combat = this.pendingCombat();
     const roll = this.pendingCombatRoll();
@@ -215,13 +219,16 @@ export class CombatService {
     const die1 = kind === 'die2' ? roll.die1 : this.rollDie();
     const die2 = kind === 'die1' ? roll.die2 : this.rollDie();
     const diceTotal = die1 + die2;
+    const rerollMask = kind === 'both'
+      ? 1
+      : roll.heroRerollsUsed | (kind === 'die1' ? 1 : 2);
     this.pendingCombatRoll.set({
       ...roll,
       die1,
       die2,
       diceTotal,
       attackPower: diceTotal + roll.equipmentBonus + roll.heroBonus,
-      heroRerollsUsed: 1,
+      heroRerollsUsed: rerollMask,
     });
     return true;
   }
@@ -231,6 +238,9 @@ export class CombatService {
     const combat = this.pendingCombat();
     const roll = this.pendingCombatRoll();
     if (!combat || !roll) return false;
+
+    // Le tir magique est inutile lorsque les dés ont déjà dépassé le monstre.
+    if (roll.diceTotal > roll.monsterStrength) return false;
 
     const available = combat.player.inventory.spells.some(
       spell => spell?.effect === 'magic-attack',

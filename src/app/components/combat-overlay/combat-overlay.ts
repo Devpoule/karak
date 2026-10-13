@@ -159,6 +159,14 @@ export class CombatOverlay implements OnDestroy {
     return this.combatService.getRemainingMagicBolts();
   }
 
+  /** Le tir magique n'est proposé que si le lancer brut ne suffit pas déjà. */
+  get canUseMagicBolt(): boolean {
+    const roll = this.combatService.pendingCombatRoll();
+    return this.remainingMagicBolts > 0
+      && !!roll
+      && roll.diceTotal <= roll.monsterStrength;
+  }
+
   get displayedSacrificeBonus(): number {
     return this.combatService.pendingCombatRoll()?.sacrificeUsed ? 1 : 0;
   }
@@ -509,7 +517,7 @@ export class CombatOverlay implements OnDestroy {
     const combatMessage = result.outcome === 'victory'
       ? `Victoire contre ${result.monster.name}.`
       : result.outcome === 'defeat'
-        ? `${result.player.heroId ? getHeroDefinition(result.player.heroId)?.name ?? 'Le héros' : 'Le héros'} perd 1 pt de vie.`
+        ? `${result.player.heroId ? getHeroDefinition(result.player.heroId)?.name ?? 'Le héros' : 'Le héros'} perd 1 point de vie.`
         : `Égalité contre ${result.monster.name}.`;
     const combatTone = result.outcome === 'victory'
       ? 'success'

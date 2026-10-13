@@ -42,6 +42,9 @@ export class Game implements OnInit, OnDestroy {
   /** Fréquence de vérification des résolutions obligatoires. */
   private readonly aiBlockedCheckDelay = 200;
 
+  /** Durée d'affichage de l'annonce du joueur actif. */
+  private readonly turnAnnouncementDuration = 2800;
+
   private aiTurnRunning = false;
   private aiRunId = 0;
   private destroyed = false;
@@ -119,7 +122,7 @@ export class Game implements OnInit, OnDestroy {
       this.announcementTimer = setTimeout(() => {
         this.turnAnnouncement.set(null);
         this.announcementTimer = null;
-      }, 1400);
+      }, this.turnAnnouncementDuration);
     });
   }
 

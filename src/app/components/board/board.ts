@@ -290,7 +290,8 @@ export class Board {
   /** Emplacements occupés susceptibles d'être remplacés. */
   getReplacementSlots(equipment: Equipment): { index: number; name: string }[] {
     const inventory = this.gameService.activePlayer?.inventory;
-    if (!inventory) return [];
+    const player = this.gameService.activePlayer;
+    if (!inventory || !player || !this.playerService.canReplaceEquipment(player, equipment)) return [];
     if (equipment.kind === 'key') {
       return inventory.key ? [{ index: 0, name: inventory.key.name }] : [];
     }

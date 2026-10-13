@@ -280,7 +280,7 @@
                 (pointerdown)="$event.stopPropagation()"
                 (click)="endTurn()"
               >
-                <span aria-hidden="true">✓</span>
+                <span aria-hidden="true">⏭</span>
               </button>
             }
             @if (gameService.xanrosSubstitutionSelectionOpen()) {
@@ -340,13 +340,15 @@
           <img class="board__reward-image" [src]="equipment.image" [alt]="equipment.name" draggable="false" />
           <p>{{ equipment.name }}</p>
           @if (!canCollectPendingEquipment) {
-             <p class="board__reward-notice">Aucun emplacement libre : choisissez un objet à remplacer.</p>
-             <div class="board__reward-actions">
-               @for (slot of getReplacementSlots(equipment); track slot.index) {
-                 <button type="button" (click)="replacePendingEquipment(slot.index)">Remplacer {{ slot.name }}</button>
+             @if (getReplacementSlots(equipment).length) {
+               <p class="board__reward-notice">Aucun emplacement libre : choisissez un objet à remplacer.</p>
+               <div class="board__reward-actions">
+                 @for (slot of getReplacementSlots(equipment); track slot.index) {
+                   <button type="button" (click)="replacePendingEquipment(slot.index)">Remplacer {{ slot.name }}</button>
+                 }
+               </div>
                }
-             </div>
-          }
+             }
           <div class="board__reward-actions">
             <button type="button" [disabled]="!canCollectPendingEquipment" (click)="collectPendingEquipment()">Récupérer</button>
           </div>
