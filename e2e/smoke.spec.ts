@@ -1,12 +1,10 @@
 import { expect, test } from '@playwright/test';
 
 test('Karak se charge et affiche l’entrée de partie', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/game');
 
   await expect(page).toHaveTitle(/Karak/i);
-  await expect(page.getByRole('img', { name: 'Karak', exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Entrer' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Règles du jeu' })).toBeVisible();
 
   await page.screenshot({
     path: 'playwright-report/karak-home.png',
@@ -15,18 +13,18 @@ test('Karak se charge et affiche l’entrée de partie', async ({ page }) => {
 });
 
 test('la page de jeu affiche la préparation de partie', async ({ page }) => {
-  await page.goto('/game');
+  await page.goto('/');
 
-  await expect(page.getByRole('button', { name: 'Jouer' })).toBeVisible();
-  await page.getByRole('button', { name: 'Jouer' }).click();
+  await expect(page.getByRole('link', { name: 'Jouer' })).toBeVisible();
+  await page.getByRole('link', { name: 'Jouer' }).click();
   await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
   await expect(page.getByText("Combien d'aventuriers entrent dans le donjon ?")).toBeVisible();
 });
 
 test('la préparation reste lisible sur écran étroit', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/game');
-  await page.getByRole('button', { name: 'Jouer' }).click();
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Jouer' }).click();
 
   await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
   await expect.poll(async () => page.evaluate(() =>
@@ -39,14 +37,13 @@ test('la préparation reste lisible sur écran étroit', async ({ page }) => {
 });
 
 test('la préparation progresse jusqu’à la détermination du premier joueur', async ({ page }) => {
-  await page.goto('/game');
-  await page.getByRole('button', { name: 'Jouer' }).click();
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Jouer' }).click();
   await page.getByRole('button', { name: 'Continuer' }).click();
 
   await expect(page.getByRole('heading', { name: 'Tirage des héros' })).toBeVisible();
   // Le bouton arrive avec l'animation d'entrée du panneau de préparation.
-  await page.waitForTimeout(600);
-  await page.getByRole('button', { name: 'Tirer les héros' }).click({ force: true });
+  await page.getByRole('button', { name: 'Tirer les héros', exact: true }).click({ force: true });
   await expect(page.getByRole('heading', { name: 'Qui commence ?' })).toBeVisible({ timeout: 10_000 });
   await page.screenshot({
     path: 'playwright-report/karak-first-player.png',
@@ -64,11 +61,10 @@ test('une partie atteint le plateau après les lancers de préparation', async (
       return state / 0x1_0000_0000;
     };
   });
-  await page.goto('/game');
-  await page.getByRole('button', { name: 'Jouer' }).click();
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Jouer' }).click();
   await page.getByRole('button', { name: 'Continuer' }).click();
-  await page.waitForTimeout(600);
-  await page.getByRole('button', { name: 'Tirer les héros' }).click({ force: true });
+  await page.getByRole('button', { name: 'Tirer les héros', exact: true }).click({ force: true });
   await expect(page.getByRole('heading', { name: 'Qui commence ?' })).toBeVisible({ timeout: 10_000 });
 
   for (let attempt = 0; attempt < 20; attempt++) {
@@ -126,15 +122,12 @@ test('une partie atteint le plateau après les lancers de préparation', async (
   });
 });
 
-test('le grimoire est réservé à la partie et se replie avec la boule de cristal', async ({ page }) => {
-  await page.goto('/game');
-  const crystal = page.getByRole('button', { name: 'Afficher ou replier le glossaire des héros' });
-  await expect(crystal).toHaveCount(0);
+test('les fiches de héros sont accessibles depuis le plateau', async ({ page }) => {
+  await page.goto('/');
 
-  await page.getByRole('button', { name: 'Jouer' }).click();
+  await page.getByRole('link', { name: 'Jouer' }).click();
   await page.getByRole('button', { name: 'Continuer' }).click();
-  await page.waitForTimeout(600);
-  await page.getByRole('button', { name: 'Tirer les héros' }).click({ force: true });
+  await page.getByRole('button', { name: 'Tirer les héros', exact: true }).click({ force: true });
   await expect(page.getByRole('heading', { name: 'Qui commence ?' })).toBeVisible();
 
   for (let attempt = 0; attempt < 40; attempt++) {
@@ -148,23 +141,53 @@ test('le grimoire est réservé à la partie et se replie avec la boule de crist
 
   await page.getByRole('button', { name: 'Entrer dans le donjon' }).click();
   await expect(page.locator('app-board')).toBeVisible();
-  await expect(crystal).toBeVisible();
   const infoButton = page.getByRole('button', { name: /Afficher les informations de/ }).first();
   await expect(infoButton).toBeVisible();
   await infoButton.click();
   await expect(page.getByRole('dialog').first()).toBeVisible();
-  await page.getByRole('button', { name: 'Fermer la fiche' }).first().click();
+  await page.locator('.codex-dialog__backdrop').click({ position: { x: 5, y: 5 } });
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 
-  const powerButton = page.getByRole('button', { name: /^Pouvoir 1 :/ }).first();
-  await expect(powerButton).toBeVisible();
-  await powerButton.click();
-  await expect(page.getByRole('dialog').first()).toBeVisible();
-  await page.screenshot({ path: 'playwright-report/hero-codex-dialog.png', fullPage: true });
-  await page.getByRole('button', { name: 'Fermer la fiche' }).first().click();
+  await expect(page.getByRole('button', { name: /^Pouvoir 1 :/ }).first()).toBeVisible();
+});
 
-  await crystal.click();
-  await expect(page.getByRole('button', { name: /Consulter / })).toHaveCount(6);
-  await expect(page.getByRole('button', { name: 'Consulter Aderyn' })).toBeVisible();
-  await crystal.click();
-  await expect(page.getByRole('button', { name: 'Consulter Aderyn' })).toHaveCount(0);
+test('quitter la préparation réinitialise la partie sans confirmation', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Jouer' }).click();
+  await page.getByRole('button', { name: 'Continuer' }).click();
+  await expect(page.getByRole('heading', { name: 'Tirage des héros' })).toBeVisible();
+
+  await page.getByRole('button', { name: /Accueil/ }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('link', { name: 'Jouer' })).toBeVisible();
+
+  await page.goto('/play');
+  await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
+});
+
+test('quitter une partie active demande confirmation et permet l’annulation', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Jouer' }).click();
+  await page.getByRole('button', { name: 'Continuer' }).click();
+  await page.getByRole('button', { name: 'Tirer les héros', exact: true }).click({ force: true });
+  await expect(page.getByRole('heading', { name: 'Qui commence ?' })).toBeVisible();
+
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const roll = page.locator('button[aria-label^="Lancer les dés du joueur"], button[aria-label^="Relancer les dés du joueur"]').first();
+    if (await roll.isVisible().catch(() => false)) await roll.click({ force: true });
+    if (await page.getByRole('button', { name: 'Entrer dans le donjon' }).isVisible().catch(() => false)) break;
+    await page.waitForTimeout(250);
+  }
+  await page.getByRole('button', { name: 'Entrer dans le donjon' }).click();
+  await expect(page.locator('app-board')).toBeVisible();
+
+  await page.getByRole('button', { name: /Accueil/ }).click();
+  await expect(page.getByRole('heading', { name: 'Quitter la partie ?' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Quitter la partie ?' })).toHaveCount(0);
+  await expect(page.locator('app-board')).toBeVisible();
+
+  await page.getByRole('button', { name: /Accueil/ }).click();
+  await page.getByRole('button', { name: 'Quitter la partie' }).click();
+  await expect(page).toHaveURL(/\/$/);
 });

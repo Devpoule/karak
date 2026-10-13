@@ -303,6 +303,11 @@ export class GameService {
     return this.initialized;
   }
 
+  /** Une aventure est commencée uniquement lorsque la phase de jeu est active. */
+  isGameInProgress(): boolean {
+    return this.phase() === 'playing';
+  }
+
   /**
    * Prépare les joueurs participant à la partie.
    *

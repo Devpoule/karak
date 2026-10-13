@@ -7,6 +7,10 @@ import { AiService } from './ai.service';
 import { GameService } from './game.service';
 import { PlayerService } from './player.service';
 import { CombatService } from './combat.service';
+import { DungeonService } from './dungeon.service';
+import { ExplorationService } from './exploration.service';
+import { TileDeckService } from './tile-deck.service';
+import { TurnService } from './turn.service';
 
 describe('AiService résolutions obligatoires', () => {
   let aiService: AiService;
@@ -460,5 +464,71 @@ describe('AiService résolutions obligatoires', () => {
 
     expect(aiService.resolveMandatoryAction()).toBe('resolved');
     expect(player.inventory.key?.id).toBe('key');
+  });
+});
+
+describe('AiService déplacements et exploration', () => {
+  let aiService: AiService;
+  let gameService: GameService;
+  let playerService: PlayerService;
+  let dungeonService: DungeonService;
+  let tileDeckService: TileDeckService;
+  let turnService: TurnService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [AiService, GameService, PlayerService] });
+    aiService = TestBed.inject(AiService);
+    gameService = TestBed.inject(GameService);
+    playerService = TestBed.inject(PlayerService);
+    dungeonService = TestBed.inject(DungeonService);
+    tileDeckService = TestBed.inject(TileDeckService);
+    turnService = TestBed.inject(TurnService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(1);
+    dungeonService.initialize();
+    playerService.players[1].position = { x: 0, y: 0 };
+  });
+
+  it('déplace une IA vers une tuile connectée et consomme un mouvement', () => {
+    dungeonService.placeTile({ definitionId: 'straight-01', x: 0, y: -1, rotation: 90 });
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+
+    expect(aiService.playAction()).toBe(true);
+
+    expect(playerService.players[1].position).toEqual({ x: 0, y: -1 });
+    expect(turnService.remainingMovements()).toBe(3);
+    vi.restoreAllMocks();
+  });
+
+  it('explore une ouverture libre avec une pioche déterministe', () => {
+    (tileDeckService as unknown as { deck: string[] }).deck = ['straight-01'];
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+
+    expect(aiService.playAction()).toBe(true);
+
+    expect(dungeonService.tiles).toHaveLength(2);
+    expect(playerService.players[1].position).not.toEqual({ x: 0, y: 0 });
+    expect(turnService.remainingMovements()).toBe(3);
+    vi.restoreAllMocks();
+  });
+
+  it('ne consomme pas de mouvement lorsqu une résolution bloque encore l IA', () => {
+    const player = playerService.players[1];
+    player.inventory.key = {
+      id: 'key', kind: 'key', name: 'Clé', image: '/assets/tokens/key.png',
+    };
+    const chestTile = {
+      definitionId: 'room-01', x: 1, y: 0, rotation: 0,
+      tokenId: 'closed-chest', tokenFace: 'front',
+    } as PlacedTile;
+    dungeonService.placeTile(chestTile);
+    gameService.resolveTileEntry(player, { definitionId: 'start', x: 0, y: 0, rotation: 0 }, chestTile);
+    const movementsBefore = turnService.remainingMovements();
+
+    expect(aiService.playAction()).toBe(false);
+    expect(turnService.remainingMovements()).toBe(movementsBefore);
+    expect(gameService.pendingTreasure()).not.toBeNull();
   });
 });

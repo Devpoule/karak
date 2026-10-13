@@ -29,6 +29,15 @@ export class GameHeader {
       void this.router.navigateByUrl('/');
       return;
     }
+
+    // La préparation n'est pas encore une partie commencée :
+    // elle peut être abandonnée sans confirmation.
+    if (!this.gameService.isGameInProgress()) {
+      this.gameService.initialize();
+      void this.router.navigateByUrl('/');
+      return;
+    }
+
     this.showLeaveConfirmation = true;
   }
 
