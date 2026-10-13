@@ -1095,50 +1095,63 @@ export class GameService {
    * commence avec l'intégralité de ses mouvements.
    */
   endTurn(): void {
-    if (this.turnTransitionPending()) return;
-    if (this.phase() !== 'playing') {
-      return;
-    }
-    /*
-     * Un changement de joueur est interdit tant qu'une
-     * exploration attend encore sa confirmation.
-     *
-     * Cela évite qu'une tuile piochée par un joueur soit
-     * finalement manipulée pendant le tour du suivant.
-     */
-    if (this.explorationService.pendingTile) {
-      return;
-    }
-    /*
-     * Un combat ou un coffre obligatoire doit être résolu avant
-     * que la main puisse passer au joueur suivant.
-     */
-    if (this.hasPendingTileResolution) {
-      return;
-    }
-    const currentPlayerIndex = this.activePlayerIndex();
-    const playerCount = this.playerService.players.length;
-    if (currentPlayerIndex === null || playerCount === 0) {
-      return;
-    }
-    const nextPlayerIndex = (currentPlayerIndex + 1) % playerCount;
-    const currentPlayer = this.activePlayer;
+    const transition = this.getTurnTransitionContext();
+    if (!transition) return;
+
     // Conserver le joueur sortant pendant la pause entre les tours.
     this.turnTransitionPending.set(true);
     this.turnService.stopMovements();
-    this.turnTransitionTimer = setTimeout(() => {
-      this.turnTransitionTimer = null;
-      if (this.phase() !== 'playing' || this.activePlayerIndex() !== currentPlayerIndex) {
-        this.turnTransitionPending.set(false);
-        return;
-      }
-      if (currentPlayer) this.playerService.completeRecoveryTurn(currentPlayer);
-      this.turnService.resetMovements();
-      this.activePlayerIndex.set(nextPlayerIndex);
-      this.prepareActivePlayerTurn();
+    this.turnTransitionTimer = setTimeout(
+      () => this.completeTurnTransition(transition),
+      this.turnTransitionDelay,
+    );
+  }
+
+  /** Retourne le contexte immuable nécessaire à une transition autorisée. */
+  private getTurnTransitionContext(): {
+    currentPlayerIndex: number;
+    nextPlayerIndex: number;
+    currentPlayer: Player | null;
+  } | null {
+    if (this.turnTransitionPending() || this.phase() !== 'playing') return null;
+
+    // Une tuile piochée ou une résolution obligatoire appartient au joueur courant.
+    if (this.explorationService.pendingTile || this.hasPendingTileResolution) return null;
+
+    const currentPlayerIndex = this.activePlayerIndex();
+    const playerCount = this.playerService.players.length;
+    if (currentPlayerIndex === null || playerCount === 0) return null;
+
+    return {
+      currentPlayerIndex,
+      nextPlayerIndex: (currentPlayerIndex + 1) % playerCount,
+      currentPlayer: this.activePlayer,
+    };
+  }
+
+  /** Applique une transition seulement si son contexte est encore valide. */
+  private completeTurnTransition(transition: {
+    currentPlayerIndex: number;
+    nextPlayerIndex: number;
+    currentPlayer: Player | null;
+  }): void {
+    this.turnTransitionTimer = null;
+    if (
+      this.phase() !== 'playing'
+      || this.activePlayerIndex() !== transition.currentPlayerIndex
+    ) {
       this.turnTransitionPending.set(false);
-      this.scheduleRecoveryTurnCompletion(nextPlayerIndex);
-    }, this.turnTransitionDelay);
+      return;
+    }
+
+    if (transition.currentPlayer) {
+      this.playerService.completeRecoveryTurn(transition.currentPlayer);
+    }
+    this.turnService.resetMovements();
+    this.activePlayerIndex.set(transition.nextPlayerIndex);
+    this.prepareActivePlayerTurn();
+    this.turnTransitionPending.set(false);
+    this.scheduleRecoveryTurnCompletion(transition.nextPlayerIndex);
   }
 
   /** Prépare le tour actif, y compris le tour obligatoire de récupération. */
