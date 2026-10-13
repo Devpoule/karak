@@ -97,10 +97,8 @@ export class GameSetup {
    *
    * une partie oppose toujours au minimum deux aventuriers.
    *
-   * Le premier joueur est toujours humain.
-   * Les autres participants sont contrôlés par l'IA
-   * tant qu'ils n'ont pas été explicitement configurés
-   * comme joueurs humains locaux.
+   * Le premier joueur est humain par défaut. Le mode IA contre IA
+   * permet toutefois de confier tous les participants à l'IA.
    *
    * Avec les règles actuelles de Karak :
    *
@@ -149,6 +147,9 @@ export class GameSetup {
    * J5 IA
    */
   humanPlayerCount = 1;
+
+  /** Indique qu'une simulation entièrement automatisée est demandée. */
+  aiVsAi = false;
 
   /**
    * Indique si la configuration du multijoueur local
@@ -299,6 +300,10 @@ export class GameSetup {
     this.selectedPlayerCount =
       playerCount;
 
+    if (this.aiVsAi) {
+      return;
+    }
+
     if (
       this.humanPlayerCount
       > playerCount
@@ -328,6 +333,7 @@ export class GameSetup {
    * un seul humain et tous les autres participants IA.
    */
   toggleLocalMultiplayer(): void {
+    this.aiVsAi = false;
     this.localMultiplayerOpen =
       !this.localMultiplayerOpen;
 
@@ -383,6 +389,14 @@ export class GameSetup {
 
     this.humanPlayerCount =
       humanPlayerCount;
+    this.aiVsAi = false;
+  }
+
+  /** Active ou désactive la simulation IA contre IA. */
+  toggleAiVsAi(): void {
+    this.aiVsAi = !this.aiVsAi;
+    this.localMultiplayerOpen = false;
+    this.humanPlayerCount = this.aiVsAi ? 0 : 1;
   }
 
   /**
@@ -399,7 +413,7 @@ export class GameSetup {
   confirmPlayerCount(): void {
     this.gameService.initializePlayers(
       this.selectedPlayerCount,
-      this.humanPlayerCount,
+      this.aiVsAi ? 0 : this.humanPlayerCount,
     );
   }
 

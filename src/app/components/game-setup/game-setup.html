@@ -166,6 +166,16 @@
                   Jouer à plusieurs sur cet appareil
                 </button>
 
+                <button
+                  type="button"
+                  class="game-setup__local-multiplayer-toggle"
+                  [class.game-setup__local-multiplayer-toggle--active]="aiVsAi"
+                  [attr.aria-pressed]="aiVsAi"
+                  (click)="toggleAiVsAi()"
+                >
+                  Simuler une partie IA contre IA
+                </button>
+
                 <!--
                   Cette zone n'apparaît que lorsque
                   le multijoueur local est demandé.
@@ -207,7 +217,9 @@
             -->
 
             <div class="game-setup__stage-feedback">
-              @if (humanPlayerCount === 1) {
+              @if (aiVsAi) {
+                <p>Simulation IA contre IA</p>
+              } @else if (humanPlayerCount === 1) {
                 <p>
                   Vous ·
                   {{ selectedPlayerCount - 1 }}

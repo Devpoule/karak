@@ -1,9 +1,7 @@
 <header class="game-header">
-  @if (context === 'game' && navigationLocked) {
-    <span class="game-header__home game-header__home--disabled" aria-disabled="true">← Accueil</span>
-  } @else {
-    <a class="game-header__home" routerLink="/">← Accueil</a>
-  }
+  <button class="game-header__home game-header__home-button" type="button" (click)="requestLeave()">
+    ← Accueil
+  </button>
 
   <img
     class="game-header__logo"
@@ -36,3 +34,25 @@
   </div>
 
 </header>
+
+@if (showLeaveConfirmation) {
+  <div class="game-header__dialog-backdrop" role="presentation" (click)="cancelLeave()">
+    <section
+      class="game-header__dialog"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="leave-game-title"
+      aria-describedby="leave-game-message"
+      (click)="$event.stopPropagation()"
+    >
+      <h2 id="leave-game-title">Quitter la partie ?</h2>
+      <p id="leave-game-message">
+        Une aventure est en cours. Si vous quittez maintenant, votre progression sera définitivement perdue.
+      </p>
+      <div class="game-header__dialog-actions">
+        <button type="button" class="game-header__dialog-cancel" (click)="cancelLeave()">Annuler</button>
+        <button type="button" class="game-header__dialog-confirm" (click)="leaveGame()" autofocus>Quitter la partie</button>
+      </div>
+    </section>
+  </div>
+}

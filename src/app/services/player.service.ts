@@ -245,14 +245,11 @@ export class PlayerService {
       return;
     }
     /**
-     * Il doit toujours exister
-     * au moins un humain.
-     *
-     * Le nombre d'humains ne peut évidemment
-     * pas dépasser le nombre total
-     * de participants.
+     * Zéro humain est autorisé pour le mode simulation IA contre IA.
+     * Le nombre d'humains ne peut évidemment pas dépasser le nombre
+     * total de participants.
      */
-    if (humanPlayerCount < 1 || humanPlayerCount > playerCount) {
+    if (humanPlayerCount < 0 || humanPlayerCount > playerCount) {
       return;
     }
     /**
