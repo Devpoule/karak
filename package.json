@@ -8,6 +8,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:coverage": "ng test --no-watch --no-progress --coverage",
+    "test:coverage:domain": "ng test --no-watch --no-progress --coverage --coverage-include=src/app/services/**/*.ts",
+    "test:coverage:app": "ng test --no-watch --no-progress --coverage",
     "test:e2e": "playwright test"
   },
   "private": true,
