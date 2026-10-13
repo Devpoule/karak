@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getEquipmentDefinition } from '../data/equipment-definitions';
-import { GameService } from './game.service';
+import { GameService, PendingReward } from './game.service';
 import { PlayerService } from './player.service';
 import { TurnService } from './turn.service';
 import { CombatService } from './combat.service';
@@ -153,5 +153,77 @@ describe('GameService contrat d entrée dans une tuile', () => {
     expect(gameService.pendingReward()).toBeNull();
     expect(gameService.hasPendingTileResolution).toBe(false);
     expect(destination.tokenId).toBe('closed-chest');
+  });
+
+  it('refuse la récupération directe lorsque l inventaire est plein', () => {
+    const destination = tile();
+    playerService.addEquipment(player, getEquipmentDefinition('daggers')!);
+    playerService.addEquipment(player, getEquipmentDefinition('sword')!);
+    gameService.pendingGroundEquipment.set({
+      player,
+      tile: destination,
+      equipment: getEquipmentDefinition('axe')!,
+      index: 0,
+    });
+
+    expect(gameService.collectGroundEquipment()).toBe(false);
+    expect(gameService.pendingGroundEquipment()).not.toBeNull();
+    expect(gameService.leaveGroundEquipment()).toBe(true);
+
+    gameService.pendingReward.set({
+      player,
+      monster: { id: 'skeleton-king', kind: 'monster', origin: 'base', name: 'Roi', strength: 10, image: '', rewards: [] },
+      rewardTile: destination,
+      sourceTile: tile(),
+      remainingRewards: [{ kind: 'equipment', equipmentId: 'axe' }],
+    });
+    expect(gameService.replacePendingEquipment(0)).toBe(true);
+    expect(player.inventory.weapons[0]?.id).toBe('axe');
+  });
+
+  it('conserve les récompenses restantes après une récupération partielle', () => {
+    const pending: PendingReward = {
+      player,
+      monster: { id: 'skeleton-king', kind: 'monster', origin: 'base', name: 'Roi', strength: 10, image: '', rewards: [] },
+      rewardTile: tile('skeleton-king', 'back'),
+      sourceTile: tile(),
+      remainingRewards: [
+        { kind: 'equipment', equipmentId: 'sword' },
+        { kind: 'treasure', tokenId: 'treasure' },
+      ],
+    };
+    gameService.pendingReward.set(pending);
+
+    expect(gameService.collectPendingEquipment()).toBe(true);
+    expect(gameService.pendingReward()?.remainingRewards).toEqual([
+      { kind: 'treasure', tokenId: 'treasure' },
+    ]);
+    expect(gameService.collectPendingTreasure()).toBe(true);
+    expect(gameService.pendingReward()).toBeNull();
+  });
+
+  it('caractérise l entrée en phase setup sans masquer un combat déclenché par le code actuel', () => {
+    gameService.phase.set('setup');
+
+    const result = gameService.resolveTileEntry(player, tile(), tile('giant-rat'));
+
+    expect(result).toBe('combat');
+    expect(combatService.hasPendingCombat).toBe(true);
+  });
+
+  it('ne déclenche pas de nouvelle résolution depuis une partie terminée sans jeton', () => {
+    gameService.phase.set('game-over');
+
+    expect(gameService.resolveTileEntry(player, tile(), tile())).toBe('none');
+    expect(gameService.hasPendingTileResolution).toBe(false);
+  });
+
+  it('refuse une entrée répétée pendant une résolution obligatoire', () => {
+    const destination = tile('closed-chest');
+    playerService.addEquipment(player, getEquipmentDefinition('key')!);
+
+    expect(gameService.resolveTileEntry(player, tile(), destination)).toBe('treasure');
+    expect(gameService.resolveTileEntry(player, tile(), tile('giant-rat'))).toBe('none');
+    expect(gameService.pendingTreasure()?.treasureTile).toBe(destination);
   });
 });
