@@ -193,6 +193,53 @@ describe('AiService résolutions obligatoires', () => {
     expect(player.inventory.weapons[0]?.id).toBe('sword');
   });
 
+  it('termine la résolution IA avant de programmer le joueur suivant', async () => {
+    vi.useFakeTimers();
+    try {
+      const player = gameService.activePlayer!;
+      const fallen = getTokenDefinition('fallen');
+      const rewardTile = {
+        x: 1,
+        y: 0,
+        definitionId: 'room-1',
+        tokenId: 'fallen',
+        tokenFace: 'back',
+      } as PlacedTile;
+      gameService.pendingReward.set({
+        player,
+        monster: fallen as any,
+        rewardTile,
+        sourceTile: { x: 0, y: 0 } as PlacedTile,
+        remainingRewards: [
+          { kind: 'treasure', tokenId: 'open-chest' },
+          { kind: 'equipment', equipmentId: 'sword' },
+        ],
+      });
+
+      expect(aiService.resolveMandatoryAction()).toBe('resolved');
+      expect(gameService.pendingReward()?.remainingRewards).toEqual([
+        { kind: 'equipment', equipmentId: 'sword' },
+      ]);
+      expect(gameService.turnTransitionPending()).toBe(false);
+      expect(gameService.activePlayerIndex()).toBe(1);
+
+      expect(aiService.resolveMandatoryAction()).toBe('resolved');
+      expect(gameService.pendingReward()).toBeNull();
+      expect(gameService.turnTransitionPending()).toBe(true);
+      expect(gameService.activePlayerIndex()).toBe(1);
+
+      vi.advanceTimersByTime(2800);
+      await Promise.resolve();
+
+      expect(gameService.turnTransitionPending()).toBe(false);
+      expect(gameService.activePlayerIndex()).toBe(0);
+      expect(player.inventory.weapons[0]?.id).toBe('sword');
+      expect(rewardTile.tokenId).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('ne contrôle jamais un joueur humain', () => {
     gameService.activePlayerIndex.set(0);
     expect(aiService.resolveMandatoryAction()).toBe('none');
