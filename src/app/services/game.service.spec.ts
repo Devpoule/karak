@@ -491,6 +491,50 @@ describe('GameService récompenses trésor', () => {
     expect(playerService.players[0].treasures).toEqual([]);
     expect(gameService.pendingReward()).not.toBeNull();
   });
+
+  it('refuse toute opération de récompense hors de playing', () => {
+    const equipmentReward = { kind: 'equipment', equipmentId: 'sword' } as const;
+    prepareReward('fallen', [equipmentReward]);
+    gameService.phase.set('setup');
+
+    expect(gameService.collectPendingEquipment()).toBe(false);
+    expect(gameService.replacePendingEquipment(0)).toBe(false);
+    expect(gameService.leavePendingReward()).toBe(false);
+    expect(gameService.pendingReward()?.remainingRewards).toEqual([equipmentReward]);
+  });
+
+  it('laisse les récompenses restantes sur le même jeton après un refus', () => {
+    const rewardTile = {
+      x: 1,
+      y: 0,
+      definitionId: 'room-1',
+      tokenId: 'fallen',
+      tokenFace: 'back',
+    } as PlacedTile;
+    const token = getTokenDefinition('fallen') as MonsterTokenDefinition;
+    const rewards = [{ kind: 'equipment', equipmentId: 'sword' }] as const;
+    gameService.pendingReward.set({
+      player: playerService.players[0],
+      monster: token,
+      rewardTile,
+      sourceTile: { x: 0, y: 0 } as PlacedTile,
+      remainingRewards: rewards,
+    });
+
+    expect(gameService.leavePendingReward()).toBe(true);
+    expect(gameService.pendingReward()).toBeNull();
+    expect(rewardTile.tokenId).toBe('fallen');
+    expect(rewardTile.tokenFace).toBe('back');
+  });
+
+  it('nettoie une récompense en attente lors de la réinitialisation', () => {
+    prepareReward('fallen', [{ kind: 'treasure', tokenId: 'open-chest' }]);
+
+    gameService.initialize();
+
+    expect(gameService.pendingReward()).toBeNull();
+    expect(gameService.hasPendingTileResolution).toBe(false);
+  });
 });
 
 describe('GameService récupération automatique des équipements humains', () => {

@@ -967,6 +967,15 @@ export class GameService {
     this.endTurn();
   }
 
+  /** Retourne la récompense uniquement lorsqu'elle appartient au joueur actif. */
+  private getActivePendingReward(): PendingReward | null {
+    const pending = this.pendingReward();
+    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) {
+      return null;
+    }
+    return pending;
+  }
+
   /** Termine la partie une seule fois et fige le classement des trésors. */
   private finishGame(): void {
     if (this.phase() === 'game-over') return;
@@ -988,8 +997,8 @@ export class GameService {
 
   /** Récupère un équipement sans appliquer les autres récompenses implicitement. */
   collectPendingEquipment(): boolean {
-    const pending = this.pendingReward();
-    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
+    const pending = this.getActivePendingReward();
+    if (!pending) return false;
     const rewardIndex = pending.remainingRewards.findIndex(reward => reward.kind === 'equipment');
     if (rewardIndex < 0) return false;
     const reward = pending.remainingRewards[rewardIndex];
@@ -1008,10 +1017,8 @@ export class GameService {
    * le modèle joueur reçoit le type métier correspondant à son origine.
    */
   collectPendingTreasure(): boolean {
-    const pending = this.pendingReward();
-    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) {
-      return false;
-    }
+    const pending = this.getActivePendingReward();
+    if (!pending) return false;
 
     const rewardIndex = pending.remainingRewards.findIndex(reward => reward.kind === 'treasure');
     if (rewardIndex < 0) return false;
@@ -1034,8 +1041,8 @@ export class GameService {
 
   /** Remplace un équipement plein et dépose l'ancien sur la tuile du combat. */
   replacePendingEquipment(slotIndex: number): boolean {
-    const pending = this.pendingReward();
-    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
+    const pending = this.getActivePendingReward();
+    if (!pending) return false;
     const rewardIndex = pending.remainingRewards.findIndex(reward => reward.kind === 'equipment');
     if (rewardIndex < 0) return false;
     const reward = pending.remainingRewards[rewardIndex];
@@ -1072,8 +1079,8 @@ export class GameService {
    * target === null signifie conserver le détenteur actuel (si présent).
    */
   resolvePendingCurse(target: Player | null): boolean {
-    const pending = this.pendingReward();
-    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
+    const pending = this.getActivePendingReward();
+    if (!pending) return false;
     const rewardIndex = pending.remainingRewards.findIndex(
       reward => reward.kind === 'special' && reward.effect === 'curse',
     );
@@ -1098,8 +1105,8 @@ export class GameService {
    * La malédiction, lorsqu'elle est présente, doit d'abord être résolue.
    */
   leavePendingReward(): boolean {
-    const pending = this.pendingReward();
-    if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
+    const pending = this.getActivePendingReward();
+    if (!pending) return false;
     if (pending.remainingRewards.some(reward => reward.kind === 'special' && reward.effect === 'curse')) {
       return false;
     }
