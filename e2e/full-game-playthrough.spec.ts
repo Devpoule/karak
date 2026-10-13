@@ -9,11 +9,10 @@ async function openPreparedGame(page: import('@playwright/test').Page): Promise<
       return state / 0x1_0000_0000;
     };
   });
-  await page.goto('/game');
-  await page.getByRole('button', { name: 'Jouer' }).click();
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Jouer' }).click();
   await page.getByRole('button', { name: 'Continuer' }).click();
-  await page.waitForTimeout(600);
-  await page.getByRole('button', { name: 'Tirer les héros' }).click({ force: true });
+  await page.getByRole('button', { name: 'Tirer les héros', exact: true }).click({ force: true });
   await expect(page.getByRole('heading', { name: 'Qui commence ?' })).toBeVisible();
 
   for (let attempt = 0; attempt < 40; attempt++) {
@@ -67,7 +66,6 @@ test('partie intégrale déterministe jusqu’au classement du Dragon', async ({
   await expect(page.locator('.combat-overlay')).toBeVisible();
   await page.getByRole('button', { name: 'Lancer les dés' }).click({ force: true });
   await expect(page.locator('.combat-overlay__verdict-title')).toContainText('gagne', { timeout: 15_000 });
-  await page.getByRole('button', { name: 'Continuer' }).click({ force: true });
   await expect(page.getByRole('heading', { name: 'Récompense du combat' })).toBeVisible();
   await page.getByRole('button', { name: 'Récupérer le trésor' }).click();
 
