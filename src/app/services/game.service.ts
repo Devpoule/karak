@@ -65,6 +65,17 @@ export interface PendingTokenChoice {
   sourceTile: PlacedTile;
   tokens: readonly [TokenDefinition, TokenDefinition];
 }
+
+type TileEntryClassification =
+  | { kind: 'empty' }
+  | { kind: 'unknown' }
+  | { kind: 'sneak' }
+  | { kind: 'monster'; token: MonsterTokenDefinition }
+  | { kind: 'monster-reward'; token: MonsterTokenDefinition }
+  | { kind: 'already-resolved' }
+  | { kind: 'closed-chest-without-key' }
+  | { kind: 'treasure'; token: TreasureTokenDefinition };
+
 @Injectable({
   providedIn: 'root',
 })
@@ -632,29 +643,26 @@ export class GameService {
       this.revealNewRoom(destinationTile, player, sourceTile);
       if (this.pendingTokenChoice()) return 'token-choice';
     }
-    if (!destinationTile.tokenId) {
+    const classification = this.classifyTileEntry(player, destinationTile);
+
+    if (classification.kind === 'empty' || classification.kind === 'already-resolved') {
       return this.offerGroundEquipment(player, destinationTile);
     }
-    const token = getTokenDefinition(destinationTile.tokenId);
-    if (!token) {
-      return 'none';
-    }
-    // Aderyn's Sneak lets her cross a live monster tile without combat.
-    // The curse disables hero powers but does not alter ordinary movement.
-    if (token.kind === 'monster'
-      && destinationTile.tokenFace !== 'back'
-      && player.heroId === 'aderyn'
-      && !player.isCursed) {
+    if (classification.kind === 'unknown'
+      || classification.kind === 'sneak'
+      || classification.kind === 'closed-chest-without-key') {
       return 'none';
     }
     // Le verso d'un monstre contient une récompense, pas un adversaire.
-    if (token.kind === 'monster' && destinationTile.tokenFace === 'back') {
-      const remainingRewards = this.remainingRewardsByTile.get(destinationTile) ?? token.rewards ?? [];
+    if (classification.kind === 'monster-reward') {
+      const remainingRewards = this.remainingRewardsByTile.get(destinationTile)
+        ?? classification.token.rewards
+        ?? [];
       if (!remainingRewards.length) return this.offerGroundEquipment(player, destinationTile);
       this.turnService.stopMovements();
       this.pendingReward.set({
         player,
-        monster: token,
+        monster: classification.token,
         rewardTile: destinationTile,
         sourceTile,
         remainingRewards: [...remainingRewards],
@@ -674,30 +682,60 @@ export class GameService {
       }
       return 'reward';
     }
-    // Un coffre déjà retourné ne peut pas être ouvert à nouveau.
-    if (token.kind === 'treasure' && destinationTile.tokenFace === 'back') {
-      return this.offerGroundEquipment(player, destinationTile);
-    }
-    // Un coffre fermé sans clé ne constitue pas une résolution obligatoire.
-    // Le héros peut poursuivre son déplacement et reviendra l'ouvrir plus tard.
-    if (token.kind === 'treasure'
-      && token.id === 'closed-chest'
-      && player.inventory.key === null) {
-      return 'none';
-    }
+
     this.turnService.stopMovements();
-    if (token.kind === 'monster') {
+    if (classification.kind === 'monster') {
       return this.combatService.startCombat(player, sourceTile, destinationTile)
         ? 'combat'
         : 'none';
     }
     this.pendingTreasure.set({
       player,
-      treasure: token,
+      treasure: classification.token,
       treasureTile: destinationTile,
       sourceTile,
     });
     return 'treasure';
+  }
+
+  /** Classifie le contenu d'une tuile sans modifier l'état du jeu. */
+  private classifyTileEntry(
+    player: Player,
+    destinationTile: PlacedTile,
+  ): TileEntryClassification {
+    if (!destinationTile.tokenId) return { kind: 'empty' };
+
+    const token = getTokenDefinition(destinationTile.tokenId);
+    if (!token) return { kind: 'unknown' };
+
+    // Aderyn's Sneak lets her cross a live monster tile without combat.
+    // The curse disables hero powers but does not alter ordinary movement.
+    if (
+      token.kind === 'monster'
+      && destinationTile.tokenFace !== 'back'
+      && player.heroId === 'aderyn'
+      && !player.isCursed
+    ) {
+      return { kind: 'sneak' };
+    }
+
+    if (token.kind === 'monster') {
+      return destinationTile.tokenFace === 'back'
+        ? { kind: 'monster-reward', token }
+        : { kind: 'monster', token };
+    }
+
+    // Un coffre déjà retourné ne peut pas être ouvert à nouveau.
+    if (destinationTile.tokenFace === 'back') {
+      return { kind: 'already-resolved' };
+    }
+
+    // Un coffre fermé sans clé ne constitue pas une résolution obligatoire.
+    if (token.id === 'closed-chest' && player.inventory.key === null) {
+      return { kind: 'closed-chest-without-key' };
+    }
+
+    return { kind: 'treasure', token };
   }
 
   /**
