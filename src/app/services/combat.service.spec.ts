@@ -420,6 +420,7 @@ describe('CombatService séparation du lancer et de la résolution', () => {
     player.heroId = 'xanros';
     player.lives = 1;
     combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, createTile());
+    (combatService.pendingCombat()!.monster as { strength: number }).strength = 2;
     combatService.rollPendingCombat();
 
     expect(combatService.useXanrosSacrifice()).toBe(true);

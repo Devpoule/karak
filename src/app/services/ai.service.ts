@@ -167,7 +167,6 @@ export class AiService {
     if (!player || player.controller !== 'ai' || !combat || combat.player !== player || !roll) {
       return false;
     }
-    if (!this.gameService.canUseXanrosSacrificeForScore(player)) return false;
     if (roll.attackPower > combat.monster.strength) return false;
 
     const available = this.combatService.getAvailableHeroRerolls();
@@ -180,8 +179,8 @@ export class AiService {
     const combat = this.combatService.pendingCombat();
     const roll = this.combatService.pendingCombatRoll();
     if (!player || player.controller !== 'ai' || !combat || combat.player !== player || !roll) return false;
-    if (roll.attackPower > combat.monster.strength) return false;
-    return this.combatService.useXanrosSacrifice();
+    return this.combatService.canUseXanrosSacrifice()
+      && this.combatService.useXanrosSacrifice();
   }
 
   private getEquipmentDefinition(equipmentId: string) {

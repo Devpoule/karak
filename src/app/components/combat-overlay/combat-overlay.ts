@@ -59,6 +59,7 @@ export class CombatOverlay implements OnDestroy {
     signal<CombatResult | null>(null);
   readonly magicBoltFeedback = signal<number[]>([]);
   readonly magicBoltScorePulse = signal(false);
+  readonly xanrosSacrificeDeclined = signal(false);
 
   private trackedCombat: PendingCombat | null = null;
 
@@ -180,19 +181,22 @@ export class CombatOverlay implements OnDestroy {
   }
 
   get canUseXanrosSacrifice(): boolean {
-    const combat = this.combatService.pendingCombat();
-    const roll = this.combatService.pendingCombatRoll();
     return this.isDecisionVisible
-      && combat?.player.heroId === 'xanros'
-      && !combat.player.isCursed
-      && this.gameService.canUseXanrosSacrificeForScore(combat.player)
-      && !!roll
-      && !roll.sacrificeUsed;
+      && !this.xanrosSacrificeDeclined()
+      && this.combatService.canUseXanrosSacrifice();
   }
 
   useXanrosSacrifice(): void {
     if (!this.canUseXanrosSacrifice || !this.combatService.useXanrosSacrifice()) return;
     if (this.remainingMagicBolts === 0) this.resolveCombatAfterRoll();
+  }
+
+  declineXanrosSacrifice(): void {
+    if (!this.canUseXanrosSacrifice) return;
+    this.xanrosSacrificeDeclined.set(true);
+    if (this.remainingMagicBolts === 0 && this.availableHeroRerolls.length === 0) {
+      this.resolveCombatAfterRoll();
+    }
   }
 
   useHeroReroll(kind: 'both' | 'die1' | 'die2'): void {
@@ -354,6 +358,7 @@ export class CombatOverlay implements OnDestroy {
     this.presentedResult.set(null);
     this.magicBoltFeedback.set([]);
     this.magicBoltScorePulse.set(false);
+    this.xanrosSacrificeDeclined.set(false);
 
     this.displayedDice.set({
       die1: this.randomDie(),

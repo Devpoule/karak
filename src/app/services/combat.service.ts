@@ -1,5 +1,5 @@
 
-import { Injectable, isDevMode, Optional, signal } from '@angular/core';
+import { Injectable, Optional, signal } from '@angular/core';
 
 import { getTokenDefinition } from '../data/token-definitions';
 import { Player } from '../models/player';
@@ -173,15 +173,26 @@ export class CombatService {
       canContinueTurn: false,
     };
     this.pendingCombatRoll.set(roll);
-    this.logCombatDiagnostic('roll', roll, combat.player.inventory.weapons);
     return roll;
+  }
+
+  /** Indique si le sacrifice de Xanros améliore le résultat en victoire ou égalité. */
+  canUseXanrosSacrifice(): boolean {
+    const combat = this.pendingCombat();
+    const roll = this.pendingCombatRoll();
+    return !!combat && !!roll
+      && !roll.sacrificeUsed
+      && combat.player.heroId === 'xanros'
+      && !combat.player.isCursed
+      && roll.attackPower <= roll.monsterStrength
+      && roll.attackPower + 1 >= roll.monsterStrength;
   }
 
   /** Sacrifie une vie de Xanros pour ajouter +1 après le lancer. */
   useXanrosSacrifice(): boolean {
     const combat = this.pendingCombat();
     const roll = this.pendingCombatRoll();
-    if (!combat || !roll || roll.sacrificeUsed || combat.player.heroId !== 'xanros' || combat.player.isCursed) return false;
+    if (!this.canUseXanrosSacrifice() || !combat || !roll) return false;
     this.playerService.loseLife(combat.player);
     this.pendingCombatRoll.set({
       ...roll,
@@ -304,8 +315,6 @@ export class CombatService {
       outcome,
     };
 
-    this.logCombatDiagnostic('resolution', result, combat.player.inventory.weapons);
-
     this.consumeUsedMagicBolts(combat.player, roll.magicBoltsUsed);
 
     this.applyOutcome(combat, outcome);
@@ -368,38 +377,6 @@ export class CombatService {
    * Cette méthode observe les snapshots du combat et ne participe jamais
    * au calcul ni à la mutation de son résultat.
    */
-  private logCombatDiagnostic(
-    phase: 'roll' | 'resolution',
-    snapshot: CombatRoll | CombatResult,
-    weapons: Player['inventory']['weapons'],
-  ): void {
-    if (!isDevMode()) return;
-
-    const magicBonus = snapshot.magicBoltsUsed;
-    const weaponBonus = snapshot.equipmentBonus - magicBonus;
-    const calculatedAttack = snapshot.diceTotal + weaponBonus + snapshot.heroBonus + magicBonus;
-    const payload = {
-      phase,
-      heroId: snapshot.player.heroId ?? null,
-      weapons: weapons.map(weapon => weapon
-        ? { id: weapon.id, attackBonus: weapon.attackBonus ?? 0 }
-        : null),
-      diceTotal: snapshot.diceTotal,
-      equipmentBonus: weaponBonus,
-      heroBonus: snapshot.heroBonus,
-      magicBonus,
-      attackPower: snapshot.attackPower,
-      monsterStrength: snapshot.monsterStrength,
-      verdict: 'outcome' in snapshot ? snapshot.outcome : 'pending',
-      formulaMatches: calculatedAttack === snapshot.attackPower,
-    };
-
-    console.debug('[Karak combat diagnostic]', payload);
-    if (!payload.formulaMatches) {
-      console.warn('[Karak combat diagnostic] incohérence de formule', payload);
-    }
-  }
-
   private countMagicBolts(player: Player): number {
     return player.inventory.spells.filter(spell => spell?.effect === 'magic-attack').length;
   }
