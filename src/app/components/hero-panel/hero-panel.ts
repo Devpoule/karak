@@ -4,6 +4,7 @@ import { getHeroDefinition } from '../../data/hero-definitions';
 import { HeroDefinition } from '../../models/hero';
 import { Player } from '../../models/player';
 import { PlayerService } from '../../services/player.service';
+import { GameService } from '../../services/game.service';
 
 
 /**
@@ -28,6 +29,7 @@ import { PlayerService } from '../../services/player.service';
 })
 export class HeroPanel {
   private readonly playerService = inject(PlayerService);
+  readonly gameService = inject(GameService);
 
   /** Côté d'affichage, utilisé pour placer le médaillon vers le centre du plateau. */
   @Input() side: 'left' | 'right' = 'left';
@@ -69,7 +71,15 @@ export class HeroPanel {
     );
   }
 
+  get isHealingPortalTarget(): boolean {
+    return this.gameService.healingPortalSelection()?.target === this.player;
+  }
+
   openBiography(): void {
+    if (this.gameService.healingPortalSelection() && this.player) {
+      this.gameService.selectHealingPortalTarget(this.player);
+      return;
+    }
     this.portraitClicked.emit();
   }
 }

@@ -728,3 +728,52 @@
     saturate(0.85)
     brightness(0.98);
 }
+.board__healing-portal-controls {
+  z-index: 55;
+}
+
+.board__healing-portal-count {
+  position: absolute;
+  top: -2.15rem;
+  left: 50%;
+  padding: 0.15rem 0.35rem;
+  transform: translateX(-50%);
+  border-radius: 0.25rem;
+  background: rgba(28, 24, 20, 0.72);
+  color: #eee1c5;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.board__healing-portal-confirm {
+  top: 50%;
+  left: 50%;
+  width: 42px;
+  height: 42px;
+  transform: translate(-50%, -50%);
+  border-color: rgba(190, 132, 232, 0.9);
+  background: rgba(54, 27, 78, 0.95);
+  box-shadow: 0 0 8px rgba(174, 103, 225, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+.board__healing-portal-confirm:hover:not(:disabled) {
+  transform: translate(-50%, -50%) scale(1.12);
+  filter: brightness(1.2);
+}
+.board__healing-portal-confirm img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.board__healing-portal-confirm:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.board__tile--healing-selected::after {
+  position: absolute; inset: 0.18rem; border: 3px solid #f7d56c;
+  border-radius: 50%; box-shadow: 0 0 1rem #f7d56c; content: ''; pointer-events: none;
+}

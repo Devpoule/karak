@@ -3,6 +3,7 @@
   [class.hero-panel--left]="side === 'left'"
   [class.hero-panel--right]="side === 'right'"
   [class.hero-panel--unconscious]="isUnconscious"
+  [class.hero-panel--healing-target]="isHealingPortalTarget"
   [attr.aria-label]="isUnconscious ? 'Héros inconscient : récupération obligatoire' : null"
 >
   <!--
@@ -24,7 +25,7 @@
     <button
       class="hero-panel__hero"
       type="button"
-      [attr.aria-label]="'Afficher les informations de ' + hero.name"
+      [attr.aria-label]="gameService.healingPortalSelection() ? 'Sélectionner ' + hero.name + ' comme cible du portail' : 'Afficher les informations de ' + hero.name"
       (click)="openBiography()"
     >
       <img
