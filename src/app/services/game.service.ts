@@ -66,6 +66,12 @@ export interface PendingTokenChoice {
   tokens: readonly [TokenDefinition, TokenDefinition];
 }
 
+export interface HealingPortalSelection {
+  readonly user: Player;
+  readonly target: Player | null;
+  readonly destination: PlacedTile | null;
+}
+
 type TileEntryClassification =
   | { kind: 'empty' }
   | { kind: 'unknown' }
@@ -148,6 +154,8 @@ export class GameService {
   /** Équipement présent sur la tuile et proposé au joueur actif. */
   readonly pendingGroundEquipment = signal<PendingGroundEquipment | null>(null);
   readonly pendingTokenChoice = signal<PendingTokenChoice | null>(null);
+  /** Sélection temporaire partagée entre l'inventaire et le plateau. */
+  readonly healingPortalSelection = signal<HealingPortalSelection | null>(null);
 
   /** Objets déposés indépendamment des jetons monstres/trésors. */
   private groundEquipmentByTile = new Map<string, Equipment[]>();
@@ -298,6 +306,7 @@ export class GameService {
     this.pendingReward.set(null);
     this.pendingGroundEquipment.set(null);
     this.pendingTokenChoice.set(null);
+    this.healingPortalSelection.set(null);
     this.groundEquipmentByTile = new Map<string, Equipment[]>();
     this.groundEquipmentRevision.update(value => value + 1);
     this.remainingRewardsByTile = new WeakMap<PlacedTile, readonly MonsterReward[]>();
@@ -839,6 +848,95 @@ export class GameService {
     return this.dungeonService.tiles.filter(tile =>
       this.dungeonService.getTileDefinition(tile)?.feature === 'healing-fountain',
     );
+  }
+
+  /** Valide les invariants communs à un déplacement normal de héros. */
+  canPerformNormalMovement(player: Player | null): boolean {
+    return this.phase() === 'playing'
+      && !!player
+      && player === this.activePlayer
+      && player.lives > 0
+      && player.recoveryState === 'none'
+      && !this.turnTransitionPending()
+      && !this.hasPendingTileResolution
+      && !this.explorationService.pendingTile
+      && this.healingPortalSelection() === null
+      && this.turnService.canMove;
+  }
+
+  /**
+   * Valide un déplacement normal vers une destination précise.
+   * Une même tuile n'est jamais une destination de déplacement.
+   */
+  canPerformNormalMovementTo(player: Player | null, x: number, y: number): boolean {
+    if (!this.canPerformNormalMovement(player) || !player?.position) return false;
+    return player.position.x !== x || player.position.y !== y;
+  }
+
+  /**
+   * Indique si le sacrifice de Xanros peut encore changer l'issue du score.
+   *
+   * Le score est calculé à partir des trésors réellement possédés. Un héros
+   * déjà strictement en tête n'a aucun intérêt à perdre un point de vie ; de
+   * même, le sacrifice n'est proposé que si son point supplémentaire atteint
+   * au moins le meilleur score adverse.
+   */
+  canUseXanrosSacrificeForScore(player: Player): boolean {
+    if (!this.playerService.players.includes(player) || player.heroId !== 'xanros') return false;
+    const playerScore = calculateTreasurePoints(player.treasures);
+    const bestOpponentScore = Math.max(
+      ...this.playerService.players
+        .filter(candidate => candidate !== player)
+        .map(candidate => calculateTreasurePoints(candidate.treasures)),
+    );
+    return Number.isFinite(bestOpponentScore)
+      && playerScore <= bestOpponentScore
+      && playerScore + 1 >= bestOpponentScore;
+  }
+
+  get canUseHealingPortal(): boolean {
+    const player = this.activePlayer;
+    return this.phase() === 'playing'
+      && !!player
+      && player.controller === 'human'
+      && player.recoveryState === 'none'
+      && !this.turnTransitionPending()
+      && !this.hasPendingTileResolution
+      && !this.explorationService.pendingTile
+      && player.inventory.spells.some(spell => spell?.effect === 'healing-portal')
+      && this.getHealingFountains().length > 0;
+  }
+
+  openHealingPortalSelection(): boolean {
+    if (!this.canUseHealingPortal || !this.activePlayer) return false;
+    const fountains = this.getHealingFountains();
+    this.healingPortalSelection.set({ user: this.activePlayer, target: this.activePlayer, destination: fountains[0] });
+    return true;
+  }
+
+  closeHealingPortalSelection(): void {
+    this.healingPortalSelection.set(null);
+  }
+
+  selectHealingPortalTarget(target: Player): void {
+    const selection = this.healingPortalSelection();
+    if (!selection || !this.playerService.players.includes(target)) return;
+    this.healingPortalSelection.set({ ...selection, target });
+  }
+
+  selectHealingPortalDestination(destination: PlacedTile): void {
+    const selection = this.healingPortalSelection();
+    if (!selection || !this.getHealingFountains().includes(destination)) return;
+    this.healingPortalSelection.set({ ...selection, destination });
+  }
+
+  moveHealingPortalSelection(step: 1 | -1): void {
+    const selection = this.healingPortalSelection();
+    const fountains = this.getHealingFountains();
+    if (!selection || fountains.length < 2) return;
+    const currentIndex = Math.max(0, fountains.indexOf(selection.destination as PlacedTile));
+    const nextIndex = (currentIndex + step + fountains.length) % fountains.length;
+    this.selectHealingPortalDestination(fountains[nextIndex]);
   }
 
   /**

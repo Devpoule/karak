@@ -143,27 +143,13 @@
 .inventory-panel__drop-confirmation button { margin: 0 0.2rem; cursor: pointer; }
 
 .inventory-panel__portal {
-  position: fixed;
-  top: clamp(5rem, 12vh, 8rem);
-  left: 50%;
-  z-index: 90;
-  width: fit-content;
-  max-width: min(30rem, calc(100vw - 2rem));
-  padding: 0.7rem 0.9rem;
-  transform: translateX(-50%);
-  border: 1px solid #f2cf70;
-  border-radius: 0.5rem;
-  background: rgba(67, 45, 18, 0.97);
-  color: #fff3c9;
-  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.5), 0 0 1rem rgba(242, 207, 112, 0.2);
+  margin-top: 0.35rem;
   text-align: center;
-  animation: healing-portal-toast-in 180ms ease-out both;
-  pointer-events: auto;
 }
 
-.inventory-panel__portal p { margin: 0 0 0.35rem; }
-.inventory-panel__portal > button { margin: 0.15rem; cursor: pointer; }
 .inventory-panel__portal button {
+  margin: 0.15rem;
+  padding: 0.35rem 0.55rem;
   color: #fff8df;
   background: rgba(25, 20, 15, 0.55);
   border: 1px solid rgba(242, 207, 112, 0.75);
@@ -172,24 +158,3 @@
 }
 .inventory-panel__portal button:hover,
 .inventory-panel__portal button:focus-visible { background: rgba(139, 89, 26, 0.85); }
-.inventory-panel__portal-options { display: grid; gap: 0.35rem; }
-.inventory-panel__portal-options > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.15rem; }
-.inventory-panel__portal-options span { width: 100%; font-size: 0.85rem; }
-
-@keyframes healing-portal-toast-in {
-  from { opacity: 0; transform: translate(-50%, -0.5rem); }
-  to { opacity: 1; transform: translate(-50%, 0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .inventory-panel__portal { animation: none; }
-}
-
-@media (max-width: 600px) {
-  .inventory-panel__portal {
-    top: 4.75rem;
-    max-width: calc(100vw - 1rem);
-    padding: 0.6rem 0.7rem;
-    font-size: 0.9rem;
-  }
-}

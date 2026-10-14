@@ -185,6 +185,7 @@ export class CombatOverlay implements OnDestroy {
     return this.isDecisionVisible
       && combat?.player.heroId === 'xanros'
       && !combat.player.isCursed
+      && this.gameService.canUseXanrosSacrificeForScore(combat.player)
       && !!roll
       && !roll.sacrificeUsed;
   }

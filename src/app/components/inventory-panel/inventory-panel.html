@@ -34,9 +34,9 @@
         <div class="inventory-panel__slot">
           @if (spell) {
             <button type="button" class="inventory-panel__item-button" [disabled]="!canDropEquipment"
-              [attr.aria-label]="'Déposer volontairement ' + spell.name"
-              [attr.title]="'Déposer volontairement ' + spell.name"
-              (click)="selectDrop('spell', slotIndex, spell)">
+              [attr.aria-label]="spell.effect === 'healing-portal' && canUseHealingPortal ? 'Utiliser ' + spell.name : 'Déposer volontairement ' + spell.name"
+              [attr.title]="spell.effect === 'healing-portal' && canUseHealingPortal ? 'Utiliser ' + spell.name : 'Déposer volontairement ' + spell.name"
+              (click)="handleSpellClick(slotIndex, spell)">
               <img class="inventory-panel__item" [src]="spell.image" [alt]="spell.name" draggable="false" />
             </button>
           }
@@ -64,34 +64,8 @@
   @if (canUseHealingPortal) {
     <div class="inventory-panel__portal" aria-label="Utiliser le Portail de guérison">
       @if (!isHealingPortalSelectionOpen) {
-        <button type="button" (click)="openHealingPortalSelection()">
-          Utiliser Portail de guérison
-        </button>
-      } @else {
-        <p>Choisir le héros et la fontaine</p>
-        <div class="inventory-panel__portal-options">
-          <div>
-            <span>Héros cible</span>
-            @for (target of healingTargets; track $index) {
-              <button type="button" (click)="selectHealingPortalTarget(target)">
-                {{ getPlayerDisplayName(target, $index) }}
-              </button>
-            }
-          </div>
-          <div>
-            <span>Fontaine</span>
-            @for (fountain of healingFountains; track fountain.x + ':' + fountain.y) {
-              <button type="button" (click)="selectHealingPortalDestination(fountain)">
-                ({{ fountain.x }}, {{ fountain.y }})
-              </button>
-            }
-          </div>
-        </div>
-        @if (healingPortalSelection; as selection) {
-          <p>Déplacer {{ selection.target ? getPlayerDisplayName(selection.target) : 'le héros sélectionné' }} vers la fontaine ({{ selection.destination?.x }}, {{ selection.destination?.y }}) ?</p>
-        }
-        <button type="button" (click)="confirmHealingPortal()" [disabled]="!healingPortalSelection">Confirmer</button>
-        <button type="button" (click)="cancelHealingPortal()">Annuler</button>
+        <button type="button" (click)="openHealingPortalSelection()">Utiliser</button>
+        <button type="button" (click)="dropHealingPortal()">Déposer</button>
       }
     </div>
   }

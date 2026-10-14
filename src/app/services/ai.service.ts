@@ -167,6 +167,7 @@ export class AiService {
     if (!player || player.controller !== 'ai' || !combat || combat.player !== player || !roll) {
       return false;
     }
+    if (!this.gameService.canUseXanrosSacrificeForScore(player)) return false;
     if (roll.attackPower > combat.monster.strength) return false;
 
     const available = this.combatService.getAvailableHeroRerolls();
@@ -260,9 +261,19 @@ export class AiService {
     if (!player || player.controller !== 'ai') {
       return false;
     }
+    if (!this.gameService.canPerformNormalMovement(player) && player.recoveryState !== 'resting') {
+      return false;
+    }
     if (player.recoveryState === 'resting') {
       this.gameService.endTurn();
       return false;
+    }
+
+    // Choix déterministe : l'IA soigne son propre héros dès que le portail
+    // est utilisable, en privilégiant la première fontaine découverte.
+    if (player.inventory.spells.some(spell => spell?.effect === 'healing-portal')) {
+      const fountain = this.gameService.getHealingFountains()[0];
+      if (fountain && player.lives < 5 && this.gameService.useHealingPortal(player, fountain)) return true;
     }
 
     if (this.gameService.canUseXanrosSubstitution) {
@@ -461,6 +472,10 @@ export class AiService {
       );
 
     if (!destinationTile) {
+      return false;
+    }
+
+    if (!this.gameService.canPerformNormalMovementTo(player, destination.x, destination.y)) {
       return false;
     }
 

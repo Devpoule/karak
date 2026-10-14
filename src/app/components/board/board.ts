@@ -1,4 +1,4 @@
-import { Component, effect } from '@angular/core';
+import { Component, effect, HostListener } from '@angular/core';
 import { getPlayerUiConfig } from '../../constants/player-ui.constants';
 import { getHeroDefinition } from '../../data/hero-definitions';
 import { getTokenDefinition } from '../../data/token-definitions';
@@ -94,6 +94,69 @@ export class Board {
         this.centerOnActivePlayer();
       });
     });
+
+    effect(() => {
+      const destination = this.gameService.healingPortalSelection()?.destination;
+      queueMicrotask(() => {
+        if (destination) this.centerOnPosition(destination.x, destination.y);
+        else this.centerOnActivePlayer();
+      });
+    });
+  }
+
+  get healingPortalSelection() {
+    return this.gameService.healingPortalSelection();
+  }
+
+  get healingFountains(): readonly PlacedTile[] { return this.gameService.getHealingFountains(); }
+
+  get healingPortalImage(): string {
+    return getEquipmentDefinition('heart')?.image ?? '';
+  }
+
+  healingPortalControlLeft(tile: PlacedTile | null | undefined): number {
+    return this.mapCenterInPixels + (tile?.x ?? 0) * this.tileSize;
+  }
+
+  healingPortalControlTop(tile: PlacedTile | null | undefined): number {
+    return this.mapCenterInPixels + (tile?.y ?? 0) * this.tileSize - this.tileSize * 0.75;
+  }
+
+  confirmHealingPortal(): void {
+    const selection = this.healingPortalSelection;
+    if (selection?.target && selection.destination && this.gameService.useHealingPortal(selection.target, selection.destination)) {
+      this.gameService.closeHealingPortalSelection();
+    }
+  }
+
+  selectHealingFountain(tile: PlacedTile): void {
+    if (!this.healingPortalSelection) return;
+    this.gameService.selectHealingPortalDestination(tile);
+    this.centerOnPosition(tile.x, tile.y);
+  }
+
+  moveHealingPortalSelection(step: 1 | -1): void {
+    if (!this.healingPortalSelection) return;
+    this.gameService.moveHealingPortalSelection(step);
+    const destination = this.gameService.healingPortalSelection()?.destination;
+    if (destination) this.centerOnPosition(destination.x, destination.y);
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleHealingPortalKeyboard(event: KeyboardEvent): void {
+    if (!this.healingPortalSelection) return;
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      this.moveHealingPortalSelection(1);
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      this.moveHealingPortalSelection(-1);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      this.gameService.closeHealingPortalSelection();
+    }
+    const destination = this.gameService.healingPortalSelection()?.destination;
+    if (destination) this.centerOnPosition(destination.x, destination.y);
   }
 
   // ==========================================================
@@ -154,9 +217,7 @@ export class Board {
    * - si aucun combat obligatoire n'attend sa résolution.
    */
   get movementControlsEnabled(): boolean {
-    return this.turnService.canMove
-      && this.gameService.activePlayer?.recoveryState !== 'resting'
-      && !this.gameService.hasPendingTileResolution;
+    return this.gameService.canPerformNormalMovement(this.gameService.activePlayer);
   }
 
   // ==========================================================
@@ -555,7 +616,7 @@ export class Board {
   private moveActivePlayerTo(x: number, y: number, direction: Direction): boolean {
     const player = this.gameService.activePlayer;
 
-    if (!player || !this.turnService.canMove) {
+    if (!player || !this.gameService.canPerformNormalMovementTo(player, x, y)) {
       return false;
     }
 

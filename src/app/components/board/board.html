@@ -67,8 +67,10 @@
     @for (tile of tiles; track $index) {
       <div
         class="board__tile"
+        [class.board__tile--healing-selected]="healingPortalSelection?.destination === tile"
         [style.left.px]="mapCenterInPixels + tile.x * tileSize - tileSize / 2"
         [style.top.px]="mapCenterInPixels + tile.y * tileSize - tileSize / 2"
+        (click)="selectHealingFountain(tile)"
       >
         <!-- Image de la tuile -->
         <img
@@ -297,6 +299,25 @@
           </div>
         }
       }
+    }
+    @if (healingPortalSelection; as selection) {
+      <div
+        class="board__movement-controls board__healing-portal-controls"
+        [style.left.px]="healingPortalControlLeft(selection.destination)"
+        [style.top.px]="healingPortalControlTop(selection.destination)"
+        (pointerdown)="$event.stopPropagation()"
+      >
+        <span class="board__healing-portal-count" aria-live="polite">
+          {{ healingFountains.indexOf(selection.destination!) + 1 }} / {{ healingFountains.length }}
+        </span>
+        @if (healingFountains.length > 1) {
+          <button type="button" class="board__movement-control board__movement-control--west board__healing-portal-previous" (click)="moveHealingPortalSelection(-1)" aria-label="Fontaine précédente" title="Fontaine précédente">◀</button>
+          <button type="button" class="board__movement-control board__movement-control--east board__healing-portal-next" (click)="moveHealingPortalSelection(1)" aria-label="Fontaine suivante" title="Fontaine suivante">▶</button>
+        }
+        <button type="button" class="board__movement-control board__healing-portal-confirm" [disabled]="!selection.target || !selection.destination" (click)="confirmHealingPortal()" aria-label="Confirmer la téléportation" title="Utiliser le Portail de guérison">
+          <img [src]="healingPortalImage" alt="" draggable="false" />
+        </button>
+      </div>
     }
   </div>
   @if (gameService.pendingTokenChoice(); as choice) {

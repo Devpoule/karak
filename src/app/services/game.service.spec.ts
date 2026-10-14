@@ -106,6 +106,109 @@ describe('GameService Portail de guérison', () => {
   });
 });
 
+describe('GameService décision du sacrifice de Xanros', () => {
+  let gameService: GameService;
+  let playerService: PlayerService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
+    gameService = TestBed.inject(GameService);
+    playerService = TestBed.inject(PlayerService);
+    playerService.initialize(2);
+  });
+
+  it('refuse le sacrifice lorsque Xanros est déjà strictement en tête', () => {
+    const xanros = playerService.players[0];
+    const opponent = playerService.players[1];
+    xanros.heroId = 'xanros';
+    playerService.addTreasure(xanros, 'monster-treasure');
+    playerService.addTreasure(xanros, 'monster-treasure');
+    playerService.addTreasure(opponent, 'opened-chest');
+
+    expect(gameService.canUseXanrosSacrificeForScore(xanros)).toBe(false);
+  });
+
+  it('refuse le sacrifice lorsque le point supplémentaire resterait insuffisant', () => {
+    const xanros = playerService.players[0];
+    const opponent = playerService.players[1];
+    xanros.heroId = 'xanros';
+    playerService.addTreasure(xanros, 'opened-chest');
+    playerService.addTreasure(opponent, 'monster-treasure');
+    playerService.addTreasure(opponent, 'monster-treasure');
+    playerService.addTreasure(opponent, 'opened-chest');
+
+    expect(gameService.canUseXanrosSacrificeForScore(xanros)).toBe(false);
+  });
+
+  it('autorise le sacrifice lorsqu’il peut atteindre le meilleur score adverse', () => {
+    const xanros = playerService.players[0];
+    const opponent = playerService.players[1];
+    xanros.heroId = 'xanros';
+    playerService.addTreasure(xanros, 'monster-treasure');
+    playerService.addTreasure(opponent, 'monster-treasure');
+    playerService.addTreasure(opponent, 'monster-treasure');
+
+    expect(gameService.canUseXanrosSacrificeForScore(xanros)).toBe(true);
+  });
+});
+
+describe('GameService invariants de déplacement', () => {
+  let gameService: GameService;
+  let playerService: PlayerService;
+  let turnService: TurnService;
+  let dungeonService: DungeonService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
+    gameService = TestBed.inject(GameService);
+    playerService = TestBed.inject(PlayerService);
+    turnService = TestBed.inject(TurnService);
+    dungeonService = TestBed.inject(DungeonService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    turnService.resetMovements();
+  });
+
+  it('autorise le déplacement normal du joueur actif vivant', () => {
+    expect(gameService.canPerformNormalMovement(playerService.players[0])).toBe(true);
+  });
+
+  it('refuse une destination identique sans modifier les invariants de déplacement', () => {
+    const active = playerService.players[0];
+    active.position = { x: 0, y: 0 };
+    const movementsBefore = turnService.movementsMadeThisTurn();
+
+    expect(gameService.canPerformNormalMovementTo(active, 0, 0)).toBe(false);
+    expect(active.position).toEqual({ x: 0, y: 0 });
+    expect(turnService.movementsMadeThisTurn()).toBe(movementsBefore);
+    expect(gameService.activePlayer).toBe(active);
+  });
+
+  it('refuse un joueur inactif ou sans vie', () => {
+    const active = playerService.players[0];
+    const inactive = playerService.players[1];
+    expect(gameService.canPerformNormalMovement(inactive)).toBe(false);
+    active.lives = 0;
+    active.recoveryState = 'pending';
+    expect(gameService.canPerformNormalMovement(active)).toBe(false);
+  });
+
+  it('bloque les déplacements normaux pendant la sélection du portail', () => {
+    const active = playerService.players[0];
+    active.heroId = 'xanros';
+    playerService.addEquipment(active, getEquipmentDefinition('heart')!);
+    dungeonService.tiles.push({ definitionId: 'healing-corner', x: 2, y: 0, rotation: 0 });
+
+    expect(gameService.openHealingPortalSelection()).toBe(true);
+    expect(gameService.healingPortalSelection()?.target).toBe(active);
+    expect(gameService.canPerformNormalMovement(active)).toBe(false);
+    gameService.closeHealingPortalSelection();
+    expect(gameService.canPerformNormalMovement(active)).toBe(true);
+  });
+});
+
 describe('GameService substitution de Xanros', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
