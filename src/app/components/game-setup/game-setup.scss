@@ -553,17 +553,20 @@
   width: calc(100% - 3rem);
 
   min-width: 0;
-  min-height: 0;
+  // Toutes les étapes partagent une ligne d'action commune.
+  // Cette hauteur minimale évite que les écrans courts (joueurs/héros)
+  // remontent leur bouton par rapport aux étapes avec cartes.
+  min-height: 530px;
 
   margin: 0.85rem auto;
 
   grid-template-rows:
     auto
-    auto
+    minmax(0, 1fr)
     32px
     48px;
 
-  align-content: center;
+  align-content: stretch;
 
   row-gap: 0.7rem;
 
@@ -593,11 +596,11 @@
 .game-setup__stage--player-cards {
   grid-template-rows:
     auto
-    auto
+    minmax(0, 1fr)
     32px
     48px;
 
-  align-content: center;
+  align-content: stretch;
 }
 
 .game-setup__stage-header {
@@ -1871,6 +1874,8 @@
     row-gap: 0.45rem;
 
     padding: 0.6rem;
+
+    min-height: 0;
   }
 
   .game-setup__stage-header {

@@ -9,6 +9,8 @@
    ========================================================== */
 
 .home {
+  position: relative;
+
   min-height: 100vh;
   box-sizing: border-box;
 
@@ -16,26 +18,11 @@
   align-items: center;
   justify-content: center;
 
-  padding: 3rem clamp(2rem, 6vw, 7rem);
+  padding: 3rem 2rem;
 
-  color: #352e2a;
+  color: #fff8e8;
 
-  /*
-   * Palette volontairement claire afin de distinguer l'accueil
-   * de l'atmosphère sombre du donjon pendant une partie.
-   */
-  background:
-    radial-gradient(
-      circle at 70% 40%,
-      rgba(166, 145, 178, 0.12),
-      transparent 34%
-    ),
-    linear-gradient(
-      135deg,
-      #f7f3eb 0%,
-      #eee7dc 55%,
-      #e4dace 100%
-    );
+  background: url('/assets/home-page.png') center / cover no-repeat;
 }
 
 
@@ -44,49 +31,65 @@
    ========================================================== */
 
 .home__hero {
-  width: min(1400px, 100%);
+  width: min(1120px, 100%);
+  min-height: min(720px, calc(100vh - 6rem));
 
-  display: grid;
-  grid-template-columns:
-    minmax(300px, 0.8fr)
-    minmax(500px, 1.5fr);
-
-  align-items: center;
-
-  gap: clamp(2rem, 5vw, 6rem);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
 }
 
 .home__content {
-  max-width: 520px;
+  width: min(620px, 100%);
+
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  align-items: center;
+  justify-items: center;
+
+  padding: 1rem 1.5rem;
+
+  text-align: center;
+
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 
   h1 {
-    margin: 0 0 1.25rem;
+    margin: 0 0 0.55rem;
 
-    font-size: clamp(2rem, 3vw, 3.4rem);
+    font-size: clamp(1.7rem, 2.5vw, 2.8rem);
+    font-weight: 700;
     line-height: 1.05;
 
-    color: #352b28;
+    color: #80501d;
+
+    text-shadow:
+      0 1px 0 rgba(255, 248, 224, 0.9),
+      0 2px 3px rgba(56, 38, 20, 0.58);
   }
 
   p {
-    margin: 0 0 2rem;
+    margin: 0;
 
-    max-width: 44ch;
+    max-width: 38ch;
 
-    font-size: 1.1rem;
-    line-height: 1.65;
+    color: #352b23;
+    font-size: clamp(0.95rem, 1.2vw, 1.05rem);
+    line-height: 1.35;
+    font-weight: 600;
 
-    color: #62554c;
+    text-shadow:
+      0 1px 0 rgba(255, 250, 235, 0.9),
+      0 1px 3px rgba(255, 250, 235, 0.75);
   }
 }
 
 .home__logo {
   display: block;
 
-  width: clamp(220px, 22vw, 340px);
+  width: clamp(240px, 24vw, 390px);
   max-width: 100%;
 
-  margin-bottom: 2rem;
+  margin: 0 auto 0.7rem;
 
   object-fit: contain;
 
@@ -99,94 +102,182 @@
    ========================================================== */
 
 .home__actions {
+  align-self: end;
+
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 1.25rem;
+
+  width: 100%;
+  padding-bottom: 0.2rem;
 }
 
 .home__play {
+  position: relative;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  min-width: 150px;
-  padding: 0.85rem 1.8rem;
+  min-width: 220px;
+  min-height: 68px;
+  padding: 1rem 2.8rem;
 
-  color: #fff8e8;
+  overflow: hidden;
+
+  color: #f7ead0;
+  font-size: 1.15rem;
   font-weight: 700;
+  letter-spacing: 0.1em;
   text-decoration: none;
+  text-transform: uppercase;
 
-  background:
-    linear-gradient(
-      180deg,
-      #a74638 0%,
-      #7e2e29 100%
-    );
+  background: linear-gradient(180deg, #8f3329 0%, #5b1c17 100%);
 
-  border: 1px solid #68251f;
+  border: 1px solid rgba(240, 207, 138, 0.82);
   border-radius: 4px;
 
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 3px 8px rgba(64, 38, 29, 0.22);
+    0 8px 22px rgba(0, 0, 0, 0.4),
+    0 0 12px rgba(224, 177, 93, 0.22);
+
+  animation: home-play-glow 2.8s ease-in-out infinite;
 
   transition:
     transform 150ms ease,
-    box-shadow 150ms ease;
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+
+  &::before {
+    content: '';
+
+    position: absolute;
+    top: -40%;
+    bottom: -40%;
+    left: -45%;
+
+    width: 24%;
+
+    transform: rotate(18deg);
+
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 235, 181, 0.08),
+      rgba(255, 235, 181, 0.68),
+      rgba(255, 235, 181, 0.08),
+      transparent
+    );
+
+    filter: blur(1px);
+    pointer-events: none;
+
+    animation: home-play-shimmer 3.6s ease-in-out infinite;
+  }
 
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px) scale(1.035);
+
+    border-color: #ffde97;
 
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.22),
-      0 5px 12px rgba(64, 38, 29, 0.28);
+      0 12px 30px rgba(0, 0, 0, 0.48),
+      0 0 18px rgba(255, 224, 157, 0.58);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #ffde97;
+    outline-offset: 4px;
   }
 }
 
-.home__rules {
-  padding: 0.75rem 0.25rem;
+@keyframes home-play-glow {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 8px 22px rgba(0, 0, 0, 0.4),
+      0 0 12px rgba(224, 177, 93, 0.22);
+  }
 
-  color: #5b4038;
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.28),
+      0 10px 26px rgba(0, 0, 0, 0.44),
+      0 0 24px rgba(255, 224, 157, 0.48);
+  }
+}
+
+@keyframes home-play-shimmer {
+  0%,
+  55% {
+    left: -45%;
+    opacity: 0;
+  }
+
+  68% {
+    opacity: 1;
+  }
+
+  82%,
+  100% {
+    left: 125%;
+    opacity: 0;
+  }
+}
+
+.home__lore {
+  align-self: end;
+
+  margin-top: 0.45rem;
+
+  color: #493225;
+  font-size: 0.95rem;
   font-weight: 600;
   text-decoration: none;
 
-  border-bottom: 2px solid transparent;
+  border-bottom: 1px solid transparent;
 
   transition:
     color 150ms ease,
     border-color 150ms ease;
 
   &:hover {
-    color: #7e2e29;
-    border-color: #7e2e29;
+    color: #7c4e1c;
+    border-color: #7c4e1c;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #6f461d;
+    outline-offset: 4px;
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .home__play,
+  .home__lore {
+    transition: none;
+  }
 
-/* ==========================================================
-   ILLUSTRATION
-   ========================================================== */
+  .home__play:hover {
+    transform: none;
+  }
 
-.home__illustration {
-  min-width: 0;
+  .home__play {
+    animation: none;
+  }
 
-  img {
-    display: block;
-
-    width: 100%;
-    max-height: 620px;
-
-    object-fit: contain;
-
-    border-radius: 6px;
-
-    box-shadow:
-      0 16px 35px rgba(46, 34, 42, 0.2);
-
-    user-select: none;
+  .home__play::before {
+    animation: none;
   }
 }
-
 
 /* ==========================================================
    AFFICHAGE ÉTROIT
@@ -197,23 +288,9 @@
     padding: 2rem 1.25rem;
   }
 
-  /*
-   * Le contenu passe sur une seule colonne et l'illustration
-   * est remontée avant le texte.
-   */
-  .home__hero {
-    grid-template-columns: 1fr;
-  }
-
   .home__content {
-    max-width: 650px;
-  }
-
-  .home__illustration {
-    order: -1;
-
-    img {
-      max-height: 420px;
-    }
+    width: min(620px, 100%);
+    min-height: min(720px, calc(100vh - 4rem));
+    padding-inline: 0;
   }
 }
