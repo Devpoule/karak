@@ -10,6 +10,7 @@ import { PlayerService } from './player.service';
 import { TurnService } from './turn.service';
 import { DungeonService } from './dungeon.service';
 import { TokenBagService } from './token-bag.service';
+import { CombatService } from './combat.service';
 
 describe('GameService Portail de guérison', () => {
   let gameService: GameService;
@@ -787,5 +788,83 @@ describe('GameService audit coffre inaccessible', () => {
     expect(gameService.pendingGroundEquipment()).toBeNull();
     expect(turnService.remainingMovements()).toBe(3);
     expect(gameService.turnTransitionPending()).toBe(false);
+  });
+});
+
+describe('GameService résolution des salles découvertes par Aderyn', () => {
+  let gameService: GameService;
+  let playerService: PlayerService;
+  let turnService: TurnService;
+  let combatService: CombatService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
+    gameService = TestBed.inject(GameService);
+    playerService = TestBed.inject(PlayerService);
+    turnService = TestBed.inject(TurnService);
+    combatService = TestBed.inject(CombatService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+  });
+
+  function roomWithToken(tokenId: string): PlacedTile {
+    return {
+      x: 1,
+      y: 0,
+      definitionId: 'room-1',
+      tokenId,
+      tokenFace: 'front',
+    } as PlacedTile;
+  }
+
+  it('déclenche le combat pour un monstre découvert malgré Sneak', () => {
+    const player = playerService.players[0];
+    player.heroId = 'aderyn';
+    const tile = roomWithToken('giant-rat');
+
+    expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile, true)).toBe('combat');
+    expect(combatService.hasPendingCombat).toBe(true);
+    expect(turnService.remainingMovements()).toBe(0);
+  });
+
+  it('conserve Sneak pour un monstre déjà présent sur le plan', () => {
+    const player = playerService.players[0];
+    player.heroId = 'aderyn';
+    const tile = roomWithToken('giant-rat');
+
+    expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile)).toBe('none');
+    expect(combatService.hasPendingCombat).toBe(false);
+    expect(turnService.remainingMovements()).toBe(4);
+  });
+
+  it('rend disponible l’interaction avec un objet découvert sans malédiction', () => {
+    const player = playerService.players[0];
+    player.heroId = 'aderyn';
+    playerService.addEquipment(player, getEquipmentDefinition('key')!);
+    const tile = roomWithToken('closed-chest');
+
+    expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile, true)).toBe('treasure');
+    expect(tile.tokenId).toBeUndefined();
+    expect(player.treasures).toContain('opened-chest');
+  });
+
+  it('résout normalement un objet découvert et un monstre découvert sous malédiction', () => {
+    const player = playerService.players[0];
+    player.heroId = 'aderyn';
+    player.isCursed = true;
+
+    const monster = roomWithToken('giant-rat');
+    expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, monster, true)).toBe('combat');
+
+    combatService.initialize();
+    turnService.resetMovements();
+    const chest = roomWithToken('closed-chest');
+    playerService.addEquipment(player, getEquipmentDefinition('key')!);
+    expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, chest, true)).toBe('treasure');
+    expect(gameService.pendingTreasure()).toBeNull();
+    expect(chest.tokenId).toBeUndefined();
+    expect(turnService.remainingMovements()).toBe(0);
   });
 });

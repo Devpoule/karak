@@ -16,7 +16,7 @@ La référence locale est `public/assets/rules/karak-base.pdf`, accompagnée de 
 - Le Portail de guérison est distinct d'une tuile `healing-fountain`. Il téléporte un héros choisi vers une fontaine découverte, restaure tous ses PV, retire sa malédiction, consomme un exemplaire et ne termine pas le tour. Argentus ne conserve pas ce portail.
 - Les états `pending`, `resting` et `none` représentent respectivement une récupération attendue, le tour de repos en cours et la possibilité de jouer normalement.
 - Une victoire contre une momie peut produire une malédiction ; son attribution et sa résolution passent par les états métier dédiés.
-- Aderyn remporte également un combat à égalité et peut traverser une tuile occupée par un monstre ; ces deux pouvoirs sont désactivés lorsqu'elle est maudite.
+- Aderyn remporte également un combat à égalité et peut traverser une tuile occupée par un monstre déjà connue ; ces deux pouvoirs sont désactivés lorsqu'elle est maudite. Lorsqu'une nouvelle salle est découverte, son contenu doit d'abord être résolu normalement, y compris pour Aderyn non maudite.
 - Horan peut relancer les deux dés une fois par combat ; Victorius peut relancer une fois chaque dé affichant 1, dans la limite d'une relance par combat. Ces relances sont indisponibles lorsqu'ils sont maudits.
 - Horan non maudit se réincarne après une défaite à 0 PV en rejoignant une fontaine découverte et en récupérant tous ses PV ; sans fontaine disponible ou sous malédiction, le repos ordinaire reste appliqué.
 - Taia reçoit `+1` à l'attaque après son premier déplacement du tour ; ce bonus est capturé au lancer et désactivé par la malédiction. Son choix de jetons à l'exploration reste à intégrer.
