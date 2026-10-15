@@ -28,7 +28,7 @@
   }
 
   @if (showPlayer) {
-    <app-hero-panel [player]="player" [side]="side" (portraitClicked)="toggleBiography()" />
+    <app-hero-panel [player]="player" [side]="side" (portraitClicked)="toggleBiography()" (curseClicked)="openCurseDialog()" />
     <app-life-panel [player]="player" />
   }
 
@@ -58,9 +58,10 @@
                 [class.player-sidebar__power-badge--selected]="selectedPowerId === power.id"
                 [class.player-sidebar__power-badge--disabled]="player?.isCursed"
                 [attr.aria-pressed]="selectedPowerId === power.id"
+                [attr.aria-disabled]="player?.isCursed ? 'true' : null"
                 [attr.aria-label]="'Pouvoir ' + (index + 1) + ' : ' + power.name"
-                [attr.title]="power.name + ' — ' + power.summary"
-                [attr.data-tooltip]="power.name + ' — ' + power.description"
+                [attr.title]="player?.isCursed ? 'Pouvoir annulé par la malédiction en cours' : power.name + ' — ' + power.summary"
+                [attr.data-tooltip]="player?.isCursed ? 'Pouvoir annulé par la malédiction en cours' : power.name + ' — ' + power.description"
                 (click)="togglePower(power.id)"
               >
                 <img [src]="powerImage(index)" alt="" draggable="false" />
@@ -78,6 +79,20 @@
           [icon]="hero.characterTransparent"
           [iconAlt]="hero.name"
           [body]="hero.description"
+          [placement]="side"
+          (closed)="closeDetails()"
+        />
+      }
+
+      @if (curseDialogOpen && player?.isCursed) {
+        <app-codex-dialog
+          title="Malédiction"
+          [subtitle]="hero.name"
+          [icon]="'/assets/tokens/curse.png'"
+          iconAlt="Médaillon de malédiction"
+          [body]="hero.name + ' est sous l’emprise d’une malédiction.'"
+          [powers]="hero.powers"
+          note="Ses pouvoirs spéciaux sont inutilisables tant que la malédiction n’est pas levée."
           [placement]="side"
           (closed)="closeDetails()"
         />

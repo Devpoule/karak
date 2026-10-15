@@ -48,6 +48,7 @@ export type PlayerSide = 'left' | 'right';
 export class PlayerSidebar {
   selectedPowerId: HeroPowerId | null = null;
   biographyOpen = false;
+  curseDialogOpen = false;
 
   // ==========================================================
   // CONFIGURATION DU JOUEUR
@@ -101,6 +102,7 @@ export class PlayerSidebar {
   }
 
   togglePower(powerId: HeroPowerId): void {
+    if (this.player?.isCursed) return;
     this.biographyOpen = false;
     this.selectedPowerId = this.selectedPowerId === powerId ? null : powerId;
   }
@@ -110,9 +112,16 @@ export class PlayerSidebar {
     this.biographyOpen = !this.biographyOpen;
   }
 
+  openCurseDialog(): void {
+    this.selectedPowerId = null;
+    this.biographyOpen = false;
+    this.curseDialogOpen = true;
+  }
+
   closeDetails(): void {
     this.selectedPowerId = null;
     this.biographyOpen = false;
+    this.curseDialogOpen = false;
   }
 
   powerImage(powerIndex: number): string {

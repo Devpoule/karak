@@ -4,6 +4,7 @@
   [class.hero-panel--right]="side === 'right'"
   [class.hero-panel--unconscious]="isUnconscious"
   [class.hero-panel--healing-target]="isHealingPortalTarget"
+  [class.hero-panel--curse-applying]="curseAnimation === 'hero-panel__curse--appearing'"
   [attr.aria-label]="isUnconscious ? 'Héros inconscient : récupération obligatoire' : null"
 >
   <!--
@@ -34,14 +35,18 @@
         [alt]="hero.name"
         draggable="false"
       />
-      @if (isCursed) {
-        <img
-          class="hero-panel__curse"
-          [src]="curseImagePath"
-          alt="Héros maudit : pouvoirs spéciaux désactivés"
-          draggable="false"
-        />
-      }
     </button>
+      @if (curseVisible) {
+        <button
+          class="hero-panel__curse"
+          [class.hero-panel__curse--appearing]="curseAnimation === 'hero-panel__curse--appearing'"
+          [class.hero-panel__curse--disappearing]="curseAnimation === 'hero-panel__curse--disappearing'"
+          type="button"
+          aria-label="Afficher les informations de la malédiction"
+          (click)="curseClicked.emit()"
+        >
+          <img [src]="curseImagePath" alt="Héros maudit : pouvoirs spéciaux désactivés" draggable="false" />
+        </button>
+      }
   }
 </section>

@@ -261,6 +261,25 @@
   text-decoration: line-through;
 }
 
+.player-sidebar__power-badge--disabled::after {
+  content: '╱';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 78%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  color: #e53935;
+  font: 700 clamp(1.8rem, 4vw, 3.5rem)/1 Arial, sans-serif;
+  border: clamp(2px, .25vw, 4px) solid #e53935;
+  border-radius: 50%;
+  background: rgba(55, 25, 20, .2);
+  text-shadow: 0 1px 2px #160a08;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

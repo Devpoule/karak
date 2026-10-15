@@ -42,6 +42,7 @@
   height: auto;
 
   user-select: none;
+  display: block;
   pointer-events: none;
 
   filter:
@@ -176,22 +177,80 @@
 .hero-panel__curse {
   position: absolute;
   z-index: 10;
-  top: 3%;
-  width: 27%;
-  max-height: 30%;
+  /* Remonte au niveau du cartouche du nom, hors de la zone du portrait. */
+  top: -28%;
+  width: 42%;
+  max-height: 38%;
   height: auto;
   object-fit: contain;
   filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7));
-  pointer-events: none;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
   user-select: none;
 }
 
 .hero-panel--left .hero-panel__curse {
-  right: 7%;
+  right: -20%;
+}
+
+/* Le médaillon déborde volontairement du panneau : il doit rester au-dessus
+ * de la fiche latérale voisine lors d'un transfert de malédiction. */
+.hero-panel--left,
+.hero-panel--right {
+  z-index: 20;
 }
 
 .hero-panel--right .hero-panel__curse {
-  left: 7%;
+  left: -20%;
+}
+
+.hero-panel--curse-applying::before {
+  content: '';
+  position: absolute;
+  z-index: 11;
+  inset: 4% 9%;
+  pointer-events: none;
+  background:
+    linear-gradient(165deg, transparent 0 18%, rgba(255, 54, 44, .9) 19% 21%, transparent 22% 48%, rgba(255, 54, 44, .75) 49% 51%, transparent 52%),
+    linear-gradient(195deg, transparent 0 62%, rgba(255, 54, 44, .7) 63% 65%, transparent 66%);
+  mix-blend-mode: screen;
+  animation: curse-lightning 720ms ease-out both;
+}
+
+@keyframes curse-lightning {
+  0%, 100% { opacity: 0; }
+  12%, 24%, 38% { opacity: 1; }
+  18%, 30%, 52% { opacity: .15; }
+}
+
+.hero-panel__curse img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hero-panel__curse:hover,
+.hero-panel__curse:focus-visible {
+  filter: drop-shadow(0 3px 7px rgba(255, 54, 44, .9)) brightness(1.12);
+  outline: 2px solid rgba(255, 92, 75, .8);
+  outline-offset: 2px;
+}
+
+.hero-panel__curse--appearing { animation: curse-impact 720ms cubic-bezier(.2, 1.35, .45, 1) both; }
+.hero-panel__curse--disappearing { animation: curse-dissipate 650ms ease-in both; }
+
+@keyframes curse-impact {
+  from { opacity: 0; transform: translateY(-45%) scale(.45) rotate(-8deg); }
+  65% { opacity: 1; transform: translateY(5%) scale(1.08) rotate(2deg); }
+  to { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
+
+@keyframes curse-dissipate {
+  from { opacity: 1; transform: scale(1); filter: blur(0) drop-shadow(0 3px 5px rgba(0, 0, 0, .7)); }
+  to { opacity: 0; transform: translateY(-18%) scale(1.3); filter: blur(5px); }
 }
 
 .hero-panel__name {
@@ -210,5 +269,15 @@
 @media (prefers-reduced-motion: reduce) {
   .hero-panel__hero::after {
     transition: none;
+  }
+
+  .hero-panel__curse--appearing,
+  .hero-panel__curse--disappearing {
+    animation: none;
+  }
+
+  .hero-panel--curse-applying::before {
+    animation: none;
+    opacity: 0;
   }
 }

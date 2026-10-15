@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { Component, DoCheck, EventEmitter, inject, Input, Output } from '@angular/core';
 
 import { getHeroDefinition } from '../../data/hero-definitions';
 import { HeroDefinition } from '../../models/hero';
@@ -27,7 +27,7 @@ import { GameService } from '../../services/game.service';
   styleUrl: './hero-panel.scss',
   templateUrl: './hero-panel.html',
 })
-export class HeroPanel {
+export class HeroPanel implements DoCheck {
   private readonly playerService = inject(PlayerService);
   readonly gameService = inject(GameService);
 
@@ -36,12 +36,41 @@ export class HeroPanel {
 
   /** Notifie la fiche latérale que le portrait doit ouvrir la biographie. */
   @Output() readonly portraitClicked = new EventEmitter<void>();
+  /** Ouvre la fiche d'information dédiée à la malédiction. */
+  @Output() readonly curseClicked = new EventEmitter<void>();
 
   /**
    * Joueur dont le héros est représenté.
    */
   @Input() player: Player | null = null;
   @Input() curseImagePath = '/assets/tokens/curse.png';
+  curseVisible = false;
+  curseAnimation = '';
+  private previousPlayer: Player | null = null;
+  private previousCurseState = false;
+  private dismissalTimer: ReturnType<typeof setTimeout> | null = null;
+
+  ngDoCheck(): void {
+    const cursed = this.player?.isCursed === true;
+    if (this.player !== this.previousPlayer) {
+      this.previousPlayer = this.player;
+      this.previousCurseState = cursed;
+      this.curseVisible = cursed;
+      this.curseAnimation = '';
+      return;
+    }
+    if (cursed === this.previousCurseState) return;
+    this.previousCurseState = cursed;
+    if (this.dismissalTimer) clearTimeout(this.dismissalTimer);
+    this.curseAnimation = cursed ? 'hero-panel__curse--appearing' : 'hero-panel__curse--disappearing';
+    this.curseVisible = true;
+    if (!cursed) {
+      this.dismissalTimer = setTimeout(() => {
+        this.curseVisible = false;
+        this.curseAnimation = '';
+      }, 700);
+    }
+  }
 
   get isCursed(): boolean {
     // Rend le médaillon dépendant de la notification métier de la malédiction.
