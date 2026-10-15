@@ -9,6 +9,15 @@ import { PlacedTile } from '../models/tile';
 import { MonsterTokenDefinition } from '../models/token';
 import { TurnService } from './turn.service';
 
+function isWinningCombatRoll(combat: PendingCombat, roll: CombatRoll): boolean {
+  return roll.attackPower > combat.monster.strength
+    || (
+      combat.player.heroId === 'aderyn'
+      && !combat.player.isCursed
+      && roll.attackPower === combat.monster.strength
+    );
+}
+
 /**
  * État d'un combat obligatoire en cours.
  *
@@ -181,6 +190,7 @@ export class CombatService {
     const combat = this.pendingCombat();
     const roll = this.pendingCombatRoll();
     return !!combat && !!roll
+      && !isWinningCombatRoll(combat, roll)
       && !roll.sacrificeUsed
       && combat.player.heroId === 'xanros'
       && !combat.player.isCursed
@@ -207,7 +217,7 @@ export class CombatService {
   getAvailableHeroRerolls(): Array<'both' | 'die1' | 'die2'> {
     const combat = this.pendingCombat();
     const roll = this.pendingCombatRoll();
-    if (!combat || !roll || combat.player.isCursed) return [];
+    if (!combat || !roll || combat.player.isCursed || isWinningCombatRoll(combat, roll)) return [];
     if (combat.player.heroId === 'horan') {
       return roll.diceTotal <= roll.monsterStrength && roll.heroRerollsUsed === 0
         ? ['both']
@@ -248,7 +258,7 @@ export class CombatService {
   useMagicBolt(): boolean {
     const combat = this.pendingCombat();
     const roll = this.pendingCombatRoll();
-    if (!combat || !roll) return false;
+    if (!combat || !roll || isWinningCombatRoll(combat, roll)) return false;
 
     // Le tir magique est inutile lorsque l'attaque effective gagne déjà.
     // Les bonus d'équipement et de héros font partie du résultat à comparer.
@@ -282,17 +292,12 @@ export class CombatService {
    * Ce prédicat est partagé par l'interface et la résolution afin qu'aucune
    * option post-lancer ne soit proposée après un résultat définitif.
    */
-  isCurrentRollWinning(): boolean {
+  hasWinningRoll(): boolean {
     const combat = this.pendingCombat();
     const roll = this.pendingCombatRoll();
     if (!combat || !roll) return false;
 
-    return roll.attackPower > combat.monster.strength
-      || (
-        combat.player.heroId === 'aderyn'
-        && !combat.player.isCursed
-        && roll.attackPower === combat.monster.strength
-      );
+    return isWinningCombatRoll(combat, roll);
   }
 
   /**
@@ -315,7 +320,7 @@ export class CombatService {
 
     let outcome: CombatOutcome;
 
-    if (this.isCurrentRollWinning()) {
+    if (isWinningCombatRoll(combat, roll)) {
       outcome = 'victory';
     } else if (roll.attackPower === combat.monster.strength) {
       outcome = 'tie';
