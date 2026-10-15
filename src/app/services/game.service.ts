@@ -256,9 +256,7 @@ export class GameService {
   ) {}
 
   private actorLabel(player: Player): string {
-    return player.controller === 'human'
-      ? 'Vous'
-      : (player.heroId ? getHeroDefinition(player.heroId)?.name : undefined) ?? 'L’IA';
+    return (player.heroId ? getHeroDefinition(player.heroId)?.name : undefined) ?? 'Le héros';
   }
 
   /**
@@ -965,7 +963,7 @@ export class GameService {
 
     this.playerService.movePlayerTo(target, destination.x, destination.y, target.facing ?? 'north');
     this.playerService.restoreCompletely(target, 5);
-    this.toastService.show(`${this.actorLabel(user)} : Portail de guérison utilisé, ${this.actorLabel(target)} récupère tous ses points de vie.`, 'success');
+    this.toastService.show(`Guérison: ${this.actorLabel(target)} récupère tous ses points de vie.`, 'success');
     return true;
   }
 
