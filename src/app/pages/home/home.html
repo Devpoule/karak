@@ -1,47 +1,53 @@
 <main class="home">
+  <!--
+    L'illustration reste un décor indépendant du menu afin que le logo,
+    l'accroche et les actions restent accessibles et responsives.
+  -->
+  <img
+    class="home__background"
+    src="/assets/board/karak-cover.png"
+    alt=""
+    aria-hidden="true"
+    draggable="false"
+  />
+  <div class="home__veil" aria-hidden="true"></div>
 
-  <section class="home__hero">
-
-    <!-- =====================================================
-         PRÉSENTATION
-         ===================================================== -->
-
+  <section class="home__hero" aria-labelledby="home-title">
     <div class="home__content">
-      <img
-        class="home__logo"
-        src="/assets/logo.png"
-        alt="Karak"
-        draggable="false"
-      />
+      <h1 class="home__title" id="home-title">
+        <img
+          class="home__logo"
+          src="/assets/logo.png"
+          alt="Karak"
+          draggable="false"
+        />
+      </h1>
 
-      <h1>Explorez les catacombes</h1>
-
-      <h2>
+      <p class="home__tagline">
         Six héros. Un donjon. D'innombrables trésors.
-      </h2>
+      </p>
 
       <nav class="home__navigation" aria-label="Menu principal">
-        <div class="home__actions">
-          <a
-            class="home__play"
-            routerLink="/play"
-            title="Nouvelle partie"
-          >
-            Jouer
-          </a>
-        </div>
+        <a
+          class="home__play"
+          routerLink="/play"
+          title="Nouvelle partie"
+        >
+          <span>Jouer</span>
+        </a>
 
         <a
           class="home__lore"
           routerLink="/codex"
           [queryParams]="{ from: 'home' }"
         >
-          <span>Codex</span>
+          <svg class="home__lore-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H20v17H7.5A2.5 2.5 0 0 0 5 21.5z" />
+            <path d="M5 4.5v17M8 5.5h8M8 9h8M8 12.5h5" />
+          </svg>
+          <span>Découvrir l'univers du jeu</span>
         </a>
       </nav>
     </div>
-
-
   </section>
-
 </main>

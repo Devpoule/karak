@@ -26,7 +26,10 @@ test('l’accueil met en avant le logo et conserve une hiérarchie typographique
 
   const logo = page.locator('.home__logo');
   await expect(logo).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Codex' })).toBeVisible();
+  await expect(page.getByRole('link', { name: "Découvrir l'univers du jeu" })).toBeVisible();
+  await expect(page.locator('.home__background')).toHaveAttribute('src', '/assets/board/karak-cover.png');
+  await expect(page.getByText("Six héros. Un donjon. D'innombrables trésors.")).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Explorez les catacombes' })).toHaveCount(0);
 
   const visual = await page.locator('.home__content').evaluate(element => {
     const logoElement = element.querySelector('.home__logo');
@@ -39,6 +42,22 @@ test('l’accueil met en avant le logo et conserve une hiérarchie typographique
 
   expect(visual.logoWidth).toBeGreaterThan(300);
   expect(visual.titleFont.toLowerCase()).toContain('georgia');
+});
+
+test('la préférence de mouvement réduit neutralise les animations de l’accueil', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+
+  const animation = await page.locator('.home__content').evaluate(element => {
+    const play = element.querySelector('.home__play');
+    return {
+      content: getComputedStyle(element).animationName,
+      play: play ? getComputedStyle(play).animationName : '',
+      shimmer: play ? getComputedStyle(play, '::after').animationName : '',
+    };
+  });
+
+  expect(animation).toEqual({ content: 'none', play: 'none', shimmer: 'none' });
 });
 
 test('les aides contextuelles utilisent les commandes Karak et restaurent le focus', async ({ page }) => {
