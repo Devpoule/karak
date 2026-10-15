@@ -11,12 +11,15 @@ import { TurnService } from './turn.service';
 import { DungeonService } from './dungeon.service';
 import { TokenBagService } from './token-bag.service';
 import { CombatService } from './combat.service';
+import { ToastService } from './toast.service';
+import { getHeroDefinition } from '../data/hero-definitions';
 
 describe('GameService Portail de guérison', () => {
   let gameService: GameService;
   let playerService: PlayerService;
   let dungeonService: DungeonService;
   let turnService: TurnService;
+  let toastService: ToastService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
@@ -24,6 +27,7 @@ describe('GameService Portail de guérison', () => {
     playerService = TestBed.inject(PlayerService);
     dungeonService = TestBed.inject(DungeonService);
     turnService = TestBed.inject(TurnService);
+    toastService = TestBed.inject(ToastService);
     playerService.initialize(2);
     gameService.initialize();
     gameService.phase.set('playing');
@@ -58,6 +62,8 @@ describe('GameService Portail de guérison', () => {
     expect(target.lives).toBe(5);
     expect(target.isCursed).toBe(false);
     expect(user.inventory.spells.some(spell => spell?.effect === 'healing-portal')).toBe(false);
+    expect(toastService.current()?.text).toContain(target.heroId ? getHeroDefinition(target.heroId)?.name : 'Le héros');
+    expect(toastService.current()?.text).not.toContain('Vous');
     expect(gameService.turnTransitionPending()).toBe(false);
     expect(turnService.remainingMovements()).toBe(2);
   });

@@ -520,11 +520,14 @@ export class CombatOverlay implements OnDestroy {
     this.presentedResult.set(null);
     this.presentationState.set('intro');
 
+    const heroName = result.player.heroId
+      ? getHeroDefinition(result.player.heroId)?.name ?? 'Le héros'
+      : 'Le héros';
     const combatMessage = result.outcome === 'victory'
-      ? `Victoire contre ${result.monster.name}.`
+      ? `${heroName} vainc ${result.monster.name}.`
       : result.outcome === 'defeat'
-        ? `${result.player.heroId ? getHeroDefinition(result.player.heroId)?.name ?? 'Le héros' : 'Le héros'} perd 1 point de vie.`
-        : `Égalité contre ${result.monster.name}.`;
+        ? `${heroName} perd 1 point de vie.`
+        : `${heroName} est à égalité avec ${result.monster.name}.`;
     const combatTone = result.outcome === 'victory'
       ? 'success'
       : result.outcome === 'defeat'
