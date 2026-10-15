@@ -9,11 +9,15 @@ export class ToastService {
   private readonly toastDurationMinimum = 4400;
   private readonly toastDurationMaximum = 10400;
   private readonly toastCharactersPerSecond = 42;
+  private readonly toastDurationScale = 2 / 3;
+  private readonly toastFadeDuration = 300;
 
   readonly current = signal<ToastMessage | null>(null);
+  readonly isDismissing = signal(false);
   private readonly queue: ToastMessage[] = [];
   private nextId = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
+  private fadeTimer: ReturnType<typeof setTimeout> | null = null;
 
   show(text: string, tone: ToastTone = 'info'): void {
     const message = { id: ++this.nextId, text, tone };
@@ -26,11 +30,12 @@ export class ToastService {
   }
 
   dismiss(): void {
+    if (!this.current() || this.isDismissing()) return;
+
     if (this.timer !== null) clearTimeout(this.timer);
     this.timer = null;
-    const next = this.queue.shift() ?? null;
-    this.current.set(next);
-    if (next) this.schedule(next);
+    this.isDismissing.set(true);
+    this.fadeTimer = setTimeout(() => this.finishDismissal(), this.toastFadeDuration);
   }
 
   private display(message: ToastMessage): void {
@@ -41,12 +46,20 @@ export class ToastService {
   private schedule(message: ToastMessage): void {
     this.timer = setTimeout(() => {
       if (this.current()?.id === message.id) this.dismiss();
-    }, Math.min(
+    }, Math.round(this.toastDurationScale * Math.min(
       this.toastDurationMaximum,
       Math.max(
         this.toastDurationMinimum,
         message.text.length * this.toastCharactersPerSecond * 2,
       ),
-    ));
+    )));
+  }
+
+  private finishDismissal(): void {
+    this.fadeTimer = null;
+    this.isDismissing.set(false);
+    const next = this.queue.shift() ?? null;
+    this.current.set(next);
+    if (next) this.schedule(next);
   }
 }
