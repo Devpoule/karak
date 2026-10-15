@@ -25,6 +25,24 @@
 
   --combat-gold: #f5d884;
   --combat-cream: #f4ead1;
+  --combat-wave-start: -320%;
+  --combat-wave-end: 360%;
+  --combat-wave-angle: 90deg;
+  --combat-wave-glow: rgba(57, 188, 255, 0.95);
+  --combat-wave-background:
+    linear-gradient(
+      var(--combat-wave-angle),
+      transparent,
+      rgba(199, 244, 255, 0.95) 42%,
+      rgba(52, 177, 255, 0.88) 58%,
+      transparent
+    );
+}
+
+.combat-overlay--wave-reverse {
+  --combat-wave-start: 360%;
+  --combat-wave-end: -320%;
+  --combat-wave-angle: 270deg;
 }
 
 .combat-overlay__backdrop {
@@ -731,9 +749,8 @@
   animation: combat-monster-defeated 900ms ease-out both;
 }
 
-.combat-overlay--victory
-.combat-overlay__fighter--monster
-.combat-overlay__visual::after {
+.combat-overlay--wave-target-hero .combat-overlay__visual::after,
+.combat-overlay--wave-target-monster .combat-overlay__visual::after {
   content: '';
   position: absolute;
   inset: 18% -8%;
@@ -741,20 +758,37 @@
   width: 32%;
   opacity: 0;
   pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(199, 244, 255, 0.95) 42%,
-    rgba(52, 177, 255, 0.88) 58%,
-    transparent
-  );
+  background: var(--combat-wave-background);
   clip-path: polygon(0 44%, 22% 50%, 38% 28%, 57% 62%, 76% 35%, 100% 51%, 77% 66%, 58% 54%, 39% 78%, 21% 56%);
-  filter: drop-shadow(0 0 8px rgba(57, 188, 255, 0.95));
+  filter: drop-shadow(0 0 8px var(--combat-wave-glow));
   animation: combat-monster-electric-pulse 760ms ease-out both;
 }
 
-.combat-overlay--victory .combat-overlay__fighter--monster .combat-overlay__visual {
+.combat-overlay--wave-target-hero .combat-overlay__visual,
+.combat-overlay--wave-target-monster .combat-overlay__visual {
   isolation: isolate;
+}
+
+.combat-overlay--defeat {
+  --combat-wave-glow: rgba(255, 38, 38, 0.98);
+  --combat-wave-background:
+    radial-gradient(
+      ellipse at center,
+      rgba(255, 255, 238, 0.98) 0 8%,
+      rgba(255, 111, 80, 0.95) 22%,
+      transparent 70%
+    ),
+    linear-gradient(
+      var(--combat-wave-angle),
+      transparent,
+      rgba(255, 220, 205, 0.98) 40%,
+      rgba(238, 28, 28, 0.94) 60%,
+      transparent
+    );
+}
+
+.combat-overlay--defeat .combat-overlay__fighter--hero .combat-overlay__visual::after {
+  filter: brightness(2) drop-shadow(0 0 8px var(--combat-wave-glow));
 }
 
 .combat-overlay__verdict--victory
@@ -1195,10 +1229,10 @@
 }
 
 @keyframes combat-monster-electric-pulse {
-  0% { opacity: 0; transform: translateX(-320%) scaleY(.7); }
+  0% { opacity: 0; transform: translateX(var(--combat-wave-start)) scaleY(.7); }
   18% { opacity: 1; }
   72% { opacity: .82; }
-  100% { opacity: 0; transform: translateX(360%) scaleY(1); }
+  100% { opacity: 0; transform: translateX(var(--combat-wave-end)) scaleY(1); }
 }
 
 @keyframes combat-weapon-entry {

@@ -1,6 +1,10 @@
 <header class="game-header">
-  <button class="game-header__home game-header__home-button" type="button" (click)="requestLeave()">
-    ← Accueil
+  <button class="game-header__home game-header__home-button" type="button" aria-label="Accueil" title="Accueil" (click)="requestLeave()">
+    <svg class="game-header__home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M3 10.5 12 3l9 7.5" />
+      <path d="M5.5 9.5V21h13V9.5M9 21v-6h6v6" />
+    </svg>
+    <span>Accueil</span>
   </button>
 
   <img
@@ -13,17 +17,22 @@
   <div class="game-header__actions">
     @if (context === 'game') {
       @if (navigationLocked) {
-        <span class="game-header__link game-header__link--disabled" aria-disabled="true">Codex</span>
+        <span class="game-header__link game-header__link--disabled game-header__codex-link" aria-disabled="true" aria-label="Codex" title="Découvrir l'univers du jeu">
+          <svg class="game-header__codex-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H20v17H7.5A2.5 2.5 0 0 0 5 21.5z" />
+            <path d="M5 4.5v17M8 5.5h8M8 9h8M8 12.5h5" />
+          </svg>
+          <span>Codex</span>
+        </span>
       } @else {
-        <a class="game-header__link" routerLink="/codex" [queryParams]="{ from: 'game' }">Codex</a>
+        <a class="game-header__link game-header__codex-link" routerLink="/codex" [queryParams]="{ from: 'game' }" aria-label="Codex" title="Découvrir l'univers du jeu">
+          <svg class="game-header__codex-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H20v17H7.5A2.5 2.5 0 0 0 5 21.5z" />
+            <path d="M5 4.5v17M8 5.5h8M8 9h8M8 12.5h5" />
+          </svg>
+          <span>Codex</span>
+        </a>
       }
-
-      <span class="game-header__separator">|</span>
-
-      <div class="game-header__turn">
-        <span class="game-header__turn-label game-header__turn-label--full">Tour / actions</span>
-        <span class="game-header__turn-label game-header__turn-label--compact">Tour</span>
-      </div>
     } @else {
       <a
         class="game-header__link"

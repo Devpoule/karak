@@ -78,7 +78,8 @@
 
   color: var(--karak-text-light);
 
-  font-weight: 700;
+  font: 700 1rem / 1.2 var(--karak-font-display);
+  letter-spacing: .02em;
   text-decoration: none;
 
   background:
@@ -119,6 +120,24 @@
   pointer-events: none;
 }
 
+.game-header__codex-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+}
+
+.game-header__codex-icon {
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
 .game-header__home {
   justify-self: start;
   align-self: center;
@@ -134,24 +153,6 @@
   display: flex;
   align-items: center;
   gap: 0.8rem;
-}
-
-.game-header__separator {
-  color: var(--karak-stone-highlight);
-  opacity: 0.5;
-}
-
-.game-header__turn {
-  color: var(--karak-text-light);
-
-  font-weight: 700;
-
-  text-shadow:
-    0 2px 2px rgba(0, 0, 0, 0.9);
-}
-
-.game-header__turn-label--compact {
-  display: none;
 }
 
 @media (max-width: 600px) {
@@ -175,21 +176,24 @@
     min-width: 0;
   }
 
-  .game-header__turn {
-    white-space: nowrap;
-  }
-
-  .game-header__turn-label--full { display: none; }
-  .game-header__turn-label--compact { display: inline; }
-
-
-  .game-header__separator {
-    display: none;
-  }
 }
 .game-header__home-button {
-  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
   cursor: pointer;
+}
+
+.game-header__home-icon {
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
 }
 
 .game-header__dialog-backdrop {

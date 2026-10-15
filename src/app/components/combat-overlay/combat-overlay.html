@@ -7,6 +7,9 @@
     [class.combat-overlay--victory]="result?.outcome === 'victory'"
     [class.combat-overlay--tie]="result?.outcome === 'tie'"
     [class.combat-overlay--defeat]="result?.outcome === 'defeat'"
+    [class.combat-overlay--wave-target-hero]="waveTarget === 'hero'"
+    [class.combat-overlay--wave-target-monster]="waveTarget === 'monster'"
+    [class.combat-overlay--wave-reverse]="waveDirection() === 'right-to-left'"
     [class.combat-overlay--high-power]="result && result.attackPower >= result.monsterStrength + 3"
     (pointerdown)="$event.stopPropagation()"
     (pointermove)="$event.stopPropagation()"
@@ -36,6 +39,7 @@
 
       <!-- HÉROS -->
       <section
+        #heroFighter
         class="combat-overlay__fighter combat-overlay__fighter--hero"
       >
         <div class="combat-overlay__visual">
@@ -148,6 +152,7 @@
 
       <!-- MONSTRE -->
       <section
+        #monsterFighter
         class="combat-overlay__fighter combat-overlay__fighter--monster"
       >
         <div class="combat-overlay__visual">

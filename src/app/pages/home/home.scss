@@ -92,9 +92,17 @@
   animation: home-logo-in var(--karak-motion-slow) var(--karak-ease-emphasis) both;
 }
 
+/* Sur grand écran, le dragon du logo remonte jusqu'à la limite supérieure. */
+@media (min-width: 701px) {
+  .home__logo {
+    position: relative;
+    top: clamp(-5.5rem, -10vh, -3rem);
+  }
+}
+
 .home__tagline {
   max-width: 38ch;
-  margin: clamp(-.5rem, -1vh, 0rem) 0 0;
+  margin: clamp(5rem, 11vh, 8rem) 0 0;
 
   color: var(--karak-text-highlight);
   font: 600 clamp(1rem, 1.8vw, 1.45rem) / 1.35 var(--karak-font-display);
@@ -142,6 +150,7 @@
 .home__play {
   min-height: clamp(3.5rem, 7vw, 5.25rem);
   padding: .75rem clamp(1.5rem, 4vw, 3rem);
+  gap: .7rem;
 
   overflow: hidden;
 
@@ -238,6 +247,18 @@
   flex: 0 0 auto;
   width: 1.5rem;
   height: 1.5rem;
+
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.home__play-icon {
+  flex: 0 0 auto;
+  width: clamp(1.75rem, 3vw, 2.25rem);
+  height: clamp(1.75rem, 3vw, 2.25rem);
 
   fill: none;
   stroke: currentColor;
@@ -368,18 +389,11 @@
   }
 
   .home__navigation {
-    width: min(100%, 22rem);
+      flex-direction: column;
+      width: min(100%, 22rem);
     margin-top: auto;
   }
 
-  .home__play {
-    min-height: 3.75rem;
-  }
-
-  .home__lore {
-    min-height: 2.9rem;
-    padding-inline: .75rem;
-  }
 }
 
 @media (max-height: 680px) {

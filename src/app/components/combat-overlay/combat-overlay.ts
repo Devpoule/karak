@@ -1,9 +1,11 @@
 
 import {
   Component,
+  ElementRef,
   effect,
   OnDestroy,
   signal,
+  ViewChild,
 } from '@angular/core';
 
 import { getHeroDefinition } from '../../data/hero-definitions';
@@ -30,6 +32,31 @@ type CombatPresentationState =
   | 'decision'
   | 'result';
 
+export type CombatWaveTarget = 'hero' | 'monster' | null;
+export type CombatWaveDirection = 'left-to-right' | 'right-to-left';
+
+interface CombatFighterBounds {
+  left: number;
+  right: number;
+}
+
+/** Retourne la cible visuelle de la vague sans modifier l'issue métier. */
+export function getCombatWaveTarget(outcome: CombatOutcome): CombatWaveTarget {
+  if (outcome === 'victory') return 'monster';
+  if (outcome === 'defeat') return 'hero';
+  return null;
+}
+
+/** Détermine le sens de propagation à partir des positions réellement rendues. */
+export function getCombatWaveDirection(
+  source: CombatFighterBounds,
+  target: CombatFighterBounds,
+): CombatWaveDirection {
+  const sourceCenter = (source.left + source.right) / 2;
+  const targetCenter = (target.left + target.right) / 2;
+  return sourceCenter <= targetCenter ? 'left-to-right' : 'right-to-left';
+}
+
 @Component({
   selector: 'app-combat-overlay',
   imports: [],
@@ -37,6 +64,12 @@ type CombatPresentationState =
   styleUrl: './combat-overlay.scss',
 })
 export class CombatOverlay implements OnDestroy {
+
+  @ViewChild('heroFighter')
+  private heroFighter?: ElementRef<HTMLElement>;
+
+  @ViewChild('monsterFighter')
+  private monsterFighter?: ElementRef<HTMLElement>;
 
   readonly presentationState =
     signal<CombatPresentationState>('intro');
@@ -60,6 +93,7 @@ export class CombatOverlay implements OnDestroy {
   readonly magicBoltFeedback = signal<number[]>([]);
   readonly magicBoltScorePulse = signal(false);
   readonly xanrosSacrificeDeclined = signal(false);
+  readonly waveDirection = signal<CombatWaveDirection>('left-to-right');
 
   private trackedCombat: PendingCombat | null = null;
 
@@ -107,6 +141,11 @@ export class CombatOverlay implements OnDestroy {
 
   get result(): CombatResult | null {
     return this.presentedResult();
+  }
+
+  get waveTarget(): CombatWaveTarget {
+    const outcome = this.result?.outcome;
+    return outcome ? getCombatWaveTarget(outcome) : null;
   }
 
   get canRoll(): boolean {
@@ -333,6 +372,7 @@ export class CombatOverlay implements OnDestroy {
     }
     this.presentedResult.set(result);
     this.presentationState.set('result');
+    this.schedule(() => this.updateWaveDirection(result.outcome), 0);
 
     this.schedule(() => {
       if (this.presentationState() === 'result' && this.presentedResult() === result) {
@@ -356,6 +396,7 @@ export class CombatOverlay implements OnDestroy {
 
     this.presentedCombat.set(combat);
     this.presentedResult.set(null);
+    this.waveDirection.set('left-to-right');
     this.magicBoltFeedback.set([]);
     this.magicBoltScorePulse.set(false);
     this.xanrosSacrificeDeclined.set(false);
@@ -595,6 +636,24 @@ export class CombatOverlay implements OnDestroy {
   // ==========================================================
   // VERDICT
   // ==========================================================
+
+  private updateWaveDirection(outcome: CombatOutcome): void {
+    const target = getCombatWaveTarget(outcome);
+    if (!target) return;
+
+    const heroElement = this.heroFighter?.nativeElement;
+    const monsterElement = this.monsterFighter?.nativeElement;
+    if (!heroElement || !monsterElement) return;
+
+    const sourceElement = target === 'hero' ? monsterElement : heroElement;
+    const targetElement = target === 'hero' ? heroElement : monsterElement;
+    this.waveDirection.set(
+      getCombatWaveDirection(
+        sourceElement.getBoundingClientRect(),
+        targetElement.getBoundingClientRect(),
+      ),
+    );
+  }
 
   getOutcomeLabel(outcome: CombatOutcome): string {
     switch (outcome) {

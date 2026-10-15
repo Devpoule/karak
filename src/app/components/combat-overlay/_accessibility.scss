@@ -18,4 +18,14 @@
     animation: none !important;
     opacity: .5;
   }
+
+  .combat-overlay--defeat .combat-overlay__fighter-image--hero {
+    animation: none !important;
+    filter: drop-shadow(0 0 7px var(--combat-wave-glow));
+  }
+
+  .combat-overlay--defeat .combat-overlay__fighter--hero .combat-overlay__visual::after {
+    animation: none !important;
+    opacity: .5;
+  }
 }
