@@ -67,6 +67,7 @@ test('partie intégrale déterministe jusqu’au classement du Dragon', async ({
   await page.getByRole('button', { name: 'Lancer les dés' }).click({ force: true });
   await expect(page.locator('.combat-overlay__verdict-title')).toContainText('gagne', { timeout: 15_000 });
   await expect(page.getByRole('heading', { name: 'Récompense du combat' })).toBeVisible();
+  await expect(page.locator('app-toast-container .toast-container')).toHaveCount(0);
   await page.getByRole('button', { name: 'Récupérer le trésor' }).click();
 
   await expect(page.getByRole('heading', { name: 'Fin de la partie' })).toBeVisible();

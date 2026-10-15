@@ -531,21 +531,6 @@ export class CombatOverlay implements OnDestroy {
     this.presentedResult.set(null);
     this.presentationState.set('intro');
 
-    const heroName = result.player.heroId
-      ? getHeroDefinition(result.player.heroId)?.name ?? 'Le héros'
-      : 'Le héros';
-    const combatMessage = result.outcome === 'victory'
-      ? `${heroName} vainc ${result.monster.name}.`
-      : result.outcome === 'defeat'
-        ? `${heroName} perd 1 point de vie.`
-        : `${heroName} est à égalité avec ${result.monster.name}.`;
-    const combatTone = result.outcome === 'victory'
-      ? 'success'
-      : result.outcome === 'defeat'
-        ? 'combat'
-        : 'warning';
-    queueMicrotask(() => this.toastService.show(combatMessage, combatTone));
-
     this.trackedCombat = null;
     this.resolving = false;
 
@@ -577,6 +562,23 @@ export class CombatOverlay implements OnDestroy {
     if (this.gameService.hasPendingTileResolution) {
       return;
     }
+
+    // Une récompense obligatoire possède déjà son propre dialogue : le toast
+    // de victoire serait redondant et resterait visible derrière celui-ci.
+    const heroName = result.player.heroId
+      ? getHeroDefinition(result.player.heroId)?.name ?? 'Le héros'
+      : 'Le héros';
+    const combatMessage = result.outcome === 'victory'
+      ? `${heroName} vainc ${result.monster.name}.`
+      : result.outcome === 'defeat'
+        ? `${heroName} perd 1 point de vie.`
+        : `${heroName} est à égalité avec ${result.monster.name}.`;
+    const combatTone = result.outcome === 'victory'
+      ? 'success'
+      : result.outcome === 'defeat'
+        ? 'combat'
+        : 'warning';
+    queueMicrotask(() => this.toastService.show(combatMessage, combatTone));
 
     if (result.canContinueTurn) {
       this.gameService.resumeMovementsAfterUnstoppable();

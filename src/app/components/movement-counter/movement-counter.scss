@@ -61,3 +61,20 @@
   text-shadow:
     0 1px 1px rgba(0, 0, 0, 0.5);
 }
+
+@media (max-width: 760px) {
+  .movement-counter {
+    gap: 0.45rem;
+    padding: 0.45rem 0.55rem;
+    border-width: 4px;
+  }
+
+  .movement-counter__label {
+    font-size: 0.62rem;
+  }
+
+  .movement-counter__points {
+    gap: 0.25rem;
+    font-size: 0.85rem;
+  }
+}

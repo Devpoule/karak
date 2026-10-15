@@ -11,7 +11,7 @@
 .combat-overlay {
   position: absolute;
   inset: 0;
-  z-index: 1000;
+  z-index: var(--karak-z-cinematic);
 
   display: flex;
   align-items: center;
@@ -1377,11 +1377,35 @@
   }
 
   .combat-overlay__verdict-effect {
-    min-width: 240px;
+    width: min(100%, 24rem);
+    min-width: 0;
+    min-height: 44px;
+    padding: .45rem .75rem;
+    border-radius: 999px;
+    background: rgba(20, 11, 8, .48);
   }
 
   .combat-overlay__verdict-title {
-    font-size: clamp(2.5rem, 13vw, 4rem);
+    font-size: clamp(1.15rem, 7vw, 1.8rem);
+    line-height: 1.1;
+    white-space: normal;
+  }
+}
+
+@keyframes combat-verdict-landscape-in {
+  0% {
+    opacity: 0;
+    transform: translateY(30%) scale(.88);
+  }
+
+  70% {
+    opacity: 1;
+    transform: translateY(0) scale(1.015);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -1410,7 +1434,41 @@
 }
 @media (max-width: 620px) {
   .combat-overlay__decision { top: calc(50% + 135px); font-size: .8rem; }
-  .combat-overlay__verdict { top: calc(50% + 82px); }
+  /* Le verdict dispose d'une bande dédiée sous l'arène et ses dés. */
+  .combat-overlay__verdict {
+    top: auto;
+    bottom: clamp(1rem, 8vh, 3.5rem);
+  }
   .combat-overlay__fighter-name { font-size: .95rem; }
-  .combat-overlay__verdict-title { font-size: clamp(1.25rem, 7vw, 2rem); }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .combat-overlay__arena {
+    scale: .78;
+    transform-origin: center 38%;
+  }
+
+  .combat-overlay__decision {
+    top: calc(50% + 108px);
+    max-height: calc(100% - 1rem);
+    overflow-y: auto;
+  }
+
+  .combat-overlay__fighter-footer {
+    transform: translateY(-1.25rem);
+  }
+
+  .combat-overlay__verdict {
+    top: auto;
+    right: .75rem;
+    bottom: .75rem;
+    left: .75rem;
+    width: auto;
+    transform: none;
+    animation-name: combat-verdict-landscape-in;
+  }
+
+  .combat-overlay__verdict-title {
+    font-size: clamp(1rem, 4.8vw, 1.45rem);
+  }
 }

@@ -16,17 +16,29 @@
 
       <h1>Explorez les catacombes</h1>
 
-      <p>
+      <h2>
         Six héros. Un donjon. D'innombrables trésors.
-      </p>
+      </h2>
 
-      <div class="home__actions">
-        <a class="home__play" routerLink="/play">Jouer</a>
-      </div>
+      <nav class="home__navigation" aria-label="Menu principal">
+        <div class="home__actions">
+          <a
+            class="home__play"
+            routerLink="/play"
+            title="Nouvelle partie"
+          >
+            Jouer
+          </a>
+        </div>
 
-      <a class="home__lore" routerLink="/codex">
-        Les légendes de Karak
-      </a>
+        <a
+          class="home__lore"
+          routerLink="/codex"
+          [queryParams]="{ from: 'home' }"
+        >
+          <span>Découvrir l'univers du jeu</span>
+        </a>
+      </nav>
     </div>
 
 

@@ -15,13 +15,14 @@
       @if (navigationLocked) {
         <span class="game-header__link game-header__link--disabled" aria-disabled="true">Codex</span>
       } @else {
-        <a class="game-header__link" routerLink="/codex">Codex</a>
+        <a class="game-header__link" routerLink="/codex" [queryParams]="{ from: 'game' }">Codex</a>
       }
 
       <span class="game-header__separator">|</span>
 
       <div class="game-header__turn">
-        Tour / actions
+        <span class="game-header__turn-label game-header__turn-label--full">Tour / actions</span>
+        <span class="game-header__turn-label game-header__turn-label--compact">Tour</span>
       </div>
     } @else {
       <a

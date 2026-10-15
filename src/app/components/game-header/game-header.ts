@@ -11,6 +11,7 @@ import { GameService } from '../../services/game.service';
 })
 export class GameHeader {
   showLeaveConfirmation = false;
+  private previouslyFocusedElement: HTMLElement | null = null;
 
   constructor(
     private readonly combatService: CombatService,
@@ -38,11 +39,15 @@ export class GameHeader {
       return;
     }
 
+    this.previouslyFocusedElement = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
     this.showLeaveConfirmation = true;
   }
 
   cancelLeave(): void {
     this.showLeaveConfirmation = false;
+    queueMicrotask(() => this.previouslyFocusedElement?.focus());
   }
 
   leaveGame(): void {

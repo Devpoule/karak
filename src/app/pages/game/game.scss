@@ -106,7 +106,7 @@
   position: absolute;
   inset: 0;
 
-  z-index: 20;
+  z-index: var(--karak-z-hud);
 
   overflow: hidden;
 
@@ -115,7 +115,7 @@
 
 .game__game-over {
   position: relative;
-  z-index: 20;
+  z-index: var(--karak-z-dialog);
   width: min(520px, 90vw);
   margin: auto;
   padding: 2rem;
@@ -138,7 +138,7 @@
   position: absolute;
   top: 18px;
   left: 50%;
-  z-index: 30;
+  z-index: var(--karak-z-feedback);
   transform: translateX(-50%);
 
   display: flex;
@@ -183,4 +183,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .game__turn-announcement { animation: none; }
+}
+
+@media (max-width: 600px) {
+  .game {
+    grid-template-rows: 56px minmax(0, 1fr);
+  }
 }

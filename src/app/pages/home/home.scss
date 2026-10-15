@@ -1,6 +1,6 @@
 :host {
   display: block;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 
@@ -11,16 +11,16 @@
 .home {
   position: relative;
 
-  min-height: 100vh;
+  min-height: 100dvh;
   box-sizing: border-box;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  padding: 3rem 2rem;
+  padding: var(--karak-space-7) var(--karak-space-6);
 
-  color: #fff8e8;
+  color: var(--karak-text-light);
 
   background: url('/assets/home-page.png') center / cover no-repeat;
 }
@@ -32,7 +32,7 @@
 
 .home__hero {
   width: min(1120px, 100%);
-  min-height: min(720px, calc(100vh - 6rem));
+  min-height: min(720px, calc(100dvh - 6rem));
 
   display: flex;
   align-items: stretch;
@@ -51,16 +51,18 @@
 
   text-align: center;
 
+  font-family: var(--karak-font-body);
+
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 
   h1 {
     margin: 0 0 0.55rem;
 
-    font-size: clamp(1.7rem, 2.5vw, 2.8rem);
+    font-size: var(--karak-font-size-xl);
     font-weight: 700;
     line-height: 1.05;
 
-    color: #80501d;
+    color: var(--karak-text-dark);
 
     text-shadow:
       0 1px 0 rgba(255, 248, 224, 0.9),
@@ -72,7 +74,7 @@
 
     max-width: 38ch;
 
-    color: #352b23;
+    color: var(--karak-text-dark);
     font-size: clamp(0.95rem, 1.2vw, 1.05rem);
     line-height: 1.35;
     font-weight: 600;
@@ -101,16 +103,26 @@
    ACTIONS
    ========================================================== */
 
+.home__navigation {
+  align-self: end;
+
+  display: grid;
+  justify-items: center;
+  gap: var(--karak-space-3);
+
+  width: 100%;
+}
+
 .home__actions {
   align-self: end;
 
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1.25rem;
+  gap: var(--karak-space-4);
 
   width: 100%;
-  padding-bottom: 0.2rem;
+  padding-bottom: var(--karak-space-1);
 }
 
 .home__play {
@@ -121,22 +133,22 @@
   justify-content: center;
 
   min-width: 220px;
-  min-height: 68px;
-  padding: 1rem 2.8rem;
+  min-height: 56px;
+  padding: var(--karak-space-4) var(--karak-space-6);
 
   overflow: hidden;
 
-  color: #f7ead0;
+  color: var(--karak-button-text);
   font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-decoration: none;
   text-transform: uppercase;
 
-  background: linear-gradient(180deg, #8f3329 0%, #5b1c17 100%);
+  background: var(--karak-button-danger-bg);
 
-  border: 1px solid rgba(240, 207, 138, 0.82);
-  border-radius: 4px;
+  border: var(--karak-border-default);
+  border-radius: var(--karak-radius-sm);
 
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
@@ -178,9 +190,9 @@
   }
 
   &:hover {
-    transform: translateY(-3px) scale(1.035);
+    transform: translateY(-2px) scale(1.025);
 
-    border-color: #ffde97;
+    border-color: var(--karak-text-highlight);
 
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.22),
@@ -193,8 +205,8 @@
   }
 
   &:focus-visible {
-    outline: 2px solid #ffde97;
-    outline-offset: 4px;
+    outline: var(--karak-focus-width) solid var(--karak-focus-color);
+    outline-offset: var(--karak-focus-offset);
   }
 }
 
@@ -234,11 +246,12 @@
 }
 
 .home__lore {
-  align-self: end;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--karak-space-1);
 
-  margin-top: 0.45rem;
-
-  color: #493225;
+  color: var(--karak-text-dark);
   font-size: 0.95rem;
   font-weight: 600;
   text-decoration: none;
@@ -255,8 +268,13 @@
   }
 
   &:focus-visible {
-    outline: 2px solid #6f461d;
-    outline-offset: 4px;
+    outline: var(--karak-focus-width) solid var(--karak-focus-color);
+    outline-offset: var(--karak-focus-offset);
+  }
+
+  small {
+    color: color-mix(in srgb, var(--karak-text-dark) 72%, transparent);
+    font-size: var(--karak-font-size-xs);
   }
 }
 
@@ -285,12 +303,27 @@
 
 @media (max-width: 900px) {
   .home {
-    padding: 2rem 1.25rem;
+    padding: var(--karak-space-6) var(--karak-space-4);
   }
 
   .home__content {
     width: min(620px, 100%);
-    min-height: min(720px, calc(100vh - 4rem));
+    min-height: min(720px, calc(100dvh - 4rem));
     padding-inline: 0;
+  }
+}
+
+@media (max-width: 430px) {
+  .home {
+    padding: var(--karak-space-5) var(--karak-space-3);
+  }
+
+  .home__logo {
+    width: min(78vw, 290px);
+  }
+
+  .home__play {
+    width: min(100%, 18rem);
+    min-width: 0;
   }
 }

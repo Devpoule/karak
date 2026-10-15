@@ -16,7 +16,7 @@
 
   overflow: hidden;
 
-  background: #1c1822;
+  background: var(--karak-stone-deep);
 }
 
 .game-setup__background {
@@ -78,12 +78,12 @@
 
   overflow: hidden;
 
-  border: 1px solid rgba(240, 207, 138, 0.78);
-  border-radius: 4px;
+  border: var(--karak-border-default);
+  border-radius: var(--karak-radius-sm);
 
   background: linear-gradient(180deg, rgba(137, 47, 35, 0.96), rgba(91, 28, 23, 0.98));
 
-  color: #f7ead0;
+  color: var(--karak-button-text);
 
   font: inherit;
   font-size: 1rem;
@@ -101,9 +101,9 @@
   animation: game-setup-play-glow 2.8s ease-in-out infinite;
 
   transition:
-    transform 160ms ease,
-    box-shadow 160ms ease,
-    border-color 160ms ease;
+    transform var(--karak-motion-fast) var(--karak-ease-standard),
+    box-shadow var(--karak-motion-fast) var(--karak-ease-standard),
+    border-color var(--karak-motion-fast) var(--karak-ease-standard);
 }
 
 /**
@@ -187,8 +187,8 @@
 }
 
 .game-setup__play:focus-visible {
-  outline: 2px solid rgba(255, 222, 151, 0.9);
-  outline-offset: 4px;
+  outline: var(--karak-focus-width) solid var(--karak-focus-color);
+  outline-offset: var(--karak-focus-offset);
 }
 
 /**
@@ -311,14 +311,14 @@
    * Une étape chargée, par exemple cinq héros,
    * ne doit jamais dépasser la hauteur disponible.
    */
-  max-height: calc(100vh - 4rem);
+  max-height: calc(100dvh - 4rem);
 
   overflow: hidden;
 
   transform: translate(-50%, -50%);
 
-  border: 2px solid rgba(224, 177, 93, 0.72);
-  border-radius: 7px;
+  border: var(--karak-border-strong);
+  border-radius: var(--karak-radius-md);
 
   background: linear-gradient(180deg, rgba(38, 29, 31, 0.8), rgba(25, 20, 24, 0.86));
 
@@ -327,7 +327,7 @@
     0 0 18px rgba(224, 177, 93, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
-  color: #fff8e8;
+  color: var(--karak-text-light);
 
   animation: game-setup-panel-in 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -412,7 +412,7 @@
 
   padding: 0 1.5rem;
 
-  border-bottom: 2px solid rgba(224, 177, 93, 0.52);
+  border-bottom: var(--karak-border-subtle);
 
   background: linear-gradient(180deg, rgba(56, 41, 37, 0.96), rgba(28, 21, 24, 0.94));
 
@@ -574,8 +574,8 @@
 
   overflow: hidden;
 
-  border: 1px solid rgba(224, 177, 93, 0.38);
-  border-radius: 7px;
+  border: var(--karak-border-subtle);
+  border-radius: var(--karak-radius-md);
 
   background: linear-gradient(180deg, rgba(24, 18, 22, 0.36), rgba(12, 10, 13, 0.22));
 
@@ -622,9 +622,9 @@
     width: 100%;
     margin: 0 0 0.55rem;
 
-    color: #f0cf8a;
+    color: var(--karak-text-highlight);
 
-    font-size: 1.9rem;
+    font: 700 var(--karak-font-size-lg)/1.1 var(--karak-font-display);
     line-height: 1.1;
 
     letter-spacing: 0.03em;
@@ -639,7 +639,7 @@
 
     margin: 0;
 
-    color: #f4ead6;
+    color: var(--karak-text-light);
 
     font-size: 0.95rem;
     font-weight: 500;
@@ -688,7 +688,7 @@
 
     margin: 0;
 
-    color: #f4ead6;
+    color: var(--karak-text-light);
 
     font-size: 0.92rem;
     font-weight: 600;
@@ -754,12 +754,12 @@
 
   padding: 0;
 
-  border: 1px solid rgba(224, 177, 93, 0.65);
-  border-radius: 5px;
+  border: var(--karak-border-default);
+  border-radius: var(--karak-radius-sm);
 
   background: rgba(35, 27, 30, 0.88);
 
-  color: #fff8e8;
+  color: var(--karak-button-text);
 
   font: inherit;
   font-size: 1.05rem;
@@ -778,7 +778,7 @@
   &:hover {
     transform: translateY(-2px);
 
-    border-color: rgba(238, 195, 112, 0.9);
+    border-color: var(--karak-text-highlight);
 
     background: rgba(69, 42, 39, 0.94);
   }
@@ -787,7 +787,7 @@
 .game-setup__player-count--selected {
   transform: translateY(-2px);
 
-  border-color: #f0cf8a;
+  border-color: var(--karak-text-highlight);
 
   background: rgba(112, 50, 43, 0.96);
 
@@ -835,7 +835,7 @@
 
   background: transparent;
 
-  color: rgba(244, 234, 214, 0.72);
+  color: var(--karak-text-muted);
 
   font: inherit;
   font-size: 0.82rem;
@@ -854,14 +854,14 @@
   &:hover,
   &:focus-visible,
   &--active {
-    color: #f0cf8a;
+    color: var(--karak-text-highlight);
 
     text-decoration-color: #f0cf8a;
   }
 
   &:focus-visible {
-    outline: 1px solid rgba(240, 207, 138, 0.7);
-    outline-offset: 4px;
+    outline: var(--karak-focus-width) solid var(--karak-focus-color);
+    outline-offset: var(--karak-focus-offset);
   }
 }
 
@@ -912,12 +912,12 @@
 
   padding: 0;
 
-  border: 1px solid rgba(224, 177, 93, 0.48);
-  border-radius: 4px;
+  border: var(--karak-border-default);
+  border-radius: var(--karak-radius-sm);
 
   background: rgba(35, 27, 30, 0.78);
 
-  color: #fff8e8;
+  color: var(--karak-button-text);
 
   font: inherit;
   font-size: 0.82rem;
@@ -942,8 +942,8 @@
   }
 
   &:focus-visible {
-    outline: 1px solid rgba(240, 207, 138, 0.8);
-    outline-offset: 3px;
+    outline: var(--karak-focus-width) solid var(--karak-focus-color);
+    outline-offset: var(--karak-focus-offset);
   }
 }
 
@@ -970,12 +970,13 @@
 
   padding: 0.68rem 1.45rem;
 
-  border: 1px solid rgba(224, 177, 93, 0.65);
-  border-radius: 4px;
+  min-height: 44px;
+  border: var(--karak-border-default);
+  border-radius: var(--karak-radius-sm);
 
   background: rgba(86, 34, 31, 0.88);
 
-  color: #fff8e8;
+  color: var(--karak-button-text);
 
   font: inherit;
   font-weight: 700;
@@ -995,7 +996,7 @@
   &:hover:not(:disabled) {
     transform: translateY(-2px);
 
-    background: rgba(105, 40, 36, 0.94);
+    background: var(--karak-button-danger-bg);
 
     box-shadow:
       0 6px 18px rgba(0, 0, 0, 0.42),

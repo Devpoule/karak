@@ -1,6 +1,8 @@
 <main class="codex-page">
   <header class="codex-page__header">
-    <button type="button" class="codex-page__back" (click)="goBack()">← Retour</button>
+    <button type="button" class="codex-page__back" (click)="goBack()">
+      ← {{ returnContext === 'game' ? 'Retour à la partie' : 'Accueil' }}
+    </button>
     <div>
       <p class="codex-page__eyebrow">Encyclopédie de</p>
       <h1>Karak</h1>
@@ -8,12 +10,15 @@
     </div>
   </header>
 
-  <nav class="codex-page__sections" aria-label="Rubriques du Codex">
-    <button type="button" [class.codex-page__section--selected]="section === 'universe'" [attr.aria-pressed]="section === 'universe'" (click)="selectSection('universe')">L'univers de Karak</button>
-    <button type="button" [class.codex-page__section--selected]="section === 'heroes'" [attr.aria-pressed]="section === 'heroes'" (click)="selectSection('heroes')">Héros</button>
-    <button type="button" [class.codex-page__section--selected]="section === 'bestiary'" [attr.aria-pressed]="section === 'bestiary'" (click)="selectSection('bestiary')">Bestiaire</button>
-    <button type="button" [class.codex-page__section--selected]="section === 'rules'" [attr.aria-pressed]="section === 'rules'" (click)="selectSection('rules')">Règles et mécaniques</button>
-  </nav>
+  <div class="codex-page__sections-shell">
+    <nav class="codex-page__sections" aria-label="Rubriques du Codex">
+      <button type="button" [class.codex-page__section--selected]="section === 'universe'" [attr.aria-pressed]="section === 'universe'" (click)="selectSection('universe')">L'univers de Karak</button>
+      <button type="button" [class.codex-page__section--selected]="section === 'heroes'" [attr.aria-pressed]="section === 'heroes'" (click)="selectSection('heroes')">Héros</button>
+      <button type="button" [class.codex-page__section--selected]="section === 'bestiary'" [attr.aria-pressed]="section === 'bestiary'" (click)="selectSection('bestiary')">Bestiaire</button>
+      <button type="button" [class.codex-page__section--selected]="section === 'rules'" [attr.aria-pressed]="section === 'rules'" (click)="selectSection('rules')">Règles et mécaniques</button>
+    </nav>
+    <span class="codex-page__sections-hint" aria-hidden="true">›</span>
+  </div>
 
   @if (section === 'universe') {
     <article class="codex-page__universe">

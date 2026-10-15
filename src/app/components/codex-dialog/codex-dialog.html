@@ -1,16 +1,18 @@
 <div class="codex-dialog__backdrop" [class.codex-dialog__backdrop--left]="placement === 'left'" [class.codex-dialog__backdrop--right]="placement === 'right'" (click)="close()">
   <section
+    #dialogElement
     class="codex-dialog"
     role="dialog"
+    tabindex="-1"
     aria-modal="true"
-    [attr.aria-label]="title"
+    [attr.aria-labelledby]="titleId"
     (click)="$event.stopPropagation()"
   >
     <header class="codex-dialog__header">
       @if (icon) { <img [src]="icon" [alt]="iconAlt" draggable="false" /> }
       <div>
         @if (subtitle) { <p class="codex-dialog__eyebrow">{{ subtitle }}</p> }
-        <h2>{{ title }}</h2>
+        <h2 [id]="titleId">{{ title }}</h2>
       </div>
     </header>
     <div class="codex-dialog__body">

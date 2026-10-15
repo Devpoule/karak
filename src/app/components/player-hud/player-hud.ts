@@ -1,4 +1,4 @@
-import { Component, effect } from '@angular/core';
+import { Component, effect, HostListener } from '@angular/core';
 
 
 
@@ -100,6 +100,7 @@ interface HudPlayerEntry {
 })
 
 export class PlayerHud {
+  private compactViewport = false;
 
 
   // ==========================================================
@@ -212,6 +213,11 @@ export class PlayerHud {
     private readonly playerService: PlayerService,
 
   ) {
+    this.compactViewport = this.isCompactViewport();
+    if (this.compactViewport) {
+      this.leftPanelOpen = false;
+      this.rightPanelOpen = false;
+    }
 
     effect(() => {
       const playerIndex = this.gameService.activePlayerIndex();
@@ -237,6 +243,28 @@ export class PlayerHud {
       });
     });
   }
+
+  private isCompactViewport(): boolean {
+    return typeof window !== 'undefined' && window.innerWidth <= 760;
+  }
+
+  @HostListener('window:resize')
+  onViewportResize(): void {
+    const compactViewport = this.isCompactViewport();
+    if (compactViewport === this.compactViewport) return;
+
+    this.compactViewport = compactViewport;
+    if (compactViewport) {
+      this.leftPanelOpen = false;
+      this.rightPanelOpen = false;
+      const activeIndex = this.activePlayerIndex;
+      if (activeIndex !== null) this.showActivePlayerPanel(activeIndex);
+      return;
+    }
+
+    this.leftPanelOpen = true;
+    this.rightPanelOpen = true;
+  }
   /**
 
    * Ouvre la fiche du joueur actif sans fermer le panneau opposé.
@@ -258,6 +286,11 @@ export class PlayerHud {
     }
 
 
+
+    if (this.compactViewport) {
+      if (player.controller === 'human') this.rightPanelOpen = false;
+      else this.leftPanelOpen = false;
+    }
 
     if (player.controller === 'human') {
       this.openLeftPlayer(playerIndex);
@@ -498,6 +531,11 @@ export class PlayerHud {
    */
 
   togglePlayerPanel(playerIndex: number): void {
+    const selectedPlayer = this.players[playerIndex];
+    if (this.compactViewport) {
+      if (selectedPlayer?.controller === 'human') this.rightPanelOpen = false;
+      else if (selectedPlayer?.controller === 'ai') this.leftPanelOpen = false;
+    }
 
     const player = this.players[playerIndex];
 
