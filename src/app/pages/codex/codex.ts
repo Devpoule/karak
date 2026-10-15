@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Location } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { HERO_DEFINITIONS } from '../../data/hero-definitions';
 import { HeroDefinition } from '../../models/hero';
@@ -24,13 +23,22 @@ export class Codex implements OnInit {
   readonly bestiary = CODEX_BESTIARY;
   readonly rules = CODEX_RULE_SECTIONS;
   readonly lore = CODEX_LORE;
+  /** Origine explicite du Codex, utilisée pour un retour déterministe. */
+  returnContext: 'home' | 'game' = 'home';
   section: 'universe' | 'heroes' | 'bestiary' | 'rules' = 'universe';
   selectedHero = this.heroes[0];
   selectedMonster = this.bestiary[0];
 
-  constructor(private readonly location: Location, private readonly route: ActivatedRoute) {}
+  constructor(
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+  ) {}
 
   ngOnInit(): void {
+    this.route.queryParamMap.subscribe(params => {
+      this.returnContext = params.get('from') === 'game' ? 'game' : 'home';
+    });
+
     this.route.fragment.subscribe(fragment => {
       if (!fragment) return;
       this.section = fragment === 'heroes' || fragment === 'bestiary'
@@ -55,6 +63,6 @@ export class Codex implements OnInit {
   originLabel(origin: 'base' | 'regent'): string { return contentOrigin(origin).name; }
 
   goBack(): void {
-    this.location.back();
+    void this.router.navigateByUrl(this.returnContext === 'game' ? '/play' : '/');
   }
 }

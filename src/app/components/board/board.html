@@ -316,7 +316,7 @@
           <h2 id="sneak-title">Marche rampante — Adéryn</h2>
           <p>Un monstre se trouve sur votre chemin. Adéryn peut l'affronter ou utiliser Marche rampante pour éviter le combat.</p>
           <div class="board__reward-actions">
-            <button type="button" (click)="gameService.choosePendingSneak('combat')">Combattre</button>
+            <button type="button" autofocus (click)="gameService.choosePendingSneak('combat')">Combattre</button>
             <button type="button" (click)="gameService.choosePendingSneak('sneak')">Passer discrètement</button>
           </div>
         </section>
@@ -347,7 +347,7 @@
         <h2 id="treasure-title">Coffre fermé</h2>
         <img class="board__reward-image" [src]="pending.treasure.image" alt="Coffre fermé" draggable="false" />
         <div class="board__reward-actions">
-          <button type="button" [disabled]="!canOpenPendingTreasure" (click)="openPendingTreasure()">
+          <button type="button" autofocus [disabled]="!canOpenPendingTreasure" (click)="openPendingTreasure()">
             Ouvrir le coffre
           </button>
         </div>

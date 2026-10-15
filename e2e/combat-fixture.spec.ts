@@ -147,6 +147,14 @@ test('combat fixture reste lisible sur écran étroit', async ({ page }) => {
   )).toBe(true);
 });
 
+test('combat fixture reste lisible en paysage court', async ({ page }) => {
+  await page.setViewportSize({ width: 844, height: 390 });
+  await runCombatScenario(page, 5, 'gagne', 'combat-roll-landscape.png', 'combat-victory-landscape.png');
+  await expect.poll(async () => page.evaluate(() =>
+    document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+  )).toBe(true);
+});
+
 test('combat fixture affiche le bonus vert d’un Tir magique', async ({ page }) => {
   await runCombatScenario(page, 6, 'gagne', 'combat-roll-magic.png', 'combat-magic.png', true);
 });

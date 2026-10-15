@@ -409,3 +409,59 @@
     animation: none;
   }
 }
+
+/*
+ * Mode compact : une seule fiche devient un tiroir bas afin de
+ * préserver la zone centrale du plateau. PlayerHud ferme le panneau
+ * opposé quand le viewport est compact.
+ */
+@media (max-width: 760px) {
+  .player-hud {
+    --sidebar-width: min(22rem, calc(100vw - 1rem));
+    --sidebar-edge: .5rem;
+  }
+
+  .player-hud__side {
+    top: auto;
+    bottom: calc(4.75rem + env(safe-area-inset-bottom));
+    max-height: min(62dvh, 34rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .player-hud__side--left,
+  .player-hud__side--right {
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, calc(100% + 1rem));
+  }
+
+  .player-hud__side--open {
+    transform: translate(-50%, 0);
+  }
+
+  .player-hud__turn-controls {
+    bottom: max(.75rem, env(safe-area-inset-bottom));
+    width: calc(100% - 1rem);
+    gap: .35rem;
+    justify-content: center;
+  }
+
+  .player-hud__players {
+    gap: .25rem;
+  }
+
+  .player-hud__player-control {
+    width: clamp(44px, 12vw, 52px);
+    height: 52px;
+    flex-basis: clamp(44px, 12vw, 52px);
+  }
+
+  .player-hud__turn-center {
+    min-width: 0;
+  }
+
+  .player-hud__movements {
+    max-width: min(45vw, 14rem);
+  }
+}

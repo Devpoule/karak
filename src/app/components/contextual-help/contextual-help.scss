@@ -15,21 +15,21 @@
   width: 1.55rem;
   height: 1.55rem;
   padding: 0;
-  border: 1px solid #e8bd58;
-  border-radius: 50%;
+  border: var(--karak-border-default);
+  border-radius: var(--karak-radius-round);
   background: #192333;
-  color: #f6d77d;
+  color: var(--karak-text-highlight);
   cursor: pointer;
   font: inherit;
   font-size: .82rem;
   font-weight: 700;
   line-height: 1;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--karak-shadow-md);
   transition:
-    opacity 150ms ease,
-    transform 150ms ease,
-    background 150ms ease,
-    box-shadow 150ms ease;
+    opacity var(--karak-motion-fast) var(--karak-ease-standard),
+    transform var(--karak-motion-fast) var(--karak-ease-standard),
+    background var(--karak-motion-fast) var(--karak-ease-standard),
+    box-shadow var(--karak-motion-fast) var(--karak-ease-standard);
 }
 
 .contextual-help__trigger:hover {
@@ -45,8 +45,8 @@
 }
 
 .contextual-help__trigger:focus-visible {
-  outline: 2px solid #fff0ad;
-  outline-offset: 3px;
+  outline: var(--karak-focus-width) solid var(--karak-focus-color);
+  outline-offset: var(--karak-focus-offset);
 }
 
 .contextual-help__popover {
@@ -69,8 +69,8 @@
 
 .contextual-help__popover h2 {
   margin: 0 2rem .55rem 0;
-  color: #f6d77d;
-  font: 700 1rem/1.25 Georgia, 'Times New Roman', serif;
+  color: var(--karak-text-highlight);
+  font: 700 1rem/1.25 var(--karak-font-display);
 }
 
 .contextual-help__popover p {

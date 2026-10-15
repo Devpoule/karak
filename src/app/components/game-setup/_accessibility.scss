@@ -5,11 +5,19 @@
   .game-setup__setup,
   .game-setup__play,
   .game-setup__play::before,
-  .game-setup__play::after {
-    animation: none;
+  .game-setup__play::after,
+  .game-setup__player-roll--awaiting,
+  .game-setup__roll-trigger--active,
+  .game-setup__die,
+  .game-setup__icon-action--attention,
+  .game-setup__drawing-indicator,
+  .game-setup__player-roll--winner,
+  .game-setup__winner-message,
+  .game-setup__sparkles span {
+    animation: none !important;
   }
 
   .game-setup__play {
-    transition: none;
+    transition: none !important;
   }
 }

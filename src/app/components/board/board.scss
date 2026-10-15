@@ -24,6 +24,7 @@
   overflow: hidden;
   cursor: grab;
   user-select: none;
+  touch-action: none;
   background:
     radial-gradient(circle at 50% 35%, rgba(105, 88, 70, 0.12), transparent 45%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.018) 25%, transparent 25%),
@@ -582,11 +583,11 @@
 .board__reward-backdrop {
   position: absolute;
   inset: 0;
-  z-index: 60;
+  z-index: var(--karak-z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: var(--karak-space-5);
   background: rgba(12, 10, 9, 0.72);
   cursor: default;
 }
@@ -594,30 +595,65 @@
   width: min(100%, 380px);
   max-height: 100%;
   overflow-y: auto;
-  padding: 24px;
-  border: 1px solid rgba(224, 187, 104, 0.75);
-  border-radius: 10px;
-  background: #29221c;
-  color: #eee1c5;
+  padding: var(--karak-space-5);
+  border: var(--karak-border-default);
+  border-radius: var(--karak-radius-lg);
+  background: var(--karak-stone-deep);
+  color: var(--karak-text-light);
   text-align: center;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
+  box-shadow: var(--karak-shadow-lg);
 }
-.board__reward-panel h2 { margin: 0 0 16px; font-size: 1.35rem; }
-.board__reward-panel p { margin: 12px 0; }
+
+@media (max-width: 760px) {
+  .board__movement-control,
+  .board__end-turn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+  }
+
+  .board__camera-tools {
+    right: .5rem;
+    bottom: .5rem;
+    gap: .35rem;
+  }
+
+  .board__camera-tool {
+    width: 44px;
+    height: 44px;
+  }
+
+  .board__reward-backdrop {
+    padding: .5rem;
+  }
+
+  .board__reward-panel {
+    max-height: calc(100% - 1rem);
+    padding: var(--karak-space-4);
+  }
+
+  .board__reward-actions button {
+    min-height: 44px;
+  }
+}
+.board__reward-panel h2 { margin: 0 0 var(--karak-space-4); color: var(--karak-text-highlight); font: 700 var(--karak-font-size-lg)/var(--karak-line-heading) var(--karak-font-display); }
+.board__reward-panel p { margin: var(--karak-space-3) 0; }
 .board__reward-image { display: block; width: 100px; height: 100px; margin: 0 auto; object-fit: contain; }
 .board__reward-notice { color: #f2c9a1; }
-.board__reward-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
+.board__reward-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--karak-space-3); margin-top: var(--karak-space-5); }
 .board__reward-actions button {
-  padding: 10px 14px;
-  border: 1px solid rgba(224, 187, 104, 0.7);
-  border-radius: 6px;
-  background: #49392a;
-  color: #fff8e8;
+  padding: .625rem .875rem;
+  border: var(--karak-border-default);
+  border-radius: var(--karak-radius-sm);
+  background: var(--karak-button-bg);
+  color: var(--karak-button-text);
   font: inherit;
   cursor: pointer;
+  transition: filter var(--karak-motion-fast) var(--karak-ease-standard),
+    transform var(--karak-motion-fast) var(--karak-ease-standard);
 }
-.board__reward-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
-.board__reward-actions button:not(:disabled):hover { filter: brightness(1.2); }
+.board__reward-actions button:disabled { opacity: var(--karak-button-disabled-opacity); cursor: not-allowed; }
+.board__reward-actions button:not(:disabled):hover { filter: brightness(1.12); transform: translateY(-1px); }
 
 /*
  * Équipements au sol : tous les objets utilisent la même référence visuelle,

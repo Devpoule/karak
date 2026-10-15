@@ -32,6 +32,9 @@ body {
 
 body {
   min-height: 100vh;
+  color: var(--karak-text-light);
+  font-family: var(--karak-font-body);
+  line-height: var(--karak-line-body);
 }
 
 
@@ -105,6 +108,49 @@ app-root {
   --karak-text-dark: #2d2018;
   --karak-text-light: #ead8bb;
   --karak-text-highlight: #ffe5b7;
+  --karak-text-muted: #b9aa93;
+  --karak-text-on-danger: #fff4e8;
+
+  /* Typographie */
+  --karak-font-display: Georgia, 'Times New Roman', serif;
+  --karak-font-body: Arial, sans-serif;
+  --karak-font-size-xs: .72rem;
+  --karak-font-size-sm: .85rem;
+  --karak-font-size-md: 1rem;
+  --karak-font-size-lg: clamp(1.2rem, 2.5vw, 1.8rem);
+  --karak-font-size-xl: clamp(1.8rem, 4vw, 3rem);
+  --karak-line-body: 1.55;
+  --karak-line-heading: 1.15;
+
+  /* Espacements */
+  --karak-space-1: .25rem;
+  --karak-space-2: .5rem;
+  --karak-space-3: .75rem;
+  --karak-space-4: 1rem;
+  --karak-space-5: 1.5rem;
+  --karak-space-6: 2rem;
+  --karak-space-7: 3rem;
+
+  /* Bordures et rayons */
+  --karak-border-subtle: 1px solid rgba(197, 167, 130, .38);
+  --karak-border-default: 1px solid var(--karak-stone-highlight);
+  --karak-border-strong: 2px solid var(--karak-parchment-dark);
+  --karak-radius-sm: .25rem;
+  --karak-radius-md: .5rem;
+  --karak-radius-lg: .75rem;
+  --karak-radius-round: 50%;
+
+  /* Variantes de boutons futures, sans primitive Angular imposée. */
+  --karak-button-text: #fff8df;
+  --karak-button-bg: linear-gradient(var(--karak-stone-mid), var(--karak-stone-dark));
+  --karak-button-border: var(--karak-stone-highlight);
+  --karak-button-hover-bg: var(--karak-parchment);
+  --karak-button-hover-text: var(--karak-text-dark);
+  --karak-button-danger-bg: linear-gradient(#8f3329, #5b1c17);
+  --karak-button-disabled-opacity: .48;
+  --karak-focus-color: #fff0ad;
+  --karak-focus-width: 2px;
+  --karak-focus-offset: 3px;
 
 
   /* ----------------------------------------------------------
@@ -112,6 +158,11 @@ app-root {
      ---------------------------------------------------------- */
 
   --karak-red: #9b3d2c;
+  --karak-danger: #b94736;
+  --karak-danger-bright: #e05a45;
+  --karak-success: #78d99a;
+  --karak-warning: #f0a85e;
+  --karak-info: #b8c9db;
 
 
   /* ----------------------------------------------------------
@@ -119,4 +170,42 @@ app-root {
      ---------------------------------------------------------- */
 
   --karak-shadow: rgba(0, 0, 0, 0.65);
+  --karak-shadow-sm: 0 .25rem .5rem rgba(0, 0, 0, .4);
+  --karak-shadow-md: 0 .5rem 1.5rem rgba(0, 0, 0, .55);
+  --karak-shadow-lg: 0 1rem 3rem rgba(0, 0, 0, .75);
+
+  /* Motion */
+  --karak-motion-fast: 140ms;
+  --karak-motion-normal: 240ms;
+  --karak-motion-slow: 500ms;
+  --karak-motion-dramatic: 900ms;
+  --karak-ease-standard: cubic-bezier(.2, .8, .2, 1);
+  --karak-ease-emphasis: cubic-bezier(.22, 1, .36, 1);
+  --karak-ease-linear: linear;
+
+  /*
+   * Hiérarchie : contenu plateau < HUD < feedback < dialogue < modal.
+   * Les composants peuvent réserver les niveaux locaux 1 à 19.
+   */
+  --karak-z-base: 0;
+  --karak-z-board-content: 5;
+  --karak-z-hud: 20;
+  --karak-z-feedback: 30;
+  --karak-z-dialog: 50;
+  --karak-z-modal: 60;
+  --karak-z-cinematic: 80;
+}
+
+/* Socle commun de visibilité du focus clavier. */
+:where(button, a, input, select, textarea):focus-visible {
+  outline: var(--karak-focus-width) solid var(--karak-focus-color);
+  outline-offset: var(--karak-focus-offset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
 }

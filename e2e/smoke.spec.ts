@@ -21,6 +21,50 @@ test('la page de jeu affiche la préparation de partie', async ({ page }) => {
   await expect(page.getByText("Combien d'aventuriers entrent dans le donjon ?")).toBeVisible();
 });
 
+test('le Codex depuis l’accueil revient à l’accueil', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.home__lore').click();
+
+  await expect(page).toHaveURL(/\/codex\?from=home$/);
+  await expect(page.getByRole('heading', { name: 'Karak', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '← Accueil' })).toBeVisible();
+
+  await page.getByRole('button', { name: '← Accueil' }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('link', { name: /Jouer/ })).toBeVisible();
+});
+
+test('le Codex depuis la préparation revient à la préparation', async ({ page }) => {
+  await page.goto('/play');
+  await page.getByRole('link', { name: 'Codex' }).click();
+
+  await expect(page).toHaveURL(/\/codex\?from=game$/);
+  await page.getByRole('button', { name: '← Retour à la partie' }).click();
+  await expect(page).toHaveURL(/\/play$/);
+  await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
+});
+
+test('l’accueil et la préparation restent sans débordement aux six dimensions cibles', async ({ page }) => {
+  const viewports = [
+    [1920, 1080],
+    [1366, 768],
+    [1024, 768],
+    [768, 1024],
+    [390, 844],
+    [844, 390],
+  ] as const;
+
+  for (const [width, height] of viewports) {
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    await page.getByRole('link', { name: /Jouer/ }).click();
+    await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
+    await expect.poll(async () => page.evaluate(() =>
+      document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+    )).toBe(true);
+  }
+});
+
 test('la préparation reste lisible sur écran étroit', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
@@ -30,10 +74,29 @@ test('la préparation reste lisible sur écran étroit', async ({ page }) => {
   await expect.poll(async () => page.evaluate(() =>
     document.documentElement.scrollWidth <= document.documentElement.clientWidth,
   )).toBe(true);
+  await expect(page.locator('.game-header__turn-label--compact')).toHaveText('Tour');
+  await expect(page.locator('.game-header__turn-label--full')).toBeHidden();
   await page.screenshot({
     path: 'playwright-report/karak-setup-narrow.png',
     fullPage: true,
   });
+});
+
+test('la préférence de mouvement réduit neutralise les animations de préparation', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/play');
+  await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
+
+  const animation = await page.locator('.game-setup__content').evaluate(element => {
+    const style = getComputedStyle(element);
+    return {
+      name: style.animationName,
+      duration: style.animationDuration,
+    };
+  });
+
+  expect(animation.name).toBe('none');
+  expect(animation.duration).toBe('0s');
 });
 
 test('la préparation progresse jusqu’à la détermination du premier joueur', async ({ page }) => {
@@ -145,7 +208,8 @@ test('les fiches de héros sont accessibles depuis le plateau', async ({ page })
   await expect(infoButton).toBeVisible();
   await infoButton.click();
   await expect(page.getByRole('dialog').first()).toBeVisible();
-  await page.locator('.codex-dialog__backdrop').click({ position: { x: 5, y: 5 } });
+  await expect(page.locator('.codex-dialog__close')).toHaveCount(0);
+  await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   await expect(page.getByRole('button', { name: /^Pouvoir 1 :/ }).first()).toBeVisible();
