@@ -76,15 +76,18 @@ describe('GameService contrat d entrée dans une tuile', () => {
     expect(turnService.remainingMovements()).toBe(0);
   });
 
-  it('applique Sneak à Aderyn sur un monstre découvert, sans neutraliser un coffre découvert', () => {
+  it('résout le monstre découvert avant de conserver Sneak pour les tuiles connues', () => {
     player.heroId = 'aderyn';
     const room = { ...tile(), definitionId: 'straight-room' };
     (tokenBagService as unknown as { bag: string[] }).bag = ['closed-chest', 'giant-rat'];
     tokenBagService.remainingTokens.set(2);
 
-    expect(gameService.resolveTileEntry(player, tile(), room, true)).toBe('none');
+    expect(gameService.resolveTileEntry(player, tile(), room, true)).toBe('combat');
     expect(room.tokenId).toBe('giant-rat');
-    expect(combatService.hasPendingCombat).toBe(false);
+    expect(combatService.hasPendingCombat).toBe(true);
+
+    combatService.initialize();
+    turnService.resetMovements();
 
     const chestRoom = { ...tile('closed-chest'), definitionId: 'straight-room' };
     playerService.addEquipment(player, getEquipmentDefinition('key')!);
