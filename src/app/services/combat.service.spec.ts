@@ -64,6 +64,44 @@ describe('CombatService séparation du lancer et de la résolution', () => {
     vi.restoreAllMocks();
   });
 
+  it('identifie un lancer déjà gagnant avant toute option post-lancer', () => {
+    vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0.999)
+      .mockReturnValueOnce(0);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const combatService = new CombatService(playerService);
+    const player = playerService.players[0];
+
+    player.heroId = 'victorius';
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, createTile());
+    combatService.rollPendingCombat();
+
+    expect(combatService.isCurrentRollWinning()).toBe(true);
+    expect(combatService.getAvailableHeroRerolls()).toContain('die2');
+
+    vi.restoreAllMocks();
+  });
+
+  it('considère l égalité comme gagnante pour Aderyn non maudite', () => {
+    vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.5);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const combatService = new CombatService(playerService);
+    const player = playerService.players[0];
+
+    player.heroId = 'aderyn';
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, createTile());
+    combatService.rollPendingCombat();
+
+    expect(combatService.pendingCombatRoll()?.attackPower).toBe(5);
+    expect(combatService.isCurrentRollWinning()).toBe(true);
+
+    vi.restoreAllMocks();
+  });
+
   it('ne retourne le monstre qu’à la résolution définitive d’une victoire', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.999);
     const playerService = new PlayerService();
