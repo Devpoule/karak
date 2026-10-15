@@ -452,6 +452,17 @@ export class CombatOverlay implements OnDestroy {
     this.schedule(() => {
       this.presentationState.set('decision');
 
+      // Un lancer gagnant ne nécessite aucun choix supplémentaire :
+      // relance, sort ou sacrifice ne peuvent plus améliorer son issue.
+      if (this.combatService.isCurrentRollWinning()) {
+        this.schedule(() => {
+          if (this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() === roll) {
+            this.resolveCombatAfterRoll();
+          }
+        }, 0);
+        return;
+      }
+
       if (roll.player.controller === 'ai') {
         this.schedule(() => {
           if (this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() === roll) {

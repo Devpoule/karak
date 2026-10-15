@@ -277,6 +277,25 @@ export class CombatService {
   }
 
   /**
+   * Indique si le lancer courant garantit déjà la victoire.
+   *
+   * Ce prédicat est partagé par l'interface et la résolution afin qu'aucune
+   * option post-lancer ne soit proposée après un résultat définitif.
+   */
+  isCurrentRollWinning(): boolean {
+    const combat = this.pendingCombat();
+    const roll = this.pendingCombatRoll();
+    if (!combat || !roll) return false;
+
+    return roll.attackPower > combat.monster.strength
+      || (
+        combat.player.heroId === 'aderyn'
+        && !combat.player.isCursed
+        && roll.attackPower === combat.monster.strength
+      );
+  }
+
+  /**
    * Résout définitivement le combat à partir du lancer enregistré.
    *
    * attaque > monstre : victoire
@@ -296,9 +315,7 @@ export class CombatService {
 
     let outcome: CombatOutcome;
 
-    const winsTie = combat.player.heroId === 'aderyn' && !combat.player.isCursed;
-    if (roll.attackPower > combat.monster.strength
-      || (winsTie && roll.attackPower === combat.monster.strength)) {
+    if (this.isCurrentRollWinning()) {
       outcome = 'victory';
     } else if (roll.attackPower === combat.monster.strength) {
       outcome = 'tie';
