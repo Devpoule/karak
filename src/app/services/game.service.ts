@@ -655,7 +655,10 @@ export class GameService {
       this.revealNewRoom(destinationTile, player, sourceTile);
       if (this.pendingTokenChoice()) return 'token-choice';
     }
-    const classification = this.classifyTileEntry(player, destinationTile);
+    // Une salle nouvellement découverte impose la résolution de son contenu.
+    // Sneak reste disponible uniquement lors d'un déplacement vers une tuile
+    // déjà connue, où Aderyn peut choisir de traverser le monstre sans combat.
+    const classification = this.classifyTileEntry(player, destinationTile, !revealRoom);
 
     if (classification.kind === 'empty' || classification.kind === 'already-resolved') {
       return this.offerGroundEquipment(player, destinationTile);
@@ -720,6 +723,7 @@ export class GameService {
   private classifyTileEntry(
     player: Player,
     destinationTile: PlacedTile,
+    allowSneak = true,
   ): TileEntryClassification {
     if (!destinationTile.tokenId) return { kind: 'empty' };
 
@@ -731,6 +735,7 @@ export class GameService {
     if (
       token.kind === 'monster'
       && destinationTile.tokenFace !== 'back'
+      && allowSneak
       && player.heroId === 'aderyn'
       && !player.isCursed
     ) {
