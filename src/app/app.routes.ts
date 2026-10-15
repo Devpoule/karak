@@ -1,11 +1,5 @@
 import { Routes } from '@angular/router';
 
-import { Home } from './pages/home/home';
-import { Game } from './pages/game/game';
-import { Codex } from './pages/codex/codex';
-import { Entry } from './pages/entry/entry';
-
-
 /**
  * Routes principales de l'application.
  *
@@ -19,15 +13,15 @@ import { Entry } from './pages/entry/entry';
 export const routes: Routes = [
   {
     path: '',
-    component: Home,
+    loadComponent: () => import('./pages/home/home').then(({ Home }) => Home),
   },
   {
     path: 'game',
-    component: Entry,
+    loadComponent: () => import('./pages/entry/entry').then(({ Entry }) => Entry),
   },
   {
     path: 'play',
-    component: Game,
+    loadComponent: () => import('./pages/game/game').then(({ Game }) => Game),
   },
   {
     path: 'rules',
@@ -36,6 +30,6 @@ export const routes: Routes = [
   },
   {
     path: 'codex',
-    component: Codex,
+    loadComponent: () => import('./pages/codex/codex').then(({ Codex }) => Codex),
   },
 ];
