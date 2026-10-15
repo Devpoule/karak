@@ -309,6 +309,20 @@
       </div>
     }
   </div>
+  @if (gameService.pendingSneakChoice(); as sneak) {
+    @if (sneak.player.controller === 'human') {
+      <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
+        <section class="board__reward-panel" role="dialog" aria-modal="true" aria-labelledby="sneak-title">
+          <h2 id="sneak-title">Marche rampante — Adéryn</h2>
+          <p>Un monstre se trouve sur votre chemin. Adéryn peut l'affronter ou utiliser Marche rampante pour éviter le combat.</p>
+          <div class="board__reward-actions">
+            <button type="button" (click)="gameService.choosePendingSneak('combat')">Combattre</button>
+            <button type="button" (click)="gameService.choosePendingSneak('sneak')">Passer discrètement</button>
+          </div>
+        </section>
+      </div>
+    }
+  }
   @if (gameService.pendingTokenChoice(); as choice) {
     @if (choice.player.controller === 'human') {
       <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">

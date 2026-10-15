@@ -81,6 +81,11 @@ export class AiService {
       return 'waiting';
     }
 
+    const pendingSneak = this.gameService.pendingSneakChoice();
+    if (pendingSneak?.player === player) {
+      return this.gameService.choosePendingSneak('combat') ? 'resolved' : 'unsupported:sneak-choice';
+    }
+
     const pendingTokenChoice = this.gameService.pendingTokenChoice();
     if (pendingTokenChoice?.player === player) {
       // Choix déterministe : conserver le premier jeton tiré.

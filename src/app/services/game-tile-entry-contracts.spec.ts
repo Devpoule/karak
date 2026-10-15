@@ -110,9 +110,10 @@ describe('GameService contrat d entrée dans une tuile', () => {
 
     const result = gameService.resolveTileEntry(player, tile(), tile('giant-rat'));
 
-    expect(result).toBe('none');
+    expect(result).toBe('sneak-choice');
     expect(combatService.hasPendingCombat).toBe(false);
-    expect(turnService.remainingMovements()).toBe(4);
+    expect(gameService.pendingSneakChoice()?.player).toBe(player);
+    expect(turnService.remainingMovements()).toBe(0);
   });
 
   it('laisse passer un coffre fermé lorsque le joueur ne possède pas de clé', () => {

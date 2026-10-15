@@ -835,14 +835,39 @@ describe('GameService résolution des salles découvertes par Aderyn', () => {
     expect(turnService.remainingMovements()).toBe(0);
   });
 
-  it('conserve Sneak pour un monstre déjà présent sur le plan', () => {
+  it('propose le choix Sneak pour un monstre déjà présent sur le plan', () => {
     const player = playerService.players[0];
     player.heroId = 'aderyn';
     const tile = roomWithToken('giant-rat');
 
-    expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile)).toBe('none');
+    expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile)).toBe('sneak-choice');
     expect(combatService.hasPendingCombat).toBe(false);
-    expect(turnService.remainingMovements()).toBe(4);
+    expect(gameService.pendingSneakChoice()?.monster.id).toBe('giant-rat');
+    expect(turnService.remainingMovements()).toBe(0);
+  });
+
+  it('permet à Adéryn de choisir le combat depuis la résolution Sneak', () => {
+    const player = playerService.players[0];
+    player.heroId = 'aderyn';
+    const destination = roomWithToken('giant-rat');
+
+    gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, destination);
+
+    expect(gameService.choosePendingSneak('combat')).toBe(true);
+    expect(gameService.pendingSneakChoice()).toBeNull();
+    expect(combatService.hasPendingCombat).toBe(true);
+  });
+
+  it('permet à Adéryn de passer discrètement sans combat', () => {
+    const player = playerService.players[0];
+    player.heroId = 'aderyn';
+    const destination = roomWithToken('giant-rat');
+
+    gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, destination);
+
+    expect(gameService.choosePendingSneak('sneak')).toBe(true);
+    expect(gameService.pendingSneakChoice()).toBeNull();
+    expect(combatService.hasPendingCombat).toBe(false);
   });
 
   it('rend disponible l’interaction avec un objet découvert sans malédiction', () => {

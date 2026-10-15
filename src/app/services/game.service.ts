@@ -49,7 +49,7 @@ export interface PendingReward {
   sourceTile: PlacedTile;
   remainingRewards: readonly MonsterReward[];
 }
-export type TileEntryResolution = 'none' | 'combat' | 'treasure' | 'reward' | 'equipment' | 'token-choice';
+export type TileEntryResolution = 'none' | 'combat' | 'treasure' | 'reward' | 'equipment' | 'token-choice' | 'sneak-choice';
 
 /** Objet au sol en attente d'une décision du joueur. */
 export interface PendingGroundEquipment {
@@ -66,6 +66,14 @@ export interface PendingTokenChoice {
   tokens: readonly [TokenDefinition, TokenDefinition];
 }
 
+/** Choix d'Adéryn face à un monstre déjà révélé. */
+export interface PendingSneakChoice {
+  player: Player;
+  monster: MonsterTokenDefinition;
+  sourceTile: PlacedTile;
+  destinationTile: PlacedTile;
+}
+
 export interface HealingPortalSelection {
   readonly user: Player;
   readonly target: Player | null;
@@ -75,7 +83,7 @@ export interface HealingPortalSelection {
 type TileEntryClassification =
   | { kind: 'empty' }
   | { kind: 'unknown' }
-  | { kind: 'sneak' }
+  | { kind: 'sneak'; token: MonsterTokenDefinition }
   | { kind: 'monster'; token: MonsterTokenDefinition }
   | { kind: 'monster-reward'; token: MonsterTokenDefinition }
   | { kind: 'already-resolved' }
@@ -154,6 +162,7 @@ export class GameService {
   /** Équipement présent sur la tuile et proposé au joueur actif. */
   readonly pendingGroundEquipment = signal<PendingGroundEquipment | null>(null);
   readonly pendingTokenChoice = signal<PendingTokenChoice | null>(null);
+  readonly pendingSneakChoice = signal<PendingSneakChoice | null>(null);
   /** Sélection temporaire partagée entre l'inventaire et le plateau. */
   readonly healingPortalSelection = signal<HealingPortalSelection | null>(null);
 
@@ -187,7 +196,8 @@ export class GameService {
       || this.pendingTreasure() !== null
       || this.pendingReward() !== null
       || this.pendingGroundEquipment() !== null
-      || this.pendingTokenChoice() !== null;
+      || this.pendingTokenChoice() !== null
+      || this.pendingSneakChoice() !== null;
   }
 
   /** Joueurs vers lesquels Xanros peut actuellement se substituer. */
@@ -303,6 +313,7 @@ export class GameService {
     this.pendingTreasure.set(null);
     this.pendingReward.set(null);
     this.pendingGroundEquipment.set(null);
+    this.pendingSneakChoice.set(null);
     this.pendingTokenChoice.set(null);
     this.healingPortalSelection.set(null);
     this.groundEquipmentByTile = new Map<string, Equipment[]>();
@@ -619,6 +630,17 @@ export class GameService {
     return true;
   }
 
+  /** Résout le choix tactique d'Adéryn face à un monstre révélé. */
+  choosePendingSneak(action: 'combat' | 'sneak'): boolean {
+    const pending = this.pendingSneakChoice();
+    if (!pending || pending.player !== this.activePlayer || pending.player.isCursed) return false;
+    this.pendingSneakChoice.set(null);
+    if (action === 'combat') {
+      return this.combatService.startCombat(pending.player, pending.sourceTile, pending.destinationTile);
+    }
+    return true;
+  }
+
   /**
    * Résout les conséquences communes de l'entrée d'un héros
    * sur une tuile.
@@ -658,11 +680,21 @@ export class GameService {
     // déjà connue, où Aderyn peut choisir de traverser le monstre sans combat.
     const classification = this.classifyTileEntry(player, destinationTile, !revealRoom);
 
+    if (classification.kind === 'sneak') {
+      this.turnService.stopMovements();
+      this.pendingSneakChoice.set({
+        player,
+        monster: classification.token,
+        sourceTile,
+        destinationTile,
+      });
+      return 'sneak-choice';
+    }
+
     if (classification.kind === 'empty' || classification.kind === 'already-resolved') {
       return this.offerGroundEquipment(player, destinationTile);
     }
     if (classification.kind === 'unknown'
-      || classification.kind === 'sneak'
       || classification.kind === 'closed-chest-without-key') {
       return 'none';
     }
@@ -737,7 +769,7 @@ export class GameService {
       && player.heroId === 'aderyn'
       && !player.isCursed
     ) {
-      return { kind: 'sneak' };
+      return { kind: 'sneak', token };
     }
 
     if (token.kind === 'monster') {
