@@ -7,5 +7,7 @@
 .toast-container--warning { border-color: #f0a85e; background: rgba(75, 39, 24, .96); }
 .toast-container--combat { border-color: #d78963; background: rgba(67, 25, 25, .97); }
 @keyframes toast-in { from { opacity: 0; transform: translate(-50%, -.6rem); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes toast-out { from { opacity: 1; filter: blur(0); transform: translate(-50%, 0) scale(1); } to { opacity: 0; filter: blur(3px); transform: translate(-50%, -.2rem) scale(.98); } }
+.toast-container--dismissing { animation: toast-out .3s ease-in forwards; }
 @media (prefers-reduced-motion: reduce) { .toast-container { animation: none; } }
 @media (max-width: 600px) { .toast-container { top: 4.5rem; width: max-content; max-width: calc(100vw - 1rem); font-size: .9rem; } }
