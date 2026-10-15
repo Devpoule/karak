@@ -77,8 +77,10 @@ describe('CombatService séparation du lancer et de la résolution', () => {
     combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, createTile());
     combatService.rollPendingCombat();
 
-    expect(combatService.isCurrentRollWinning()).toBe(true);
-    expect(combatService.getAvailableHeroRerolls()).toContain('die2');
+    expect(combatService.hasWinningRoll()).toBe(true);
+    expect(combatService.getAvailableHeroRerolls()).toEqual([]);
+    expect(combatService.useHeroReroll('die2')).toBe(false);
+    expect(combatService.useMagicBolt()).toBe(false);
 
     vi.restoreAllMocks();
   });
@@ -97,7 +99,7 @@ describe('CombatService séparation du lancer et de la résolution', () => {
     combatService.rollPendingCombat();
 
     expect(combatService.pendingCombatRoll()?.attackPower).toBe(5);
-    expect(combatService.isCurrentRollWinning()).toBe(true);
+    expect(combatService.hasWinningRoll()).toBe(true);
 
     vi.restoreAllMocks();
   });
@@ -421,8 +423,8 @@ describe('CombatService séparation du lancer et de la résolution', () => {
     combatService.rollPendingCombat();
     expect(combatService.getAvailableHeroRerolls()).toEqual(['die1', 'die2']);
     expect(combatService.useHeroReroll('die1')).toBe(true);
-    expect(combatService.getAvailableHeroRerolls()).toEqual(['die2']);
-    expect(combatService.useHeroReroll('die2')).toBe(true);
+    expect(combatService.getAvailableHeroRerolls()).toEqual([]);
+    expect(combatService.useHeroReroll('die2')).toBe(false);
     expect(combatService.getAvailableHeroRerolls()).toEqual([]);
 
     vi.restoreAllMocks();
