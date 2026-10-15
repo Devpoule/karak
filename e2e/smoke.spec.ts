@@ -21,6 +21,50 @@ test('la page de jeu affiche la préparation de partie', async ({ page }) => {
   await expect(page.getByText("Combien d'aventuriers entrent dans le donjon ?")).toBeVisible();
 });
 
+test('l’accueil met en avant le logo et conserve une hiérarchie typographique cohérente', async ({ page }) => {
+  await page.goto('/');
+
+  const logo = page.locator('.home__logo');
+  await expect(logo).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Codex' })).toBeVisible();
+
+  const visual = await page.locator('.home__content').evaluate(element => {
+    const logoElement = element.querySelector('.home__logo');
+    const title = element.querySelector('h1');
+    return {
+      logoWidth: logoElement?.getBoundingClientRect().width ?? 0,
+      titleFont: title ? getComputedStyle(title).fontFamily : '',
+    };
+  });
+
+  expect(visual.logoWidth).toBeGreaterThan(300);
+  expect(visual.titleFont.toLowerCase()).toContain('georgia');
+});
+
+test('les aides contextuelles utilisent les commandes Karak et restaurent le focus', async ({ page }) => {
+  await page.goto('/play');
+
+  const help = page.getByRole('button', { name: /Afficher l’aide/ }).first();
+  await expect(help).toBeVisible();
+
+  const buttonStyle = await help.evaluate(element => {
+    const style = getComputedStyle(element);
+    return { backgroundImage: style.backgroundImage, fontFamily: style.fontFamily };
+  });
+  expect(buttonStyle.backgroundImage).toContain('linear-gradient');
+  expect(buttonStyle.fontFamily.toLowerCase()).toContain('georgia');
+
+  await help.click();
+  const popover = page.getByRole('dialog', { name: 'Choisir les joueurs' });
+  await expect(popover).toBeVisible();
+  await popover.click();
+  await expect(popover).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(popover).toBeHidden();
+  await expect(help).toBeFocused();
+});
+
 test('le Codex depuis l’accueil revient à l’accueil', async ({ page }) => {
   await page.goto('/');
   await page.locator('.home__lore').click();
@@ -57,6 +101,10 @@ test('l’accueil et la préparation restent sans débordement aux six dimension
   for (const [width, height] of viewports) {
     await page.setViewportSize({ width, height });
     await page.goto('/');
+    await expect(page.locator('.home__logo')).toBeVisible();
+    await expect.poll(async () => page.evaluate(() =>
+      document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+    )).toBe(true);
     await page.getByRole('link', { name: /Jouer/ }).click();
     await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
     await expect.poll(async () => page.evaluate(() =>

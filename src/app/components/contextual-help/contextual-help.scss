@@ -1,5 +1,4 @@
 :host {
-  position: relative;
   display: inline-flex;
   position: absolute;
   top: 0;
@@ -17,14 +16,11 @@
   padding: 0;
   border: var(--karak-border-default);
   border-radius: var(--karak-radius-round);
-  background: #192333;
-  color: var(--karak-text-highlight);
+  background: var(--karak-button-bg);
+  color: var(--karak-button-text);
   cursor: pointer;
-  font: inherit;
-  font-size: .82rem;
-  font-weight: 700;
-  line-height: 1;
-  box-shadow: var(--karak-shadow-md);
+  font: 700 var(--karak-font-size-sm) / 1 var(--karak-font-display);
+  box-shadow: var(--karak-shadow-sm);
   transition:
     opacity var(--karak-motion-fast) var(--karak-ease-standard),
     transform var(--karak-motion-fast) var(--karak-ease-standard),
@@ -34,9 +30,10 @@
 
 .contextual-help__trigger:hover {
   transform: translateY(-2px);
-  background: #24334a;
+  background: var(--karak-button-hover-bg);
+  color: var(--karak-button-hover-text);
   box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.42),
+    var(--karak-shadow-md),
     0 0 8px rgba(232, 189, 88, 0.3);
 }
 

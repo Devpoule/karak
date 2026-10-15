@@ -13,13 +13,23 @@ export class ContextualHelpComponent {
 
   readonly help = input.required<ContextualHelp>();
   isOpen = false;
+  private previouslyFocusedElement: HTMLElement | null = null;
 
   toggle(): void {
+    if (!this.isOpen) {
+      this.previouslyFocusedElement = document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    }
     this.isOpen = !this.isOpen;
   }
 
   close(): void {
     this.isOpen = false;
+    const focusTarget = this.previouslyFocusedElement
+      ?? this.elementRef.nativeElement.querySelector<HTMLButtonElement>('.contextual-help__trigger');
+    this.previouslyFocusedElement = null;
+    queueMicrotask(() => focusTarget?.focus());
   }
 
   @HostListener('document:keydown.escape')

@@ -187,8 +187,10 @@
   display: block;
   padding: 0;
   border: 0;
+  border-radius: 50%;
   background: transparent;
   cursor: pointer;
+  outline: none;
   user-select: none;
 }
 
@@ -232,11 +234,15 @@
   height: auto;
 }
 
-.hero-panel__curse:hover,
+.hero-panel__curse:hover {
+  filter: drop-shadow(0 3px 9px rgba(255, 54, 44, .95)) brightness(1.12);
+}
+
+/* Le focus clavier suit la silhouette circulaire du médaillon. */
 .hero-panel__curse:focus-visible {
-  filter: drop-shadow(0 3px 7px rgba(255, 54, 44, .9)) brightness(1.12);
-  outline: 2px solid rgba(255, 92, 75, .8);
-  outline-offset: 2px;
+  filter: drop-shadow(0 3px 9px rgba(255, 54, 44, .95)) brightness(1.12);
+  outline: 2px solid rgba(255, 220, 142, .95);
+  outline-offset: 3px;
 }
 
 .hero-panel__curse--appearing { animation: curse-impact 720ms cubic-bezier(.2, 1.35, .45, 1) both; }

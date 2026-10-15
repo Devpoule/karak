@@ -1,4 +1,4 @@
-import { Component, DoCheck, EventEmitter, inject, Input, Output } from '@angular/core';
+import { Component, DoCheck, effect, EventEmitter, inject, Input, OnDestroy, Output, signal } from '@angular/core';
 
 import { getHeroDefinition } from '../../data/hero-definitions';
 import { HeroDefinition } from '../../models/hero';
@@ -6,6 +6,7 @@ import { Player } from '../../models/player';
 import { PlayerService } from '../../services/player.service';
 import { GameService } from '../../services/game.service';
 
+type CurseAnimation = '' | 'hero-panel__curse--appearing' | 'hero-panel__curse--disappearing';
 
 /**
  * Affiche le plateau visuel réservé au héros d'un joueur.
@@ -27,7 +28,7 @@ import { GameService } from '../../services/game.service';
   styleUrl: './hero-panel.scss',
   templateUrl: './hero-panel.html',
 })
-export class HeroPanel implements DoCheck {
+export class HeroPanel implements DoCheck, OnDestroy {
   private readonly playerService = inject(PlayerService);
   readonly gameService = inject(GameService);
 
@@ -41,34 +42,53 @@ export class HeroPanel implements DoCheck {
 
   /**
    * Joueur dont le héros est représenté.
-   */
+  */
   @Input() player: Player | null = null;
   @Input() curseImagePath = '/assets/tokens/curse.png';
-  curseVisible = false;
-  curseAnimation = '';
+  readonly curseVisible = signal(false);
+  readonly curseAnimation = signal<CurseAnimation>('');
   private previousPlayer: Player | null = null;
   private previousCurseState = false;
   private dismissalTimer: ReturnType<typeof setTimeout> | null = null;
 
+  /** Synchronise l'animation avec les notifications de l'état métier. */
+  private readonly curseStateEffect = effect(() => {
+    this.playerService.curseRevision();
+    this.syncCurseState(this.player?.isCursed === true);
+  });
+
   ngDoCheck(): void {
-    const cursed = this.player?.isCursed === true;
+    this.syncCurseState(this.player?.isCursed === true);
+  }
+
+  private syncCurseState(cursed: boolean): void {
     if (this.player !== this.previousPlayer) {
       this.previousPlayer = this.player;
       this.previousCurseState = cursed;
-      this.curseVisible = cursed;
-      this.curseAnimation = '';
+      this.curseVisible.set(cursed);
+      this.curseAnimation.set('');
       return;
     }
     if (cursed === this.previousCurseState) return;
     this.previousCurseState = cursed;
     if (this.dismissalTimer) clearTimeout(this.dismissalTimer);
-    this.curseAnimation = cursed ? 'hero-panel__curse--appearing' : 'hero-panel__curse--disappearing';
-    this.curseVisible = true;
+    this.curseAnimation.set(cursed ? 'hero-panel__curse--appearing' : 'hero-panel__curse--disappearing');
+    this.curseVisible.set(true);
     if (!cursed) {
       this.dismissalTimer = setTimeout(() => {
-        this.curseVisible = false;
-        this.curseAnimation = '';
+        this.curseVisible.set(false);
+        this.curseAnimation.set('');
+        this.dismissalTimer = null;
       }, 700);
+    }
+  }
+
+  /** Évite qu'une minuterie de dissipation survive à la destruction de la fiche. */
+  ngOnDestroy(): void {
+    this.curseStateEffect.destroy();
+    if (this.dismissalTimer) {
+      clearTimeout(this.dismissalTimer);
+      this.dismissalTimer = null;
     }
   }
 
