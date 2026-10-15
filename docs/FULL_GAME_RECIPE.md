@@ -11,8 +11,7 @@ La recette a été exécutée sur la branche `test/full-game-playthrough`, cré�
 - Les scénarios Playwright utilisent Chromium et le serveur Angular configuré dans `playwright.config.ts`.
 - Un générateur pseudo-aléatoire local est installé uniquement dans le contexte de test avec `page.addInitScript`. Le fonctionnement de production n'est pas modifié.
 - La préparation de partie est réalisée par les boutons visibles : entrée, configuration, tirage des héros, lancers et entrée dans le donjon.
-- Le scénario intégral prépare ensuite le combat Dragon dans l'état Angular de développement exposé par le navigateur, puis déclenche le lancer, la résolution et la collecte avec l'interface réelle.
-- Cette fixture de développement ne doit pas être activée dans un build de production.
+- Le scénario intégral prépare ensuite le combat Dragon dans l'état Angular de développement du navigateur de test, puis déclenche le lancer, la résolution et la collecte avec l'interface réelle.
 
 ## Matrice de recette
 

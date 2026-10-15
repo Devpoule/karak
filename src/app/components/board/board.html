@@ -195,17 +195,6 @@
         </div>
       }
     }
-    <!-- ===================================================
-         CONTRÔLES TEMPORAIRES DE DÉVELOPPEMENT
-         ===================================================
-         Ces contrôles servent actuellement à tester le moteur
-         de déplacement et d'exploration sans héros.
-         ✓ = déplacement possible vers une tuile existante
-         ? = exploration possible
-         × = direction inaccessible
-         Ils ont vocation à disparaître lorsque les interactions
-         définitives du héros seront implémentées.
-         =================================================== -->
     @if (movementControlsEnabled && canControlActivePlayer) {
       @if (gameService.activePlayer?.position; as position) {
         @if (playerTile; as tile) {

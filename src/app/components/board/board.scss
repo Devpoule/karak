@@ -492,58 +492,6 @@
   }
 }
 /* ==========================================================
-   CONTRÔLES TEMPORAIRES DE DÉVELOPPEMENT
-   ========================================================== */
-/*
- * Interface provisoire permettant de tester les quatre
- * directions autour d'une tuile sélectionnée.
- *
- * Elle disparaîtra lorsque les interactions définitives
- * du héros auront remplacé ces contrôles.
- */
-.board__debug {
-  position: absolute;
-  width: var(--tile-size);
-  height: var(--tile-size);
-  transform: translate(-50%, -50%);
-  span {
-    position: absolute;
-    font-weight: bold;
-  }
-}
-/*
- * Direction nord.
- */
-.board__debug-north {
-  top: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-/*
- * Direction est.
- */
-.board__debug-east {
-  top: 50%;
-  right: 4px;
-  transform: translateY(-50%);
-}
-/*
- * Direction sud.
- */
-.board__debug-south {
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-/*
- * Direction ouest.
- */
-.board__debug-west {
-  top: 50%;
-  left: 4px;
-  transform: translateY(-50%);
-}
-/* ==========================================================
    ACTION D'ENTRÉE DANS LE DONJON
    ========================================================== */
 .board__cover-action {
