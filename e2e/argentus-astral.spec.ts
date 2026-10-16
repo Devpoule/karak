@@ -56,6 +56,12 @@ test('Marche astrale autorise à traverser un mur entre deux tuiles découvertes
   await expect(page.getByRole('button', { name: /Se déplacer vers l'est/ })).toBeVisible();
   await page.getByRole('button', { name: /Se déplacer vers l'est/ }).click({ force: true });
 
+  await expect(page.locator('.movement-counter__point')).toHaveCount(4);
+  await expect(page.locator('.movement-counter__point--consuming')).toHaveCount(1);
+  await page.waitForTimeout(550);
+  await expect(page.locator('.movement-counter__point--consuming')).toHaveCount(0);
+  await expect(page.locator('.movement-counter__point--consumed')).toHaveCount(1);
+
   await expect.poll(async () => page.evaluate(() => {
     const root = document.querySelector('app-root');
     const ng = (window as Window & { ng?: { getComponent(node: Element): any } }).ng;

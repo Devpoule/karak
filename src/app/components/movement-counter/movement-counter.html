@@ -10,8 +10,19 @@
     class="movement-counter__points"
     aria-hidden="true"
   >
-    @for (point of movementPoints; track $index) {
-      <span class="movement-counter__point">●</span>
+    @for (pointIndex of pointIndexes; track pointIndex) {
+      <span
+        class="movement-counter__point"
+        [class.movement-counter__point--consumed]="isPointConsumed(pointIndex)"
+        [class.movement-counter__point--consuming]="isPointAnimating(pointIndex)"
+      >
+        <span class="movement-counter__point-core">●</span>
+        <span class="movement-counter__fragments" aria-hidden="true">
+          @for (fragmentIndex of fragmentIndexes; track fragmentIndex) {
+            <span class="movement-counter__fragment" [class]="'movement-counter__fragment--' + fragmentIndex"></span>
+          }
+        </span>
+      </span>
     }
   </div>
 </section>

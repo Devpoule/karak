@@ -136,12 +136,14 @@ describe('GameService contrat d entrée dans une tuile', () => {
     expect(destination.tokenId).toBeUndefined();
   });
 
-  it('met en attente la récompense d un monstre déjà vaincu', () => {
+  it('résout automatiquement une récompense équipement pour l IA', () => {
     player.controller = 'ai';
     const destination = tile('skeleton-swordsman', 'back');
 
     expect(gameService.resolveTileEntry(player, tile(), destination)).toBe('reward');
-    expect(gameService.pendingReward()?.rewardTile).toBe(destination);
+    expect(player.inventory.weapons.some(weapon => weapon?.id === 'sword')).toBe(true);
+    expect(gameService.pendingReward()).toBeNull();
+    expect(destination.tokenId).toBeUndefined();
     expect(turnService.remainingMovements()).toBe(0);
   });
 

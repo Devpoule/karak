@@ -431,7 +431,7 @@ describe('AiService résolutions obligatoires', () => {
     expect(playerService.players[1].isCursed).toBe(true);
   });
 
-  it('résout la malédiction avant de laisser une récompense équipement pleine', () => {
+  it('laisse automatiquement un équipement inutile et conserve la malédiction en attente', () => {
     playerService.setCursed(playerService.players[0], true);
     const player = playerService.players[1];
     playerService.addEquipment(player, getEquipmentDefinition('sword')!);
@@ -451,8 +451,10 @@ describe('AiService résolutions obligatoires', () => {
     expect(aiService.resolveMandatoryAction()).toBe('resolved');
     expect(playerService.players[0].isCursed).toBe(true);
     expect(gameService.pendingReward()?.remainingRewards).toEqual([
-      { kind: 'equipment', equipmentId: 'sword' },
+      { kind: 'special', effect: 'curse' },
     ]);
+    expect(gameService.getGroundEquipment(gameService.pendingReward()!.rewardTile).map(item => item.id))
+      .toEqual(['sword']);
   });
 
   it('n appelle aucune cible lorsque la partie ne contient aucun adversaire', () => {

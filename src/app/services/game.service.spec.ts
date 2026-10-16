@@ -1327,7 +1327,31 @@ describe('GameService récupération automatique des équipements humains', () =
     expect(gameService.pendingReward()).toBeNull();
   });
 
-  it('conserve la résolution lorsque l’inventaire est plein', () => {
+  it('stocke un exemplaire de puissance équivalente lorsqu’une case reste libre', () => {
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const player = playerService.players[0];
+    playerService.addEquipment(player, getEquipmentDefinition('daggers')!);
+    const tile = {
+      x: 1,
+      y: 0,
+      definitionId: 'room-1',
+      tokenId: 'giant-rat',
+      tokenFace: 'back',
+    } as PlacedTile;
+
+    gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile);
+
+    expect(player.inventory.weapons.map(item => item?.id)).toEqual(['daggers', 'daggers']);
+    expect(gameService.pendingReward()).toBeNull();
+    expect(tile.tokenId).toBeUndefined();
+  });
+
+  it('laisse automatiquement une arme inutile sans ouvrir de résolution', () => {
     const gameService = TestBed.inject(GameService);
     const playerService = TestBed.inject(PlayerService);
     playerService.initialize(2);
@@ -1347,18 +1371,22 @@ describe('GameService récupération automatique des équipements humains', () =
 
     gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile);
 
-    expect(gameService.pendingReward()).not.toBeNull();
+    expect(gameService.pendingReward()).toBeNull();
     expect(player.inventory.weapons.map(item => item?.id)).toEqual(['daggers', 'sword']);
+    expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['daggers']);
+    expect(tile.tokenId).toBe('giant-rat');
   });
 
   it('remplace automatiquement l’arme la plus faible par une amélioration stricte', () => {
     const gameService = TestBed.inject(GameService);
     const playerService = TestBed.inject(PlayerService);
+    const toastService = TestBed.inject(ToastService);
     playerService.initialize(2);
     gameService.initialize();
     gameService.phase.set('playing');
     gameService.activePlayerIndex.set(0);
     const player = playerService.players[0];
+    player.heroId = 'victorius';
     playerService.addEquipment(player, getEquipmentDefinition('daggers')!);
     playerService.addEquipment(player, getEquipmentDefinition('sword')!);
     const tile = {
@@ -1373,6 +1401,7 @@ describe('GameService récupération automatique des équipements humains', () =
     expect(player.inventory.weapons.map(item => item?.id)).toEqual(['axe', 'sword']);
     expect(gameService.pendingReward()).toBeNull();
     expect(tile.tokenId).toBeUndefined();
+    expect(toastService.current()?.text).toBe('Victorius a obtenu une hache.');
   });
   it('permet de remplacer un sort lorsque les trois emplacements sont occupés', () => {
     vi.useFakeTimers();

@@ -6,9 +6,7 @@ import {
   DIRECTIONS,
   PlacedTile,
 } from '../models/tile';
-import { getEquipmentDefinition } from '../data/equipment-definitions';
 import { Player } from '../models/player';
-import { Equipment } from '../models/equipment';
 import { calculateTreasurePoints } from '../models/treasure';
 
 import { DungeonService } from './dungeon.service';
@@ -32,11 +30,6 @@ export type AiMandatoryResolutionResult =
   | 'waiting'
   | `unsupported:${string}`
   | 'none';
-
-type AiEquipmentDecision =
-  | { action: 'collect' }
-  | { action: 'replace'; slotIndex: number }
-  | { action: 'leave' };
 
 /**
  * Service de décision des joueurs IA.
@@ -123,18 +116,9 @@ export class AiService {
 
       const equipmentReward = pendingReward.remainingRewards.find(reward => reward.kind === 'equipment');
       if (equipmentReward?.kind === 'equipment') {
-        const equipment = this.getEquipmentDefinition(equipmentReward.equipmentId);
-        if (!equipment) return 'unsupported:equipment-definition';
-        const equipmentDecision = this.chooseEquipmentDecision(player, equipment);
-        if (equipmentDecision.action !== 'leave') {
-          return this.applyPendingEquipmentDecision(equipmentDecision);
-        }
-
-        if (pendingReward.remainingRewards.some(reward => reward.kind === 'special' && reward.effect === 'curse')) {
-          return this.resolvePendingCurseForAi(player);
-        }
-
-        return this.applyPendingEquipmentDecision(equipmentDecision);
+        return this.gameService.resolvePendingRewardEquipment()
+          ? 'resolved'
+          : 'unsupported:equipment-decision';
       }
 
       if (pendingReward.remainingRewards.some(reward => reward.kind === 'special' && reward.effect === 'curse')) {
@@ -148,9 +132,9 @@ export class AiService {
 
     const pendingGroundEquipment = this.gameService.pendingGroundEquipment();
     if (pendingGroundEquipment?.player === player) {
-      return this.applyGroundEquipmentDecision(
-        this.chooseEquipmentDecision(player, pendingGroundEquipment.equipment),
-      );
+      return this.gameService.resolvePendingGroundEquipment()
+        ? 'resolved'
+        : 'unsupported:ground-equipment-decision';
     }
 
     return 'none';
@@ -245,55 +229,6 @@ export class AiService {
     }
 
     return this.gameService.finishXanrosSubstitutionAction();
-  }
-
-  private getEquipmentDefinition(equipmentId: string) {
-    // Le catalogue reste la source de vérité ; aucune règle d'inventaire
-    // n'est dupliquée ici.
-    return getEquipmentDefinition(equipmentId);
-  }
-
-  /** Retourne le premier emplacement portant le bonus minimal strictement inférieur. */
-  private findStrictlyWeakerWeapon(player: Player, attackBonus: number): number | null {
-    let weakestIndex = -1;
-    let weakestBonus = Number.POSITIVE_INFINITY;
-    player.inventory.weapons.forEach((weapon, index) => {
-      if (weapon && weapon.attackBonus < weakestBonus) {
-        weakestBonus = weapon.attackBonus;
-        weakestIndex = index;
-      }
-    });
-    return weakestIndex >= 0 && attackBonus > weakestBonus ? weakestIndex : null;
-  }
-
-  /** Choisit une action sans modifier l'inventaire ni l'état du jeu. */
-  private chooseEquipmentDecision(player: Player, equipment: Equipment): AiEquipmentDecision {
-    if (this.playerService.canAddEquipment(player, equipment)) {
-      return { action: 'collect' };
-    }
-    if (equipment.kind === 'weapon') {
-      const slotIndex = this.findStrictlyWeakerWeapon(player, equipment.attackBonus);
-      if (slotIndex !== null) return { action: 'replace', slotIndex };
-    }
-    return { action: 'leave' };
-  }
-
-  private applyPendingEquipmentDecision(decision: AiEquipmentDecision): AiMandatoryResolutionResult {
-    const resolved = decision.action === 'collect'
-      ? this.gameService.collectPendingEquipment()
-      : decision.action === 'replace'
-        ? this.gameService.replacePendingEquipment(decision.slotIndex)
-        : this.gameService.leavePendingReward();
-    return resolved ? 'resolved' : 'unsupported:equipment-rejected';
-  }
-
-  private applyGroundEquipmentDecision(decision: AiEquipmentDecision): AiMandatoryResolutionResult {
-    const resolved = decision.action === 'collect'
-      ? this.gameService.collectGroundEquipment()
-      : decision.action === 'replace'
-        ? this.gameService.replaceGroundEquipment(decision.slotIndex)
-        : this.gameService.leaveGroundEquipment();
-    return resolved ? 'resolved' : 'unsupported:ground-equipment-rejected';
   }
 
   /** Choisit puis délègue la résolution de la malédiction au moteur métier. */

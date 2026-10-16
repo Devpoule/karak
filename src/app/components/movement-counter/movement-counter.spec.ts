@@ -1,9 +1,13 @@
 import { TestBed } from '@angular/core/testing';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { TurnService } from '../../services/turn.service';
 import { MovementCounter } from './movement-counter';
 
 describe('MovementCounter', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('accorde son libellé accessible selon le nombre de mouvements restants', () => {
     TestBed.configureTestingModule({
       imports: [MovementCounter],
@@ -23,5 +27,81 @@ describe('MovementCounter', () => {
     turnService.remainingMovements.set(0);
     fixture.detectChanges();
     expect(counter.getAttribute('aria-label')).toBe('0 mouvement disponible');
+  });
+
+  it('anime uniquement le point consommé après une consommation effective', () => {
+    vi.useFakeTimers();
+    TestBed.configureTestingModule({
+      imports: [MovementCounter],
+      providers: [TurnService],
+    });
+    const fixture = TestBed.createComponent(MovementCounter);
+    const turnService = TestBed.inject(TurnService);
+    fixture.detectChanges();
+
+    turnService.consumeMovement();
+    fixture.detectChanges();
+
+    const points = fixture.nativeElement.querySelectorAll('.movement-counter__point') as NodeListOf<HTMLElement>;
+    expect(points).toHaveLength(4);
+    expect(points[3].classList.contains('movement-counter__point--consuming')).toBe(true);
+    expect(points[3].classList.contains('movement-counter__point--consumed')).toBe(true);
+    expect(points[0].classList.contains('movement-counter__point--consuming')).toBe(false);
+    expect(points[0].classList.contains('movement-counter__point--consumed')).toBe(false);
+
+    vi.advanceTimersByTime(480);
+    fixture.detectChanges();
+    expect(points[3].classList.contains('movement-counter__point--consuming')).toBe(false);
+    expect(points[3].classList.contains('movement-counter__point--consumed')).toBe(true);
+  });
+
+  it('conserve les animations de consommations successives sans réanimer une tentative invalide', () => {
+    vi.useFakeTimers();
+    TestBed.configureTestingModule({
+      imports: [MovementCounter],
+      providers: [TurnService],
+    });
+    const fixture = TestBed.createComponent(MovementCounter);
+    const turnService = TestBed.inject(TurnService);
+    fixture.detectChanges();
+
+    turnService.consumeMovement();
+    fixture.detectChanges();
+    turnService.consumeMovement();
+    fixture.detectChanges();
+
+    const points = fixture.nativeElement.querySelectorAll('.movement-counter__point') as NodeListOf<HTMLElement>;
+    expect(points[2].classList.contains('movement-counter__point--consuming')).toBe(true);
+    expect(points[3].classList.contains('movement-counter__point--consuming')).toBe(true);
+
+    turnService.remainingMovements.set(0);
+    turnService.consumeMovement();
+    fixture.detectChanges();
+    expect(points[0].classList.contains('movement-counter__point--consuming')).toBe(false);
+
+    vi.advanceTimersByTime(480);
+    fixture.detectChanges();
+    expect(points[2].classList.contains('movement-counter__point--consuming')).toBe(false);
+    expect(points[3].classList.contains('movement-counter__point--consuming')).toBe(false);
+  });
+
+  it('réinitialise les points et l animation au changement de tour', () => {
+    vi.useFakeTimers();
+    TestBed.configureTestingModule({
+      imports: [MovementCounter],
+      providers: [TurnService],
+    });
+    const fixture = TestBed.createComponent(MovementCounter);
+    const turnService = TestBed.inject(TurnService);
+    fixture.detectChanges();
+
+    turnService.consumeAllMovements();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.movement-counter__point--consuming')).toHaveLength(4);
+
+    turnService.resetMovements();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.movement-counter__point--consumed')).toHaveLength(0);
+    expect(fixture.nativeElement.querySelectorAll('.movement-counter__point--consuming')).toHaveLength(0);
   });
 });

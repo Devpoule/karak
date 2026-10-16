@@ -19,7 +19,7 @@ describe('HeroPanel brouillard d’inconscience', () => {
     expect(fixture.nativeElement.querySelector('.hero-panel--unconscious')).not.toBeNull();
   });
 
-  it('conserve le voile pendant le tour de repos', () => {
+  it('conserve le voile pendant le tour de récupération', () => {
     const fixture = createPanel('resting');
 
     expect(fixture.nativeElement.querySelector('.hero-panel--unconscious')).not.toBeNull();

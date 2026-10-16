@@ -68,7 +68,7 @@ Méthodes : `endTurn`, `prepareActivePlayerTurn`, `scheduleRecoveryTurnCompletio
 
 États modifiés : `turnTransitionPending`, `activePlayerIndex`, `recoveryRevision`, mouvements de `TurnService`, état de récupération de `PlayerService`.
 
-Effets différés : `turnTransitionTimer` et `queueMicrotask` pour finir un tour de repos. `endTurn` bloque explicitement les transitions lorsque l'exploration, le combat ou une récompense est encore en attente.
+Effets différés : `turnTransitionTimer` et `queueMicrotask` pour finir un tour de récupération. `endTurn` bloque explicitement les transitions lorsque l'exploration, le combat ou une récompense est encore en attente.
 
 Risque élevé : la transition dépend à la fois de l'état du service et d'un callback différé. `initialize` annule le timer, mais le contrat doit rester testé avec les changements de phase et de joueur.
 

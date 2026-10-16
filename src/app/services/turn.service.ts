@@ -2,6 +2,10 @@ import { Injectable, signal } from '@angular/core';
 
 import { GAME_CONSTANTS } from '../constants/game.constants';
 
+export interface MovementConsumptionAnimation {
+  readonly firstPointIndex: number;
+  readonly count: number;
+}
 
 /**
  * Gère l'état du tour de jeu en cours.
@@ -53,6 +57,9 @@ export class TurnService {
   /** Nombre de déplacements déjà réalisés pendant le tour courant. */
   readonly movementsMadeThisTurn = signal<number>(0);
 
+  /** Événement émis uniquement après une consommation effective. */
+  readonly lastMovementConsumption = signal<MovementConsumptionAnimation | null>(null);
+
 
   // ==========================================================
   // ÉTAT DÉRIVÉ
@@ -93,10 +100,12 @@ export class TurnService {
       return;
     }
 
+    const consumedPointIndex = this.remainingMovements() - 1;
     this.remainingMovements.update(
       (remaining) => remaining - 1,
     );
     this.movementsMadeThisTurn.update((made) => made + 1);
+    this.publishMovementConsumption(consumedPointIndex, 1);
   }
 
   /**
@@ -110,7 +119,15 @@ export class TurnService {
     const remaining = this.remainingMovements();
     this.remainingMovements.set(0);
     this.movementsMadeThisTurn.update(made => made + remaining);
+    this.publishMovementConsumption(0, remaining);
     return true;
+  }
+
+  private publishMovementConsumption(firstPointIndex: number, count: number): void {
+    this.lastMovementConsumption.set({
+      firstPointIndex,
+      count,
+    });
   }
 
 
@@ -151,5 +168,6 @@ export class TurnService {
       GAME_CONSTANTS.movement.perTurn,
     );
     this.movementsMadeThisTurn.set(0);
+    this.lastMovementConsumption.set(null);
   }
 }

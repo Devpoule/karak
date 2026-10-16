@@ -14,7 +14,7 @@ La référence locale est `public/assets/rules/karak-base.pdf`, accompagnée de 
 - Le trésor d'un monstre vaut `1` point ; le rubis du Dragon vaut `1,5` point.
 - Vaincre le Dragon attribue le rubis, puis la partie se termine et le classement se fait selon les points de trésor. L'implémentation retient tous les joueurs ex æquo au meilleur score ; aucun départage supplémentaire n'est inventé.
 - Le Portail de guérison est distinct d'une tuile `healing-fountain`. Il téléporte un héros choisi vers une fontaine découverte, restaure tous ses PV, retire sa malédiction, consomme un exemplaire et ne termine pas le tour. Argentus ne conserve pas ce portail.
-- Les états `pending`, `resting` et `none` représentent respectivement une récupération attendue, le tour de repos en cours et la possibilité de jouer normalement.
+- Les états `pending`, `resting` et `none` représentent respectivement une récupération attendue, le tour de récupération en cours et la possibilité de jouer normalement.
 - Une victoire contre une momie peut produire une malédiction ; son attribution et sa résolution passent par les états métier dédiés.
 - Aderyn remporte également un combat à égalité et peut traverser une tuile occupée par un monstre déjà connue ; ces deux pouvoirs sont désactivés lorsqu'elle est maudite. Lorsqu'une nouvelle salle est découverte, son contenu doit d'abord être résolu normalement, y compris pour Aderyn non maudite.
 - Lorsqu'un lancer de combat garantit déjà la victoire, le combat est résolu automatiquement. Aucune relance, utilisation de sort, sacrifice ou confirmation supplémentaire n'est proposée ; ces choix restent disponibles uniquement lorsque le résultat n'est pas encore gagnant.
@@ -28,6 +28,8 @@ La référence locale est `public/assets/rules/karak-base.pdf`, accompagnée de 
 ## Adaptation numérique
 
 Les capacités d'inventaire, les signaux de réactivité, les délais d'animation, l'automatisation IA et certains choix de présentation sont des décisions numériques. Ils ne constituent pas des règles officielles supplémentaires.
+
+Pour alléger les décisions répétitives, l'interface numérique automatise aussi les équipements : un objet équivalent est récupéré lorsqu'une case est libre, une arme strictement plus puissante remplace automatiquement l'arme la plus faible, et un objet inutile reste sur la tuile sans ouvrir de choix. Toute récupération ou amélioration utile est signalée par une notification non bloquante.
 
 Les capacités particulières des héros ne sont considérées comme officielles dans le moteur que lorsqu'elles sont effectivement implémentées et couvertes. Les bonus non implémentés restent nuls ; il ne faut pas les déduire d'un nom d'asset ou d'une hypothèse.
 

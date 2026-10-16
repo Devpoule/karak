@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, effect, OnDestroy, signal } from '@angular/core';
 
+import { GAME_CONSTANTS } from '../../constants/game.constants';
 import { TurnService } from '../../services/turn.service';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
 
@@ -20,11 +21,38 @@ import { QuantityPipe } from '../../pipes/quantity.pipe';
   styleUrl: './movement-counter.scss',
   templateUrl: './movement-counter.html',
 })
-export class MovementCounter {
+export class MovementCounter implements OnDestroy {
+
+  readonly pointIndexes = Array.from({ length: GAME_CONSTANTS.movement.perTurn }, (_, index) => index);
+  readonly fragmentIndexes = Array.from({ length: 6 }, (_, index) => index);
+  private readonly animatingPointIndexes = new Set<number>();
+  private readonly animationStateRevision = signal(0);
+  private readonly animationTimers = new Map<number, ReturnType<typeof setTimeout>>();
 
   constructor(
     private readonly turnService: TurnService,
-  ) {}
+  ) {
+    effect(() => {
+      const consumption = this.turnService.lastMovementConsumption();
+      if (!consumption) {
+        this.clearAnimations();
+        return;
+      }
+
+      for (let offset = 0; offset < consumption.count; offset++) {
+        const pointIndex = consumption.firstPointIndex + offset;
+        this.animatingPointIndexes.add(pointIndex);
+        const previousTimer = this.animationTimers.get(pointIndex);
+        if (previousTimer !== undefined) clearTimeout(previousTimer);
+        this.animationTimers.set(pointIndex, setTimeout(() => {
+          this.animatingPointIndexes.delete(pointIndex);
+          this.animationTimers.delete(pointIndex);
+          this.animationStateRevision.update(revision => revision + 1);
+        }, 480));
+      }
+      this.animationStateRevision.update(revision => revision + 1);
+    });
+  }
 
 
   /**
@@ -41,5 +69,26 @@ export class MovementCounter {
     return Array.from({
       length: this.turnService.remainingMovements(),
     });
+  }
+
+  isPointConsumed(index: number): boolean {
+    return index >= this.turnService.remainingMovements();
+  }
+
+  isPointAnimating(index: number): boolean {
+    this.animationStateRevision();
+    return this.animatingPointIndexes.has(index);
+  }
+
+  ngOnDestroy(): void {
+    this.clearAnimations();
+  }
+
+  private clearAnimations(): void {
+    this.animationTimers.forEach(timer => clearTimeout(timer));
+    this.animationTimers.clear();
+    if (this.animatingPointIndexes.size === 0) return;
+    this.animatingPointIndexes.clear();
+    this.animationStateRevision.update(revision => revision + 1);
   }
 }
