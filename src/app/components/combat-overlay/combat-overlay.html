@@ -116,9 +116,9 @@
                 @for (weapon of displayedWeapons; track weapon.id + $index) {
                   <span
                     class="combat-overlay__bonus combat-overlay__bonus--weapon"
-                    [attr.aria-label]="'Bonus d’équipement : +' + weapon.attackBonus + ' points'"
+                    [attr.aria-label]="'Bonus d’équipement : +' + (weapon.attackBonus | quantity: 'point' : 'points')"
                   >
-                    +{{ weapon.attackBonus }} pt{{ weapon.attackBonus === 1 ? '' : 's' }}
+                    +{{ weapon.attackBonus | quantity: 'pt' : 'pts' }}
                   </span>
                 }
                 @for (bolt of displayedMagicBonusEntries; track bolt) {
@@ -135,8 +135,11 @@
                   </span>
                 }
                 @if (displayedHeroBonus > 0) {
-                  <span class="combat-overlay__bonus combat-overlay__bonus--hero" aria-label="Bonus du pouvoir : +{{ displayedHeroBonus }} point">
-                    +{{ displayedHeroBonus }}pt
+                  <span
+                    class="combat-overlay__bonus combat-overlay__bonus--hero"
+                    [attr.aria-label]="'Bonus du pouvoir : +' + (displayedHeroBonus | quantity: 'point' : 'points')"
+                  >
+                    +{{ displayedHeroBonus | quantity: 'pt' : 'pts' : '' }}
                   </span>
                 }
               </div>
@@ -151,8 +154,7 @@
               [class.combat-overlay__score--tie]="combatResult.outcome === 'tie'"
               aria-label="Score final du héros"
             >
-              <span class="combat-overlay__score-label">Score de combat</span>
-              <strong class="combat-overlay__score-value">{{ combatResult.attackPower }} pts</strong>
+              <strong class="combat-overlay__score-value">{{ combatResult.attackPower | quantity: 'pt' : 'pts' }}</strong>
             </div>
           }
         </div>
@@ -206,8 +208,7 @@
               [class.combat-overlay__score--tie]="combatResult.outcome === 'tie'"
               aria-label="Score final du monstre"
             >
-              <span class="combat-overlay__score-label">Force</span>
-              <strong class="combat-overlay__score-value">{{ combatResult.monsterStrength }} pts</strong>
+              <strong class="combat-overlay__score-value">{{ combatResult.monsterStrength | quantity: 'pt' : 'pts' }}</strong>
             </div>
           }
         </div>

@@ -129,6 +129,25 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     expect(monsterScore?.classList.contains(`combat-overlay__score--${monsterClass}`)).toBe(true);
     expect(heroScore?.textContent).toContain(`${result.attackPower} pts`);
     expect(monsterScore?.textContent).toContain(`${result.monsterStrength} pts`);
+    expect(heroScore?.textContent).not.toContain('Score de combat');
+    expect(monsterScore?.textContent).not.toContain('Force');
+    fixture.destroy();
+  });
+
+  it('conserve le résultat pendant quatre secondes avant sa fermeture automatique', () => {
+    const { fixture, overlay } = prepareCombat(false);
+    const clearTimers = (overlay as unknown as { clearTimers: () => void }).clearTimers.bind(overlay);
+    const resolveAfterRoll = (overlay as unknown as { resolveCombatAfterRoll: () => void }).resolveCombatAfterRoll.bind(overlay);
+
+    clearTimers();
+    resolveAfterRoll();
+    expect(overlay.presentationState()).toBe('result');
+
+    vi.advanceTimersByTime(3999);
+    expect(overlay.presentationState()).toBe('result');
+
+    vi.advanceTimersByTime(1);
+    expect(overlay.presentationState()).toBe('intro');
     fixture.destroy();
   });
 });

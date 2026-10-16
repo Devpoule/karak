@@ -92,7 +92,7 @@
           <img class="board__token" [src]="tokenImage" alt="" draggable="false" />
         }
         @if (getGroundEquipment(tile).length; as itemCount) {
-          <div class="board__ground-items" [attr.aria-label]="itemCount + ' équipement(s) au sol'">
+          <div class="board__ground-items" [attr.aria-label]="(itemCount | quantity: 'équipement' : 'équipements') + ' au sol'">
             @for (equipment of getGroundEquipment(tile); track $index; let equipmentIndex = $index) {
               <button type="button" class="board__ground-item"
                 [disabled]="!canSelectGroundEquipment(tile)"
@@ -417,7 +417,7 @@
             alt="Trésor"
             draggable="false"
           />
-          <p>Trésor — {{ pendingTreasureRewardPoints }} point{{ pendingTreasureRewardPoints === 1 ? '' : 's' }}</p>
+          <p>Trésor — {{ pendingTreasureRewardPoints | quantity: 'point' : 'points' }}</p>
           <div class="board__reward-actions">
             <button type="button" (click)="collectPendingTreasure()">Récupérer le trésor</button>
           </div>

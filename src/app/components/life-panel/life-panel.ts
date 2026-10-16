@@ -2,12 +2,13 @@ import { Component, DoCheck, Input, OnDestroy } from '@angular/core';
 import { Player } from '../../models/player';
 import { PlayerService } from '../../services/player.service';
 import { CombatService } from '../../services/combat.service';
+import { QuantityPipe } from '../../pipes/quantity.pipe';
 
 const MAX_LIVES = 5;
 interface LifeSlot { index: number; active: boolean; }
 
 @Component({
-  imports: [],
+  imports: [QuantityPipe],
   selector: 'app-life-panel',
   styleUrl: './life-panel.scss',
   templateUrl: './life-panel.html',

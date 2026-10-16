@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
 
+// La présentation finale dure désormais quatre secondes ; le setup du jeu
+// reste inclus dans le délai global du scénario de fixture.
+test.setTimeout(60_000);
+
 async function openBoard(page: import('@playwright/test').Page): Promise<void> {
   await page.addInitScript(() => {
     let state = 0x5eed;
@@ -120,6 +124,18 @@ async function runCombatScenario(
 
   await expect(page.locator('.combat-overlay__verdict-title')).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.combat-overlay__verdict-title')).toContainText(verdict);
+  const heroScore = page.locator('.combat-overlay__score--hero');
+  const monsterScore = page.locator('.combat-overlay__score--monster');
+  await expect(heroScore).toBeVisible();
+  await expect(monsterScore).toBeVisible();
+  await expect(heroScore).not.toContainText('Score de combat');
+  await expect(monsterScore).not.toContainText('Force');
+  const [heroBox, monsterBox] = await Promise.all([
+    heroScore.boundingBox(),
+    monsterScore.boundingBox(),
+  ]);
+  if (!heroBox || !monsterBox) throw new Error('Scores de combat non mesurables');
+  expect(Math.abs(heroBox.y - monsterBox.y)).toBeLessThan(2);
   await page.screenshot({ path: `playwright-report/${verdictFile}`, fullPage: true });
 
   const continueButton = page.getByRole('button', { name: 'Continuer' });

@@ -2,10 +2,12 @@ import { Component, Input } from '@angular/core';
 import { calculateTreasurePoints, Treasure } from '../../models/treasure';
 import { Player } from '../../models/player';
 import { PlayerService } from '../../services/player.service';
+import { QuantityPipe } from '../../pipes/quantity.pipe';
 
 interface TreasureGroup {
   readonly type: Treasure;
-  readonly label: string;
+  readonly singularLabel: string;
+  readonly pluralLabel: string;
   readonly image: string;
   readonly count: number;
 }
@@ -13,7 +15,7 @@ interface TreasureGroup {
 /** Affiche les trésors collectés et leur score dérivé. */
 @Component({
   selector: 'app-treasure-panel',
-  imports: [],
+  imports: [QuantityPipe],
   templateUrl: './treasure-panel.html',
   styleUrl: './treasure-panel.scss',
 })
@@ -28,7 +30,8 @@ export class TreasurePanel {
     return (['opened-chest', 'monster-treasure', 'dragon-ruby'] as const)
       .map(type => ({
         type,
-        label: this.getLabel(type),
+        singularLabel: this.getLabel(type, 'singular'),
+        pluralLabel: this.getLabel(type, 'plural'),
         image: this.getImage(type),
         count: treasures.filter(treasure => treasure === type).length,
       }))
@@ -40,10 +43,10 @@ export class TreasurePanel {
     return calculateTreasurePoints(this.player?.treasures ?? []);
   }
 
-  private getLabel(type: Treasure): string {
+  private getLabel(type: Treasure, form: 'singular' | 'plural'): string {
     switch (type) {
-      case 'opened-chest': return 'Coffres ouverts';
-      case 'monster-treasure': return 'Trésors des Morts';
+      case 'opened-chest': return form === 'singular' ? 'Coffre ouvert' : 'Coffres ouverts';
+      case 'monster-treasure': return form === 'singular' ? 'Trésor des Morts' : 'Trésors des Morts';
       case 'dragon-ruby': return 'Rubis du dragon';
     }
   }

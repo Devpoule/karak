@@ -22,6 +22,7 @@ import {
 import { SetupStep } from '../../models/game';
 import { ContextualHelpComponent } from '../contextual-help/contextual-help';
 import { PREPARATION_HELP } from '../../data/contextual-help';
+import { QuantityPipe } from '../../pipes/quantity.pipe';
 
 /**
  * Vue actuellement affichée dans le panneau principal.
@@ -57,7 +58,7 @@ type FirstPlayerResolutionState =
 
 @Component({
   selector: 'app-game-setup',
-  imports: [ContextualHelpComponent],
+  imports: [ContextualHelpComponent, QuantityPipe],
   templateUrl: './game-setup.html',
   styleUrl: './game-setup.scss',
 })

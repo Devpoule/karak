@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 import { PlayerService } from '../../services/player.service';
 import { TreasurePanel } from './treasure-panel';
@@ -45,5 +46,25 @@ describe('TreasurePanel', () => {
 
     expect(panel.groups[0].type).toBe('dragon-ruby');
     expect(panel.points).toBe(1.5);
+  });
+
+  it('affiche les quantités avec le bon libellé dans le panneau', () => {
+    TestBed.configureTestingModule({
+      imports: [TreasurePanel],
+      providers: [PlayerService],
+    });
+    const fixture = TestBed.createComponent(TreasurePanel);
+    const playerService = TestBed.inject(PlayerService);
+    playerService.initialize(2);
+    fixture.componentInstance.player = playerService.players[0];
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.treasure-panel__points')?.textContent).toContain('0 PT');
+
+    playerService.addTreasure(playerService.players[0], 'dragon-ruby');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.treasure-panel__points')?.textContent).toContain('1,5 PTS');
+    expect(fixture.nativeElement.querySelector('.treasure-panel__label')?.textContent).toContain('1 Rubis du dragon');
   });
 });

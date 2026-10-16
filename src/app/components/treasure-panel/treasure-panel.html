@@ -6,9 +6,13 @@
         <div class="treasure-panel__groups">
           @for (group of groups; track group.type) {
             <div class="treasure-panel__group">
-              <img [src]="group.image" [alt]="group.label" draggable="false" />
+              <img
+                [src]="group.image"
+                [alt]="group.count | quantity: group.singularLabel : group.pluralLabel"
+                draggable="false"
+              />
               <span class="treasure-panel__count" aria-label="Nombre">×{{ group.count }}</span>
-              <span class="treasure-panel__label">{{ group.label }}</span>
+            <span class="treasure-panel__label">{{ group.count | quantity: group.singularLabel : group.pluralLabel }}</span>
             </div>
           }
         </div>
@@ -17,6 +21,6 @@
       }
     </div>
 
-    <strong class="treasure-panel__points">{{ points }} pt{{ points === 1 ? '' : 's' }}</strong>
+    <strong class="treasure-panel__points">{{ points | quantity: 'PT' : 'PTS' }}</strong>
   </div>
 </section>

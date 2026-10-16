@@ -21,6 +21,7 @@ import {
 import { GameService } from '../../services/game.service';
 import { AiService } from '../../services/ai.service';
 import { ToastService } from '../../services/toast.service';
+import { QuantityPipe } from '../../pipes/quantity.pipe';
 
 /**
  * Étapes visuelles de présentation d'un combat.
@@ -59,7 +60,7 @@ export function getCombatWaveDirection(
 
 @Component({
   selector: 'app-combat-overlay',
-  imports: [],
+  imports: [QuantityPipe],
   templateUrl: './combat-overlay.html',
   styleUrl: './combat-overlay.scss',
 })
@@ -104,10 +105,10 @@ export class CombatOverlay implements OnDestroy {
    */
   private readonly introDuration = 1900;
 
-  /** Durée commune de lecture du verdict avant fermeture automatique. */
-  private readonly resultDuration = 1800;
-  /** Lecture brève du verdict d'égalité avant reprise automatique. */
-  private readonly tieResultDuration = 900;
+  /** Durée commune de présentation du résultat final pour humain et IA. */
+  private readonly resultPresentationDuration = 4000;
+  /** Délai de décision de l'IA après l'animation des dés. */
+  private readonly aiDecisionDelay = 1800;
 
   /**
    * Empêche deux résolutions simultanées.
@@ -401,7 +402,7 @@ export class CombatOverlay implements OnDestroy {
       if (this.presentationState() === 'result' && this.presentedResult() === result) {
         this.dismissResult();
       }
-    }, result.outcome === 'tie' ? this.tieResultDuration : this.resultDuration);
+    }, this.resultPresentationDuration);
   }
 
   // ==========================================================
@@ -538,7 +539,7 @@ export class CombatOverlay implements OnDestroy {
             if (boltsUsed > 0) this.triggerMagicBoltFeedback(boltsUsed);
             this.resolveCombatAfterRoll();
           }
-        }, this.resultDuration);
+        }, this.aiDecisionDelay);
       } else if (!this.canUseMagicBolt && this.availableHeroRerolls.length === 0 && !this.canUseXanrosSacrifice) {
         this.schedule(() => {
           if (this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() === roll) {

@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 
 import { TurnService } from '../../services/turn.service';
+import { QuantityPipe } from '../../pipes/quantity.pipe';
 
 
 /**
@@ -14,7 +15,7 @@ import { TurnService } from '../../services/turn.service';
  * par le service.
  */
 @Component({
-  imports: [],
+  imports: [QuantityPipe],
   selector: 'app-movement-counter',
   styleUrl: './movement-counter.scss',
   templateUrl: './movement-counter.html',

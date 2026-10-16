@@ -313,21 +313,35 @@
    ========================================================== */
 
 .combat-overlay__fighter-footer {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: 64px 34px 84px;
   align-items: center;
-  gap: 4px;
+  justify-items: center;
 
   width: 100%;
 }
 
+.combat-overlay__roll-trigger,
+.combat-overlay__dice {
+  grid-row: 1;
+}
+
+.combat-overlay__bonus-list {
+  grid-row: 2;
+  margin-top: 0;
+}
+
 .combat-overlay__score {
+  grid-row: 3;
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 
   min-width: min(170px, 100%);
+  min-height: 84px;
+  box-sizing: border-box;
   padding: 5px 14px 7px;
 
   border: 1px solid rgba(213, 173, 93, 0.65);
@@ -335,11 +349,6 @@
 
   transform-origin: center;
   animation: combat-score-reveal 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.combat-overlay__score-label {
-  color: rgba(244, 232, 207, 0.82);
-  font-size: clamp(0.58rem, 1.1vw, 0.72rem);
 }
 
 .combat-overlay__score-value {
@@ -577,7 +586,7 @@
   justify-content: center;
   gap: 8px 12px;
   width: min(100%, 330px);
-  margin-top: 6px;
+  margin-top: 0;
   line-height: 1;
   text-align: center;
 }
@@ -707,10 +716,6 @@
   color: rgba(244, 232, 207, 0.95);
   font-size: .9rem;
   text-align: center;
-}
-
-.combat-overlay__decision .combat-overlay__result-score {
-  margin: 2px 0;
 }
 
 .combat-overlay__verdict {
@@ -952,33 +957,8 @@
 }
 
 /* ==========================================================
-   SCORE ET CONTINUER
+   CONTINUER
    ========================================================== */
-
-.combat-overlay__result-score {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: 12px;
-
-  color: rgba(244, 232, 207, 0.92);
-
-  font-size: 1.1rem;
-  font-weight: 800;
-
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.85);
-}
-
-.combat-overlay__result-score span {
-  min-width: 38px;
-  text-align: center;
-  font-size: 1.25rem;
-}
-
-.combat-overlay__result-score b {
-  color: rgba(213, 173, 93, 0.75);
-}
 
 .combat-overlay__continue {
   margin-top: 4px;
@@ -1494,6 +1474,7 @@
     width: 100%;
     max-width: 112px;
     min-width: 0;
+    min-height: 72px;
   }
 
   .combat-overlay__dice {

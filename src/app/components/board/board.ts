@@ -14,6 +14,7 @@ import { ExplorationService, PendingTilePlacement } from '../../services/explora
 import { GameService, PendingReward, PendingTreasure } from '../../services/game.service';
 import { TREASURE_POINTS, Treasure } from '../../models/treasure';
 import { CombatOverlay } from '../combat-overlay/combat-overlay';
+import { QuantityPipe } from '../../pipes/quantity.pipe';
 
 /**
  * Joueur prêt à être représenté sur le plateau.
@@ -65,7 +66,7 @@ interface PlayerMarkerPosition {
  */
 @Component({
   selector: 'app-board',
-  imports: [CombatOverlay],
+  imports: [CombatOverlay, QuantityPipe],
   templateUrl: './board.html',
   styleUrl: './board.scss',
 })

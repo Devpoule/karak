@@ -231,8 +231,7 @@
                 </p>
               } @else {
                 <p>
-                  {{ humanPlayerCount }}
-                  joueurs humains
+                  {{ humanPlayerCount | quantity: 'joueur humain' : 'joueurs humains' }}
 
                   @if (selectedPlayerCount - humanPlayerCount > 0) {
                     ·
