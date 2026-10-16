@@ -1351,7 +1351,7 @@ describe('GameService récupération automatique des équipements humains', () =
     expect(tile.tokenId).toBeUndefined();
   });
 
-  it('laisse automatiquement une arme inutile sans ouvrir de résolution', () => {
+  it('laisse automatiquement une arme inutilisable au sol sans décision humaine', () => {
     const gameService = TestBed.inject(GameService);
     const playerService = TestBed.inject(PlayerService);
     playerService.initialize(2);
@@ -1386,22 +1386,23 @@ describe('GameService récupération automatique des équipements humains', () =
     gameService.phase.set('playing');
     gameService.activePlayerIndex.set(0);
     const player = playerService.players[0];
-    player.heroId = 'victorius';
+    player.heroId = 'argentus';
     playerService.addEquipment(player, getEquipmentDefinition('daggers')!);
     playerService.addEquipment(player, getEquipmentDefinition('sword')!);
     const tile = {
       x: 1,
       y: 0,
       definitionId: 'room-1',
-      tokenId: 'skeleton-king',
+      tokenId: 'skeleton-swordsman',
       tokenFace: 'back',
     } as PlacedTile;
 
     expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile)).toBe('reward');
-    expect(player.inventory.weapons.map(item => item?.id)).toEqual(['axe', 'sword']);
+    expect(player.inventory.weapons.map(item => item?.id)).toEqual(['sword', 'sword']);
     expect(gameService.pendingReward()).toBeNull();
     expect(tile.tokenId).toBeUndefined();
-    expect(toastService.current()?.text).toBe('Victorius a obtenu une hache.');
+    expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['daggers']);
+    expect(toastService.current()?.text).toBe('Argentus a remplacé ses poignards par une épée.');
   });
   it('permet de remplacer un sort lorsque les trois emplacements sont occupés', () => {
     vi.useFakeTimers();
@@ -1860,5 +1861,227 @@ describe('GameService Aderyn backstab integration', () => {
     expect(player.isCursed).toBe(false);
     expect(player.inventory.spells.some(spell => spell?.id === 'fire-sword')).toBe(true);
     expect(gameService.pendingReward()).toBeNull();
+  });
+
+  it('remplace les poignards par une épée même si une épée identique occupe un autre slot', () => {
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const player = playerService.players[0];
+    player.heroId = 'argentus';
+    const tile = {
+      x: 1,
+      y: 0,
+      definitionId: 'room-1',
+      tokenId: 'skeleton-swordsman',
+      tokenFace: 'back',
+    } as PlacedTile;
+    playerService.addEquipment(player, getEquipmentDefinition('sword')!);
+    playerService.addEquipment(player, getEquipmentDefinition('daggers')!);
+
+    expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile)).toBe('reward');
+    expect(player.inventory.weapons.map(item => item?.id)).toEqual(['sword', 'sword']);
+    expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['daggers']);
+    expect(gameService.pendingReward()).toBeNull();
+    expect(tile.tokenId).toBeUndefined();
+  });
+
+  it('défausse explicitement l’arme remplacée si la tuile est occupée sans toucher à son objet', () => {
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const dungeonService = TestBed.inject(DungeonService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const player = playerService.players[0];
+    const otherPlayer = playerService.players[1];
+    const tile = dungeonService.getTileAt(0, 0)!;
+    player.position = { x: 0, y: 0 };
+    otherPlayer.position = { x: 0, y: 0 };
+    otherPlayer.controller = 'human';
+    playerService.addEquipment(otherPlayer, getEquipmentDefinition('fire-sword')!);
+    gameService.activePlayerIndex.set(1);
+    expect(gameService.dropInventoryEquipment(otherPlayer, 'spell', 0)).toBe(true);
+    gameService.activePlayerIndex.set(0);
+    playerService.addEquipment(player, getEquipmentDefinition('sword')!);
+    playerService.addEquipment(player, getEquipmentDefinition('daggers')!);
+    gameService.pendingReward.set({
+      player,
+      monster: getTokenDefinition('skeleton-king') as MonsterTokenDefinition,
+      rewardTile: tile,
+      sourceTile: { x: -1, y: 0 } as PlacedTile,
+      remainingRewards: [{ kind: 'equipment', equipmentId: 'axe' }],
+    });
+
+    expect(gameService.resolvePendingRewardEquipment()).toBe(true);
+    expect(player.inventory.weapons.map(item => item?.id)).toEqual(['sword', 'axe']);
+    expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['fire-sword']);
+    expect(gameService.pendingReward()).toBeNull();
+    expect(tile.tokenId).toBeUndefined();
+  });
+});
+
+describe('GameService invariant des équipements au sol', () => {
+  let gameService: GameService;
+  let playerService: PlayerService;
+  let dungeonService: DungeonService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
+    gameService = TestBed.inject(GameService);
+    playerService = TestBed.inject(PlayerService);
+    dungeonService = TestBed.inject(DungeonService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+  });
+
+  function startTile(): PlacedTile {
+    const tile = {
+      x: 0,
+      y: 0,
+      definitionId: 'start',
+    } as PlacedTile;
+    dungeonService.tiles.push(tile);
+    return tile;
+  }
+
+  it('refuse un second dépôt sans retirer le nouvel objet de l’inventaire', () => {
+    const player = playerService.players[0];
+    const tile = startTile();
+    player.position = { x: tile.x, y: tile.y };
+    playerService.addEquipment(player, getEquipmentDefinition('daggers')!);
+    playerService.addEquipment(player, getEquipmentDefinition('sword')!);
+
+    expect(gameService.dropInventoryEquipment(player, 'weapon', 0)).toBe(true);
+    expect(gameService.dropInventoryEquipment(player, 'weapon', 1)).toBe(false);
+    expect(player.inventory.weapons[1]?.id).toBe('sword');
+    expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['daggers']);
+  });
+
+  it('échange atomiquement l’objet au sol avec l’ancien équipement', () => {
+    const player = playerService.players[0];
+    const otherPlayer = playerService.players[1];
+    const tile = startTile();
+    player.position = { x: tile.x, y: tile.y };
+    otherPlayer.position = { x: tile.x, y: tile.y };
+    otherPlayer.controller = 'human';
+    playerService.addEquipment(otherPlayer, getEquipmentDefinition('axe')!);
+    gameService.activePlayerIndex.set(1);
+    expect(gameService.dropInventoryEquipment(otherPlayer, 'weapon', 0)).toBe(true);
+
+    gameService.activePlayerIndex.set(0);
+    playerService.addEquipment(player, getEquipmentDefinition('daggers')!);
+    playerService.addEquipment(player, getEquipmentDefinition('sword')!);
+    expect(gameService.offerGroundEquipmentAt(tile, 0)).toBe(true);
+
+    expect(player.inventory.weapons.map(item => item?.id)).toEqual(['axe', 'sword']);
+    expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['daggers']);
+    expect(gameService.getGroundEquipment(tile)).toHaveLength(1);
+  });
+
+  it('remplace automatiquement une arme plus faible sur tuile occupée sans dupliquer l’objet au sol', () => {
+    const player = playerService.players[0];
+    const otherPlayer = playerService.players[1];
+    const tile = startTile();
+    player.position = { x: tile.x, y: tile.y };
+    otherPlayer.position = { x: tile.x, y: tile.y };
+    otherPlayer.controller = 'human';
+    playerService.addEquipment(otherPlayer, getEquipmentDefinition('daggers')!);
+    gameService.activePlayerIndex.set(1);
+    expect(gameService.dropInventoryEquipment(otherPlayer, 'weapon', 0)).toBe(true);
+
+    gameService.activePlayerIndex.set(0);
+    playerService.addEquipment(player, getEquipmentDefinition('daggers')!);
+    playerService.addEquipment(player, getEquipmentDefinition('sword')!);
+    gameService.pendingReward.set({
+      player,
+      monster: getTokenDefinition('fallen') as MonsterTokenDefinition,
+      rewardTile: tile,
+      sourceTile: { x: -1, y: 0 } as PlacedTile,
+      remainingRewards: [{ kind: 'equipment', equipmentId: 'sword' }],
+    });
+
+    expect(gameService.resolvePendingRewardEquipment()).toBe(true);
+    expect(gameService.pendingReward()).toBeNull();
+    expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['daggers']);
+    expect(player.inventory.weapons.map(item => item?.id)).toEqual(['sword', 'sword']);
+  });
+
+  it('termine la récompense inutilisable sur tuile occupée et la conserve sur le jeton', () => {
+    const player = playerService.players[0];
+    const otherPlayer = playerService.players[1];
+    const tile = startTile();
+    tile.tokenId = 'skeleton-swordsman';
+    tile.tokenFace = 'back';
+    otherPlayer.position = { x: tile.x, y: tile.y };
+    player.position = { x: tile.x, y: tile.y };
+    otherPlayer.controller = 'human';
+    playerService.addEquipment(otherPlayer, getEquipmentDefinition('fire-sword')!);
+    gameService.activePlayerIndex.set(1);
+    expect(gameService.dropInventoryEquipment(otherPlayer, 'spell', 0)).toBe(true);
+    gameService.activePlayerIndex.set(0);
+
+    playerService.addEquipment(player, getEquipmentDefinition('sword')!);
+    playerService.addEquipment(player, { ...getEquipmentDefinition('sword')! });
+    gameService.pendingReward.set({
+      player,
+      monster: getTokenDefinition('skeleton-swordsman') as MonsterTokenDefinition,
+      rewardTile: tile,
+      sourceTile: { x: -1, y: 0 } as PlacedTile,
+      remainingRewards: [{ kind: 'equipment', equipmentId: 'sword' }],
+    });
+
+    expect(gameService.resolvePendingRewardEquipment()).toBe(true);
+    expect(gameService.pendingReward()).toBeNull();
+    expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['fire-sword']);
+    expect(gameService.getRemainingMonsterRewards(tile)).toEqual([
+      { kind: 'equipment', equipmentId: 'sword' },
+    ]);
+    expect(tile.tokenId).toBe('skeleton-swordsman');
+    expect(player.inventory.weapons.map(item => item?.id)).toEqual(['sword', 'sword']);
+  });
+
+  it('ne repropose pas un objet volontairement refusé dans la même séquence', () => {
+    const player = playerService.players[0];
+    const tile = startTile();
+    player.position = { x: tile.x, y: tile.y };
+    const equipment = getEquipmentDefinition('sword')!;
+    playerService.addEquipment(player, getEquipmentDefinition('daggers')!);
+    playerService.addEquipment(player, equipment);
+    expect(gameService.dropInventoryEquipment(player, 'weapon', 0)).toBe(true);
+
+    gameService.pendingGroundEquipment.set({ player, tile, equipment, index: 0 });
+    expect(gameService.leaveGroundEquipment()).toBe(true);
+    expect(gameService.pendingGroundEquipment()).toBeNull();
+    expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['daggers']);
+  });
+
+  it('dépose puis réévalue une récompense apparue sous le héros sans mouvement supplémentaire', () => {
+    const player = playerService.players[0];
+    player.controller = 'ai';
+    const tile = startTile();
+    player.position = { x: tile.x, y: tile.y };
+    playerService.addEquipment(player, getEquipmentDefinition('sword')!);
+    playerService.addEquipment(player, getEquipmentDefinition('axe')!);
+    const movementsBefore = TestBed.inject(TurnService).movementsMadeThisTurn();
+    gameService.pendingReward.set({
+      player,
+      monster: getTokenDefinition('fallen') as MonsterTokenDefinition,
+      rewardTile: tile,
+      sourceTile: { x: -1, y: 0 } as PlacedTile,
+      remainingRewards: [{ kind: 'equipment', equipmentId: 'sword' }],
+    });
+
+    expect(gameService.resolvePendingRewardEquipment()).toBe(true);
+    expect(gameService.pendingReward()).toBeNull();
+    expect(gameService.pendingGroundEquipment()).toBeNull();
+    expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['sword']);
+    expect(TestBed.inject(TurnService).movementsMadeThisTurn()).toBe(movementsBefore);
   });
 });
