@@ -5,12 +5,15 @@ import { GameService } from './game.service';
 import { PlayerService } from './player.service';
 import { TurnService } from './turn.service';
 import { ExplorationService } from './exploration.service';
+import { DungeonService } from './dungeon.service';
+import { getEquipmentDefinition } from '../data/equipment-definitions';
 
 describe('GameService contrat de transition de tour', () => {
   let gameService: GameService;
   let playerService: PlayerService;
   let turnService: TurnService;
   let explorationService: ExplorationService;
+  let dungeonService: DungeonService;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -19,6 +22,7 @@ describe('GameService contrat de transition de tour', () => {
     playerService = TestBed.inject(PlayerService);
     turnService = TestBed.inject(TurnService);
     explorationService = TestBed.inject(ExplorationService);
+    dungeonService = TestBed.inject(DungeonService);
     playerService.initialize(3);
     gameService.initialize();
     gameService.phase.set('playing');
@@ -52,6 +56,48 @@ describe('GameService contrat de transition de tour', () => {
     expect(gameService.turnTransitionPending()).toBe(false);
     expect(gameService.activePlayerIndex()).toBe(0);
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('refuse la transition pendant une sélection de Portail de guérison', () => {
+    const active = playerService.players[0];
+    playerService.addEquipment(active, getEquipmentDefinition('heart')!);
+    dungeonService.tiles.push({ definitionId: 'healing-corner', x: 2, y: 0, rotation: 0 });
+
+    expect(gameService.openHealingPortalSelection()).toBe(true);
+    gameService.endTurn();
+
+    expect(gameService.turnTransitionPending()).toBe(false);
+    expect(gameService.activePlayerIndex()).toBe(0);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('libère la transition après confirmation ou annulation du Portail', () => {
+    const active = playerService.players[0];
+    active.position = { x: 0, y: 0 };
+    playerService.addEquipment(active, getEquipmentDefinition('heart')!);
+    dungeonService.tiles.push({ definitionId: 'healing-corner', x: 2, y: 0, rotation: 0 });
+
+    expect(gameService.openHealingPortalSelection()).toBe(true);
+    expect(gameService.useHealingPortal(active, dungeonService.tiles.at(-1)!)).toBe(true);
+    expect(gameService.healingPortalSelection()).toBeNull();
+    gameService.endTurn();
+    expect(gameService.turnTransitionPending()).toBe(true);
+    vi.clearAllTimers();
+    gameService.initialize();
+
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    playerService.players[0].position = { x: 0, y: 0 };
+    playerService.addEquipment(playerService.players[0], getEquipmentDefinition('heart')!);
+    dungeonService.tiles.push({ definitionId: 'healing-corner', x: 3, y: 0, rotation: 0 });
+    expect(gameService.openHealingPortalSelection()).toBe(true);
+    const spellCount = playerService.players[0].inventory.spells.filter(Boolean).length;
+    gameService.closeHealingPortalSelection();
+
+    expect(gameService.healingPortalSelection()).toBeNull();
+    expect(playerService.players[0].inventory.spells.filter(Boolean).length).toBe(spellCount);
+    gameService.endTurn();
+    expect(gameService.turnTransitionPending()).toBe(true);
   });
 
   it('rend un double appel à endTurn idempotent pendant la transition', () => {

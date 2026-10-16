@@ -79,14 +79,14 @@ export const HERO_POWER_DEFINITIONS: Readonly<Record<HeroPowerId, HeroPowerDefin
   'combat-training': {
     id: 'combat-training',
     name: 'Entraînement au combat',
-    summary: 'Si vous combattez tout de suite après votre premier déplacement, vous ajoutez +1 à votre force d’attaque.',
+    summary: 'Peut relancer une fois chaque dé affichant 1 pendant un combat.',
     description:
       'Le spadassin est un combattant expérimenté dont les attaques sont toujours menées avec précision. Si vous avez le chiffre 1 sur un de vos dés, vous pouvez toujours répéter la lancée. En d’autres termes – vous n’aurez jamais 1 sur le dé.',
   },
   unstoppable: {
     id: 'unstoppable',
     name: 'Inarrêtable',
-    summary: 'Lors de la découverte d’une pièce, vous pouvez choisir parmi les deux jetons tirés de monstres/trésors.',
+    summary: 'Avec un 6 au combat, peut poursuivre son tour après la résolution, dans la limite des mouvements restants.',
     description:
       'Si pendant un combat le spadassin a un six sur un dé, il peut continuer son tour, et ce même si vous avez perdu le combat ou si son résultat s’est soldé par un match nul. Vous pouvez donc à nouveau combattre ou continuer votre déplacement (mais la limite de quatre déplacements s’applique même dans ce cas).',
   },

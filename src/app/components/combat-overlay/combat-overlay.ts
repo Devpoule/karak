@@ -225,6 +225,22 @@ export class CombatOverlay implements OnDestroy {
       && this.combatService.canUseXanrosSacrifice();
   }
 
+  /**
+   * Affiche un refus explicite dès qu'une décision optionnelle reste ouverte.
+   * Le bouton est volontairement partagé par Horan, Victorius et les Tirs
+   * magiques ; le choix métier lui-même reste dans CombatService.
+   */
+  get canKeepCombatResult(): boolean {
+    return this.isDecisionVisible
+      && (
+        this.availableHeroRerolls.length > 0
+        || (
+          this.canUseMagicBolt
+          && (!this.canUseXanrosSacrifice || this.xanrosSacrificeDeclined())
+        )
+      );
+  }
+
   useXanrosSacrifice(): void {
     if (!this.canUseXanrosSacrifice || !this.combatService.useXanrosSacrifice()) return;
     if (this.remainingMagicBolts === 0) this.resolveCombatAfterRoll();
@@ -559,12 +575,44 @@ export class CombatOverlay implements OnDestroy {
 
     this.clearTimers();
 
+    // La Réincarnation valide encore l'identité du dernier combat avant
+    // que son résultat ne soit retiré du service de combat.
+    if (result.outcome === 'defeat' && result.player.lives === 0) {
+      this.gameService.beginHoranReincarnation(result);
+    }
+
     /**
-     * Libérer l'état de présentation et le dernier
-     * résultat avant de traiter la suite du tour.
-     *
-     * L'IA ne doit plus considérer que le verdict
-     * précédent est en cours d'affichage.
+     * Enregistrer l'autorisation avant les récompenses garantit qu'une
+     * résolution automatique d'inventaire ne puisse pas terminer le tour
+     * avant l'offre de continuation.
+     */
+    if (result.unstoppableEligible) {
+      this.gameService.registerUnstoppableContinuation(result);
+    }
+
+    /**
+     * Le héros est déjà présent sur la tuile du monstre vaincu.
+     * Nous déclenchons donc la résolution de son verso sans effectuer un
+     * second déplacement.
+     */
+    if (result.outcome === 'victory') {
+      this.gameService.resolveTileEntry(
+        combat.player,
+        combat.sourceTile,
+        combat.monsterTile,
+      );
+    }
+
+    // Après une victoire, cette tentative attendra une éventuelle récompense.
+    // Pour les autres issues, elle ouvre immédiatement la décision humaine.
+    if (result.unstoppableEligible) {
+      this.gameService.finalizeUnstoppableContinuation();
+    }
+
+    /**
+     * Libérer l'état de présentation et le dernier résultat avant de traiter
+     * la suite du tour. L'IA ne doit plus considérer le verdict précédent
+     * comme un combat encore actif.
      */
     this.combatService.clearLastCombatResult();
 
@@ -574,25 +622,6 @@ export class CombatOverlay implements OnDestroy {
 
     this.trackedCombat = null;
     this.resolving = false;
-
-    if (result.outcome === 'defeat' && result.player.lives === 0) {
-      this.gameService.resolveHoranReincarnation(result.player);
-    }
-
-    /**
-     * Le héros est déjà présent sur la tuile
-     * du monstre vaincu.
-     *
-     * Nous déclenchons donc la résolution de son
-     * verso sans effectuer un second déplacement.
-     */
-    if (result.outcome === 'victory') {
-      this.gameService.resolveTileEntry(
-        combat.player,
-        combat.sourceTile,
-        combat.monsterTile,
-      );
-    }
 
     /**
      * Une récompense obligatoire bloque le passage
@@ -621,15 +650,13 @@ export class CombatOverlay implements OnDestroy {
         : 'warning';
     queueMicrotask(() => this.toastService.show(combatMessage, combatTone));
 
-    if (result.canContinueTurn) {
-      this.gameService.resumeMovementsAfterUnstoppable();
-      return;
-    }
-
     /**
      * Aucun contenu obligatoire ne reste à résoudre.
-     * Le tour peut se terminer.
+     * Une décision Inarrêtable éventuelle est maintenant affichée par
+     * GameService ; elle ne doit pas être contournée par la fermeture du
+     * verdict.
      */
+    if (this.gameService.pendingUnstoppableDecision()) return;
     this.gameService.endTurn();
   }
 

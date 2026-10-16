@@ -4,7 +4,7 @@ import { calculateTreasurePoints } from '../models/treasure';
 import { getTokenDefinition } from '../data/token-definitions';
 import { getEquipmentDefinition } from '../data/equipment-definitions';
 import { Equipment } from '../models/equipment';
-import { PlacedTile } from '../models/tile';
+import { DIRECTIONS, PlacedTile } from '../models/tile';
 import { Player } from '../models/player';
 import { MonsterReward, MonsterTokenDefinition, TreasureTokenDefinition, TokenDefinition } from '../models/token';
 import { DungeonService } from './dungeon.service';
@@ -14,6 +14,7 @@ import { TileDeckService } from './tile-deck.service';
 import { TokenBagService } from './token-bag.service';
 import { TurnService } from './turn.service';
 import { CombatService } from './combat.service';
+import type { CombatResult } from './combat.service';
 import { ToastService } from './toast.service';
 import { getHeroDefinition } from '../data/hero-definitions';
 
@@ -66,18 +67,37 @@ export interface PendingTokenChoice {
   tokens: readonly [TokenDefinition, TokenDefinition];
 }
 
-/** Choix d'Adéryn face à un monstre déjà révélé. */
+/** Choix d'Aderyn face à un monstre déjà révélé. */
 export interface PendingSneakChoice {
   player: Player;
   monster: MonsterTokenDefinition;
   sourceTile: PlacedTile;
   destinationTile: PlacedTile;
+  movementConsumed: boolean;
 }
 
 export interface HealingPortalSelection {
   readonly user: Player;
   readonly target: Player | null;
   readonly destination: PlacedTile | null;
+}
+
+/** Destination choisie pour la Réincarnation de Horan. */
+export interface HoranReincarnationSelection {
+  readonly player: Player;
+  readonly destination: PlacedTile;
+}
+
+/** Décision facultative proposée après un combat qualifiant de Victorius. */
+export interface PendingUnstoppableDecision {
+  readonly player: Player;
+  readonly result: CombatResult;
+}
+
+/** Action facultative encore disponible après une Substitution de Xanros. */
+export interface PendingXanrosSubstitutionAction {
+  readonly player: Player;
+  readonly tile: PlacedTile;
 }
 
 type TileEntryClassification =
@@ -165,6 +185,12 @@ export class GameService {
   readonly pendingSneakChoice = signal<PendingSneakChoice | null>(null);
   /** Sélection temporaire partagée entre l'inventaire et le plateau. */
   readonly healingPortalSelection = signal<HealingPortalSelection | null>(null);
+  /** Décision métier en attente après la défaite de Horan à 0 PV. */
+  readonly horanReincarnationSelection = signal<HoranReincarnationSelection | null>(null);
+  /** Décision métier en attente pour la poursuite facultative de Victorius. */
+  readonly pendingUnstoppableDecision = signal<PendingUnstoppableDecision | null>(null);
+  /** Action facultative autorisée sur la tuile d'arrivée de Xanros. */
+  readonly pendingXanrosSubstitutionAction = signal<PendingXanrosSubstitutionAction | null>(null);
 
   /** Objets déposés indépendamment des jetons monstres/trésors. */
   private groundEquipmentByTile = new Map<string, Equipment[]>();
@@ -179,6 +205,8 @@ export class GameService {
   readonly turnTransitionPending = signal(false);
   /** Sélection temporaire de cible pour la Substitution de Xanros. */
   readonly xanrosSubstitutionSelectionOpen = signal(false);
+  private xanrosSubstitutionPlayer: Player | null = null;
+  private optionalXanrosTreasure = false;
   /** Révision UI émise lorsqu'un héros entre réellement en tour de repos. */
   readonly recoveryRevision = signal(0);
   private readonly turnTransitionDelay = 2800;
@@ -186,6 +214,8 @@ export class GameService {
 
   /** Récompenses restant sur chaque jeton retourné après une récupération partielle. */
   private remainingRewardsByTile = new WeakMap<PlacedTile, readonly MonsterReward[]>();
+  /** Résultat qualifiant conservé pendant la résolution d'une récompense. */
+  private pendingUnstoppableResult: CombatResult | null = null;
 
   /**
    * Indique si l'entrée sur une tuile a déclenché une résolution
@@ -197,7 +227,11 @@ export class GameService {
       || this.pendingReward() !== null
       || this.pendingGroundEquipment() !== null
       || this.pendingTokenChoice() !== null
-      || this.pendingSneakChoice() !== null;
+      || this.pendingSneakChoice() !== null
+      || this.horanReincarnationSelection() !== null
+      || this.pendingUnstoppableDecision() !== null
+      || this.xanrosSubstitutionSelectionOpen()
+      || this.pendingXanrosSubstitutionAction() !== null;
   }
 
   /** Joueurs vers lesquels Xanros peut actuellement se substituer. */
@@ -214,44 +248,263 @@ export class GameService {
     return this.phase() === 'playing'
       && !this.turnTransitionPending()
       && !this.hasPendingTileResolution
+      && !this.explorationService.pendingTile
+      && this.healingPortalSelection() === null
       && this.turnService.remainingMovements() === 4
+      && this.turnService.movementsMadeThisTurn() === 0
+      && this.turnService.suspendedMovementCount === null
       && player?.heroId === 'xanros'
+      && player.lives > 0
+      && player.recoveryState === 'none'
       && !player.isCursed
       && this.xanrosSubstitutionTargets.length > 0;
   }
 
   openXanrosSubstitution(): boolean {
     if (!this.canUseXanrosSubstitution) return false;
+    this.xanrosSubstitutionPlayer = this.activePlayer;
     this.xanrosSubstitutionSelectionOpen.set(true);
     return true;
   }
 
   cancelXanrosSubstitution(): void {
+    this.xanrosSubstitutionPlayer = null;
     this.xanrosSubstitutionSelectionOpen.set(false);
   }
 
-  resumeMovementsAfterUnstoppable(): boolean {
-    const player = this.activePlayer;
-    if (this.phase() !== 'playing' || player?.heroId !== 'victorius' || player.isCursed) return false;
-    return this.turnService.resumeSuspendedMovements();
+  /** Indique si l'action post-Substitution appartient encore au joueur actif. */
+  get canResolveXanrosSubstitutionAction(): boolean {
+    const pending = this.pendingXanrosSubstitutionAction();
+    return !!pending
+      && pending.player === this.activePlayer
+      && this.phase() === 'playing'
+      && !this.turnTransitionPending()
+      && this.pendingTreasure() === null
+      && this.pendingReward() === null
+      && this.pendingGroundEquipment() === null
+      && this.pendingTokenChoice() === null
+      && this.pendingSneakChoice() === null
+      && this.horanReincarnationSelection() === null
+      && this.pendingUnstoppableDecision() === null
+      && this.combatService.pendingCombat() === null
+      && this.healingPortalSelection() === null
+      && !this.xanrosSubstitutionSelectionOpen();
+  }
+
+  /** Le coffre en attente provient-il de l'action facultative de Xanros ? */
+  get isOptionalXanrosTreasure(): boolean {
+    return this.optionalXanrosTreasure;
+  }
+
+  /** Termine l'action facultative de Xanros sans déclencher d'autre effet. */
+  finishXanrosSubstitutionAction(): boolean {
+    if (!this.canResolveXanrosSubstitutionAction) return false;
+    this.pendingXanrosSubstitutionAction.set(null);
+    this.endTurn();
+    return true;
+  }
+
+  /**
+   * Enregistre le résultat d'un combat qualifiant pour Inarrêtable.
+   *
+   * La décision est différée tant qu'une récompense ou une autre résolution
+   * obligatoire appartient encore au combat. Le résultat doit encore être
+   * celui publié par CombatService : une interface ne peut donc pas fabriquer
+   * une autorisation de reprise.
+   */
+  registerUnstoppableContinuation(result: CombatResult): boolean {
+    const player = result.player;
+    if (
+      !result.unstoppableEligible
+      || this.combatService.lastCombatResult() !== result
+      || this.phase() !== 'playing'
+      || player !== this.activePlayer
+      || player.heroId !== 'victorius'
+      || player.isCursed
+      || this.pendingUnstoppableResult !== null
+      || this.pendingUnstoppableDecision() !== null
+    ) {
+      return false;
+    }
+
+    this.pendingUnstoppableResult = result;
+    return true;
+  }
+
+  /** Tente d'afficher l'autorisation après la fin des résolutions obligatoires. */
+  finalizeUnstoppableContinuation(): boolean {
+    return this.offerUnstoppableDecision();
+  }
+
+  /** Accepte une continuation autorisée et consomme l'autorisation. */
+  acceptUnstoppableContinuation(): boolean {
+    const decision = this.pendingUnstoppableDecision();
+    if (!decision || !this.canContinueUnstoppable(decision.player)) return false;
+    if (!this.turnService.resumeSuspendedMovements()) return false;
+
+    this.clearUnstoppableContinuation();
+    return true;
+  }
+
+  /** Refuse la continuation et termine le tour selon le flux normal. */
+  declineUnstoppableContinuation(): boolean {
+    const decision = this.pendingUnstoppableDecision();
+    if (
+      !decision
+      || this.phase() !== 'playing'
+      || decision.player !== this.activePlayer
+      || this.turnTransitionPending()
+    ) {
+      return false;
+    }
+
+    this.clearUnstoppableContinuation();
+    this.endTurn();
+    return true;
+  }
+
+  /** Efface une autorisation devenue obsolète. */
+  private clearUnstoppableContinuation(): void {
+    this.pendingUnstoppableResult = null;
+    this.pendingUnstoppableDecision.set(null);
+  }
+
+  /**
+   * Rend la décision visible uniquement lorsque la reprise est légale.
+   * Une suspension à zéro mouvement conduit directement à la fin du tour.
+   */
+  private offerUnstoppableDecision(): boolean {
+    const result = this.pendingUnstoppableResult;
+    if (!result || this.hasPendingTileResolution) return false;
+
+    if (!this.canContinueUnstoppable(result.player)) {
+      this.clearUnstoppableContinuation();
+      return false;
+    }
+
+    this.pendingUnstoppableDecision.set({ player: result.player, result });
+    return true;
+  }
+
+  private canContinueUnstoppable(player: Player): boolean {
+    return this.phase() === 'playing'
+      && !this.turnTransitionPending()
+      && player === this.activePlayer
+      && player.heroId === 'victorius'
+      && !player.isCursed
+      && player.lives > 0
+      && player.recoveryState === 'none'
+      && this.combatService.pendingCombat() === null
+      && this.pendingTreasure() === null
+      && this.pendingReward() === null
+      && this.pendingGroundEquipment() === null
+      && this.pendingTokenChoice() === null
+      && this.pendingSneakChoice() === null
+      && this.horanReincarnationSelection() === null
+      && (this.turnService.suspendedMovementCount ?? 0) > 0;
+  }
+
+  /** Termine une résolution obligatoire en ouvrant, si nécessaire, Inarrêtable. */
+  private finishMandatoryResolution(): void {
+    if (this.offerUnstoppableDecision()) return;
+    this.clearUnstoppableContinuation();
+    this.endTurn();
   }
 
   confirmXanrosSubstitution(target: Player): boolean {
     const player = this.activePlayer;
-    if (!this.xanrosSubstitutionSelectionOpen() || !this.canUseXanrosSubstitution) return false;
-    if (!this.xanrosSubstitutionTargets.includes(target) || !player?.position || !target.position) return false;
+    if (!this.canConfirmXanrosSubstitution(player, target)) return false;
 
-    const playerPosition = { ...player.position };
-    player.position = { ...target.position };
-    target.position = playerPosition;
-    this.xanrosSubstitutionSelectionOpen.set(false);
-    this.turnService.stopMovements();
-
+    const playerPosition = player.position;
+    const targetPosition = target.position;
+    if (!playerPosition || !targetPosition) return false;
     const sourceTile = this.dungeonService.getTileAt(playerPosition.x, playerPosition.y);
-    const destinationTile = this.dungeonService.getTileAt(player.position.x, player.position.y);
-    if (sourceTile && destinationTile) {
-      this.resolveTileEntry(player, sourceTile, destinationTile);
+    const destinationTile = this.dungeonService.getTileAt(targetPosition.x, targetPosition.y);
+    if (!sourceTile || !destinationTile || !this.turnService.consumeAllMovements()) return false;
+
+    player.position = { ...targetPosition };
+    target.position = { ...playerPosition };
+    this.cancelXanrosSubstitution();
+    this.prepareXanrosSubstitutionAction(player, destinationTile);
+    return true;
+  }
+
+  /** Vérifie toute la décision conservée entre l'ouverture et la confirmation. */
+  private canConfirmXanrosSubstitution(player: Player | null, target: Player): player is Player {
+    return !!player
+      && this.xanrosSubstitutionSelectionOpen()
+      && this.xanrosSubstitutionPlayer === player
+      && this.phase() === 'playing'
+      && !this.turnTransitionPending()
+      && !this.explorationService.pendingTile
+      && this.healingPortalSelection() === null
+      && this.combatService.pendingCombat() === null
+      && this.pendingTreasure() === null
+      && this.pendingReward() === null
+      && this.pendingGroundEquipment() === null
+      && this.pendingTokenChoice() === null
+      && this.pendingSneakChoice() === null
+      && this.horanReincarnationSelection() === null
+      && this.pendingUnstoppableDecision() === null
+      && player.heroId === 'xanros'
+      && player.lives > 0
+      && player.recoveryState === 'none'
+      && !player.isCursed
+      && this.turnService.remainingMovements() === 4
+      && this.turnService.movementsMadeThisTurn() === 0
+      && this.turnService.suspendedMovementCount === null
+      && this.playerService.players.includes(target)
+      && target !== player
+      && this.xanrosSubstitutionTargets.includes(target)
+      && !!player.position
+      && !!target.position;
+  }
+
+  /** Prépare uniquement les interactions explicitement autorisées après l'échange. */
+  private prepareXanrosSubstitutionAction(player: Player, tile: PlacedTile): void {
+    const hasGroundEquipment = this.getGroundEquipment(tile).length > 0;
+    const hasOpenableChest = tile.tokenId === 'closed-chest' && player.inventory.key !== null;
+    const canHeal = player.inventory.spells.some(spell => spell?.effect === 'healing-portal')
+      && this.getHealingFountains().length > 0
+      && player.lives < 5;
+
+    if (hasGroundEquipment || hasOpenableChest || canHeal) {
+      this.pendingXanrosSubstitutionAction.set({ player, tile });
+      return;
     }
+
+    this.endTurn();
+  }
+
+  /** Prépare l'ouverture facultative d'un coffre de la tuile d'arrivée. */
+  openXanrosSubstitutionChest(tile: PlacedTile): boolean {
+    const pending = this.pendingXanrosSubstitutionAction();
+    const player = this.activePlayer;
+    if (
+      !this.canResolveXanrosSubstitutionAction
+      || !pending
+      || pending.tile !== tile
+      || tile.tokenId !== 'closed-chest'
+      || player !== pending.player
+      || player.inventory.key === null
+    ) {
+      return false;
+    }
+
+    const treasure = getTokenDefinition('closed-chest');
+    if (!treasure || treasure.kind !== 'treasure') return false;
+    this.pendingXanrosSubstitutionAction.set(null);
+    this.pendingTreasure.set({ player, treasure, treasureTile: tile, sourceTile: tile });
+    this.optionalXanrosTreasure = true;
+    return true;
+  }
+
+  /** Refuse l'ouverture facultative d'un coffre après Substitution. */
+  declineOptionalXanrosTreasure(): boolean {
+    if (!this.optionalXanrosTreasure || !this.pendingTreasure()) return false;
+    this.pendingTreasure.set(null);
+    this.optionalXanrosTreasure = false;
+    this.endTurn();
     return true;
   }
   constructor(
@@ -300,8 +553,11 @@ export class GameService {
       clearTimeout(this.turnTransitionTimer);
       this.turnTransitionTimer = null;
     }
+    this.clearUnstoppableContinuation();
+    this.cancelXanrosSubstitution();
+    this.pendingXanrosSubstitutionAction.set(null);
+    this.optionalXanrosTreasure = false;
     this.turnTransitionPending.set(false);
-    this.xanrosSubstitutionSelectionOpen.set(false);
     this.phase.set('setup');
     this.finalRanking.set([]);
     this.winners.set([]);
@@ -316,6 +572,8 @@ export class GameService {
     this.pendingSneakChoice.set(null);
     this.pendingTokenChoice.set(null);
     this.healingPortalSelection.set(null);
+    this.horanReincarnationSelection.set(null);
+    this.clearUnstoppableContinuation();
     this.groundEquipmentByTile = new Map<string, Equipment[]>();
     this.groundEquipmentRevision.update(value => value + 1);
     this.remainingRewardsByTile = new WeakMap<PlacedTile, readonly MonsterReward[]>();
@@ -596,6 +854,8 @@ export class GameService {
     }
     const firstToken = this.tokenBagService.draw();
     if (!firstToken) {
+      // Adaptation numérique : le manuel ne décrit pas la découverte
+      // d'une pièce lorsque le sachet est vide.
       return;
     }
     const canUseFateWeaver = player?.heroId === 'taia'
@@ -612,13 +872,25 @@ export class GameService {
       });
       return;
     }
+    // Adaptation numérique : avec un seul jeton disponible, il n'existe
+    // pas de décision possible et le premier tirage est placé directement.
     tile.tokenId = firstToken.id;
     tile.tokenFace = 'front';
   }
 
   choosePendingToken(index: 0 | 1): boolean {
     const pending = this.pendingTokenChoice();
-    if (!pending || pending.player !== this.activePlayer || pending.player.isCursed) return false;
+    if (
+      !pending
+      || this.phase() !== 'playing'
+      || this.turnTransitionPending()
+      || pending.player !== this.activePlayer
+      || pending.player.isCursed
+      || !this.dungeonService.tiles.includes(pending.tile)
+      || pending.tile.tokenId !== undefined
+    ) {
+      return false;
+    }
     const selected = pending.tokens[index];
     const rejected = pending.tokens[index === 0 ? 1 : 0];
     if (!selected || !rejected) return false;
@@ -626,17 +898,42 @@ export class GameService {
     pending.tile.tokenId = selected.id;
     pending.tile.tokenFace = 'front';
     this.pendingTokenChoice.set(null);
-    this.resolveTileEntry(pending.player, pending.sourceTile, pending.tile);
+    const resolution = this.resolveTileEntry(pending.player, pending.sourceTile, pending.tile);
+    if (resolution === 'none' && !this.hasPendingTileResolution) {
+      this.turnService.resumeSuspendedMovements();
+      if (!this.turnService.canMove) {
+        this.endTurn();
+      }
+    }
     return true;
   }
 
-  /** Résout le choix tactique d'Adéryn face à un monstre révélé. */
+  /** Résout le choix tactique d'Aderyn face à un monstre révélé. */
   choosePendingSneak(action: 'combat' | 'sneak'): boolean {
     const pending = this.pendingSneakChoice();
     if (!pending || pending.player !== this.activePlayer || pending.player.isCursed) return false;
-    this.pendingSneakChoice.set(null);
+
     if (action === 'combat') {
-      return this.combatService.startCombat(pending.player, pending.sourceTile, pending.destinationTile);
+      const started = this.combatService.startCombat(
+        pending.player,
+        pending.sourceTile,
+        pending.destinationTile,
+        pending.movementConsumed,
+      );
+      if (!started) return false;
+      this.pendingSneakChoice.set(null);
+      return true;
+    }
+
+    // The entry movement is consumed by the board flow. Tile resolution only
+    // suspends the movements still available while waiting for the decision.
+    if (!this.turnService.resumeSuspendedMovements()) return false;
+    this.pendingSneakChoice.set(null);
+    if (!pending.movementConsumed) {
+      this.turnService.consumeMovement();
+    }
+    if (!this.turnService.canMove) {
+      this.endTurn();
     }
     return true;
   }
@@ -663,10 +960,11 @@ export class GameService {
     sourceTile: PlacedTile,
     destinationTile: PlacedTile,
     revealRoom = false,
+    movementConsumed = false,
   ): TileEntryResolution {
     // Une entrée de tuile est une résolution de partie : elle n'est
     // valide qu'après la fin de la préparation et avant la fin de partie.
-    if (this.phase() !== 'playing') return 'none';
+    if (this.phase() !== 'playing' || player !== this.activePlayer) return 'none';
     if (player.recoveryState === 'resting') return 'none';
     if (this.turnTransitionPending() || this.hasPendingTileResolution) {
       return 'none';
@@ -687,6 +985,7 @@ export class GameService {
         monster: classification.token,
         sourceTile,
         destinationTile,
+        movementConsumed,
       });
       return 'sneak-choice';
     }
@@ -733,7 +1032,7 @@ export class GameService {
 
     this.turnService.stopMovements();
     if (classification.kind === 'monster') {
-      return this.combatService.startCombat(player, sourceTile, destinationTile)
+      return this.combatService.startCombat(player, sourceTile, destinationTile, movementConsumed)
         ? 'combat'
         : 'none';
     }
@@ -822,6 +1121,7 @@ export class GameService {
     pending.treasureTile.tokenId = undefined;
     pending.treasureTile.tokenFace = undefined;
     this.pendingTreasure.set(null);
+    this.optionalXanrosTreasure = false;
     this.endTurn();
     this.toastService.show(`${this.actorLabel(pending.player)} : coffre ouvert, trésor récupéré.`, 'success');
     return true;
@@ -909,6 +1209,42 @@ export class GameService {
   }
 
   /**
+   * Valide un déplacement légal vers une tuile voisine déjà présente.
+   *
+   * DungeonService reste responsable de la géométrie. Cette méthode ajoute
+   * les invariants du tour et les exceptions des pouvoirs de héros afin que
+   * Board et IA utilisent une même source de vérité.
+   */
+  canMoveTo(
+    player: Player | null,
+    sourceTile: PlacedTile | null,
+    destinationTile: PlacedTile | null,
+  ): boolean {
+    if (!this.canPerformNormalMovement(player) || !sourceTile || !destinationTile || !player?.position) {
+      return false;
+    }
+
+    const actualSource = this.dungeonService.getTileAt(sourceTile.x, sourceTile.y);
+    const actualDestination = this.dungeonService.getTileAt(destinationTile.x, destinationTile.y);
+    if (!actualSource || !actualDestination || actualSource !== sourceTile || actualDestination !== destinationTile) {
+      return false;
+    }
+
+    if (player.position.x !== actualSource.x || player.position.y !== actualSource.y) {
+      return false;
+    }
+
+    const direction = DIRECTIONS.find(candidate =>
+      this.dungeonService.getNeighbor(actualSource, candidate) === actualDestination,
+    );
+    if (!direction) return false;
+
+    if (this.dungeonService.canMoveTo(actualSource, direction)) return true;
+
+    return player.heroId === 'argentus' && !player.isCursed;
+  }
+
+  /**
    * Indique si le sacrifice de Xanros peut encore changer l'issue du score.
    *
    * Le score est calculé à partir des trésors réellement possédés. Un héros
@@ -931,13 +1267,15 @@ export class GameService {
 
   get canUseHealingPortal(): boolean {
     const player = this.activePlayer;
+    const postSubstitution = this.pendingXanrosSubstitutionAction()?.player === player;
     return this.phase() === 'playing'
       && !!player
       && player.controller === 'human'
       && player.recoveryState === 'none'
       && !this.turnTransitionPending()
-      && !this.hasPendingTileResolution
+      && (!this.hasPendingTileResolution || postSubstitution)
       && !this.explorationService.pendingTile
+      && this.healingPortalSelection() === null
       && player.inventory.spells.some(spell => spell?.effect === 'healing-portal')
       && this.getHealingFountains().length > 0;
   }
@@ -980,8 +1318,9 @@ export class GameService {
    */
   useHealingPortal(target: Player, destination: PlacedTile): boolean {
     const user = this.activePlayer;
+    const postSubstitution = this.pendingXanrosSubstitutionAction()?.player === user;
     if (this.phase() !== 'playing' || !user || user.recoveryState !== 'none') return false;
-    if (this.turnTransitionPending() || this.hasPendingTileResolution || this.explorationService.pendingTile) return false;
+    if (this.turnTransitionPending() || (this.hasPendingTileResolution && !postSubstitution) || this.explorationService.pendingTile) return false;
     if (!this.playerService.players.includes(target) || !this.playerService.players.includes(user)) return false;
     if (!user.inventory.spells.some(spell => spell?.effect === 'healing-portal')) return false;
     const validDestination = this.dungeonService.tiles.includes(destination)
@@ -996,18 +1335,110 @@ export class GameService {
     this.playerService.movePlayerTo(target, destination.x, destination.y, target.facing ?? 'north');
     this.playerService.restoreCompletely(target, 5);
     this.toastService.show(`Guérison: ${this.actorLabel(target)} récupère tous ses points de vie.`, 'success');
+    const activePortalSelection = this.healingPortalSelection();
+    if (activePortalSelection?.user === user) {
+      this.healingPortalSelection.set(null);
+    }
+    if (postSubstitution) {
+      this.pendingXanrosSubstitutionAction.set(null);
+      this.endTurn();
+    }
     return true;
   }
 
-  /** Applique la Réincarnation de Horan après une défaite à 0 PV. */
-  resolveHoranReincarnation(player: Player): boolean {
-    if (this.phase() !== 'playing' || player.heroId !== 'horan' || player.isCursed || player.lives !== 0) return false;
-    const fountain = this.getHealingFountains()[0];
-    if (!fountain) return false;
-    this.playerService.movePlayerTo(player, fountain.x, fountain.y, player.facing ?? 'north');
-    const restored = this.playerService.restoreCompletely(player, 5);
-    if (restored) this.toastService.show(`${this.actorLabel(player)} : Horan revient avec tous ses points de vie.`, 'success');
-    return restored;
+  /**
+   * Prépare la Réincarnation uniquement à partir du dernier combat résolu.
+   *
+   * Une fontaine unique est appliquée immédiatement. Lorsque plusieurs
+   * destinations existent, la décision reste en attente sur le plateau.
+   * L'IA choisit la première destination de manière déterministe.
+   */
+  beginHoranReincarnation(result: CombatResult): boolean {
+    const player = result.player;
+    const fountains = this.getHealingFountains();
+    if (fountains.length === 0) {
+      // Adaptation numérique provisoire : le manuel ne définit pas ce cas.
+      // Le flux appelant conserve alors la récupération générique sans
+      // inventer une élimination de Horan.
+      return false;
+    }
+    if (
+      this.phase() !== 'playing'
+      || this.combatService.pendingCombat() !== null
+      || this.combatService.lastCombatResult() !== result
+      || result.outcome !== 'defeat'
+      || player !== this.activePlayer
+      || !this.playerService.players.includes(player)
+      || player.heroId !== 'horan'
+      || player.isCursed
+      || player.lives !== 0
+      || player.recoveryState !== 'pending'
+      || this.horanReincarnationSelection() !== null
+    ) {
+      return false;
+    }
+
+    this.horanReincarnationSelection.set({
+      player,
+      destination: fountains[0],
+    });
+
+    if (fountains.length === 1 || player.controller === 'ai') {
+      return this.confirmHoranReincarnation();
+    }
+
+    return true;
+  }
+
+  /** Sélectionne une fontaine valide pour la Réincarnation en attente. */
+  selectHoranReincarnationDestination(destination: PlacedTile): void {
+    const selection = this.horanReincarnationSelection();
+    if (!selection || !this.getHealingFountains().includes(destination)) return;
+    this.horanReincarnationSelection.set({ ...selection, destination });
+  }
+
+  /** Navigue entre les fontaines proposées pour la Réincarnation. */
+  moveHoranReincarnationSelection(step: 1 | -1): void {
+    const selection = this.horanReincarnationSelection();
+    const fountains = this.getHealingFountains();
+    if (!selection || fountains.length < 2) return;
+    const currentIndex = Math.max(0, fountains.indexOf(selection.destination));
+    const nextIndex = (currentIndex + step + fountains.length) % fountains.length;
+    this.selectHoranReincarnationDestination(fountains[nextIndex]);
+  }
+
+  /** Applique une seule fois la destination de Réincarnation confirmée. */
+  confirmHoranReincarnation(): boolean {
+    const selection = this.horanReincarnationSelection();
+    if (
+      !selection
+      || this.phase() !== 'playing'
+      || selection.player !== this.activePlayer
+      || selection.player.heroId !== 'horan'
+      || selection.player.isCursed
+      || selection.player.lives !== 0
+      || selection.player.recoveryState !== 'pending'
+      || !this.getHealingFountains().includes(selection.destination)
+    ) {
+      return false;
+    }
+
+    this.playerService.movePlayerTo(
+      selection.player,
+      selection.destination.x,
+      selection.destination.y,
+      selection.player.facing ?? 'north',
+    );
+    const restored = this.playerService.restoreCompletely(selection.player, 5);
+    if (!restored) return false;
+
+    this.horanReincarnationSelection.set(null);
+    this.toastService.show(`${this.actorLabel(selection.player)} : Horan revient avec tous ses points de vie.`, 'success');
+
+    // La Réincarnation est une résolution de fin de combat : elle ne rend
+    // pas les mouvements consommés et le tour reprend sa fin normale.
+    this.endTurn();
+    return true;
   }
 
   /** Vérifie que la proposition correspond toujours à l'objet présent au sol. */
@@ -1039,20 +1470,22 @@ export class GameService {
     else this.groundEquipmentByTile.delete(key);
     this.groundEquipmentRevision.update(value => value + 1);
     this.pendingGroundEquipment.set(null);
-    this.endTurn();
+    this.finishMandatoryResolution();
     return true;
   }
 
   /** Permet de sélectionner un équipement directement sur la tuile du héros. */
   offerGroundEquipmentAt(tile: PlacedTile, index: number): boolean {
     const player = this.activePlayer;
-    if (this.phase() !== 'playing' || !player || player.controller !== 'human') return false;
-    if (this.turnTransitionPending() || this.hasPendingTileResolution || this.explorationService.pendingTile) return false;
+    const postSubstitution = this.pendingXanrosSubstitutionAction()?.player === player;
+    if (this.phase() !== 'playing' || !player || (player.controller !== 'human' && !postSubstitution)) return false;
+    if (this.turnTransitionPending() || (this.hasPendingTileResolution && !postSubstitution) || this.explorationService.pendingTile) return false;
     if (!player.position || player.position.x !== tile.x || player.position.y !== tile.y) return false;
     if (!Number.isInteger(index) || index < 0) return false;
     const equipment = this.getGroundEquipment(tile)[index];
     if (!equipment) return false;
     this.pendingGroundEquipment.set({ player, tile, equipment, index });
+    if (postSubstitution) this.pendingXanrosSubstitutionAction.set(null);
     if (this.playerService.canAddEquipment(player, equipment)) {
       this.collectGroundEquipment();
     } else {
@@ -1096,7 +1529,7 @@ export class GameService {
     // restent disponibles. Si le héros avait déjà consommé son dernier
     // mouvement, la fin automatique du tour reste toutefois applicable.
     if (!this.turnService.canMove) {
-      this.endTurn();
+      this.finishMandatoryResolution();
     }
     return true;
   }
@@ -1125,7 +1558,7 @@ export class GameService {
       this.finishGame();
       return;
     }
-    this.endTurn();
+    this.finishMandatoryResolution();
   }
 
   /** Retourne la récompense uniquement lorsqu'elle appartient au joueur actif. */
@@ -1151,6 +1584,10 @@ export class GameService {
       clearTimeout(this.turnTransitionTimer);
       this.turnTransitionTimer = null;
     }
+    this.clearUnstoppableContinuation();
+    this.cancelXanrosSubstitution();
+    this.pendingXanrosSubstitutionAction.set(null);
+    this.optionalXanrosTreasure = false;
     this.turnTransitionPending.set(false);
     this.turnService.stopMovements();
     this.phase.set('game-over');
@@ -1272,7 +1709,7 @@ export class GameService {
       return false;
     }
     this.pendingReward.set(null);
-    this.endTurn();
+    this.finishMandatoryResolution();
     return true;
   }
 
@@ -1325,7 +1762,13 @@ export class GameService {
     if (this.turnTransitionPending() || this.phase() !== 'playing') return null;
 
     // Une tuile piochée ou une résolution obligatoire appartient au joueur courant.
-    if (this.explorationService.pendingTile || this.hasPendingTileResolution) return null;
+    if (
+      this.explorationService.pendingTile
+      || this.hasPendingTileResolution
+      || this.healingPortalSelection() !== null
+    ) {
+      return null;
+    }
 
     const currentPlayerIndex = this.activePlayerIndex();
     const playerCount = this.playerService.players.length;
@@ -1349,6 +1792,10 @@ export class GameService {
       this.phase() !== 'playing'
       || this.activePlayerIndex() !== transition.currentPlayerIndex
     ) {
+      this.clearUnstoppableContinuation();
+      this.cancelXanrosSubstitution();
+      this.pendingXanrosSubstitutionAction.set(null);
+      this.optionalXanrosTreasure = false;
       this.turnTransitionPending.set(false);
       return;
     }
@@ -1356,6 +1803,10 @@ export class GameService {
     if (transition.currentPlayer) {
       this.playerService.completeRecoveryTurn(transition.currentPlayer);
     }
+    this.clearUnstoppableContinuation();
+    this.cancelXanrosSubstitution();
+    this.pendingXanrosSubstitutionAction.set(null);
+    this.optionalXanrosTreasure = false;
     this.turnService.resetMovements();
     this.activePlayerIndex.set(transition.nextPlayerIndex);
     this.prepareActivePlayerTurn();

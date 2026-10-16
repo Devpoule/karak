@@ -66,6 +66,17 @@ export class TurnService {
     return this.remainingMovements() > 0;
   }
 
+  /**
+   * Nombre de mouvements masqués pendant une résolution obligatoire.
+   *
+   * La valeur reste consultable sans restaurer la suspension. Elle permet
+   * aux pouvoirs qui reprennent un tour de distinguer une vraie reprise
+   * d'une suspension enregistrée après le quatrième mouvement.
+   */
+  get suspendedMovementCount(): number | null {
+    return this.suspendedMovements;
+  }
+
 
   // ==========================================================
   // GESTION DES MOUVEMENTS
@@ -88,16 +99,35 @@ export class TurnService {
     this.movementsMadeThisTurn.update((made) => made + 1);
   }
 
+  /**
+   * Consomme définitivement tous les mouvements encore disponibles.
+   *
+   * Cette opération est distincte de `stopMovements()` : elle ne crée pas
+   * de suspension restaurable et comptabilise les mouvements consommés.
+   */
+  consumeAllMovements(): boolean {
+    if (!this.canMove || this.suspendedMovements !== null) return false;
+    const remaining = this.remainingMovements();
+    this.remainingMovements.set(0);
+    this.movementsMadeThisTurn.update(made => made + remaining);
+    return true;
+  }
+
 
   /**
-   * Interrompt immédiatement les déplacements du tour courant.
+   * Suspend temporairement les déplacements du tour courant.
    *
    * Utilisé lorsqu'une entrée sur une tuile déclenche une
    * résolution obligatoire, par exemple un combat ou un coffre.
+   * Cette méthode ne consomme aucun déplacement : elle masque seulement
+   * le compteur pendant la décision. Une fin définitive de tour réutilise
+   * aussi cette primitive, puis le prochain tour invalide la suspension
+   * avec `resetMovements()`.
    */
   stopMovements(): void {
-    if (this.suspendedMovements === null) {
-      this.suspendedMovements = this.remainingMovements();
+    const remaining = this.remainingMovements();
+    if (this.suspendedMovements === null && remaining > 0) {
+      this.suspendedMovements = remaining;
     }
     this.remainingMovements.set(0);
   }

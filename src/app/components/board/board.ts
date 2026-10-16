@@ -96,7 +96,8 @@ export class Board {
     });
 
     effect(() => {
-      const destination = this.gameService.healingPortalSelection()?.destination;
+      const destination = this.gameService.healingPortalSelection()?.destination
+        ?? this.gameService.horanReincarnationSelection()?.destination;
       queueMicrotask(() => {
         if (destination) this.centerOnPosition(destination.x, destination.y);
         else this.centerOnActivePlayer();
@@ -106,6 +107,10 @@ export class Board {
 
   get healingPortalSelection() {
     return this.gameService.healingPortalSelection();
+  }
+
+  get horanReincarnationSelection() {
+    return this.gameService.horanReincarnationSelection();
   }
 
   get healingFountains(): readonly PlacedTile[] { return this.gameService.getHealingFountains(); }
@@ -129,10 +134,29 @@ export class Board {
     }
   }
 
-  selectHealingFountain(tile: PlacedTile): void {
-    if (!this.healingPortalSelection) return;
-    this.gameService.selectHealingPortalDestination(tile);
-    this.centerOnPosition(tile.x, tile.y);
+  handleTileClick(tile: PlacedTile): void {
+    if (this.horanReincarnationSelection) {
+      this.gameService.selectHoranReincarnationDestination(tile);
+      this.centerOnPosition(tile.x, tile.y);
+      return;
+    }
+    if (this.healingPortalSelection) {
+      this.gameService.selectHealingPortalDestination(tile);
+      this.centerOnPosition(tile.x, tile.y);
+      return;
+    }
+
+    if (this.gameService.canResolveXanrosSubstitutionAction) {
+      this.gameService.openXanrosSubstitutionChest(tile);
+    }
+  }
+
+  confirmXanrosSubstitution(target: Player): void {
+    if (this.gameService.confirmXanrosSubstitution(target)) this.centerOnActivePlayer();
+  }
+
+  finishXanrosSubstitutionAction(): void {
+    this.gameService.finishXanrosSubstitutionAction();
   }
 
   moveHealingPortalSelection(step: 1 | -1): void {
@@ -142,8 +166,35 @@ export class Board {
     if (destination) this.centerOnPosition(destination.x, destination.y);
   }
 
+  moveHoranReincarnationSelection(step: 1 | -1): void {
+    if (!this.horanReincarnationSelection) return;
+    this.gameService.moveHoranReincarnationSelection(step);
+    const destination = this.gameService.horanReincarnationSelection()?.destination;
+    if (destination) this.centerOnPosition(destination.x, destination.y);
+  }
+
+  confirmHoranReincarnation(): void {
+    this.gameService.confirmHoranReincarnation();
+  }
+
   @HostListener('window:keydown', ['$event'])
   handleHealingPortalKeyboard(event: KeyboardEvent): void {
+    if (this.horanReincarnationSelection) {
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        this.gameService.moveHoranReincarnationSelection(1);
+      } else if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        this.gameService.moveHoranReincarnationSelection(-1);
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+        this.gameService.confirmHoranReincarnation();
+      }
+      const destination = this.gameService.horanReincarnationSelection()?.destination;
+      if (destination) this.centerOnPosition(destination.x, destination.y);
+      return;
+    }
+
     if (!this.healingPortalSelection) return;
     if (event.key === 'ArrowRight') {
       event.preventDefault();
@@ -279,6 +330,26 @@ export class Board {
       : null;
   }
 
+  /** Décision de continuation affichée au joueur humain après résolution. */
+  get humanPendingUnstoppableDecision() {
+    const pending = this.gameService.pendingUnstoppableDecision();
+    return pending?.player === this.gameService.activePlayer && pending.player.controller === 'human'
+      ? pending
+      : null;
+  }
+
+  continueVictoriusTurn(): void {
+    if (this.humanPendingUnstoppableDecision) {
+      this.gameService.acceptUnstoppableContinuation();
+    }
+  }
+
+  finishVictoriusTurn(): void {
+    if (this.humanPendingUnstoppableDecision) {
+      this.gameService.declineUnstoppableContinuation();
+    }
+  }
+
   /** Expose la définition d'un jeton au template sans déplacer la logique métier. */
   getTokenDefinition(tokenId: string) {
     return getTokenDefinition(tokenId);
@@ -305,6 +376,19 @@ export class Board {
     if (this.canOpenPendingTreasure) {
       this.gameService.openPendingTreasure();
     }
+  }
+
+  declineOptionalXanrosTreasure(): void {
+    this.gameService.declineOptionalXanrosTreasure();
+  }
+
+  get humanPendingXanrosSubstitutionAction() {
+    const pending = this.gameService.pendingXanrosSubstitutionAction();
+    return pending?.player === this.gameService.activePlayer
+      && pending.player.controller === 'human'
+      && this.gameService.healingPortalSelection() === null
+      ? pending
+      : null;
   }
 
   /** Équipement récupérable, même si le monstre possède d'autres récompenses. */
@@ -395,7 +479,7 @@ export class Board {
       && player?.controller === 'human'
       && player.position?.x === tile.x && player.position?.y === tile.y
       && !this.gameService.turnTransitionPending()
-      && !this.gameService.hasPendingTileResolution
+      && (!this.gameService.hasPendingTileResolution || this.gameService.canResolveXanrosSubstitutionAction)
       && !this.explorationService.pendingTile;
   }
 
@@ -798,8 +882,8 @@ export class Board {
   /**
    * Tente de déplacer le joueur dans la direction demandée.
    *
-   * Le déplacement n'est effectué que si une tuile existante
-   * est physiquement connectée à la position actuelle du joueur.
+   * Le déplacement n'est effectué que vers une tuile existante
+   * autorisée par la validation métier commune.
    */
   movePlayer(direction: Direction): void {
     if (!this.movementControlsEnabled) {
@@ -837,8 +921,9 @@ export class Board {
     }
 
     if (this.moveActivePlayerTo(destination.x, destination.y, direction)) {
-      this.gameService.resolveTileEntry(player, currentTile, destinationTile);
       this.consumePlayerMovement();
+      this.gameService.resolveTileEntry(player, currentTile, destinationTile, false, true);
+      this.finishPlayerMovement();
     }
   }
 
@@ -851,7 +936,9 @@ export class Board {
    */
   private consumePlayerMovement(): void {
     this.turnService.consumeMovement();
+  }
 
+  private finishPlayerMovement(): void {
     if (!this.turnService.canMove && !this.gameService.hasPendingTileResolution) {
       this.gameService.endTurn();
     }
@@ -918,8 +1005,9 @@ export class Board {
       }
 
       if (this.moveActivePlayerTo(destination.x, destination.y, direction)) {
-        this.gameService.resolveTileEntry(player, currentTile, destinationTile);
         this.consumePlayerMovement();
+        this.gameService.resolveTileEntry(player, currentTile, destinationTile, false, true);
+        this.finishPlayerMovement();
       }
 
       return;
@@ -937,9 +1025,9 @@ export class Board {
    * Indique si le joueur actif peut être contrôlé
    * manuellement depuis le plateau.
    *
-   * Les joueurs IA utiliseront ultérieurement leur propre
-   * moteur de décision et ne doivent jamais exposer
-   * les commandes destinées à un joueur humain.
+   * Les joueurs IA utilisent leur propre moteur de décision
+   * et ne doivent jamais exposer les commandes destinées
+   * à un joueur humain.
    */
   get canControlActivePlayer(): boolean {
     return this.gameService.activePlayer?.controller === 'human';
@@ -1079,13 +1167,14 @@ export class Board {
      * exploré. La salle venant d'être découverte, son contenu
      * doit d'abord être révélé.
      */
-    this.gameService.resolveTileEntry(player, sourceTile, placedTile, true);
+    this.consumePlayerMovement();
+    this.gameService.resolveTileEntry(player, sourceTile, placedTile, true, true);
 
     /*
      * Le déplacement ayant permis d'entrer dans la salle
      * compte bien parmi les quatre déplacements du tour.
      */
-    this.consumePlayerMovement();
+    this.finishPlayerMovement();
   }
 
   // ==========================================================
@@ -1117,11 +1206,8 @@ export class Board {
   }
 
   canMoveTo(tile: PlacedTile, direction: Direction): boolean {
-    if (this.dungeonService.canMoveTo(tile, direction)) return true;
-
-    const player = this.gameService.activePlayer;
-    if (!player || player.heroId !== 'argentus' || player.isCursed) return false;
-    return this.dungeonService.getNeighbor(tile, direction) !== undefined;
+    const destination = this.dungeonService.getNeighbor(tile, direction);
+    return this.gameService.canMoveTo(this.gameService.activePlayer, tile, destination ?? null);
   }
 
   // ==========================================================

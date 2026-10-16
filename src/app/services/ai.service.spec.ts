@@ -11,8 +11,15 @@ import { DungeonService } from './dungeon.service';
 import { ExplorationService } from './exploration.service';
 import { TileDeckService } from './tile-deck.service';
 import { TurnService } from './turn.service';
+import { TokenBagService } from './token-bag.service';
 
 describe('AiService résolutions obligatoires', () => {
+  afterEach(() => {
+    (getTokenDefinition('giant-rat') as { strength: number }).strength = 5;
+    (getTokenDefinition('skeleton-swordsman') as { strength: number }).strength = 9;
+    vi.restoreAllMocks();
+  });
+
   let aiService: AiService;
   let gameService: GameService;
   let playerService: PlayerService;
@@ -63,6 +70,80 @@ describe('AiService résolutions obligatoires', () => {
     expect(aiService.resolveMagicBoltDecision()).toBe(true);
     expect(combatService.pendingCombatRoll()?.magicBoltsUsed).toBe(0);
     expect(player.inventory.spells.filter(Boolean)).toHaveLength(2);
+    vi.restoreAllMocks();
+  });
+
+  it('conserve les Tirs d Argentus après la résolution du combat', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const player = gameService.activePlayer!;
+    player.heroId = 'argentus';
+    const bolt = getEquipmentDefinition('fire-sword')!;
+    playerService.addEquipment(player, bolt);
+    startAiCombat('giant-rat');
+    (combatService.pendingCombat()!.monster as { strength: number }).strength = 2;
+
+    expect(aiService.resolveMagicBoltDecision()).toBe(true);
+    expect(combatService.pendingCombatRoll()?.magicBoltsUsed).toBe(1);
+    expect(combatService.resolvePendingCombat()?.outcome).toBe('victory');
+    expect(player.inventory.spells[0]).toBe(bolt);
+    vi.restoreAllMocks();
+  });
+
+  it('utilise une seule fois la Double attaque de Horan lorsque le lancer est insuffisant', () => {
+    vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.999)
+      .mockReturnValueOnce(0.999);
+    const player = gameService.activePlayer!;
+    player.heroId = 'horan';
+    startAiCombat('giant-rat');
+
+    expect(aiService.resolveHeroRerollDecision()).toBe(true);
+    expect(combatService.pendingCombatRoll()?.diceTotal).toBe(12);
+    expect(aiService.resolveHeroRerollDecision()).toBe(false);
+
+    vi.restoreAllMocks();
+  });
+
+  it('relance successivement les deux dés éligibles de Victorius', () => {
+    vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.999)
+      .mockReturnValueOnce(0.8);
+    const player = gameService.activePlayer!;
+    player.heroId = 'victorius';
+    (getTokenDefinition('giant-rat') as { strength: number }).strength = 20;
+    startAiCombat('giant-rat');
+
+    expect(aiService.resolveHeroRerollDecision()).toBe(true);
+    expect(combatService.pendingCombatRoll()?.heroRerollsUsed).toBe(3);
+    expect(aiService.resolveHeroRerollDecision()).toBe(false);
+
+    vi.restoreAllMocks();
+  });
+
+  it('accepte Inarrêtable par le même état métier que le joueur humain', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    const player = gameService.activePlayer!;
+    player.heroId = 'victorius';
+    const turnService = TestBed.inject(TurnService);
+    turnService.consumeMovement();
+    turnService.stopMovements();
+    startAiCombat('giant-rat');
+    (combatService.pendingCombat()!.monster as { strength: number }).strength = 20;
+    const result = combatService.resolvePendingCombat()!;
+
+    expect(result.unstoppableEligible).toBe(true);
+    expect(gameService.registerUnstoppableContinuation(result)).toBe(true);
+    expect(gameService.finalizeUnstoppableContinuation()).toBe(true);
+    combatService.clearLastCombatResult();
+
+    expect(aiService.resolveMandatoryAction()).toBe('resolved');
+    expect(gameService.pendingUnstoppableDecision()).toBeNull();
+    expect(turnService.remainingMovements()).toBe(3);
+
     vi.restoreAllMocks();
   });
 
@@ -145,6 +226,63 @@ describe('AiService résolutions obligatoires', () => {
     expect(player.position).toBe(positionBefore);
     expect(gameService.pendingTreasure()).toBeNull();
     expect(gameService.turnTransitionPending()).toBe(true);
+  });
+
+  it('Taia IA reprend ses mouvements apres un coffre sans cle', () => {
+    const player = gameService.activePlayer!;
+    player.heroId = 'taia';
+    const dungeonService = TestBed.inject(DungeonService);
+    const tokenBagService = TestBed.inject(TokenBagService);
+    const turnService = TestBed.inject(TurnService);
+    const source = dungeonService.getTileAt(0, 0)!;
+    const destination = {
+      definitionId: 'straight-room',
+      x: 1,
+      y: 0,
+      rotation: 0,
+    } as PlacedTile;
+    dungeonService.tiles.push(destination);
+    const chest = getTokenDefinition('closed-chest')!;
+    const rat = getTokenDefinition('giant-rat')!;
+    vi.spyOn(tokenBagService, 'draw')
+      .mockReturnValueOnce(chest)
+      .mockReturnValueOnce(rat);
+
+    turnService.consumeMovement();
+    expect(gameService.resolveTileEntry(player, source, destination, true, true)).toBe('token-choice');
+    expect(aiService.resolveMandatoryAction()).toBe('resolved');
+    expect(gameService.pendingTokenChoice()).toBeNull();
+    expect(gameService.hasPendingTileResolution).toBe(false);
+    expect(turnService.remainingMovements()).toBe(3);
+    expect(gameService.turnTransitionPending()).toBe(false);
+  });
+
+  it('Taia IA resout le jeton monstre une seule fois', () => {
+    const player = gameService.activePlayer!;
+    player.heroId = 'taia';
+    const dungeonService = TestBed.inject(DungeonService);
+    const tokenBagService = TestBed.inject(TokenBagService);
+    const turnService = TestBed.inject(TurnService);
+    const source = dungeonService.getTileAt(0, 0)!;
+    const destination = {
+      definitionId: 'straight-room',
+      x: 1,
+      y: 0,
+      rotation: 0,
+    } as PlacedTile;
+    dungeonService.tiles.push(destination);
+    const rat = getTokenDefinition('giant-rat')!;
+    const chest = getTokenDefinition('closed-chest')!;
+    vi.spyOn(tokenBagService, 'draw')
+      .mockReturnValueOnce(rat)
+      .mockReturnValueOnce(chest);
+
+    turnService.consumeMovement();
+    expect(gameService.resolveTileEntry(player, source, destination, true, true)).toBe('token-choice');
+    expect(aiService.resolveMandatoryAction()).toBe('resolved');
+    expect(combatService.hasPendingCombat).toBe(true);
+    expect(aiService.resolveMandatoryAction()).toBe('waiting');
+    expect(destination.tokenId).toBe('giant-rat');
   });
 
   it('récupère le trésor du Mort puis le rubis du dragon', () => {
@@ -524,6 +662,10 @@ describe('AiService déplacements et exploration', () => {
   let tileDeckService: TileDeckService;
   let turnService: TurnService;
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   beforeEach(() => {
     TestBed.configureTestingModule({ providers: [AiService, GameService, PlayerService] });
     aiService = TestBed.inject(AiService);
@@ -549,6 +691,18 @@ describe('AiService déplacements et exploration', () => {
     expect(playerService.players[1].position).toEqual({ x: 0, y: -1 });
     expect(turnService.remainingMovements()).toBe(3);
     vi.restoreAllMocks();
+  });
+
+  it('utilise le Portail de guérison sans créer de sélection bloquante', () => {
+    const ai = playerService.players[1];
+    ai.lives = 3;
+    playerService.addEquipment(ai, getEquipmentDefinition('heart')!);
+    dungeonService.placeTile({ definitionId: 'healing-corner', x: 2, y: 0, rotation: 0 });
+
+    expect(aiService.playAction()).toBe(true);
+    expect(gameService.healingPortalSelection()).toBeNull();
+    expect(ai.inventory.spells.filter(Boolean)).toHaveLength(0);
+    expect(gameService.turnTransitionPending()).toBe(false);
   });
 
   it('explore une ouverture libre avec une pioche déterministe', () => {
@@ -580,5 +734,50 @@ describe('AiService déplacements et exploration', () => {
     expect(turnService.remainingMovements()).toBe(movementsBefore);
     expect(gameService.pendingTreasure()).toBeNull();
     expect(gameService.turnTransitionPending()).toBe(true);
+  });
+
+  it('termine le tour après une Substitution vers une tuile sans interaction', () => {
+    vi.useFakeTimers();
+    const ai = playerService.players[1];
+    const target = playerService.players[0];
+    ai.heroId = 'xanros';
+    ai.position = { x: 0, y: 0 };
+    target.position = { x: 1, y: 0 };
+    dungeonService.placeTile({ definitionId: 'room-1', x: 1, y: 0, rotation: 0 });
+
+    expect(aiService.playAction()).toBe(true);
+    expect(ai.position).toEqual({ x: 1, y: 0 });
+    expect(turnService.remainingMovements()).toBe(0);
+    expect(turnService.movementsMadeThisTurn()).toBe(4);
+    expect(gameService.pendingXanrosSubstitutionAction()).toBeNull();
+    expect(gameService.turnTransitionPending()).toBe(true);
+    vi.runOnlyPendingTimers();
+    expect(gameService.activePlayerIndex()).toBe(0);
+  });
+
+  it('résout une interaction de coffre de Substitution sans rester bloquée', () => {
+    vi.useFakeTimers();
+    const ai = playerService.players[1];
+    const target = playerService.players[0];
+    ai.heroId = 'xanros';
+    ai.position = { x: 0, y: 0 };
+    target.position = { x: 1, y: 0 };
+    ai.inventory.key = {
+      id: 'key', kind: 'key', name: 'Clé', image: '/assets/tokens/key.png',
+    };
+    const chestTile = {
+      definitionId: 'room-1', x: 1, y: 0, rotation: 0,
+      tokenId: 'closed-chest', tokenFace: 'front',
+    } as PlacedTile;
+    dungeonService.placeTile(chestTile);
+
+    expect(aiService.playAction()).toBe(true);
+    expect(gameService.pendingXanrosSubstitutionAction()?.tile).toBe(chestTile);
+    expect(aiService.resolveMandatoryAction()).toBe('resolved');
+    expect(gameService.pendingTreasure()).not.toBeNull();
+    expect(aiService.resolveMandatoryAction()).toBe('resolved');
+    expect(gameService.pendingTreasure()).toBeNull();
+    expect(gameService.turnTransitionPending()).toBe(true);
+    vi.runOnlyPendingTimers();
   });
 });

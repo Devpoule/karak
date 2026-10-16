@@ -29,6 +29,7 @@ export interface PendingCombat {
   monster: MonsterTokenDefinition;
   monsterTile: PlacedTile;
   sourceTile: PlacedTile;
+  startedByMovement: boolean;
 }
 
 export type CombatOutcome = 'victory' | 'tie' | 'defeat';
@@ -48,7 +49,7 @@ export interface CombatRoll {
   magicBoltsUsed: number;
   heroRerollsUsed: number;
   sacrificeUsed: boolean;
-  canContinueTurn: boolean;
+  unstoppableEligible: boolean;
 }
 
 /**
@@ -68,7 +69,7 @@ export interface CombatResult {
   magicBoltsUsed: number;
   heroRerollsUsed: number;
   sacrificeUsed: boolean;
-  canContinueTurn: boolean;
+  unstoppableEligible: boolean;
   outcome: CombatOutcome;
 }
 
@@ -113,6 +114,7 @@ export class CombatService {
     player: Player,
     sourceTile: PlacedTile,
     monsterTile: PlacedTile,
+    startedByMovement = false,
   ): boolean {
     if (this.hasPendingCombat) {
       return false;
@@ -139,6 +141,7 @@ export class CombatService {
       monster: token,
       monsterTile,
       sourceTile,
+      startedByMovement,
     });
 
     return true;
@@ -162,7 +165,8 @@ export class CombatService {
       .map(weapon => ({ ...weapon }));
     const heroBonus = combat.player.heroId === 'taia'
       && !combat.player.isCursed
-      && (this.turnService?.movementsMadeThisTurn() ?? 0) > 0
+      && combat.startedByMovement
+      && (this.turnService?.movementsMadeThisTurn() ?? 0) === 1
       ? 1
       : 0;
     const roll: CombatRoll = {
@@ -179,7 +183,7 @@ export class CombatService {
       magicBoltsUsed: 0,
       heroRerollsUsed: 0,
       sacrificeUsed: false,
-      canContinueTurn: false,
+      unstoppableEligible: false,
     };
     this.pendingCombatRoll.set(roll);
     return roll;
@@ -194,8 +198,7 @@ export class CombatService {
       && !roll.sacrificeUsed
       && combat.player.heroId === 'xanros'
       && !combat.player.isCursed
-      && roll.attackPower <= roll.monsterStrength
-      && roll.attackPower + 1 >= roll.monsterStrength;
+      && combat.player.lives > 0;
   }
 
   /** Sacrifie une vie de Xanros pour ajouter +1 après le lancer. */
@@ -307,8 +310,8 @@ export class CombatService {
    * attaque = monstre : égalité
    * attaque < monstre : défaite
    *
-   * Les bonus d'équipement et de héros seront
-   * intégrés ultérieurement.
+   * Les bonus d'équipement et de héros sont déjà
+   * intégrés au lancer enregistré.
    */
   resolvePendingCombat(): CombatResult | null {
     const combat = this.pendingCombat();
@@ -330,10 +333,9 @@ export class CombatService {
 
     const result: CombatResult = {
       ...roll,
-      canContinueTurn: combat.player.heroId === 'victorius'
+      unstoppableEligible: combat.player.heroId === 'victorius'
         && !combat.player.isCursed
-        && (roll.die1 === 6 || roll.die2 === 6)
-        && outcome !== 'victory',
+        && (roll.die1 === 6 || roll.die2 === 6),
       outcome,
     };
 

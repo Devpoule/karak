@@ -221,7 +221,12 @@ describe('GameService substitution de Xanros', () => {
     TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('échange les positions au début du tour et consomme les quatre mouvements', () => {
+    vi.useFakeTimers();
     const gameService = TestBed.inject(GameService);
     const playerService = TestBed.inject(PlayerService);
     const dungeonService = TestBed.inject(DungeonService);
@@ -246,32 +251,215 @@ describe('GameService substitution de Xanros', () => {
     expect(xanros.position).toEqual({ x: 1, y: 0 });
     expect(target.position).toEqual({ x: 0, y: 0 });
     expect(turnService.remainingMovements()).toBe(0);
+    expect(turnService.movementsMadeThisTurn()).toBe(4);
     expect(gameService.xanrosSubstitutionSelectionOpen()).toBe(false);
+    expect(gameService.pendingXanrosSubstitutionAction()).toBeNull();
+    expect(gameService.hasPendingTileResolution).toBe(false);
+    expect(gameService.turnTransitionPending()).toBe(true);
+    vi.runOnlyPendingTimers();
+    expect(gameService.activePlayerIndex()).toBe(1);
   });
-});
 
-describe('GameService Tisseuse de destin de Taia', () => {
-  beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
-  });
-
-  it('tire deux jetons, place le choix et remet l’autre dans le sachet', () => {
+  it('ne résout pas automatiquement un monstre présent sur la tuile d’arrivée', () => {
+    vi.useFakeTimers();
     const gameService = TestBed.inject(GameService);
     const playerService = TestBed.inject(PlayerService);
     const dungeonService = TestBed.inject(DungeonService);
-    const tokenBagService = TestBed.inject(TokenBagService);
+    const combatService = TestBed.inject(CombatService);
     playerService.initialize(2);
     gameService.initialize();
     gameService.phase.set('playing');
     gameService.activePlayerIndex.set(0);
+    const xanros = playerService.players[0];
+    const target = playerService.players[1];
+    xanros.heroId = 'xanros';
+    xanros.position = { x: 0, y: 0 };
+    target.position = { x: 1, y: 0 };
+    const monsterTile = {
+      definitionId: 'room-1',
+      x: 1,
+      y: 0,
+      rotation: 0,
+      tokenId: 'giant-rat',
+      tokenFace: 'front',
+    } as PlacedTile;
+    dungeonService.tiles.push(
+      { definitionId: 'start', x: 0, y: 0, rotation: 0 },
+      monsterTile,
+    );
+
+    expect(gameService.openXanrosSubstitution()).toBe(true);
+    expect(gameService.confirmXanrosSubstitution(target)).toBe(true);
+    expect(combatService.pendingCombat()).toBeNull();
+    expect(monsterTile.tokenId).toBe('giant-rat');
+    expect(monsterTile.tokenFace).toBe('front');
+    expect(gameService.pendingXanrosSubstitutionAction()).toBeNull();
+    expect(gameService.turnTransitionPending()).toBe(true);
+    vi.runOnlyPendingTimers();
+  });
+
+  it('laisse le coffre de la tuile d’arrivée à une interaction facultative explicite', () => {
+    vi.useFakeTimers();
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const dungeonService = TestBed.inject(DungeonService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const xanros = playerService.players[0];
+    const target = playerService.players[1];
+    xanros.heroId = 'xanros';
+    xanros.position = { x: 0, y: 0 };
+    target.position = { x: 1, y: 0 };
+    playerService.addEquipment(xanros, getEquipmentDefinition('key')!);
+    const chestTile = {
+      definitionId: 'room-1',
+      x: 1,
+      y: 0,
+      rotation: 0,
+      tokenId: 'closed-chest',
+      tokenFace: 'front',
+    } as PlacedTile;
+    dungeonService.tiles.push(
+      { definitionId: 'start', x: 0, y: 0, rotation: 0 },
+      chestTile,
+    );
+
+    expect(gameService.openXanrosSubstitution()).toBe(true);
+    expect(gameService.confirmXanrosSubstitution(target)).toBe(true);
+    expect(gameService.pendingTreasure()).toBeNull();
+    expect(gameService.pendingXanrosSubstitutionAction()?.tile).toBe(chestTile);
+    expect(gameService.openXanrosSubstitutionChest(chestTile)).toBe(true);
+    expect(gameService.pendingXanrosSubstitutionAction()).toBeNull();
+    expect(gameService.pendingTreasure()).not.toBeNull();
+    expect(chestTile.tokenId).toBe('closed-chest');
+    expect(gameService.declineOptionalXanrosTreasure()).toBe(true);
+    expect(gameService.turnTransitionPending()).toBe(true);
+    vi.runOnlyPendingTimers();
+  });
+
+  it('permet le Portail de guérison autorisé après Substitution sans restaurer de mouvement', () => {
+    vi.useFakeTimers();
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const dungeonService = TestBed.inject(DungeonService);
+    const turnService = TestBed.inject(TurnService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const xanros = playerService.players[0];
+    const target = playerService.players[1];
+    xanros.heroId = 'xanros';
+    xanros.position = { x: 0, y: 0 };
+    target.position = { x: 1, y: 0 };
+    xanros.lives = 2;
+    playerService.addEquipment(xanros, getEquipmentDefinition('heart')!);
+    const arrival = { definitionId: 'healing-corner', x: 1, y: 0, rotation: 0 } as PlacedTile;
+    dungeonService.tiles.push(
+      { definitionId: 'start', x: 0, y: 0, rotation: 0 },
+      arrival,
+    );
+
+    expect(gameService.openXanrosSubstitution()).toBe(true);
+    expect(gameService.confirmXanrosSubstitution(target)).toBe(true);
+    expect(gameService.openHealingPortalSelection()).toBe(true);
+    expect(gameService.useHealingPortal(xanros, arrival)).toBe(true);
+    expect(xanros.position).toEqual({ x: 1, y: 0 });
+    expect(xanros.lives).toBe(5);
+    expect(turnService.remainingMovements()).toBe(0);
+    expect(turnService.movementsMadeThisTurn()).toBe(4);
+    expect(gameService.pendingXanrosSubstitutionAction()).toBeNull();
+    expect(gameService.turnTransitionPending()).toBe(true);
+    vi.runOnlyPendingTimers();
+  });
+
+  it('autorise la récupération d’une arme présente sur la tuile d’arrivée', () => {
+    vi.useFakeTimers();
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const dungeonService = TestBed.inject(DungeonService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const xanros = playerService.players[0];
+    const target = playerService.players[1];
+    xanros.heroId = 'xanros';
+    target.controller = 'human';
+    xanros.position = { x: 0, y: 0 };
+    target.position = { x: 1, y: 0 };
+    playerService.addEquipment(target, getEquipmentDefinition('sword')!);
+    const arrival = { definitionId: 'room-1', x: 1, y: 0, rotation: 0 } as PlacedTile;
+    dungeonService.tiles.push(
+      { definitionId: 'start', x: 0, y: 0, rotation: 0 },
+      arrival,
+    );
+    gameService.activePlayerIndex.set(1);
+    expect(gameService.dropInventoryEquipment(target, 'weapon', 0)).toBe(true);
+    gameService.activePlayerIndex.set(0);
+
+    expect(gameService.openXanrosSubstitution()).toBe(true);
+    expect(gameService.confirmXanrosSubstitution(target)).toBe(true);
+    expect(gameService.pendingXanrosSubstitutionAction()?.tile).toBe(arrival);
+    expect(gameService.offerGroundEquipmentAt(arrival, 0)).toBe(true);
+    expect(xanros.inventory.weapons[0]?.id).toBe('sword');
+    expect(gameService.getGroundEquipment(arrival)).toHaveLength(0);
+    expect(gameService.pendingXanrosSubstitutionAction()).toBeNull();
+    expect(gameService.turnTransitionPending()).toBe(true);
+    vi.runOnlyPendingTimers();
+  });
+});
+
+describe('GameService Tisseuse de destin de Taia', () => {
+  let gameService: GameService;
+  let playerService: PlayerService;
+  let dungeonService: DungeonService;
+  let tokenBagService: TokenBagService;
+  let turnService: TurnService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
+    gameService = TestBed.inject(GameService);
+    playerService = TestBed.inject(PlayerService);
+    dungeonService = TestBed.inject(DungeonService);
+    tokenBagService = TestBed.inject(TokenBagService);
+    turnService = TestBed.inject(TurnService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  function prepareTaia(): {
+    taia: (typeof playerService.players)[number];
+    source: PlacedTile;
+    destination: PlacedTile;
+  } {
     const taia = playerService.players[0];
     taia.heroId = 'taia';
-    const source = { definitionId: 'start', x: 0, y: 0, rotation: 0 } as PlacedTile;
-    const destination = { definitionId: 'straight-room', x: 1, y: 0, rotation: 0 } as PlacedTile;
-    dungeonService.tiles.push(source, destination);
+    const source = dungeonService.getTileAt(0, 0)!;
+    const destination = {
+      definitionId: 'straight-room',
+      x: 1,
+      y: 0,
+      rotation: 0,
+    } as PlacedTile;
+    dungeonService.tiles.push(destination);
+    return { taia, source, destination };
+  }
+
+  it('tire deux jetons, place le choix et remet l’autre dans le sachet', () => {
+    const { taia, source, destination } = prepareTaia();
     const rat = getTokenDefinition('giant-rat')!;
     const chest = getTokenDefinition('closed-chest')!;
-    vi.spyOn(tokenBagService, 'draw')
+    const draw = vi.spyOn(tokenBagService, 'draw')
       .mockReturnValueOnce(rat)
       .mockReturnValueOnce(chest);
     const returned = vi.spyOn(tokenBagService, 'returnToken');
@@ -282,8 +470,161 @@ describe('GameService Tisseuse de destin de Taia', () => {
     expect(gameService.choosePendingToken(1)).toBe(true);
     expect(destination.tokenId).toBe('closed-chest');
     expect(returned).toHaveBeenCalledWith('giant-rat');
+    expect(draw).toHaveBeenCalledTimes(2);
     expect(gameService.pendingTokenChoice()).toBeNull();
-    vi.restoreAllMocks();
+    expect(turnService.remainingMovements()).toBe(4);
+  });
+
+  it('permet de sélectionner le premier jeton et déclenche un seul combat', () => {
+    const { taia, source, destination } = prepareTaia();
+    const rat = getTokenDefinition('giant-rat')!;
+    const chest = getTokenDefinition('closed-chest')!;
+    vi.spyOn(tokenBagService, 'draw')
+      .mockReturnValueOnce(rat)
+      .mockReturnValueOnce(chest);
+    const returned = vi.spyOn(tokenBagService, 'returnToken');
+
+    turnService.consumeMovement();
+    expect(gameService.resolveTileEntry(taia, source, destination, true, true)).toBe('token-choice');
+    expect(gameService.choosePendingToken(0)).toBe(true);
+    expect(destination.tokenId).toBe('giant-rat');
+    expect(returned).toHaveBeenCalledWith('closed-chest');
+    expect(gameService.pendingTokenChoice()).toBeNull();
+    expect(TestBed.inject(CombatService).hasPendingCombat).toBe(true);
+    expect(gameService.choosePendingToken(1)).toBe(false);
+  });
+
+  it('résout normalement un coffre choisi lorsque Taia possède une clé', () => {
+    const { taia, source, destination } = prepareTaia();
+    const chest = getTokenDefinition('closed-chest')!;
+    const rat = getTokenDefinition('giant-rat')!;
+    playerService.addEquipment(taia, getEquipmentDefinition('key')!);
+    vi.spyOn(tokenBagService, 'draw')
+      .mockReturnValueOnce(chest)
+      .mockReturnValueOnce(rat);
+
+    expect(gameService.resolveTileEntry(taia, source, destination, true)).toBe('token-choice');
+    expect(gameService.choosePendingToken(0)).toBe(true);
+    expect(destination.tokenId).toBeUndefined();
+    expect(taia.inventory.key).toBeNull();
+    expect(taia.treasures).toContain('opened-chest');
+    expect(gameService.pendingTokenChoice()).toBeNull();
+  });
+
+  it('reprend les mouvements après un coffre choisi sans clé', () => {
+    const { taia, source, destination } = prepareTaia();
+    const chest = getTokenDefinition('closed-chest')!;
+    const rat = getTokenDefinition('giant-rat')!;
+    vi.spyOn(tokenBagService, 'draw')
+      .mockReturnValueOnce(chest)
+      .mockReturnValueOnce(rat);
+
+    turnService.consumeMovement();
+    expect(gameService.resolveTileEntry(taia, source, destination, true, true)).toBe('token-choice');
+    expect(turnService.remainingMovements()).toBe(0);
+
+    expect(gameService.choosePendingToken(0)).toBe(true);
+    expect(turnService.remainingMovements()).toBe(3);
+    expect(gameService.hasPendingTileResolution).toBe(false);
+    expect(gameService.turnTransitionPending()).toBe(false);
+  });
+
+  it('termine normalement le tour après un coffre sans clé au dernier mouvement', () => {
+    vi.useFakeTimers();
+    const { taia, source, destination } = prepareTaia();
+    const chest = getTokenDefinition('closed-chest')!;
+    const rat = getTokenDefinition('giant-rat')!;
+    vi.spyOn(tokenBagService, 'draw')
+      .mockReturnValueOnce(chest)
+      .mockReturnValueOnce(rat);
+
+    turnService.remainingMovements.set(1);
+    turnService.consumeMovement();
+    expect(gameService.resolveTileEntry(taia, source, destination, true, true)).toBe('token-choice');
+    expect(gameService.choosePendingToken(0)).toBe(true);
+    expect(turnService.remainingMovements()).toBe(0);
+    expect(gameService.turnTransitionPending()).toBe(true);
+  });
+
+  it('place directement le seul jeton disponible sans créer de choix', () => {
+    const { taia, source, destination } = prepareTaia();
+    const bag = tokenBagService as unknown as { bag: string[] };
+    bag.bag = ['giant-rat'];
+    tokenBagService.remainingTokens.set(1);
+
+    expect(gameService.resolveTileEntry(taia, source, destination, true)).toBe('combat');
+    expect(destination.tokenId).toBe('giant-rat');
+    expect(gameService.pendingTokenChoice()).toBeNull();
+  });
+
+  it('ne place aucun jeton lorsque le sachet est vide', () => {
+    const { taia, source, destination } = prepareTaia();
+    const bag = tokenBagService as unknown as { bag: string[] };
+    bag.bag = [];
+    tokenBagService.remainingTokens.set(0);
+
+    expect(gameService.resolveTileEntry(taia, source, destination, true)).toBe('none');
+    expect(destination.tokenId).toBeUndefined();
+    expect(gameService.pendingTokenChoice()).toBeNull();
+  });
+
+  it('désactive la Tisseuse lorsque Taia est maudite', () => {
+    const { taia, source, destination } = prepareTaia();
+    taia.isCursed = true;
+    const draw = vi.spyOn(tokenBagService, 'draw');
+    const bag = tokenBagService as unknown as { bag: string[] };
+    bag.bag = ['closed-chest', 'giant-rat'];
+    tokenBagService.remainingTokens.set(2);
+
+    expect(gameService.resolveTileEntry(taia, source, destination, true)).toBe('combat');
+    expect(draw).toHaveBeenCalledTimes(1);
+    expect(gameService.pendingTokenChoice()).toBeNull();
+  });
+
+  it('ignore une sélection après réinitialisation et refuse toute seconde mutation', () => {
+    const { taia, source, destination } = prepareTaia();
+    const rat = getTokenDefinition('giant-rat')!;
+    const chest = getTokenDefinition('closed-chest')!;
+    vi.spyOn(tokenBagService, 'draw')
+      .mockReturnValueOnce(rat)
+      .mockReturnValueOnce(chest);
+
+    expect(gameService.resolveTileEntry(taia, source, destination, true)).toBe('token-choice');
+    gameService.initialize();
+
+    expect(gameService.pendingTokenChoice()).toBeNull();
+    expect(gameService.choosePendingToken(0)).toBe(false);
+    expect(destination.tokenId).toBeUndefined();
+  });
+
+  it('refuse une résolution Taia provenant d’un joueur non actif', () => {
+    const inactive = playerService.players[1];
+    inactive.heroId = 'taia';
+    const source = dungeonService.getTileAt(0, 0)!;
+    const destination = {
+      definitionId: 'straight-room',
+      x: 1,
+      y: 0,
+      rotation: 0,
+    } as PlacedTile;
+    dungeonService.tiles.push(destination);
+    const draw = vi.spyOn(tokenBagService, 'draw');
+
+    expect(gameService.resolveTileEntry(inactive, source, destination, true)).toBe('none');
+    expect(draw).not.toHaveBeenCalled();
+    expect(destination.tokenId).toBeUndefined();
+  });
+
+  it('applique Prémonition au joueur IA par le même chemin de déplacement', () => {
+    const { taia, source, destination } = prepareTaia();
+    taia.controller = 'ai';
+    destination.tokenId = 'giant-rat';
+    destination.tokenFace = 'front';
+    const combatService = TestBed.inject(CombatService);
+
+    turnService.consumeMovement();
+    expect(gameService.resolveTileEntry(taia, source, destination, false, true)).toBe('combat');
+    expect(combatService.rollPendingCombat()?.heroBonus).toBe(1);
   });
 });
 
@@ -296,16 +637,199 @@ describe('GameService Inarrêtable de Victorius', () => {
     const gameService = TestBed.inject(GameService);
     const playerService = TestBed.inject(PlayerService);
     const turnService = TestBed.inject(TurnService);
+    const combatService = TestBed.inject(CombatService);
     playerService.initialize(2);
     gameService.initialize();
     gameService.phase.set('playing');
     gameService.activePlayerIndex.set(0);
-    playerService.players[0].heroId = 'victorius';
+    const player = playerService.players[0];
+    player.heroId = 'victorius';
     turnService.consumeMovement();
     turnService.stopMovements();
 
-    expect(gameService.resumeMovementsAfterUnstoppable()).toBe(true);
+    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    combatService.startCombat(
+      player,
+      { x: 0, y: 0 } as PlacedTile,
+      { x: 1, y: 0, definitionId: 'room-1', tokenId: 'giant-rat', tokenFace: 'front' } as PlacedTile,
+    );
+    (combatService.pendingCombat()!.monster as { strength: number }).strength = 20;
+    combatService.rollPendingCombat();
+    const result = combatService.resolvePendingCombat();
+
+    expect(result?.unstoppableEligible).toBe(true);
+    expect(gameService.registerUnstoppableContinuation(result!)).toBe(true);
+    expect(gameService.finalizeUnstoppableContinuation()).toBe(true);
+    expect(gameService.acceptUnstoppableContinuation()).toBe(true);
     expect(turnService.remainingMovements()).toBe(3);
+    vi.restoreAllMocks();
+  });
+
+  it('propose une décision explicite et consomme l’autorisation une seule fois', () => {
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const turnService = TestBed.inject(TurnService);
+    const combatService = TestBed.inject(CombatService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const player = playerService.players[0];
+    player.heroId = 'victorius';
+    turnService.consumeMovement();
+    turnService.stopMovements();
+
+    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, {
+      x: 1, y: 0, definitionId: 'room-1', tokenId: 'giant-rat', tokenFace: 'front',
+    } as PlacedTile);
+    (combatService.pendingCombat()!.monster as { strength: number }).strength = 20;
+    combatService.rollPendingCombat();
+    const result = combatService.resolvePendingCombat()!;
+
+    expect(gameService.registerUnstoppableContinuation(result)).toBe(true);
+    expect(gameService.finalizeUnstoppableContinuation()).toBe(true);
+    expect(gameService.pendingUnstoppableDecision()?.player).toBe(player);
+    expect(gameService.acceptUnstoppableContinuation()).toBe(true);
+    expect(gameService.pendingUnstoppableDecision()).toBeNull();
+    expect(gameService.acceptUnstoppableContinuation()).toBe(false);
+    expect(turnService.remainingMovements()).toBe(3);
+
+    vi.restoreAllMocks();
+  });
+
+  it('termine le tour lorsque le joueur refuse Inarrêtable', () => {
+    vi.useFakeTimers();
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const turnService = TestBed.inject(TurnService);
+    const combatService = TestBed.inject(CombatService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const player = playerService.players[0];
+    player.heroId = 'victorius';
+    turnService.consumeMovement();
+    turnService.stopMovements();
+
+    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, {
+      x: 1, y: 0, definitionId: 'room-1', tokenId: 'giant-rat', tokenFace: 'front',
+    } as PlacedTile);
+    (combatService.pendingCombat()!.monster as { strength: number }).strength = 20;
+    combatService.rollPendingCombat();
+    const result = combatService.resolvePendingCombat()!;
+
+    expect(gameService.registerUnstoppableContinuation(result)).toBe(true);
+    expect(gameService.finalizeUnstoppableContinuation()).toBe(true);
+    expect(gameService.declineUnstoppableContinuation()).toBe(true);
+    expect(gameService.pendingUnstoppableDecision()).toBeNull();
+    expect(gameService.turnTransitionPending()).toBe(true);
+
+    vi.runOnlyPendingTimers();
+    expect(gameService.activePlayerIndex()).toBe(1);
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('résout les récompenses avant de proposer Inarrêtable après une victoire', () => {
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const turnService = TestBed.inject(TurnService);
+    const combatService = TestBed.inject(CombatService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const player = playerService.players[0];
+    player.heroId = 'victorius';
+    const source = { x: 0, y: 0, definitionId: 'start', tokenFace: 'back' } as PlacedTile;
+    const monster = { x: 1, y: 0, definitionId: 'room-1', tokenId: 'giant-rat', tokenFace: 'front' } as PlacedTile;
+    turnService.consumeMovement();
+
+    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    expect(gameService.resolveTileEntry(player, source, monster, false, true)).toBe('combat');
+    (combatService.pendingCombat()!.monster as { strength: number }).strength = 1;
+    combatService.rollPendingCombat();
+    const result = combatService.resolvePendingCombat()!;
+    expect(result.outcome).toBe('victory');
+    expect(result.unstoppableEligible).toBe(true);
+
+    expect(gameService.registerUnstoppableContinuation(result)).toBe(true);
+    expect(gameService.resolveTileEntry(player, source, monster)).toBe('reward');
+    expect(player.inventory.weapons.some(weapon => weapon?.id === 'daggers')).toBe(true);
+    expect(gameService.pendingReward()).toBeNull();
+    expect(gameService.pendingUnstoppableDecision()?.player).toBe(player);
+
+    vi.restoreAllMocks();
+  });
+
+  it('termine normalement le tour qualifiant au quatrième mouvement', () => {
+    vi.useFakeTimers();
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const turnService = TestBed.inject(TurnService);
+    const combatService = TestBed.inject(CombatService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const player = playerService.players[0];
+    player.heroId = 'victorius';
+    for (let movement = 0; movement < 4; movement++) turnService.consumeMovement();
+    turnService.stopMovements();
+
+    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, {
+      x: 1, y: 0, definitionId: 'room-1', tokenId: 'giant-rat', tokenFace: 'front',
+    } as PlacedTile);
+    (combatService.pendingCombat()!.monster as { strength: number }).strength = 20;
+    combatService.rollPendingCombat();
+    const result = combatService.resolvePendingCombat()!;
+
+    gameService.registerUnstoppableContinuation(result);
+    expect(gameService.finalizeUnstoppableContinuation()).toBe(false);
+    expect(gameService.pendingUnstoppableDecision()).toBeNull();
+    gameService.endTurn();
+    vi.runOnlyPendingTimers();
+    expect(gameService.activePlayerIndex()).toBe(1);
+
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('n’autorise pas Inarrêtable après la perte de la dernière vie', () => {
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const turnService = TestBed.inject(TurnService);
+    const combatService = TestBed.inject(CombatService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const player = playerService.players[0];
+    player.heroId = 'victorius';
+    player.lives = 1;
+    turnService.consumeMovement();
+    turnService.stopMovements();
+
+    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, {
+      x: 1, y: 0, definitionId: 'room-1', tokenId: 'giant-rat', tokenFace: 'front',
+    } as PlacedTile);
+    (combatService.pendingCombat()!.monster as { strength: number }).strength = 20;
+    combatService.rollPendingCombat();
+    const result = combatService.resolvePendingCombat()!;
+
+    expect(result.unstoppableEligible).toBe(true);
+    expect(gameService.registerUnstoppableContinuation(result)).toBe(true);
+    expect(gameService.finalizeUnstoppableContinuation()).toBe(false);
+    expect(gameService.pendingUnstoppableDecision()).toBeNull();
+    expect(player.lives).toBe(0);
+    expect(player.recoveryState).toBe('pending');
+
+    vi.restoreAllMocks();
   });
 });
 
@@ -314,24 +838,149 @@ describe('GameService Réincarnation de Horan', () => {
     TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
   });
 
-  it('téléporte Horan à 0 PV vers une fontaine et le restaure complètement', () => {
+  it('permet de choisir une fontaine et restaure Horan une seule fois', () => {
+    vi.useFakeTimers();
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const dungeonService = TestBed.inject(DungeonService);
+    const combatService = TestBed.inject(CombatService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const horan = playerService.players[0];
+    horan.heroId = 'horan';
+    horan.lives = 1;
+    const inventoryBefore = { ...horan.inventory };
+    const fountain = { definitionId: 'healing-corner', x: 2, y: 1, rotation: 0 } as PlacedTile;
+    dungeonService.tiles.push(fountain);
+
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    expect(combatService.startCombat(
+      horan,
+      dungeonService.tiles[0],
+      { x: 1, y: 0, definitionId: 'room-1', tokenId: 'giant-rat', tokenFace: 'front' } as PlacedTile,
+    )).toBe(true);
+    combatService.rollPendingCombat();
+    const result = combatService.resolvePendingCombat();
+    expect(result?.outcome).toBe('defeat');
+
+    expect(gameService.beginHoranReincarnation(result!)).toBe(true);
+    expect(gameService.horanReincarnationSelection()?.destination).toBe(dungeonService.tiles[0]);
+    expect(gameService.canPerformNormalMovement(horan)).toBe(false);
+
+    gameService.selectHoranReincarnationDestination(fountain);
+    expect(gameService.confirmHoranReincarnation()).toBe(true);
+    expect(horan.position).toEqual({ x: 2, y: 1 });
+    expect(horan.lives).toBe(5);
+    expect(horan.recoveryState).toBe('none');
+    expect(horan.inventory).toEqual(inventoryBefore);
+    expect(gameService.horanReincarnationSelection()).toBeNull();
+    expect(gameService.confirmHoranReincarnation()).toBe(false);
+
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('applique automatiquement la fontaine unique', () => {
+    vi.useFakeTimers();
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const dungeonService = TestBed.inject(DungeonService);
+    const combatService = TestBed.inject(CombatService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const horan = playerService.players[0];
+    horan.heroId = 'horan';
+    horan.lives = 1;
+
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    combatService.startCombat(
+      horan,
+      dungeonService.tiles[0],
+      { x: 1, y: 0, definitionId: 'room-1', tokenId: 'giant-rat', tokenFace: 'front' } as PlacedTile,
+    );
+    combatService.rollPendingCombat();
+    const result = combatService.resolvePendingCombat();
+
+    expect(gameService.beginHoranReincarnation(result!)).toBe(true);
+    expect(gameService.horanReincarnationSelection()).toBeNull();
+    expect(horan.position).toEqual({ x: 0, y: 0 });
+    expect(horan.lives).toBe(5);
+    expect(gameService.turnTransitionPending()).toBe(true);
+
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('refuse la Réincarnation hors d’une défaite de combat et sans fontaine', () => {
     const gameService = TestBed.inject(GameService);
     const playerService = TestBed.inject(PlayerService);
     const dungeonService = TestBed.inject(DungeonService);
     playerService.initialize(2);
     gameService.initialize();
     gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
     const horan = playerService.players[0];
     horan.heroId = 'horan';
     horan.lives = 0;
     horan.recoveryState = 'pending';
-    const fountain = { definitionId: 'healing-corner', x: 2, y: 1, rotation: 0 } as PlacedTile;
-    dungeonService.tiles.push(fountain);
 
-    expect(gameService.resolveHoranReincarnation(horan)).toBe(true);
-    expect(horan.position).toEqual({ x: 0, y: 0 });
-    expect(horan.lives).toBe(5);
-    expect(horan.recoveryState).toBe('none');
+    expect(gameService.beginHoranReincarnation({
+      player: horan,
+      monster: {} as never,
+      die1: 1,
+      die2: 1,
+      diceTotal: 2,
+      equipmentBonus: 0,
+      heroBonus: 0,
+      weapons: [],
+      attackPower: 2,
+      monsterStrength: 5,
+      magicBoltsUsed: 0,
+      heroRerollsUsed: 0,
+      sacrificeUsed: false,
+      unstoppableEligible: false,
+      outcome: 'defeat',
+    })).toBe(false);
+
+    dungeonService.tiles.splice(0);
+    expect(gameService.horanReincarnationSelection()).toBeNull();
+  });
+
+  it('laisse la récupération numérique s’appliquer lorsqu’aucune fontaine n’existe', () => {
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const dungeonService = TestBed.inject(DungeonService);
+    const combatService = TestBed.inject(CombatService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    dungeonService.tiles.splice(0);
+    const horan = playerService.players[0];
+    horan.heroId = 'horan';
+    horan.lives = 1;
+
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    combatService.startCombat(
+      horan,
+      { x: 0, y: 0 } as PlacedTile,
+      { x: 1, y: 0, definitionId: 'room-1', tokenId: 'giant-rat', tokenFace: 'front' } as PlacedTile,
+    );
+    combatService.rollPendingCombat();
+    const result = combatService.resolvePendingCombat();
+
+    expect(result?.outcome).toBe('defeat');
+    expect(gameService.beginHoranReincarnation(result!)).toBe(false);
+    expect(horan.lives).toBe(0);
+    expect(horan.recoveryState).toBe('pending');
+    expect(gameService.horanReincarnationSelection()).toBeNull();
+    vi.restoreAllMocks();
   });
 });
 
@@ -468,7 +1117,10 @@ describe('GameService tour de récupération', () => {
     TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
     vi.useFakeTimers();
   });
-  afterEach(() => vi.useRealTimers());
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
   it('termine automatiquement le repos d’un humain et passe au joueur suivant', async () => {
     const playerService = TestBed.inject(PlayerService);
@@ -722,6 +1374,150 @@ describe('GameService récupération automatique des équipements humains', () =
     expect(gameService.pendingReward()).toBeNull();
     expect(tile.tokenId).toBeUndefined();
   });
+  it('permet de remplacer un sort lorsque les trois emplacements sont occupés', () => {
+    vi.useFakeTimers();
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const player = playerService.players[0];
+    const portal = getEquipmentDefinition('heart')!;
+    const rewardTile = {
+      x: 1,
+      y: 0,
+      definitionId: 'room-1',
+      tokenId: 'fallen',
+      tokenFace: 'back',
+    } as PlacedTile;
+
+    playerService.addEquipment(player, { ...portal });
+    playerService.addEquipment(player, { ...portal });
+    playerService.addEquipment(player, { ...portal });
+    gameService.pendingReward.set({
+      player,
+      monster: getTokenDefinition('fallen') as MonsterTokenDefinition,
+      rewardTile,
+      sourceTile: { x: 0, y: 0 } as PlacedTile,
+      remainingRewards: [{ kind: 'equipment', equipmentId: 'fire-sword' }],
+    });
+
+    expect(gameService.replacePendingEquipment(1)).toBe(true);
+    expect(player.inventory.spells[1]?.effect).toBe('magic-attack');
+    expect(player.inventory.spells.filter(spell => spell?.effect === 'healing-portal')).toHaveLength(2);
+    expect(gameService.pendingReward()).toBeNull();
+
+    vi.runAllTimers();
+    vi.useRealTimers();
+  });
+});
+
+describe('GameService validation centralisée des déplacements', () => {
+  let gameService: GameService;
+  let playerService: PlayerService;
+  let dungeonService: DungeonService;
+  let turnService: TurnService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
+    gameService = TestBed.inject(GameService);
+    playerService = TestBed.inject(PlayerService);
+    dungeonService = TestBed.inject(DungeonService);
+    turnService = TestBed.inject(TurnService);
+    playerService.initialize(2);
+    gameService.initialize();
+    turnService.resetMovements();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+  });
+
+  function addDestination(rotation: number): PlacedTile {
+    const destination = {
+      x: 1,
+      y: 0,
+      definitionId: 'straight-01',
+      rotation,
+    } as PlacedTile;
+    dungeonService.tiles.push(destination);
+    return destination;
+  }
+
+  it('autorise Argentus à franchir un mur entre deux tuiles découvertes', () => {
+    const player = playerService.players[0];
+    const source = dungeonService.getTileAt(0, 0)!;
+    const destination = addDestination(90);
+    player.position = { x: 0, y: 0 };
+    player.heroId = 'argentus';
+
+    expect(gameService.canMoveTo(player, source, destination)).toBe(true);
+  });
+
+  it('refuse le franchissement astral aux autres héros et sous malédiction', () => {
+    const player = playerService.players[0];
+    const source = dungeonService.getTileAt(0, 0)!;
+    const destination = addDestination(90);
+    player.position = { x: 0, y: 0 };
+
+    expect(gameService.canMoveTo(player, source, destination)).toBe(false);
+    player.heroId = 'argentus';
+    player.isCursed = true;
+    expect(gameService.canMoveTo(player, source, destination)).toBe(false);
+  });
+
+  it('conserve les contraintes de tour et de résolution en attente', () => {
+    const player = playerService.players[0];
+    const source = dungeonService.getTileAt(0, 0)!;
+    const destination = addDestination(90);
+    player.position = { x: 0, y: 0 };
+    player.heroId = 'argentus';
+
+    turnService.stopMovements();
+
+    expect(gameService.canMoveTo(player, source, destination)).toBe(false);
+  });
+});
+
+describe('GameService comptabilisation du mouvement d entrée', () => {
+  let gameService: GameService;
+  let playerService: PlayerService;
+  let dungeonService: DungeonService;
+  let turnService: TurnService;
+  let combatService: CombatService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
+    gameService = TestBed.inject(GameService);
+    playerService = TestBed.inject(PlayerService);
+    dungeonService = TestBed.inject(DungeonService);
+    turnService = TestBed.inject(TurnService);
+    combatService = TestBed.inject(CombatService);
+    playerService.initialize(2);
+    gameService.initialize();
+    turnService.resetMovements();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+  });
+
+  it('compte le mouvement avant de suspendre un combat obligatoire', () => {
+    const player = playerService.players[0];
+    const source = dungeonService.getTileAt(0, 0)!;
+    const destination = {
+      x: 1,
+      y: 0,
+      definitionId: 'straight-01',
+      rotation: 1,
+      tokenId: 'giant-rat',
+      tokenFace: 'front',
+    } as PlacedTile;
+    dungeonService.tiles.push(destination);
+
+    turnService.consumeMovement();
+    expect(gameService.resolveTileEntry(player, source, destination, false, true)).toBe('combat');
+    expect(combatService.hasPendingCombat).toBe(true);
+    expect(turnService.movementsMadeThisTurn()).toBe(1);
+    expect(turnService.remainingMovements()).toBe(0);
+  });
 });
 
 describe('GameService audit coffre inaccessible', () => {
@@ -805,6 +1601,7 @@ describe('GameService résolution des salles découvertes par Aderyn', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
+    vi.useFakeTimers();
     gameService = TestBed.inject(GameService);
     playerService = TestBed.inject(PlayerService);
     turnService = TestBed.inject(TurnService);
@@ -814,6 +1611,8 @@ describe('GameService résolution des salles découvertes par Aderyn', () => {
     gameService.phase.set('playing');
     gameService.activePlayerIndex.set(0);
   });
+
+  afterEach(() => vi.useRealTimers());
 
   function roomWithToken(tokenId: string): PlacedTile {
     return {
@@ -846,7 +1645,7 @@ describe('GameService résolution des salles découvertes par Aderyn', () => {
     expect(turnService.remainingMovements()).toBe(0);
   });
 
-  it('permet à Adéryn de choisir le combat depuis la résolution Sneak', () => {
+  it('permet à Aderyn de choisir le combat depuis la résolution Sneak', () => {
     const player = playerService.players[0];
     player.heroId = 'aderyn';
     const destination = roomWithToken('giant-rat');
@@ -858,14 +1657,69 @@ describe('GameService résolution des salles découvertes par Aderyn', () => {
     expect(combatService.hasPendingCombat).toBe(true);
   });
 
-  it('permet à Adéryn de passer discrètement sans combat', () => {
+  it('permet à Aderyn de passer discrètement sans combat', () => {
+    const player = playerService.players[0];
+    player.heroId = 'aderyn';
+    const destination = roomWithToken('giant-rat');
+
+    // Simulate one movement already spent before entering the monster tile.
+    turnService.consumeMovement();
+    gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, destination);
+
+    expect(gameService.choosePendingSneak('sneak')).toBe(true);
+    expect(gameService.pendingSneakChoice()).toBeNull();
+    expect(combatService.hasPendingCombat).toBe(false);
+    expect(turnService.remainingMovements()).toBe(2);
+    expect(turnService.movementsMadeThisTurn()).toBe(2);
+    expect(gameService.turnTransitionPending()).toBe(false);
+  });
+
+  it('ne recompte pas le mouvement lorsque l entree a deja ete consommee', () => {
+    const player = playerService.players[0];
+    player.heroId = 'aderyn';
+    const destination = roomWithToken('giant-rat');
+    turnService.consumeMovement();
+
+    expect(gameService.resolveTileEntry(
+      player,
+      { x: 0, y: 0 } as PlacedTile,
+      destination,
+      false,
+      true,
+    )).toBe('sneak-choice');
+
+    expect(gameService.choosePendingSneak('sneak')).toBe(true);
+    expect(turnService.movementsMadeThisTurn()).toBe(1);
+    expect(turnService.remainingMovements()).toBe(3);
+  });
+
+  it('termine normalement le tour aprÃ¨s un passage discret sur le dernier mouvement', () => {
+    const player = playerService.players[0];
+    player.heroId = 'aderyn';
+    const destination = roomWithToken('giant-rat');
+    turnService.remainingMovements.set(1);
+
+    gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, destination);
+
+    expect(gameService.choosePendingSneak('sneak')).toBe(true);
+    expect(turnService.remainingMovements()).toBe(0);
+    expect(turnService.movementsMadeThisTurn()).toBe(1);
+    expect(gameService.pendingSneakChoice()).toBeNull();
+    expect(gameService.turnTransitionPending()).toBe(true);
+    vi.runAllTimers();
+    expect(gameService.turnTransitionPending()).toBe(false);
+  });
+
+  it('ne laisse pas une dÃ©cision Sneak rÃ©siduelle aprÃ¨s une rÃ©initialisation', () => {
     const player = playerService.players[0];
     player.heroId = 'aderyn';
     const destination = roomWithToken('giant-rat');
 
     gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, destination);
+    expect(gameService.pendingSneakChoice()).not.toBeNull();
 
-    expect(gameService.choosePendingSneak('sneak')).toBe(true);
+    gameService.initialize();
+
     expect(gameService.pendingSneakChoice()).toBeNull();
     expect(combatService.hasPendingCombat).toBe(false);
   });
@@ -897,5 +1751,85 @@ describe('GameService résolution des salles découvertes par Aderyn', () => {
     expect(gameService.pendingTreasure()).toBeNull();
     expect(chest.tokenId).toBeUndefined();
     expect(turnService.remainingMovements()).toBe(0);
+  });
+});
+
+describe('GameService Aderyn backstab integration', () => {
+  let gameService: GameService;
+  let playerService: PlayerService;
+  let combatService: CombatService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
+    vi.useFakeTimers();
+    gameService = TestBed.inject(GameService);
+    playerService = TestBed.inject(PlayerService);
+    combatService = TestBed.inject(CombatService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  function roomWithToken(tokenId: string): PlacedTile {
+    return {
+      x: 1,
+      y: 0,
+      definitionId: 'room-1',
+      tokenId,
+      tokenFace: 'front',
+    } as PlacedTile;
+  }
+
+  it('turns a tie into a victory and grants exactly one reward', () => {
+    const player = playerService.players[0];
+    player.heroId = 'aderyn';
+    const source = { x: 0, y: 0 } as PlacedTile;
+    const destination = roomWithToken('fallen');
+
+    expect(gameService.resolveTileEntry(player, source, destination)).toBe('sneak-choice');
+    expect(gameService.choosePendingSneak('combat')).toBe(true);
+    vi.spyOn(Math, 'random').mockReturnValue(0.999999);
+
+    expect(combatService.rollPendingCombat()?.attackPower).toBe(12);
+    expect(combatService.resolvePendingCombat()?.outcome).toBe('victory');
+    expect(combatService.resolvePendingCombat()).toBeNull();
+    expect(destination.tokenFace).toBe('back');
+
+    combatService.clearLastCombatResult();
+    expect(gameService.resolveTileEntry(player, source, destination)).toBe('reward');
+    expect(gameService.collectPendingTreasure()).toBe(true);
+    expect(player.treasures).toEqual(['monster-treasure']);
+    expect(gameService.collectPendingTreasure()).toBe(false);
+    expect(gameService.resolveTileEntry(player, source, destination)).toBe('none');
+  });
+
+  it('keeps the mummy flow and applies its curse exactly once', () => {
+    const player = playerService.players[0];
+    const otherPlayer = playerService.players[1];
+    player.heroId = 'aderyn';
+    const source = { x: 0, y: 0 } as PlacedTile;
+    const destination = roomWithToken('skeleton-mummy');
+
+    expect(gameService.resolveTileEntry(player, source, destination)).toBe('sneak-choice');
+    expect(gameService.choosePendingSneak('combat')).toBe(true);
+    vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0.4)
+      .mockReturnValueOnce(0.5);
+
+    expect(combatService.rollPendingCombat()?.attackPower).toBe(7);
+    expect(combatService.resolvePendingCombat()?.outcome).toBe('victory');
+    combatService.clearLastCombatResult();
+
+    expect(gameService.resolveTileEntry(player, source, destination)).toBe('reward');
+    expect(otherPlayer.isCursed).toBe(true);
+    expect(player.isCursed).toBe(false);
+    expect(player.inventory.spells.some(spell => spell?.id === 'fire-sword')).toBe(true);
+    expect(gameService.pendingReward()).toBeNull();
   });
 });

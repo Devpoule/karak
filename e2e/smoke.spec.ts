@@ -141,8 +141,9 @@ test('la préparation reste lisible sur écran étroit', async ({ page }) => {
   await expect.poll(async () => page.evaluate(() =>
     document.documentElement.scrollWidth <= document.documentElement.clientWidth,
   )).toBe(true);
-  await expect(page.locator('.game-header__turn-label--compact')).toHaveText('Tour');
-  await expect(page.locator('.game-header__turn-label--full')).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Accueil' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Codex' })).toBeVisible();
+  await expect(page.getByAltText('Karak')).toBeVisible();
   await page.screenshot({
     path: 'playwright-report/karak-setup-narrow.png',
     fullPage: true,

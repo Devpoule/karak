@@ -67,10 +67,10 @@
     @for (tile of tiles; track $index) {
       <div
         class="board__tile"
-        [class.board__tile--healing-selected]="healingPortalSelection?.destination === tile"
+        [class.board__tile--healing-selected]="healingPortalSelection?.destination === tile || horanReincarnationSelection?.destination === tile"
         [style.left.px]="mapCenterInPixels + tile.x * tileSize - tileSize / 2"
         [style.top.px]="mapCenterInPixels + tile.y * tileSize - tileSize / 2"
-        (click)="selectHealingFountain(tile)"
+        (click)="handleTileClick(tile)"
       >
         <!-- Image de la tuile -->
         <img
@@ -274,20 +274,20 @@
                 <span aria-hidden="true">⏭</span>
               </button>
             }
-            @if (gameService.xanrosSubstitutionSelectionOpen()) {
-              <div class="board__substitution-options" role="dialog" aria-label="Choisir un héros pour la substitution">
-                <span>Échanger avec :</span>
-                @for (target of gameService.xanrosSubstitutionTargets; track $index) {
-                  <button type="button" (click)="gameService.confirmXanrosSubstitution(target)">
-                    {{ target.heroId ?? 'Héros ' + ($index + 1) }}
-                  </button>
-                }
-                <button type="button" (click)="gameService.cancelXanrosSubstitution()">Annuler</button>
-              </div>
-            }
           </div>
         }
       }
+    }
+    @if (gameService.xanrosSubstitutionSelectionOpen()) {
+      <div class="board__substitution-options" role="dialog" aria-label="Choisir un héros pour la substitution">
+        <span>Échanger avec :</span>
+        @for (target of gameService.xanrosSubstitutionTargets; track $index) {
+          <button type="button" (click)="confirmXanrosSubstitution(target)">
+            {{ target.heroId ?? 'Héros ' + ($index + 1) }}
+          </button>
+        }
+        <button type="button" (click)="gameService.cancelXanrosSubstitution()">Annuler</button>
+      </div>
     }
     @if (healingPortalSelection; as selection) {
       <div
@@ -308,13 +308,43 @@
         </button>
       </div>
     }
+    @if (horanReincarnationSelection; as selection) {
+      <div
+        class="board__movement-controls board__healing-portal-controls board__horan-reincarnation-controls"
+        [style.left.px]="healingPortalControlLeft(selection.destination)"
+        [style.top.px]="healingPortalControlTop(selection.destination)"
+        (pointerdown)="$event.stopPropagation()"
+      >
+        <span class="board__healing-portal-count" aria-live="polite">
+          Réincarnation · {{ healingFountains.indexOf(selection.destination) + 1 }} / {{ healingFountains.length }}
+        </span>
+        @if (healingFountains.length > 1) {
+          <button type="button" class="board__movement-control board__movement-control--west board__healing-portal-previous" (click)="moveHoranReincarnationSelection(-1)" aria-label="Fontaine précédente" title="Fontaine précédente">◀</button>
+          <button type="button" class="board__movement-control board__movement-control--east board__healing-portal-next" (click)="moveHoranReincarnationSelection(1)" aria-label="Fontaine suivante" title="Fontaine suivante">▶</button>
+        }
+        <button type="button" class="board__movement-control board__healing-portal-confirm" (click)="confirmHoranReincarnation()" aria-label="Confirmer la Réincarnation" title="Confirmer la Réincarnation">
+          <span aria-hidden="true">✓</span>
+        </button>
+      </div>
+    }
+    @if (humanPendingXanrosSubstitutionAction; as action) {
+      <div
+        class="board__movement-controls board__xanros-action-controls"
+        [style.left.px]="healingPortalControlLeft(action.tile)"
+        [style.top.px]="healingPortalControlTop(action.tile)"
+        (pointerdown)="$event.stopPropagation()"
+      >
+        <span aria-live="polite">Action facultative</span>
+        <button type="button" (click)="finishXanrosSubstitutionAction()">Terminer le tour</button>
+      </div>
+    }
   </div>
   @if (gameService.pendingSneakChoice(); as sneak) {
     @if (sneak.player.controller === 'human') {
       <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
         <section class="board__reward-panel" role="dialog" aria-modal="true" aria-labelledby="sneak-title">
-          <h2 id="sneak-title">Marche rampante — Adéryn</h2>
-          <p>Un monstre se trouve sur votre chemin. Adéryn peut l'affronter ou utiliser Marche rampante pour éviter le combat.</p>
+          <h2 id="sneak-title">Marche rampante — Aderyn</h2>
+          <p>Un monstre se trouve sur votre chemin. Aderyn peut l'affronter ou utiliser Marche rampante pour éviter le combat.</p>
           <div class="board__reward-actions">
             <button type="button" autofocus (click)="gameService.choosePendingSneak('combat')">Combattre</button>
             <button type="button" (click)="gameService.choosePendingSneak('sneak')">Passer discrètement</button>
@@ -350,6 +380,9 @@
           <button type="button" autofocus [disabled]="!canOpenPendingTreasure" (click)="openPendingTreasure()">
             Ouvrir le coffre
           </button>
+            @if (gameService.isOptionalXanrosTreasure) {
+              <button type="button" (click)="declineOptionalXanrosTreasure()">Ne pas ouvrir</button>
+            }
         </div>
       </section>
     </div>
@@ -407,6 +440,18 @@
             <button type="button" (click)="leavePendingReward()">Laisser sur la tuile</button>
           </div>
         }
+      </section>
+    </div>
+  }
+  @if (humanPendingUnstoppableDecision; as decision) {
+    <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
+      <section class="board__reward-panel" role="dialog" aria-modal="true" aria-labelledby="unstoppable-title">
+        <h2 id="unstoppable-title">Inarrêtable — Victorius</h2>
+        <p>Un 6 a été obtenu pendant le combat. Choisissez si vous souhaitez poursuivre ce tour.</p>
+        <div class="board__reward-actions">
+          <button type="button" autofocus (click)="continueVictoriusTurn()">Continuer le tour</button>
+          <button type="button" (click)="finishVictoriusTurn()">Terminer le tour</button>
+        </div>
       </section>
     </div>
   }

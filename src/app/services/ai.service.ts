@@ -77,8 +77,19 @@ export class AiService {
     if (!player || player.controller !== 'ai' || this.gameService.phase() !== 'playing') {
       return 'none';
     }
+    const pendingXanrosAction = this.gameService.pendingXanrosSubstitutionAction();
+    if (pendingXanrosAction?.player === player) {
+      return this.resolveXanrosSubstitutionAction()
+        ? 'resolved'
+        : 'unsupported:xanros-substitution-action';
+    }
     if (this.combatService.hasPendingCombat || this.combatService.lastCombatResult() !== null) {
       return 'waiting';
+    }
+
+    const pendingUnstoppable = this.gameService.pendingUnstoppableDecision();
+    if (pendingUnstoppable?.player === player) {
+      return this.resolveUnstoppableDecision() ? 'resolved' : 'unsupported:unstoppable-decision';
     }
 
     const pendingSneak = this.gameService.pendingSneakChoice();
@@ -164,7 +175,7 @@ export class AiService {
     return true;
   }
 
-  /** Relance une fois si le pouvoir du héros peut encore améliorer un combat perdu. */
+  /** Relance les dés éligibles, au maximum une fois chacun, sans bloquer le combat. */
   resolveHeroRerollDecision(): boolean {
     const player = this.gameService.activePlayer;
     const combat = this.combatService.pendingCombat();
@@ -174,9 +185,24 @@ export class AiService {
     }
     if (roll.attackPower > combat.monster.strength) return false;
 
-    const available = this.combatService.getAvailableHeroRerolls();
-    const choice = available[0];
-    return choice ? this.combatService.useHeroReroll(choice) : false;
+    let rerolled = false;
+    let available = this.combatService.getAvailableHeroRerolls();
+    while (available.length > 0) {
+      const choice = available[0];
+      if (!this.combatService.useHeroReroll(choice)) return rerolled;
+      rerolled = true;
+      available = this.combatService.getAvailableHeroRerolls();
+    }
+    return rerolled;
+  }
+
+  /** Choix déterministe de l'IA pour Inarrêtable. */
+  resolveUnstoppableDecision(): boolean {
+    const player = this.gameService.activePlayer;
+    const pending = this.gameService.pendingUnstoppableDecision();
+    if (!player || player.controller !== 'ai' || pending?.player !== player) return false;
+    return this.gameService.acceptUnstoppableContinuation()
+      || this.gameService.declineUnstoppableContinuation();
   }
 
   resolveXanrosSacrificeDecision(): boolean {
@@ -184,8 +210,39 @@ export class AiService {
     const combat = this.combatService.pendingCombat();
     const roll = this.combatService.pendingCombatRoll();
     if (!player || player.controller !== 'ai' || !combat || combat.player !== player || !roll) return false;
-    return this.combatService.canUseXanrosSacrifice()
+    const useful = roll.attackPower <= combat.monster.strength
+      && roll.attackPower + 1 >= combat.monster.strength;
+    return useful
+      && this.combatService.canUseXanrosSacrifice()
       && this.combatService.useXanrosSacrifice();
+  }
+
+  /** Résout de façon déterministe l'éventuelle action autorisée après Substitution. */
+  resolveXanrosSubstitutionAction(): boolean {
+    const player = this.gameService.activePlayer;
+    const pending = this.gameService.pendingXanrosSubstitutionAction();
+    if (!player || player.controller !== 'ai' || pending?.player !== player) return false;
+
+    if (this.gameService.getGroundEquipment(pending.tile).length > 0
+      && this.gameService.offerGroundEquipmentAt(pending.tile, 0)) {
+      return true;
+    }
+
+    if (pending.tile.tokenId === 'closed-chest'
+      && player.inventory.key !== null
+      && this.gameService.openXanrosSubstitutionChest(pending.tile)) {
+      return true;
+    }
+
+    const fountain = this.gameService.getHealingFountains()[0];
+    if (fountain
+      && player.inventory.spells.some(spell => spell?.effect === 'healing-portal')
+      && player.lives < 5
+      && this.gameService.useHealingPortal(player, fountain)) {
+      return true;
+    }
+
+    return this.gameService.finishXanrosSubstitutionAction();
   }
 
   private getEquipmentDefinition(equipmentId: string) {
@@ -264,6 +321,9 @@ export class AiService {
 
     if (!player || player.controller !== 'ai') {
       return false;
+    }
+    if (this.gameService.pendingXanrosSubstitutionAction()?.player === player) {
+      return this.resolveXanrosSubstitutionAction();
     }
     if (!this.gameService.canPerformNormalMovement(player) && player.recoveryState !== 'resting') {
       return false;
@@ -351,13 +411,6 @@ export class AiService {
     }
 
     /**
-     * Une action réussie consomme un mouvement.
-     */
-    if (actionPerformed) {
-      this.turnService.consumeMovement();
-    }
-
-    /**
      * La fin du tour ne doit jamais interrompre
      * une résolution obligatoire.
      *
@@ -426,11 +479,8 @@ export class AiService {
 
   /** Argentus peut franchir une séparation entre deux tuiles découvertes. */
   private canMoveTo(tile: PlacedTile, direction: Direction): boolean {
-    if (this.dungeonService.canMoveTo(tile, direction)) return true;
-    const player = this.gameService.activePlayer;
-    return player?.heroId === 'argentus'
-      && !player.isCursed
-      && this.dungeonService.getNeighbor(tile, direction) !== undefined;
+    const destination = this.dungeonService.getNeighbor(tile, direction);
+    return this.gameService.canMoveTo(this.gameService.activePlayer, tile, destination ?? null);
   }
 
   // ==========================================================
@@ -491,11 +541,14 @@ export class AiService {
     );
 
     this.restorePlayerFacing(player);
+    this.turnService.consumeMovement();
 
     this.gameService.resolveTileEntry(
       player,
       currentTile,
       destinationTile,
+      false,
+      true,
     );
 
     return true;
@@ -551,6 +604,7 @@ export class AiService {
     );
 
     this.restorePlayerFacing(player);
+    this.turnService.consumeMovement();
 
     /**
      * true indique que la salle vient d'être
@@ -560,6 +614,7 @@ export class AiService {
       player,
       currentTile,
       placedTile,
+      true,
       true,
     );
 
