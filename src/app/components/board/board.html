@@ -389,27 +389,10 @@
   }
 
   <!-- Résolution d'une récompense : interface fixe, indépendante de la caméra. -->
-  @if (humanPendingReward; as reward) {
+  @if (humanPendingReward && (pendingTreasureReward || hasPendingCurse)) {
     <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
       <section class="board__reward-panel" role="dialog" aria-modal="true" aria-labelledby="reward-title">
         <h2 id="reward-title">Récompense du combat</h2>
-        @if (pendingEquipment; as equipment) {
-          <img class="board__reward-image" [src]="equipment.image" [alt]="equipment.name" draggable="false" />
-          <p>{{ equipment.name }}</p>
-          @if (!canCollectPendingEquipment) {
-             @if (getReplacementSlots(equipment).length) {
-               <p class="board__reward-notice">Aucun emplacement libre : choisissez un objet à remplacer.</p>
-               <div class="board__reward-actions">
-                 @for (slot of getReplacementSlots(equipment); track slot.index) {
-                   <button type="button" (click)="replacePendingEquipment(slot.index)">Remplacer {{ slot.name }}</button>
-                 }
-               </div>
-               }
-             }
-          <div class="board__reward-actions">
-            <button type="button" [disabled]="!canCollectPendingEquipment" (click)="collectPendingEquipment()">Récupérer</button>
-          </div>
-        }
         @if (pendingTreasureReward; as treasureReward) {
           <img
             class="board__reward-image"
@@ -440,24 +423,6 @@
             <button type="button" (click)="leavePendingReward()">Laisser sur la tuile</button>
           </div>
         }
-      </section>
-    </div>
-  }
-  @if (humanPendingGroundEquipment; as pending) {
-    <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
-      <section class="board__reward-panel" role="dialog" aria-modal="true" aria-labelledby="ground-equipment-title">
-        <h2 id="ground-equipment-title">Équipement trouvé</h2>
-        <img class="board__reward-image" [src]="pending.equipment.image" [alt]="pending.equipment.name" draggable="false" />
-        <p>{{ pending.equipment.name }}</p>
-        <div class="board__reward-actions">
-          <button type="button" [disabled]="!canCollectGroundEquipment" (click)="collectGroundEquipment()">Récupérer</button>
-          @if (!canCollectGroundEquipment) {
-            @for (slot of getReplacementSlots(pending.equipment); track slot.index) {
-              <button type="button" (click)="replaceGroundEquipment(slot.index)">Remplacer {{ slot.name }}</button>
-            }
-          }
-          <button type="button" (click)="leaveGroundEquipment()">Laisser sur la tuile</button>
-        </div>
       </section>
     </div>
   }

@@ -473,15 +473,29 @@ export class PlayerService {
   /**
    * Indique si un équipement peut légalement remplacer un objet existant.
    *
-   * Un doublon déjà présent dans l'inventaire n'est jamais proposé :
-   * remplacer un objet par un exemplaire identique n'apporte aucun bénéfice.
+   * La validation porte sur le slot ciblé : une arme entrante doit
+   * strictement améliorer l'arme de ce slot. Un doublon présent dans un
+   * autre slot ne bloque pas cette amélioration.
    */
-  canReplaceEquipment(player: Player, equipment: Equipment): boolean {
-    if (!this.players.includes(player) || this.canAddEquipment(player, equipment)) return false;
-    const slots = equipment.kind === 'key'
-      ? [player.inventory.key]
-      : this.getEquipmentSlots(player, equipment.kind);
-    return !slots.some(item => item?.id === equipment.id);
+  canReplaceEquipment(player: Player, equipment: Equipment, slotIndex: number): boolean {
+    if (!this.players.includes(player) || this.canAddEquipment(player, equipment)
+      || !Number.isInteger(slotIndex)) return false;
+
+    if (equipment.kind === 'key') {
+      return slotIndex === 0
+        && player.inventory.key !== null
+        && player.inventory.key.id !== equipment.id;
+    }
+
+    const slots = this.getEquipmentSlots(player, equipment.kind);
+    const current = slots[slotIndex];
+    if (!current) return false;
+
+    if (equipment.kind === 'weapon') {
+      return current.kind === 'weapon' && equipment.attackBonus > current.attackBonus;
+    }
+
+    return current.kind === 'spell' && current.id !== equipment.id;
   }
   /**
    * Place un équipement dans le premier emplacement libre.

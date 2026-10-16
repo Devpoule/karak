@@ -116,7 +116,15 @@ export class AiService {
 
       const equipmentReward = pendingReward.remainingRewards.find(reward => reward.kind === 'equipment');
       if (equipmentReward?.kind === 'equipment') {
-        return this.gameService.resolvePendingRewardEquipment()
+        if (this.gameService.resolvePendingRewardEquipment()) return 'resolved';
+
+        // Une tuile occupée peut empêcher le dépôt ou l'échange. Résoudre
+        // d'abord les autres éléments obligatoires de la récompense, puis
+        // laisser l'équipement attaché au jeton pour une visite ultérieure.
+        if (pendingReward.remainingRewards.some(reward => reward.kind === 'special' && reward.effect === 'curse')) {
+          return this.resolvePendingCurseForAi(player);
+        }
+        return this.gameService.leavePendingReward()
           ? 'resolved'
           : 'unsupported:equipment-decision';
       }

@@ -193,7 +193,7 @@ export class GameService {
   readonly pendingXanrosSubstitutionAction = signal<PendingXanrosSubstitutionAction | null>(null);
 
   /** Objets déposés indépendamment des jetons monstres/trésors. */
-  private groundEquipmentByTile = new Map<string, Equipment[]>();
+  private groundEquipmentByTile = new Map<string, Equipment>();
   /** Révision réactive de l'affichage des équipements au sol. */
   readonly groundEquipmentRevision = signal(0);
 
@@ -535,6 +535,33 @@ export class GameService {
     );
   }
 
+  /** Annonce un remplacement d'arme après la validation complète de l'échange. */
+  private announceWeaponReplacement(player: Player, previous: Equipment, replacement: Equipment): void {
+    const previousName = previous.name.toLocaleLowerCase('fr-FR');
+    const replacementName = replacement.name.toLocaleLowerCase('fr-FR');
+    const previousPossessive = this.getEquipmentPossessive(previous, previousName);
+    const replacementArticle = this.getEquipmentIndefiniteArticle(replacement);
+    this.toastService.show(
+      `${this.actorLabel(player)} a remplacé ${previousPossessive} par ${replacementArticle} ${replacementName}.`,
+      'success',
+    );
+  }
+
+  /** Forme le possessif des armes du catalogue de base pour le toast. */
+  private getEquipmentPossessive(equipment: Equipment, name: string): string {
+    if (equipment.id === 'daggers') return `ses ${name}`;
+    if (equipment.id === 'sword') return `son ${name}`;
+    if (equipment.id === 'axe') return `sa ${name}`;
+    return `son ${name}`;
+  }
+
+  /** Forme l'article de l'arme reçue dans le toast de remplacement. */
+  private getEquipmentIndefiniteArticle(equipment: Equipment): string {
+    if (equipment.id === 'daggers') return 'des';
+    if (equipment.id === 'sword' || equipment.id === 'axe') return 'une';
+    return 'un';
+  }
+
   /**
    * Commence la préparation d'une nouvelle partie.
    *
@@ -574,7 +601,7 @@ export class GameService {
     this.healingPortalSelection.set(null);
     this.horanReincarnationSelection.set(null);
     this.clearUnstoppableContinuation();
-    this.groundEquipmentByTile = new Map<string, Equipment[]>();
+    this.groundEquipmentByTile = new Map<string, Equipment>();
     this.groundEquipmentRevision.update(value => value + 1);
     this.remainingRewardsByTile = new WeakMap<PlacedTile, readonly MonsterReward[]>();
     this.initializeDungeon();
@@ -1003,6 +1030,7 @@ export class GameService {
         ?? classification.token.rewards
         ?? [];
       if (!remainingRewards.length) return this.offerGroundEquipment(player, destinationTile);
+      this.remainingRewardsByTile.delete(destinationTile);
       this.turnService.stopMovements();
       this.pendingReward.set({
         player,
@@ -1131,24 +1159,68 @@ export class GameService {
     if (!Number.isInteger(slotIndex) || !player.position) return false;
     const tile = this.dungeonService.getTileAt(player.position.x, player.position.y);
     if (!tile) return false;
+    if (this.getGroundEquipment(tile).length > 0) return false;
     const equipment = this.playerService.removeEquipment(player, kind, slotIndex);
     if (!equipment) return false;
-    this.dropEquipment(tile, equipment);
+    if (!this.dropEquipment(tile, equipment)) {
+      this.playerService.replaceEquipment(player, equipment, slotIndex);
+      return false;
+    }
     return true;
   }
 
   /** Liste en lecture seule des équipements présents sur une tuile. */
   getGroundEquipment(tile: PlacedTile): readonly Equipment[] {
     this.groundEquipmentRevision();
-    return this.groundEquipmentByTile.get(this.groundKey(tile)) ?? [];
+    const equipment = this.groundEquipmentByTile.get(this.groundKey(tile));
+    return equipment ? [equipment] : [];
   }
 
-  /** Dépose un objet sans altérer le jeton éventuellement présent. */
-  private dropEquipment(tile: PlacedTile, equipment: Equipment): void {
+  /** Récompenses du verso encore disponibles sur un jeton de monstre. */
+  getRemainingMonsterRewards(tile: PlacedTile): readonly MonsterReward[] {
+    const pending = this.pendingReward();
+    const remainingRewards = this.remainingRewardsByTile.get(tile);
+    if (pending?.rewardTile === tile) {
+      return [...pending.remainingRewards, ...(remainingRewards ?? [])];
+    }
+    if (remainingRewards) return remainingRewards;
+    const token = tile.tokenId ? getTokenDefinition(tile.tokenId) : undefined;
+    return token?.kind === 'monster' ? token.rewards ?? [] : [];
+  }
+
+  /** Dépose un objet uniquement sur une tuile sans équipement au sol. */
+  private dropEquipment(tile: PlacedTile, equipment: Equipment): boolean {
     const key = this.groundKey(tile);
-    const items = this.groundEquipmentByTile.get(key) ?? [];
-    this.groundEquipmentByTile.set(key, [...items, equipment]);
+    if (this.groundEquipmentByTile.has(key)) return false;
+    this.groundEquipmentByTile.set(key, equipment);
     this.groundEquipmentRevision.update(value => value + 1);
+    return true;
+  }
+
+  /** Remplace atomiquement l'objet attendu par un équipement déjà validé. */
+  private replaceGroundEquipmentItem(
+    tile: PlacedTile,
+    expected: Equipment,
+    replacement: Equipment,
+  ): boolean {
+    const key = this.groundKey(tile);
+    if (this.groundEquipmentByTile.get(key) !== expected) return false;
+    this.groundEquipmentByTile.set(key, replacement);
+    this.groundEquipmentRevision.update(value => value + 1);
+    return true;
+  }
+
+  /**
+   * Dépose l'arme remplacée si possible ; si un objet occupe déjà la tuile,
+   * applique explicitement la règle métier de défausse de l'ancienne arme.
+   */
+  private depositOrDiscardReplacedEquipment(
+    tile: PlacedTile,
+    replacement: Equipment,
+    displaced: Equipment,
+  ): boolean {
+    if (this.getGroundEquipment(tile).length > 0) return replacement.kind === 'weapon';
+    return this.dropEquipment(tile, displaced);
   }
 
   /** Propose puis résout automatiquement le premier objet au sol. */
@@ -1158,6 +1230,32 @@ export class GameService {
     this.pendingGroundEquipment.set({ player, tile, equipment, index: 0 });
     this.resolvePendingGroundEquipment();
     return 'equipment';
+  }
+
+  /**
+   * Réévalue une seule fois l'objet apparu après une action complète.
+   *
+   * Les résolutions d'abandon ne rappellent jamais cette méthode : un objet
+   * refusé reste donc au sol sans boucle de proposition.
+   */
+  private resolveGroundEquipmentAfterAction(player: Player, tile: PlacedTile): boolean {
+    if (
+      this.phase() !== 'playing'
+      || player !== this.activePlayer
+      || this.pendingReward() !== null
+      || this.pendingGroundEquipment() !== null
+      || this.pendingTreasure() !== null
+      || this.explorationService.pendingTile
+      || this.turnTransitionPending()
+      || !player.position
+      || player.position.x !== tile.x
+      || player.position.y !== tile.y
+    ) {
+      return false;
+    }
+
+    return this.getGroundEquipment(tile).length > 0
+      && this.offerGroundEquipment(player, tile) === 'equipment';
   }
 
   /** Retourne les fontaines déjà découvertes et accessibles par le portail. */
@@ -1445,11 +1543,8 @@ export class GameService {
   /** Retire exactement l'objet récupéré et notifie immédiatement le plateau. */
   private consumeGroundEquipment(pending: PendingGroundEquipment): boolean {
     const key = this.groundKey(pending.tile);
-    const items = [...this.getGroundEquipment(pending.tile)];
-    if (items[pending.index] !== pending.equipment) return false;
-    items.splice(pending.index, 1);
-    if (items.length) this.groundEquipmentByTile.set(key, items);
-    else this.groundEquipmentByTile.delete(key);
+    if (pending.index !== 0 || this.groundEquipmentByTile.get(key) !== pending.equipment) return false;
+    this.groundEquipmentByTile.delete(key);
     this.groundEquipmentRevision.update(value => value + 1);
     this.pendingGroundEquipment.set(null);
     this.finishMandatoryResolution();
@@ -1463,7 +1558,7 @@ export class GameService {
     if (this.phase() !== 'playing' || !player || (player.controller !== 'human' && !postSubstitution)) return false;
     if (this.turnTransitionPending() || (this.hasPendingTileResolution && !postSubstitution) || this.explorationService.pendingTile) return false;
     if (!player.position || player.position.x !== tile.x || player.position.y !== tile.y) return false;
-    if (!Number.isInteger(index) || index < 0) return false;
+    if (index !== 0) return false;
     const equipment = this.getGroundEquipment(tile)[index];
     if (!equipment) return false;
     this.pendingGroundEquipment.set({ player, tile, equipment, index });
@@ -1534,12 +1629,20 @@ export class GameService {
     const pending = this.pendingGroundEquipment();
     if (!pending || this.phase() !== 'playing' || pending.player !== this.activePlayer) return false;
     if (!this.isGroundEquipmentAvailable(pending)) return false;
-    if (!this.playerService.canReplaceEquipment(pending.player, pending.equipment)) return false;
+    if (!this.playerService.canReplaceEquipment(pending.player, pending.equipment, slotIndex)) return false;
     const previous = this.playerService.replaceEquipment(pending.player, pending.equipment, slotIndex);
     if (!previous) return false;
-    this.consumeGroundEquipment(pending);
-    this.dropEquipment(pending.tile, previous);
-    this.announceEquipmentObtained(pending.player, pending.equipment);
+    if (!this.replaceGroundEquipmentItem(pending.tile, pending.equipment, previous)) {
+      this.playerService.replaceEquipment(pending.player, previous, slotIndex);
+      return false;
+    }
+    this.pendingGroundEquipment.set(null);
+    this.finishMandatoryResolution();
+    if (pending.equipment.kind === 'weapon' && previous.kind === 'weapon') {
+      this.announceWeaponReplacement(pending.player, previous, pending.equipment);
+    } else {
+      this.announceEquipmentObtained(pending.player, pending.equipment);
+    }
     return true;
   }
 
@@ -1568,9 +1671,15 @@ export class GameService {
    */
   private consumePendingReward(pending: PendingReward, rewardIndex: number): void {
     const remainingRewards = pending.remainingRewards.filter((_, index) => index !== rewardIndex);
+    const deferredRewards = this.remainingRewardsByTile.get(pending.rewardTile) ?? [];
     if (remainingRewards.length) {
-      this.remainingRewardsByTile.set(pending.rewardTile, remainingRewards);
+      if (!deferredRewards.length) this.remainingRewardsByTile.delete(pending.rewardTile);
       this.pendingReward.set({ ...pending, remainingRewards });
+      return;
+    }
+    if (deferredRewards.length) {
+      this.pendingReward.set(null);
+      this.finishMandatoryResolution();
       return;
     }
     this.remainingRewardsByTile.delete(pending.rewardTile);
@@ -1641,17 +1750,22 @@ export class GameService {
     rewardIndex: number,
     equipment: Equipment,
   ): boolean {
+    const deferredReward = pending.remainingRewards[rewardIndex];
+    if (deferredReward.kind !== 'equipment') return false;
     const remainingRewards = pending.remainingRewards.filter((_, index) => index !== rewardIndex);
-    this.dropEquipment(pending.rewardTile, equipment);
+    const groundIsOccupied = this.getGroundEquipment(pending.rewardTile).length > 0;
+    if (!groundIsOccupied && !this.dropEquipment(pending.rewardTile, equipment)) return false;
 
     if (remainingRewards.length) {
-      this.remainingRewardsByTile.set(pending.rewardTile, remainingRewards);
+      if (groundIsOccupied) this.remainingRewardsByTile.set(pending.rewardTile, [deferredReward]);
       this.pendingReward.set({ ...pending, remainingRewards });
       return true;
     }
 
-    this.remainingRewardsByTile.set(pending.rewardTile, []);
+    if (groundIsOccupied) this.remainingRewardsByTile.set(pending.rewardTile, [deferredReward]);
+    else this.remainingRewardsByTile.set(pending.rewardTile, []);
     this.pendingReward.set(null);
+    if (!groundIsOccupied && this.resolveGroundEquipmentAfterAction(pending.player, pending.rewardTile)) return true;
     this.finishMandatoryResolution();
     return true;
   }
@@ -1685,7 +1799,7 @@ export class GameService {
     return true;
   }
 
-  /** Remplace un équipement plein et dépose l'ancien sur la tuile du combat. */
+  /** Remplace l'équipement ciblé et dépose l'ancien si la tuile est libre. */
   replacePendingEquipment(slotIndex: number): boolean {
     const pending = this.getActivePendingReward();
     if (!pending) return false;
@@ -1695,12 +1809,19 @@ export class GameService {
     if (reward.kind !== 'equipment') return false;
     const equipment = getEquipmentDefinition(reward.equipmentId);
     if (!equipment) return false;
-    if (!this.playerService.canReplaceEquipment(pending.player, equipment)) return false;
+    if (!this.playerService.canReplaceEquipment(pending.player, equipment, slotIndex)) return false;
     const previous = this.playerService.replaceEquipment(pending.player, equipment, slotIndex);
     if (!previous) return false;
-    this.dropEquipment(pending.rewardTile, previous);
+    if (!this.depositOrDiscardReplacedEquipment(pending.rewardTile, equipment, previous)) {
+      this.playerService.replaceEquipment(pending.player, previous, slotIndex);
+      return false;
+    }
     this.consumePendingReward(pending, rewardIndex);
-    this.announceEquipmentObtained(pending.player, equipment);
+    if (equipment.kind === 'weapon' && previous.kind === 'weapon') {
+      this.announceWeaponReplacement(pending.player, previous, equipment);
+    } else {
+      this.announceEquipmentObtained(pending.player, equipment);
+    }
     return true;
   }
 
@@ -1756,6 +1877,9 @@ export class GameService {
     if (pending.remainingRewards.some(reward => reward.kind === 'special' && reward.effect === 'curse')) {
       return false;
     }
+    const deferredRewards = this.remainingRewardsByTile.get(pending.rewardTile) ?? [];
+    const remainingRewards = [...pending.remainingRewards, ...deferredRewards];
+    if (remainingRewards.length) this.remainingRewardsByTile.set(pending.rewardTile, remainingRewards);
     this.pendingReward.set(null);
     this.finishMandatoryResolution();
     return true;

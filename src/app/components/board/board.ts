@@ -316,7 +316,9 @@ export class Board {
     if (token.kind === 'treasure') {
       return token.backTokenId ? getTokenDefinition(token.backTokenId)?.image : token.image;
     }
-    const equipmentReward = token.rewards?.find((reward) => reward.kind === 'equipment');
+    const remainingRewards = this.gameService.getRemainingMonsterRewards(tile);
+    if (remainingRewards.length === 0) return undefined;
+    const equipmentReward = remainingRewards.find((reward) => reward.kind === 'equipment');
     if (equipmentReward?.kind === 'equipment') {
       return getEquipmentDefinition(equipmentReward.equipmentId)?.image ?? token.image;
     }
@@ -372,13 +374,6 @@ export class Board {
       : null;
   }
 
-  /** Équipement récupérable, même si le monstre possède d'autres récompenses. */
-  get pendingEquipment() {
-    const pending = this.humanPendingReward;
-    const reward = pending?.remainingRewards.find((item) => item.kind === 'equipment');
-    return reward?.kind === 'equipment' ? getEquipmentDefinition(reward.equipmentId) : undefined;
-  }
-
   /** Récompense trésor actuellement proposée après un combat. */
   get pendingTreasureReward() {
     const pending = this.humanPendingReward;
@@ -399,58 +394,6 @@ export class Board {
     if (this.pendingTreasureReward) {
       this.gameService.collectPendingTreasure();
     }
-  }
-
-  /** Indique si la récupération est possible sans remplacer un objet existant. */
-  get canCollectPendingEquipment(): boolean {
-    const pending = this.humanPendingReward;
-    const equipment = this.pendingEquipment;
-    return !!pending && !!equipment && this.playerService.canAddEquipment(pending.player, equipment);
-  }
-
-  collectPendingEquipment(): void {
-    if (!this.canCollectPendingEquipment) return;
-    this.gameService.collectPendingEquipment();
-  }
-
-  /** Emplacements occupés susceptibles d'être remplacés. */
-  getReplacementSlots(equipment: Equipment): { index: number; name: string }[] {
-    const inventory = this.gameService.activePlayer?.inventory;
-    const player = this.gameService.activePlayer;
-    if (!inventory || !player || !this.playerService.canReplaceEquipment(player, equipment)) return [];
-    if (equipment.kind === 'key') {
-      return inventory.key ? [{ index: 0, name: inventory.key.name }] : [];
-    }
-    const slots = equipment.kind === 'weapon' ? inventory.weapons : inventory.spells;
-    return slots.flatMap((item, index) => item ? [{ index, name: item.name }] : []);
-  }
-
-  replacePendingEquipment(index: number): void {
-    if (!this.humanPendingReward || !this.pendingEquipment) return;
-    this.gameService.replacePendingEquipment(index);
-  }
-
-  get humanPendingGroundEquipment() {
-    const pending = this.gameService.pendingGroundEquipment();
-    return pending?.player === this.gameService.activePlayer && pending.player.controller === 'human'
-      ? pending : null;
-  }
-
-  get canCollectGroundEquipment(): boolean {
-    const pending = this.humanPendingGroundEquipment;
-    return !!pending && this.playerService.canAddEquipment(pending.player, pending.equipment);
-  }
-
-  collectGroundEquipment(): void {
-    if (this.canCollectGroundEquipment) this.gameService.collectGroundEquipment();
-  }
-
-  replaceGroundEquipment(index: number): void {
-    if (this.humanPendingGroundEquipment) this.gameService.replaceGroundEquipment(index);
-  }
-
-  leaveGroundEquipment(): void {
-    if (this.humanPendingGroundEquipment) this.gameService.leaveGroundEquipment();
   }
 
   /** Un équipement au sol est sélectionnable uniquement sur la tuile du héros actif. */

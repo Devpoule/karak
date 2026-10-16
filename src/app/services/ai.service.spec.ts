@@ -15,6 +15,7 @@ import { TokenBagService } from './token-bag.service';
 
 describe('AiService résolutions obligatoires', () => {
   afterEach(() => {
+    vi.useRealTimers();
     (getTokenDefinition('giant-rat') as { strength: number }).strength = 5;
     (getTokenDefinition('skeleton-swordsman') as { strength: number }).strength = 9;
     vi.restoreAllMocks();
@@ -562,6 +563,60 @@ describe('AiService résolutions obligatoires', () => {
     expect(player.inventory.weapons.map(weapon => weapon?.id)).toEqual(['sword', 'sword']);
     expect(gameService.pendingReward()).toBeNull();
     expect(tile.tokenId).toBe('fallen');
+  });
+
+  it('poursuit son tour si la tuile de récompense est occupée et conserve les deux équipements', () => {
+    vi.useFakeTimers();
+    const aiPlayer = gameService.activePlayer!;
+    const humanPlayer = playerService.players[0];
+    const tile = { x: 0, y: 0, definitionId: 'start' } as PlacedTile;
+    aiPlayer.position = { x: 0, y: 0 };
+    humanPlayer.position = { x: 0, y: 0 };
+    humanPlayer.controller = 'human';
+    playerService.addEquipment(humanPlayer, getEquipmentDefinition('axe')!);
+    gameService.activePlayerIndex.set(0);
+    expect(gameService.dropInventoryEquipment(humanPlayer, 'weapon', 0)).toBe(true);
+    gameService.activePlayerIndex.set(1);
+
+    playerService.addEquipment(aiPlayer, getEquipmentDefinition('sword')!);
+    playerService.addEquipment(aiPlayer, { ...getEquipmentDefinition('sword')! });
+    gameService.pendingReward.set({
+      player: aiPlayer,
+      monster: getTokenDefinition('skeleton-swordsman') as any,
+      rewardTile: tile,
+      sourceTile: { x: -1, y: 0 } as PlacedTile,
+      remainingRewards: [
+        { kind: 'equipment', equipmentId: 'sword' },
+        { kind: 'special', effect: 'curse' },
+      ],
+    });
+
+    try {
+      expect(aiService.resolveMandatoryAction()).toBe('resolved');
+      expect(aiPlayer.inventory.weapons.map(item => item?.id)).toEqual(['sword', 'sword']);
+      expect(gameService.pendingReward()?.remainingRewards).toEqual([
+        { kind: 'special', effect: 'curse' },
+      ]);
+      expect(humanPlayer.isCursed).toBe(false);
+      expect(gameService.getRemainingMonsterRewards(tile)).toEqual([
+        { kind: 'special', effect: 'curse' },
+        { kind: 'equipment', equipmentId: 'sword' },
+      ]);
+
+      expect(aiService.resolveMandatoryAction()).toBe('resolved');
+      expect(gameService.pendingReward()).toBeNull();
+      expect(gameService.hasPendingTileResolution).toBe(false);
+      expect(humanPlayer.isCursed).toBe(true);
+      expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['axe']);
+      expect(aiPlayer.inventory.weapons.map(item => item?.id)).toEqual(['sword', 'sword']);
+      expect(gameService.turnTransitionPending()).toBe(true);
+      expect(gameService.activePlayerIndex()).toBe(1);
+      vi.runAllTimers();
+      expect(gameService.activePlayerIndex()).toBe(0);
+      expect(gameService.turnTransitionPending()).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('conserve les sorts pleins et laisse le sort sur le jeton', () => {

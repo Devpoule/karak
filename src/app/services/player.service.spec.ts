@@ -1,5 +1,6 @@
 import { PlayerService } from './player.service';
 import { calculateTreasurePoints } from '../models/treasure';
+import { getEquipmentDefinition } from '../data/equipment-definitions';
 
 describe('PlayerService treasures', () => {
   it('initialise les trésors vides pour la création et la réinitialisation', () => {
@@ -53,5 +54,35 @@ describe('PlayerService récupération', () => {
 
     expect(service.completeRecoveryTurn(player)).toBe(true);
     expect(player.recoveryState).toBe('none');
+  });
+});
+
+describe('PlayerService remplacement par slot', () => {
+  it('autorise une amélioration stricte malgré un exemplaire identique dans un autre slot', () => {
+    const service = new PlayerService();
+    service.initialize(2);
+    const player = service.players[0];
+    const sword = getEquipmentDefinition('sword')!;
+    const daggers = getEquipmentDefinition('daggers')!;
+    service.addEquipment(player, sword);
+    service.addEquipment(player, daggers);
+
+    expect(service.canReplaceEquipment(player, sword, 0)).toBe(false);
+    expect(service.canReplaceEquipment(player, sword, 1)).toBe(true);
+  });
+
+  it('refuse un remplacement à puissance égale ou sur un slot vide/invalide', () => {
+    const service = new PlayerService();
+    service.initialize(2);
+    const player = service.players[0];
+    const sword = getEquipmentDefinition('sword')!;
+    const daggers = getEquipmentDefinition('daggers')!;
+    service.addEquipment(player, sword);
+    service.addEquipment(player, { ...sword });
+
+    expect(service.canReplaceEquipment(player, sword, 0)).toBe(false);
+    expect(service.canReplaceEquipment(player, daggers, 0)).toBe(false);
+    expect(service.canReplaceEquipment(player, sword, 2)).toBe(false);
+    expect(service.canReplaceEquipment(player, sword, -1)).toBe(false);
   });
 });
