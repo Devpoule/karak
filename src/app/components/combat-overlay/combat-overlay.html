@@ -96,12 +96,14 @@
             >
               <div
                 class="combat-overlay__die"
+                [class.combat-overlay__die--rolling]="isDieRolling('die1')"
                 [class.combat-overlay__die--stopped]="isResultVisible"
                 [attr.data-value]="displayedDice().die1"
               ></div>
 
               <div
                 class="combat-overlay__die"
+                [class.combat-overlay__die--rolling]="isDieRolling('die2')"
                 [class.combat-overlay__die--stopped]="isResultVisible"
                 [attr.data-value]="displayedDice().die2"
               ></div>
@@ -294,6 +296,23 @@
           </strong>
         </div>
 
+      </div>
+    }
+
+    @if (isUnstoppableDecisionVisible) {
+      <div
+        class="combat-overlay__decision combat-overlay__decision--unstoppable"
+        role="group"
+        aria-label="Choix Inarrêtable"
+      >
+        <div class="combat-overlay__decision-actions">
+          <button type="button" class="combat-overlay__continue" autofocus (click)="continueUnstoppable()">
+            Continuer le tour
+          </button>
+          <button type="button" class="combat-overlay__continue" (click)="finishUnstoppable()">
+            Terminer le tour
+          </button>
+        </div>
       </div>
     }
   </div>

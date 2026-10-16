@@ -100,6 +100,18 @@ test('Horan peut conserver un résultat défavorable sans Tir magique', async ({
   await expect(page.locator('.combat-overlay')).toBeHidden({ timeout: 10_000 });
 });
 
+test('Horan anime les deux dés lorsqu il accepte sa relance', async ({ page }) => {
+  await openBoard(page);
+  await prepareHoranCombat(page, false);
+
+  await page.getByRole('button', { name: 'Lancer les dés' }).click({ force: true });
+  await expect(page.getByRole('button', { name: 'Relancer les deux dés' })).toBeVisible({ timeout: 10_000 });
+  await page.getByRole('button', { name: 'Relancer les deux dés' }).click({ force: true });
+
+  await expect(page.locator('.combat-overlay__die--rolling')).toHaveCount(2);
+  await expect(page.locator('.combat-overlay__verdict-title')).toBeVisible({ timeout: 10_000 });
+});
+
 test('Horan choisit une fontaine lors de sa Réincarnation', async ({ page }) => {
   await openBoard(page);
   await prepareHoranCombat(page, true, true);

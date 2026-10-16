@@ -177,23 +177,25 @@ export class AiService {
 
   /** Relance les dés éligibles, au maximum une fois chacun, sans bloquer le combat. */
   resolveHeroRerollDecision(): boolean {
+    let rerolled = false;
+    while (this.resolveNextHeroRerollDecision()) {
+      rerolled = true;
+    }
+    return rerolled;
+  }
+
+  /** Applique une seule relance IA et retourne le dé présenté à l'interface. */
+  resolveNextHeroRerollDecision(): 'both' | 'die1' | 'die2' | null {
     const player = this.gameService.activePlayer;
     const combat = this.combatService.pendingCombat();
     const roll = this.combatService.pendingCombatRoll();
     if (!player || player.controller !== 'ai' || !combat || combat.player !== player || !roll) {
-      return false;
+      return null;
     }
-    if (roll.attackPower > combat.monster.strength) return false;
+    if (roll.attackPower > combat.monster.strength) return null;
 
-    let rerolled = false;
-    let available = this.combatService.getAvailableHeroRerolls();
-    while (available.length > 0) {
-      const choice = available[0];
-      if (!this.combatService.useHeroReroll(choice)) return rerolled;
-      rerolled = true;
-      available = this.combatService.getAvailableHeroRerolls();
-    }
-    return rerolled;
+    const choice = this.combatService.getAvailableHeroRerolls()[0];
+    return choice && this.combatService.useHeroReroll(choice) ? choice : null;
   }
 
   /** Choix déterministe de l'IA pour Inarrêtable. */

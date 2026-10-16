@@ -443,18 +443,6 @@
       </section>
     </div>
   }
-  @if (humanPendingUnstoppableDecision; as decision) {
-    <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
-      <section class="board__reward-panel" role="dialog" aria-modal="true" aria-labelledby="unstoppable-title">
-        <h2 id="unstoppable-title">Inarrêtable — Victorius</h2>
-        <p>Un 6 a été obtenu pendant le combat. Choisissez si vous souhaitez poursuivre ce tour.</p>
-        <div class="board__reward-actions">
-          <button type="button" autofocus (click)="continueVictoriusTurn()">Continuer le tour</button>
-          <button type="button" (click)="finishVictoriusTurn()">Terminer le tour</button>
-        </div>
-      </section>
-    </div>
-  }
   @if (humanPendingGroundEquipment; as pending) {
     <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
       <section class="board__reward-panel" role="dialog" aria-modal="true" aria-labelledby="ground-equipment-title">

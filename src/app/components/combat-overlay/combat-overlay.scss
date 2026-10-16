@@ -563,7 +563,7 @@
   transform-origin: center;
 }
 
-.combat-overlay__dice--rolling .combat-overlay__die {
+.combat-overlay__die--rolling {
   animation:
     combat-die-roll
     145ms
@@ -572,7 +572,7 @@
     alternate;
 }
 
-.combat-overlay__dice--rolling .combat-overlay__die:nth-child(2) {
+.combat-overlay__die--rolling:nth-child(2) {
   animation-direction: alternate-reverse;
 }
 
@@ -718,6 +718,22 @@
   text-align: center;
 }
 
+.combat-overlay__decision--unstoppable {
+  top: calc(50% + 188px);
+}
+
+.combat-overlay__decision-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.combat-overlay__decision--unstoppable .combat-overlay__decision-actions {
+  flex-wrap: nowrap;
+  gap: 12px;
+}
+
 .combat-overlay__verdict {
   position: absolute;
   z-index: 30;
@@ -823,24 +839,6 @@
 .combat-overlay--wave-target-hero .combat-overlay__visual,
 .combat-overlay--wave-target-monster .combat-overlay__visual {
   isolation: isolate;
-}
-
-.combat-overlay--defeat {
-  --combat-wave-glow: rgba(255, 38, 38, 0.98);
-  --combat-wave-background:
-    radial-gradient(
-      ellipse at center,
-      rgba(255, 255, 238, 0.98) 0 8%,
-      rgba(255, 111, 80, 0.95) 22%,
-      transparent 70%
-    ),
-    linear-gradient(
-      var(--combat-wave-angle),
-      transparent,
-      rgba(255, 220, 205, 0.98) 40%,
-      rgba(238, 28, 28, 0.94) 60%,
-      transparent
-    );
 }
 
 .combat-overlay--defeat .combat-overlay__fighter--hero .combat-overlay__visual::after {

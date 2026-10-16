@@ -33,6 +33,8 @@ type CombatPresentationState =
   | 'decision'
   | 'result';
 
+type CombatDie = 'die1' | 'die2';
+
 export type CombatWaveTarget = 'hero' | 'monster' | null;
 export type CombatWaveDirection = 'left-to-right' | 'right-to-left';
 
@@ -79,6 +81,7 @@ export class CombatOverlay implements OnDestroy {
     die1: 1,
     die2: 1,
   });
+  readonly animatedDice = signal<CombatDie[]>([]);
 
   /**
    * Snapshot du combat.
@@ -114,6 +117,7 @@ export class CombatOverlay implements OnDestroy {
    * Empêche deux résolutions simultanées.
    */
   private resolving = false;
+  private aiUnstoppableDecisionWasPending = false;
 
   constructor(
     private readonly combatService: CombatService,
@@ -129,6 +133,46 @@ export class CombatOverlay implements OnDestroy {
       }
 
       this.startPresentation(combat);
+    });
+
+    effect(() => {
+      const pending = this.gameService.pendingUnstoppableDecision();
+      const combat = this.presentedCombat();
+      const result = this.presentedResult();
+
+      if (
+        pending?.player.controller === 'ai'
+        && pending.player === combat?.player
+        && pending.result === result
+        && this.presentationState() === 'result'
+      ) {
+        this.aiUnstoppableDecisionWasPending = true;
+        queueMicrotask(() => {
+          if (
+            this.gameService.pendingUnstoppableDecision()?.player === pending.player
+            && this.presentationState() === 'result'
+          ) {
+            this.aiService.resolveUnstoppableDecision();
+          }
+        });
+        return;
+      }
+
+      if (
+        this.aiUnstoppableDecisionWasPending
+        && pending === null
+        && result?.unstoppableEligible
+        && combat
+        && this.presentationState() === 'result'
+        && !this.gameService.hasPendingTileResolution
+      ) {
+        this.aiUnstoppableDecisionWasPending = false;
+        queueMicrotask(() => {
+          if (this.presentationState() === 'result' && this.presentedResult() === result) {
+            this.completeCombatPresentation(result, combat, false);
+          }
+        });
+      }
     });
   }
 
@@ -161,11 +205,30 @@ export class CombatOverlay implements OnDestroy {
     return this.presentationState() === 'rolling';
   }
 
+  isDieRolling(die: CombatDie): boolean {
+    return this.isRolling && this.animatedDice().includes(die);
+  }
+
   get isResultVisible(): boolean {
     return (
       this.presentationState() === 'result'
       && this.result !== null
     );
+  }
+
+  /** Décision Inarrêtable correspondant encore au combat affiché. */
+  get integratedUnstoppableDecision() {
+    const pending = this.gameService.pendingUnstoppableDecision();
+    return pending
+      && pending.player === this.combat?.player
+      && pending.result === this.result
+      ? pending
+      : null;
+  }
+
+  get isUnstoppableDecisionVisible(): boolean {
+    return this.isResultVisible
+      && this.integratedUnstoppableDecision?.player.controller === 'human';
   }
 
   /** Indique que le lancer est terminé et attend la confirmation du joueur. */
@@ -265,10 +328,10 @@ export class CombatOverlay implements OnDestroy {
   useHeroReroll(kind: 'both' | 'die1' | 'die2'): void {
     if (!this.canUseHeroReroll || !this.combatService.useHeroReroll(kind)) return;
     const roll = this.combatService.pendingCombatRoll();
-    if (roll) this.displayedDice.set({ die1: roll.die1, die2: roll.die2 });
-    if (this.remainingMagicBolts === 0 && this.availableHeroRerolls.length === 0) {
-      this.resolveCombatAfterRoll();
-    }
+    if (!roll) return;
+
+    this.presentationState.set('rolling');
+    this.animateDice(roll, kind === 'both' ? ['die1', 'die2'] : [kind]);
   }
 
   useMagicBolt(): void {
@@ -424,6 +487,7 @@ export class CombatOverlay implements OnDestroy {
     this.magicBoltFeedback.set([]);
     this.magicBoltScorePulse.set(false);
     this.xanrosSacrificeDeclined.set(false);
+    this.animatedDice.set([]);
 
     this.displayedDice.set({
       die1: this.randomDie(),
@@ -469,7 +533,12 @@ export class CombatOverlay implements OnDestroy {
    * Les valeurs finales proviennent exclusivement
    * de CombatService.
    */
-  private animateDice(roll: CombatRoll): void {
+  private animateDice(
+    roll: CombatRoll,
+    diceToAnimate: CombatDie[] = ['die1', 'die2'],
+  ): void {
+    this.animatedDice.set(diceToAnimate);
+
     const speeds = [
       70,
       70,
@@ -490,9 +559,10 @@ export class CombatOverlay implements OnDestroy {
       elapsed += speed;
 
       this.schedule(() => {
+        const dice = this.displayedDice();
         this.displayedDice.set({
-          die1: this.randomDie(),
-          die2: this.randomDie(),
+          die1: diceToAnimate.includes('die1') ? this.randomDie() : dice.die1,
+          die2: diceToAnimate.includes('die2') ? this.randomDie() : dice.die2,
         });
       }, elapsed);
     }
@@ -503,9 +573,10 @@ export class CombatOverlay implements OnDestroy {
     elapsed += 180;
 
     this.schedule(() => {
+      const dice = this.displayedDice();
       this.displayedDice.set({
-        die1: roll.die1,
-        die2: roll.die2,
+        die1: diceToAnimate.includes('die1') ? roll.die1 : dice.die1,
+        die2: diceToAnimate.includes('die2') ? roll.die2 : dice.die2,
       });
     }, elapsed);
 
@@ -531,13 +602,7 @@ export class CombatOverlay implements OnDestroy {
       if (roll.player.controller === 'ai') {
         this.schedule(() => {
           if (this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() === roll) {
-            const boltsBefore = roll.magicBoltsUsed;
-            this.aiService.resolveHeroRerollDecision();
-            this.aiService.resolveXanrosSacrificeDecision();
-            this.aiService.resolveMagicBoltDecision();
-            const boltsUsed = (this.combatService.pendingCombatRoll()?.magicBoltsUsed ?? boltsBefore) - boltsBefore;
-            if (boltsUsed > 0) this.triggerMagicBoltFeedback(boltsUsed);
-            this.resolveCombatAfterRoll();
+            this.resolveAiPostRollDecision();
           }
         }, this.aiDecisionDelay);
       } else if (!this.canUseMagicBolt && this.availableHeroRerolls.length === 0 && !this.canUseXanrosSacrifice) {
@@ -548,6 +613,35 @@ export class CombatOverlay implements OnDestroy {
         }, 500);
       }
     }, elapsed);
+  }
+
+  /**
+   * Applique une décision IA puis relance la présentation si un dé a changé.
+   * Le délai de décision reste distinct de la durée de l'animation.
+   */
+  private resolveAiPostRollDecision(): void {
+    const roll = this.combatService.pendingCombatRoll();
+    if (this.presentationState() !== 'decision' || !roll) return;
+
+    const reroll = this.aiService.resolveNextHeroRerollDecision();
+    if (reroll) {
+      const nextRoll = this.combatService.pendingCombatRoll();
+      if (!nextRoll) return;
+
+      this.presentationState.set('rolling');
+      this.animateDice(
+        nextRoll,
+        reroll === 'both' ? ['die1', 'die2'] : [reroll],
+      );
+      return;
+    }
+
+    const boltsBefore = roll.magicBoltsUsed;
+    this.aiService.resolveXanrosSacrificeDecision();
+    this.aiService.resolveMagicBoltDecision();
+    const boltsUsed = (this.combatService.pendingCombatRoll()?.magicBoltsUsed ?? boltsBefore) - boltsBefore;
+    if (boltsUsed > 0) this.triggerMagicBoltFeedback(boltsUsed);
+    this.resolveCombatAfterRoll();
   }
 
   // ==========================================================
@@ -578,6 +672,10 @@ export class CombatOverlay implements OnDestroy {
       || !result
       || !combat
     ) {
+      return;
+    }
+
+    if (this.integratedUnstoppableDecision) {
       return;
     }
 
@@ -618,10 +716,55 @@ export class CombatOverlay implements OnDestroy {
     }
 
     /**
-     * Libérer l'état de présentation et le dernier résultat avant de traiter
-     * la suite du tour. L'IA ne doit plus considérer le verdict précédent
-     * comme un combat encore actif.
+     * Le résultat reste visible tant qu'une récompense obligatoire ou la
+     * décision Inarrêtable doit encore être traitée. Le verdict peut ainsi
+     * rester le contexte visuel de la décision finale sans créer une seconde
+     * fenêtre modale sur le plateau.
      */
+    this.combatService.clearLastCombatResult();
+
+    if (
+      result.unstoppableEligible
+      && (
+        this.gameService.hasPendingTileResolution
+        || this.integratedUnstoppableDecision !== null
+      )
+    ) {
+      return;
+    }
+
+    this.completeCombatPresentation(result, combat, true);
+  }
+
+  continueUnstoppable(): void {
+    const result = this.presentedResult();
+    const combat = this.presentedCombat();
+    if (!result || !combat || !this.isUnstoppableDecisionVisible) return;
+    if (!this.gameService.acceptUnstoppableContinuation()) return;
+    this.completeCombatPresentation(result, combat, false);
+  }
+
+  finishUnstoppable(): void {
+    const result = this.presentedResult();
+    const combat = this.presentedCombat();
+    if (!result || !combat || !this.isUnstoppableDecisionVisible) return;
+    if (!this.gameService.declineUnstoppableContinuation()) return;
+    this.completeCombatPresentation(result, combat, false);
+  }
+
+  private completeCombatPresentation(
+    result: CombatResult,
+    combat: PendingCombat,
+    endTurn: boolean,
+  ): void {
+    if (
+      this.presentationState() !== 'result'
+      || this.presentedResult() !== result
+      || this.presentedCombat() !== combat
+    ) {
+      return;
+    }
+
     this.combatService.clearLastCombatResult();
 
     this.presentedCombat.set(null);
@@ -630,6 +773,7 @@ export class CombatOverlay implements OnDestroy {
 
     this.trackedCombat = null;
     this.resolving = false;
+    this.aiUnstoppableDecisionWasPending = false;
 
     /**
      * Une récompense obligatoire bloque le passage
@@ -658,14 +802,9 @@ export class CombatOverlay implements OnDestroy {
         : 'warning';
     queueMicrotask(() => this.toastService.show(combatMessage, combatTone));
 
-    /**
-     * Aucun contenu obligatoire ne reste à résoudre.
-     * Une décision Inarrêtable éventuelle est maintenant affichée par
-     * GameService ; elle ne doit pas être contournée par la fermeture du
-     * verdict.
-     */
-    if (this.gameService.pendingUnstoppableDecision()) return;
-    this.gameService.endTurn();
+    if (endTurn) {
+      this.gameService.endTurn();
+    }
   }
 
   // ==========================================================

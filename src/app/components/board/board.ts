@@ -331,26 +331,6 @@ export class Board {
       : null;
   }
 
-  /** Décision de continuation affichée au joueur humain après résolution. */
-  get humanPendingUnstoppableDecision() {
-    const pending = this.gameService.pendingUnstoppableDecision();
-    return pending?.player === this.gameService.activePlayer && pending.player.controller === 'human'
-      ? pending
-      : null;
-  }
-
-  continueVictoriusTurn(): void {
-    if (this.humanPendingUnstoppableDecision) {
-      this.gameService.acceptUnstoppableContinuation();
-    }
-  }
-
-  finishVictoriusTurn(): void {
-    if (this.humanPendingUnstoppableDecision) {
-      this.gameService.declineUnstoppableContinuation();
-    }
-  }
-
   /** Expose la définition d'un jeton au template sans déplacer la logique métier. */
   getTokenDefinition(tokenId: string) {
     return getTokenDefinition(tokenId);

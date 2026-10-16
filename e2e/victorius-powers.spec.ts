@@ -98,10 +98,13 @@ test('Victorius peut refuser une relance et choisir de poursuivre son tour', asy
   await expect(page.getByRole('button', { name: 'Conserver ce résultat' })).toBeVisible({ timeout: 10_000 });
   await page.getByRole('button', { name: 'Conserver ce résultat' }).click({ force: true });
   await expect(page.locator('.combat-overlay__verdict-title')).toContainText('gagne', { timeout: 10_000 });
-  await expect(page.locator('.combat-overlay')).toBeHidden({ timeout: 10_000 });
+  const combatOverlay = page.locator('.combat-overlay');
+  await expect(combatOverlay).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.board__reward-backdrop').filter({ hasText: 'Victorius' })).toHaveCount(0);
 
-  await expect(page.getByRole('dialog', { name: 'Inarrêtable — Victorius' })).toBeVisible();
-  await page.getByRole('button', { name: 'Continuer le tour' }).click({ force: true });
+  const unstoppableChoice = page.getByRole('group', { name: 'Choix Inarrêtable' });
+  await expect(unstoppableChoice).toBeVisible();
+  await unstoppableChoice.getByRole('button', { name: 'Continuer le tour' }).click({ force: true });
 
   await expect.poll(async () => page.evaluate(() => {
     const root = document.querySelector('app-root');
@@ -116,11 +119,31 @@ test('Victorius peut refuser une relance et choisir de poursuivre son tour', asy
   })).toEqual({ remainingMovements: 3, pendingDecision: null });
 });
 
+test('Victorius anime uniquement le dé sélectionné lors de sa relance', async ({ page }) => {
+  await openBoard(page);
+  await prepareVictoriusCombat(page, { movementCount: 1, die1: 6, die2: 1, strength: 20 });
+
+  await page.getByRole('button', { name: 'Lancer les dés' }).click({ force: true });
+  await expect(page.getByRole('button', { name: 'Relancer le dé 2' })).toBeVisible({ timeout: 10_000 });
+  await page.getByRole('button', { name: 'Relancer le dé 2' }).click({ force: true });
+
+  const rollingDice = page.locator('.combat-overlay__die--rolling');
+  await expect(rollingDice).toHaveCount(1);
+  await expect(page.locator('.combat-overlay__die:nth-child(2).combat-overlay__die--rolling')).toHaveCount(1);
+  await expect(page.locator('.combat-overlay__die:nth-child(1).combat-overlay__die--rolling')).toHaveCount(0);
+});
+
 test('Victorius termine normalement après un Inarrêtable au quatrième mouvement, y compris pour l’IA', async ({ page }) => {
   await openBoard(page);
   await prepareVictoriusCombat(page, { movementCount: 4, die1: 6, die2: 1, strength: 20, ai: true });
 
   await expect(page.locator('.combat-overlay')).toBeVisible({ timeout: 10_000 });
+  const rollingDice = page.locator('.combat-overlay__die--rolling');
+  await expect(rollingDice).toHaveCount(2, { timeout: 10_000 });
+  await expect(rollingDice).toHaveCount(0, { timeout: 10_000 });
+  await expect(rollingDice).toHaveCount(1, { timeout: 10_000 });
+  await expect(page.locator('.combat-overlay__die:nth-child(2).combat-overlay__die--rolling')).toHaveCount(1);
+  await expect(page.locator('.combat-overlay__die:nth-child(1).combat-overlay__die--rolling')).toHaveCount(0);
   await expect(page.locator('.combat-overlay')).toBeHidden({ timeout: 15_000 });
   await expect.poll(async () => page.evaluate(() => {
     const root = document.querySelector('app-root');
@@ -128,4 +151,27 @@ test('Victorius termine normalement après un Inarrêtable au quatrième mouveme
     const game = ng?.getComponent(root?.querySelector('app-game') ?? root!);
     return game?.gameService?.activePlayerIndex();
   }), { timeout: 15_000 }).toBe(0);
+});
+
+test('Victorius peut terminer son tour depuis la conclusion du combat', async ({ page }) => {
+  test.setTimeout(60_000);
+  await openBoard(page);
+  await prepareVictoriusCombat(page, { movementCount: 1, die1: 6, die2: 1, strength: 20 });
+
+  await page.getByRole('button', { name: /Lancer les/ }).click({ force: true });
+  await expect(page.getByRole('button', { name: /Conserver ce r.sultat/ })).toBeVisible({ timeout: 10_000 });
+  await page.getByRole('button', { name: /Conserver ce r.sultat/ }).click({ force: true });
+
+  const combatOverlay = page.locator('.combat-overlay');
+  const unstoppableChoice = combatOverlay.getByRole('group', { name: 'Choix Inarrêtable' });
+  await expect(unstoppableChoice).toBeVisible({ timeout: 10_000 });
+  await unstoppableChoice.getByRole('button', { name: 'Terminer le tour' }).click({ force: true });
+  await expect(combatOverlay).toBeHidden({ timeout: 10_000 });
+
+  await expect.poll(async () => page.evaluate(() => {
+    const root = document.querySelector('app-root');
+    const ng = (window as Window & { ng?: { getComponent(node: Element): any } }).ng;
+    const game = ng?.getComponent(root?.querySelector('app-game') ?? root!);
+    return game?.gameService?.pendingUnstoppableDecision();
+  })).toBeNull();
 });
