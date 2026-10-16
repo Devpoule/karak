@@ -208,7 +208,14 @@ export class CombatOverlay implements OnDestroy {
   }
 
   get displayedSacrificeBonus(): number {
-    return this.combatService.pendingCombatRoll()?.sacrificeUsed ? 1 : 0;
+    const roll = this.combatService.pendingCombatRoll() ?? this.result;
+    return roll?.sacrificeUsed ? 1 : 0;
+  }
+
+  /** Bonus propre au héros, hors sacrifice déjà affiché séparément. */
+  get displayedHeroBonus(): number {
+    const roll = this.combatService.pendingCombatRoll() ?? this.result;
+    return roll && !roll.sacrificeUsed ? roll.heroBonus : 0;
   }
 
   get availableHeroRerolls(): Array<'both' | 'die1' | 'die2'> {

@@ -105,4 +105,30 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
 
     expect(combatService.lastCombatResult()).toBe(result);
   });
+
+  it.each([
+    { outcome: 'victory' as const, heroClass: 'winner', monsterClass: 'loser' },
+    { outcome: 'defeat' as const, heroClass: 'loser', monsterClass: 'winner' },
+    { outcome: 'tie' as const, heroClass: 'tie', monsterClass: 'tie' },
+  ])('affiche les scores et le traitement visuel d une $outcome', ({ outcome, heroClass, monsterClass }) => {
+    const { fixture, overlay, combatService } = prepareCombat(false);
+    const roll = combatService.pendingCombatRoll()!;
+    const result = {
+      ...roll,
+      outcome,
+    };
+
+    overlay.presentedResult.set(result);
+    overlay.presentationState.set('result');
+    fixture.detectChanges();
+
+    const heroScore = fixture.nativeElement.querySelector('.combat-overlay__score--hero') as HTMLElement | null;
+    const monsterScore = fixture.nativeElement.querySelector('.combat-overlay__score--monster') as HTMLElement | null;
+
+    expect(heroScore?.classList.contains(`combat-overlay__score--${heroClass}`)).toBe(true);
+    expect(monsterScore?.classList.contains(`combat-overlay__score--${monsterClass}`)).toBe(true);
+    expect(heroScore?.textContent).toContain(`${result.attackPower} pts`);
+    expect(monsterScore?.textContent).toContain(`${result.monsterStrength} pts`);
+    fixture.destroy();
+  });
 });

@@ -106,7 +106,12 @@
                 [attr.data-value]="displayedDice().die2"
               ></div>
             </div>
-            @if (displayedWeapons.length > 0 || displayedMagicBonus > 0) {
+            @if (
+              displayedWeapons.length > 0
+              || displayedMagicBonus > 0
+              || displayedSacrificeBonus > 0
+              || displayedHeroBonus > 0
+            ) {
               <div class="combat-overlay__bonus-list" aria-label="Bonus appliqués au combat">
                 @for (weapon of displayedWeapons; track weapon.id + $index) {
                   <span
@@ -129,8 +134,26 @@
                     +1pt
                   </span>
                 }
+                @if (displayedHeroBonus > 0) {
+                  <span class="combat-overlay__bonus combat-overlay__bonus--hero" aria-label="Bonus du pouvoir : +{{ displayedHeroBonus }} point">
+                    +{{ displayedHeroBonus }}pt
+                  </span>
+                }
               </div>
             }
+          }
+
+          @if (isResultVisible && result; as combatResult) {
+            <div
+              class="combat-overlay__score combat-overlay__score--hero"
+              [class.combat-overlay__score--winner]="combatResult.outcome === 'victory'"
+              [class.combat-overlay__score--loser]="combatResult.outcome === 'defeat'"
+              [class.combat-overlay__score--tie]="combatResult.outcome === 'tie'"
+              aria-label="Score final du héros"
+            >
+              <span class="combat-overlay__score-label">Score de combat</span>
+              <strong class="combat-overlay__score-value">{{ combatResult.attackPower }} pts</strong>
+            </div>
           }
         </div>
       </section>
@@ -174,8 +197,20 @@
         -->
         <div
           class="combat-overlay__fighter-footer"
-          aria-hidden="true"
-        ></div>
+        >
+          @if (isResultVisible && result; as combatResult) {
+            <div
+              class="combat-overlay__score combat-overlay__score--monster"
+              [class.combat-overlay__score--winner]="combatResult.outcome === 'defeat'"
+              [class.combat-overlay__score--loser]="combatResult.outcome === 'victory'"
+              [class.combat-overlay__score--tie]="combatResult.outcome === 'tie'"
+              aria-label="Score final du monstre"
+            >
+              <span class="combat-overlay__score-label">Force</span>
+              <strong class="combat-overlay__score-value">{{ combatResult.monsterStrength }} pts</strong>
+            </div>
+          }
+        </div>
       </section>
     </div>
 

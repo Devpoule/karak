@@ -175,7 +175,7 @@
   position: relative;
 
   display: grid;
-  grid-template-rows: 360px 44px 100px;
+  grid-template-rows: 360px 44px auto;
 
   justify-items: center;
   align-items: center;
@@ -314,11 +314,62 @@
 
 .combat-overlay__fighter-footer {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  width: 100%;
+}
+
+.combat-overlay__score {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 
-  width: 100%;
-  height: 100px;
+  min-width: min(170px, 100%);
+  padding: 5px 14px 7px;
+
+  border: 1px solid rgba(213, 173, 93, 0.65);
+  border-radius: 12px;
+
+  transform-origin: center;
+  animation: combat-score-reveal 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.combat-overlay__score-label {
+  color: rgba(244, 232, 207, 0.82);
+  font-size: clamp(0.58rem, 1.1vw, 0.72rem);
+}
+
+.combat-overlay__score-value {
+  font-size: clamp(1.65rem, 4vw, 3rem);
+  white-space: nowrap;
+  animation: combat-score-shimmer 900ms ease-out 120ms both;
+}
+
+.combat-overlay__score--winner {
+  border-color: rgba(116, 221, 255, 0.9);
+  color: #e4fbff;
+  box-shadow:
+    0 0 10px rgba(91, 215, 255, 0.75),
+    0 0 28px rgba(22, 140, 255, 0.58);
+}
+
+.combat-overlay__score--loser {
+  border-color: rgba(255, 86, 70, 0.9);
+  color: #ffe4df;
+  box-shadow:
+    0 0 10px rgba(255, 86, 70, 0.72),
+    0 0 28px rgba(190, 24, 24, 0.55);
+}
+
+.combat-overlay__score--tie {
+  border-color: rgba(240, 207, 138, 0.9);
+  color: #fff1bd;
+  box-shadow:
+    0 0 10px rgba(240, 207, 138, 0.62),
+    0 0 24px rgba(200, 140, 38, 0.42);
 }
 
 /* ==========================================================
@@ -1170,6 +1221,39 @@
   }
 }
 
+@keyframes combat-score-reveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.48) translateY(8px);
+  }
+
+  62% {
+    opacity: 1;
+    transform: scale(1.1) translateY(0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes combat-score-shimmer {
+  0% {
+    text-shadow: 0 0 0 transparent;
+  }
+
+  34% {
+    text-shadow:
+      0 0 5px currentColor,
+      0 0 18px currentColor;
+  }
+
+  100% {
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.85);
+  }
+}
+
 /* ==========================================================
    ANIMATIONS — VERDICT
    ========================================================== */
@@ -1332,7 +1416,7 @@
   }
 
   .combat-overlay__fighter {
-    grid-template-rows: 290px 40px 90px;
+    grid-template-rows: 290px 40px auto;
   }
 
   .combat-overlay__visual,
@@ -1373,7 +1457,7 @@
   }
 
   .combat-overlay__fighter {
-    grid-template-rows: 220px 36px 80px;
+    grid-template-rows: 220px 36px auto;
   }
 
   .combat-overlay__visual,
@@ -1404,6 +1488,12 @@
     height: 40px;
     flex-basis: 40px;
     border-radius: 8px;
+  }
+
+  .combat-overlay__score {
+    width: 100%;
+    max-width: 112px;
+    min-width: 0;
   }
 
   .combat-overlay__dice {
