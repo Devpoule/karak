@@ -1,41 +1,107 @@
-# Karak — règles métier et sources
+# Karak — référentiel des règles métier
 
-## Source officielle disponible
+Référentiel de comparaison entre le manuel officiel local, le comportement réellement implémenté et les tests automatisés.
 
-La référence locale est `public/assets/rules/karak-base.pdf`, accompagnée de huit captures `public/assets/rules/karak-base-01.png` à `karak-base-08.png`. Le manuel prévaut sur le code. Une règle non explicitement lisible dans ces sources reste `INCERTAINE`.
+## Sources
 
-## Règles confirmées et couvertes par le projet
+- [Manuel officiel](../public/assets/rules/karak-base.pdf)
+- [Pages illustrées du manuel](../public/assets/rules/)
 
-- Un héros dispose de mouvements pendant son tour ; une résolution obligatoire prime sur le déplacement.
-- Les armes ajoutent leur force au combat. Dans le catalogue actuel : dague `+1`, épée `+2`, hache `+3`.
-- Le Tir magique ajoute `+1` après le lancer des dés ; il peut être utilisé avant la résolution. Les utilisations ordinaires sont consommées à la résolution. Argentus conserve ses Tirs magiques lorsqu'il n'est pas maudit ; la malédiction retire cette exception.
-- Une égalité, une victoire et une défaite ont des conséquences distinctes ; le verdict métier ne doit pas être recalculé dans l'interface.
-- Une clé ouvre un coffre et est consommée. Un coffre ouvert fournit un trésor ; les trésors ordinaires valent `1` point.
-- Le trésor d'un monstre vaut `1` point ; le rubis du Dragon vaut `1,5` point.
-- Vaincre le Dragon attribue le rubis, puis la partie se termine et le classement se fait selon les points de trésor. L'implémentation retient tous les joueurs ex æquo au meilleur score ; aucun départage supplémentaire n'est inventé.
-- Le Portail de guérison est distinct d'une tuile `healing-fountain`. Il téléporte un héros choisi vers une fontaine découverte, restaure tous ses PV, retire sa malédiction, consomme un exemplaire et ne termine pas le tour. Argentus ne conserve pas ce portail.
-- Les états `pending`, `resting` et `none` représentent respectivement une récupération attendue, le tour de récupération en cours et la possibilité de jouer normalement.
-- Une victoire contre une momie peut produire une malédiction ; son attribution et sa résolution passent par les états métier dédiés.
-- Aderyn remporte également un combat à égalité et peut traverser une tuile occupée par un monstre déjà connue ; ces deux pouvoirs sont désactivés lorsqu'elle est maudite. Lorsqu'une nouvelle salle est découverte, son contenu doit d'abord être résolu normalement, y compris pour Aderyn non maudite.
-- Lorsqu'un lancer de combat garantit déjà la victoire, le combat est résolu automatiquement. Aucune relance, utilisation de sort, sacrifice ou confirmation supplémentaire n'est proposée ; ces choix restent disponibles uniquement lorsque le résultat n'est pas encore gagnant.
-- Horan peut relancer les deux dés une fois par combat ; Victorius peut relancer une fois chaque dé affichant 1, dans la limite d'une relance par combat. Ces relances sont indisponibles lorsqu'ils sont maudits.
-- Horan non maudit se réincarne après une défaite à 0 PV en rejoignant une fontaine découverte et en récupérant tous ses PV ; sans fontaine disponible ou sous malédiction, le repos ordinaire reste appliqué.
-- Taia reçoit `+1` à l'attaque après son premier déplacement du tour ; ce bonus est capturé au lancer et désactivé par la malédiction. Lorsqu'elle découvre une salle, elle peut choisir entre deux jetons dans les conditions de son pouvoir ; le jeton non retenu retourne dans le sachet et la malédiction désactive cette capacité.
-- Argentus peut franchir une séparation entre deux tuiles déjà découvertes et adjacentes ; la Marche astrale est désactivée par la malédiction. Le déplacement consomme un mouvement comme les autres déplacements.
-- Xanros peut sacrifier une vie après le lancer pour obtenir `+1` une seule fois par combat, y compris avec une seule vie restante ; la malédiction désactive ce pouvoir. Il peut aussi échanger sa position avec un autre héros au début du tour, en consommant définitivement les quatre mouvements ; la cible et les tuiles doivent être valides. Selon l’arbitrage numérique retenu, l’arrivée par Substitution ne déclenche aucune résolution automatique de tuile ni combat obligatoire ; seules les interactions explicitement autorisées sur la tuile d’arrivée restent proposées.
-- Victorius peut relancer une fois chaque dé affichant 1, indépendamment, et peut poursuivre facultativement son tour après une victoire, une égalité ou une défaite lorsqu'un de ses dés finaux affiche 6. La continuation ne crée aucun mouvement supplémentaire, reste limitée aux mouvements suspendus et est impossible sous malédiction, à 0 PV ou pendant une récupération obligatoire.
+Le manuel prévaut sur le code. Une formulation présente dans le code mais absente du manuel n'est pas une règle officielle.
 
-## Adaptation numérique
+## Statuts
 
-Les capacités d'inventaire, les signaux de réactivité, les délais d'animation, l'automatisation IA et certains choix de présentation sont des décisions numériques. Ils ne constituent pas des règles officielles supplémentaires.
+### Conformité métier
 
-Pour alléger les décisions répétitives, l'interface numérique automatise aussi les équipements : un objet équivalent est récupéré lorsqu'une case est libre, une arme strictement plus puissante remplace automatiquement l'arme la plus faible, et un objet inutile reste sur la tuile sans ouvrir de choix. Toute récupération ou amélioration utile est signalée par une notification non bloquante.
+`conforme`, `divergence`, `incertaine`, `adaptation numérique`, `non implémentée`.
 
-Les capacités particulières des héros ne sont considérées comme officielles dans le moteur que lorsqu'elles sont effectivement implémentées et couvertes. Les bonus non implémentés restent nuls ; il ne faut pas les déduire d'un nom d'asset ou d'une hypothèse.
+### Couverture technique
 
-## Points à surveiller
+`testée`, `partiellement testée`, `non testée`, `à vérifier`.
 
-- Vérifier chaque règle de héros et chaque cas limite directement dans le manuel avant extension.
-- Distinguer les tuiles `portal` des fontaines `healing-fountain` et des objets `heart`.
-- Distinguer coffre, jeton de monstre, équipement au verso et trésor.
-- Documenter toute divergence entre le manuel et l'implémentation avant de la corriger.
+## Table des matières
+
+- [Inventaire](#inventaire)
+- [Préparation](rules/preparation.md)
+- [Déplacement](rules/movement.md)
+- [Exploration](rules/exploration.md)
+- [Combat](rules/combat.md)
+- [Équipement et trésors](rules/equipment-and-treasures.md)
+- [Récupération et malédiction](rules/recovery-and-curse.md)
+- [Victoire](rules/victory.md)
+- [Aderyn](rules/heroes/aderyn.md)
+- [Argentus](rules/heroes/argentus.md)
+- [Horan](rules/heroes/horan.md)
+- [Taia](rules/heroes/taia.md)
+- [Victorius](rules/heroes/victorius.md)
+- [Xanros](rules/heroes/xanros.md)
+
+## Inventaire
+
+| Identifiant | Domaine | Conformité métier | Couverture technique |
+|---|---|---|---|
+| `PREP-HERO-DRAW` | Préparation | à vérifier | partiellement testée |
+| `TURN-MOVEMENT-COUNT` | Déplacement | à vérifier | testée |
+| `TURN-MANDATORY-RESOLUTION` | Tour | à vérifier | partiellement testée |
+| `EXP-TILE-DISCOVERY` | Exploration | à vérifier | partiellement testée |
+| `COMBAT-RESOLUTION` | Combat | à vérifier | testée |
+| `COMBAT-MAGIC-SHOT` | Combat | à vérifier | partiellement testée |
+| `TREASURE-CHEST-KEY` | Trésors | à vérifier | testée |
+| `TREASURE-SCORING` | Score | à vérifier | testée |
+| `DRAGON-RUBY` | Victoire | à vérifier | partiellement testée |
+| `RECOVERY-REST` | Récupération | à vérifier | testée |
+| `CURSE-MUMMY` | Malédiction | à vérifier | partiellement testée |
+| `PORTAL-HEALING` | Guérison | adaptation numérique | testée |
+| `HERO-ADERYN-BACKSTAB` | Aderyn | à vérifier | partiellement testée |
+| `HERO-ADERYN-SNEAK` | Aderyn | à vérifier | partiellement testée |
+| `HERO-ARGENTUS-MAGIC-AFFINITY` | Argentus | à vérifier | partiellement testée |
+| `HERO-ARGENTUS-ASTRAL-WALK` | Argentus | à vérifier | partiellement testée |
+| `HERO-HORAN-DOUBLE-ATTACK` | Horan | à vérifier | testée |
+| `HERO-HORAN-REINCARNATION` | Horan | à vérifier | testée |
+| `HERO-TAIA-PREMONITION` | Taia | à vérifier | partiellement testée |
+| `HERO-TAIA-FATE-WEAVER` | Taia | à vérifier | partiellement testée |
+| `HERO-VICTORIUS-COMBAT-TRAINING` | Victorius | à vérifier | testée |
+| `HERO-VICTORIUS-UNSTOPPABLE` | Victorius | à vérifier | testée |
+| `HERO-XANROS-SACRIFICE` | Xanros | divergence | partiellement testée |
+| `HERO-XANROS-SUBSTITUTION` | Xanros | incertaine / adaptation numérique | testée |
+
+Les règles générales et les fiches détaillées sont en cours de consolidation ; `à vérifier` signifie que la confrontation page par page reste à établir.
+
+## Matrice règle → implémentation → tests
+
+Les liens `#Lx` ciblent une ligne GitHub/GitLab lorsqu’elle est connue. Ils restent maintenables uniquement tant que le code n’est pas déplacé : après toute évolution du fichier cible, la ligne doit être recalculée. Le nom qualifié reste affiché pour conserver une référence lisible dans VS Code et dans les forges qui ne résolvent pas les ancres de symboles TypeScript.
+
+| Règle et identifiant | Fiche documentaire | Fonction(s) responsables | Test(s) associés |
+|---|---|---|---|
+| `PREP-HERO-DRAW` | [Préparation](rules/preparation.md) | [`GameService.drawHeroes`](../src/app/services/game.service.ts#L676), [`PlayerService.drawHeroes`](../src/app/services/player.service.ts#L386) | [`game-lifecycle.spec.ts`](../src/app/services/game-lifecycle.spec.ts), [`full-game-playthrough.spec.ts`](../e2e/full-game-playthrough.spec.ts) |
+| `TURN-MOVEMENT-COUNT` | [Déplacement](rules/movement.md) | [`TurnService.resetMovements`](../src/app/services/turn.service.ts#L165), [`GameService.canPerformNormalMovementTo`](../src/app/services/game.service.ts#L1188) | [`turn.service.spec.ts`](../src/app/services/turn.service.spec.ts), [`game-turn-transition-contracts.spec.ts`](../src/app/services/game-turn-transition-contracts.spec.ts) |
+| `TURN-MANDATORY-RESOLUTION` | [Déplacement](rules/movement.md) | Répartie entre [`GameService`](../src/app/services/game.service.ts) et [`ExplorationService`](../src/app/services/exploration.service.ts) ; aucune fonction unique ne porte toute la transition | [`game-tile-entry-contracts.spec.ts`](../src/app/services/game-tile-entry-contracts.spec.ts) |
+| `EXP-TILE-DISCOVERY` | [Exploration](rules/exploration.md) | [`ExplorationService`](../src/app/services/exploration.service.ts), [`BoardComponent.confirmPendingTile`](../src/app/components/board/board.ts#L1117) | [`exploration.service.spec.ts`](../src/app/services/exploration.service.spec.ts), [`game-tile-entry-contracts.spec.ts`](../src/app/services/game-tile-entry-contracts.spec.ts) |
+| `COMBAT-RESOLUTION` | [Combat](rules/combat.md) | [`CombatOverlayComponent.resolveCombat`](../src/app/components/combat-overlay/combat-overlay.ts#L405), [`CombatService`](../src/app/services/combat.service.ts) | [`combat.service.spec.ts`](../src/app/services/combat.service.spec.ts), [`combat-fixture.spec.ts`](../e2e/combat-fixture.spec.ts) |
+| `COMBAT-MAGIC-SHOT` | [Combat](rules/combat.md) | Répartie entre [`CombatOverlayComponent`](../src/app/components/combat-overlay/combat-overlay.ts) et [`CombatService`](../src/app/services/combat.service.ts) ; aucune méthode unique n’a été identifiée | [`combat.service.spec.ts`](../src/app/services/combat.service.spec.ts) |
+| `TREASURE-CHEST-KEY` | [Équipement et trésors](rules/equipment-and-treasures.md) | [`PlayerService.addTreasure`](../src/app/services/player.service.ts#L451), orchestration dans [`GameService`](../src/app/services/game.service.ts) | [`player.service.spec.ts`](../src/app/services/player.service.spec.ts), [`game.service.spec.ts`](../src/app/services/game.service.spec.ts) |
+| `TREASURE-SCORING` | [Équipement et trésors](rules/equipment-and-treasures.md) | [`calculateTreasurePoints`](../src/app/models/treasure.ts#L25) | [`player.service.spec.ts`](../src/app/services/player.service.spec.ts), [`game.service.spec.ts`](../src/app/services/game.service.spec.ts) |
+| `DRAGON-RUBY` | [Victoire](rules/victory.md) | Répartie entre [`GameService`](../src/app/services/game.service.ts) et [`PlayerService.addTreasure`](../src/app/services/player.service.ts#L451) ; aucune fonction unique ne porte récompense et fin de partie | [`game-lifecycle.spec.ts`](../src/app/services/game-lifecycle.spec.ts), [`full-game-playthrough.spec.ts`](../e2e/full-game-playthrough.spec.ts) |
+| `RECOVERY-REST` | [Récupération](rules/recovery-and-curse.md) | [`PlayerService.beginRecoveryTurn`](../src/app/services/player.service.ts#L103), [`GameService.useHealingPortal`](../src/app/services/game.service.ts#L1301) | [`player.service.spec.ts`](../src/app/services/player.service.spec.ts), [`game.service.spec.ts`](../src/app/services/game.service.spec.ts) |
+| `CURSE-MUMMY` | [Récupération et malédiction](rules/recovery-and-curse.md) | Répartie entre [`CombatService`](../src/app/services/combat.service.ts) et [`GameService`](../src/app/services/game.service.ts) ; aucune fonction unique identifiée | [`combat.service.spec.ts`](../src/app/services/combat.service.spec.ts), [`game.service.spec.ts`](../src/app/services/game.service.spec.ts) |
+| `PORTAL-HEALING` | [Récupération et malédiction](rules/recovery-and-curse.md) | [`GameService.useHealingPortal`](../src/app/services/game.service.ts#L1301) | [`game.service.spec.ts`](../src/app/services/game.service.spec.ts), [`game-turn-transition-contracts.spec.ts`](../src/app/services/game-turn-transition-contracts.spec.ts) |
+| `HERO-ADERYN-BACKSTAB` | [Aderyn](rules/heroes/aderyn.md) | Répartie dans [`CombatService`](../src/app/services/combat.service.ts) ; aucune méthode unique documentée | [`combat.service.spec.ts`](../src/app/services/combat.service.spec.ts) |
+| `HERO-ADERYN-SNEAK` | [Aderyn](rules/heroes/aderyn.md) | Répartie dans [`GameService`](../src/app/services/game.service.ts) et [`ExplorationService`](../src/app/services/exploration.service.ts) | [`aderyn-sneak.spec.ts`](../e2e/aderyn-sneak.spec.ts) |
+| `HERO-ARGENTUS-MAGIC-AFFINITY` | [Argentus](rules/heroes/argentus.md) | Répartie dans [`CombatService`](../src/app/services/combat.service.ts) ; aucune méthode unique identifiée | [`argentus-astral.spec.ts`](../e2e/argentus-astral.spec.ts), [`combat.service.spec.ts`](../src/app/services/combat.service.spec.ts) |
+| `HERO-ARGENTUS-ASTRAL-WALK` | [Argentus](rules/heroes/argentus.md) | [`GameService.canPerformNormalMovementTo`](../src/app/services/game.service.ts#L1188) | [`argentus-astral.spec.ts`](../e2e/argentus-astral.spec.ts) |
+| `HERO-HORAN-DOUBLE-ATTACK` | [Horan](rules/heroes/horan.md) | Répartie dans [`CombatService`](../src/app/services/combat.service.ts) ; aucune méthode unique identifiée | [`horan-powers.spec.ts`](../e2e/horan-powers.spec.ts) |
+| `HERO-HORAN-REINCARNATION` | [Horan](rules/heroes/horan.md) | Répartie entre [`GameService`](../src/app/services/game.service.ts) et [`PlayerService.beginRecoveryTurn`](../src/app/services/player.service.ts#L103) | [`horan-powers.spec.ts`](../e2e/horan-powers.spec.ts), [`game.service.spec.ts`](../src/app/services/game.service.spec.ts) |
+| `HERO-TAIA-PREMONITION` | [Taia](rules/heroes/taia.md) | Répartie dans [`CombatService`](../src/app/services/combat.service.ts) et [`GameService`](../src/app/services/game.service.ts) ; aucune méthode unique identifiée | [`taia-powers.spec.ts`](../e2e/taia-powers.spec.ts) |
+| `HERO-TAIA-FATE-WEAVER` | [Taia](rules/heroes/taia.md) | Répartie entre [`ExplorationService`](../src/app/services/exploration.service.ts) et [`GameService`](../src/app/services/game.service.ts) | [`taia-powers.spec.ts`](../e2e/taia-powers.spec.ts) |
+| `HERO-VICTORIUS-COMBAT-TRAINING` | [Victorius](rules/heroes/victorius.md) | Répartie dans [`CombatService`](../src/app/services/combat.service.ts) ; aucune méthode unique identifiée | [`victorius-powers.spec.ts`](../e2e/victorius-powers.spec.ts) |
+| `HERO-VICTORIUS-UNSTOPPABLE` | [Victorius](rules/heroes/victorius.md) | Répartie dans [`GameService`](../src/app/services/game.service.ts) ; aucune méthode unique identifiée | [`victorius-powers.spec.ts`](../e2e/victorius-powers.spec.ts) |
+| `HERO-XANROS-SACRIFICE` | [Xanros](rules/heroes/xanros.md) | [`GameService.canUseXanrosSacrificeForScore`](../src/app/services/game.service.ts#L1237) ; l’application du bonus de combat est répartie dans [`CombatService`](../src/app/services/combat.service.ts) | [`game.service.spec.ts`](../src/app/services/game.service.spec.ts#L116) |
+| `HERO-XANROS-SUBSTITUTION` | [Xanros](rules/heroes/xanros.md) | [`GameService.canUseXanrosSubstitution`](../src/app/services/game.service.ts#L246), [`GameService.confirmXanrosSubstitution`](../src/app/services/game.service.ts#L414), [`GameService.prepareXanrosSubstitutionAction`](../src/app/services/game.service.ts#L464), [`GameService.openXanrosSubstitutionChest`](../src/app/services/game.service.ts#L480) | [`game.service.spec.ts`](../src/app/services/game.service.spec.ts#L219), [`xanros-powers.spec.ts`](../e2e/xanros-powers.spec.ts#L24) |
+
+## Vérification automatisée
+
+```powershell
+node docs/tools/check-rule-references.mjs
+```
+
+Le vérificateur contrôle les chemins locaux, les symboles textuels et les ancres de ligne `file.ts#L123` utilisées par la matrice. Les ancres de ligne doivent être maintenues après toute modification du code.
