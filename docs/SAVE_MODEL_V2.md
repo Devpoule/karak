@@ -1,12 +1,13 @@
 # Karak — Modèle de sauvegarde V2
 
-Statut : **conception validée**  
+Statut : **contrat implémenté pour l’écriture locale**
 Ticket : `V2.1-01`  
 Date : 18 octobre 2026
 
 Ce document définit le contrat de données destiné aux tickets
-`V2.1-02` à `V2.1-05`. Il ne constitue pas encore une implémentation de la
-sauvegarde locale.
+`V2.1-02` à `V2.1-05`. `SaveService` implémente désormais l’écriture, la
+lecture validée et la suppression de l’enveloppe locale. La reconstruction de
+`GameService` reste le périmètre de `V2.1-03`.
 
 ## 1. État actuel
 
