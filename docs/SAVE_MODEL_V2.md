@@ -95,6 +95,10 @@ Elle est également supprimée du stockage local afin de ne pas être reproposé
 à chaque démarrage. Une sauvegarde absente ou rejetée entraîne une nouvelle
 initialisation vierge.
 
+Le scénario E2E `e2e/save-continuity.spec.ts` injecte une enveloppe V2
+déterministe, recharge `/play` et vérifie dans Chromium la reprise du plateau,
+du héros actif, de la phase et du compteur de mouvements.
+
 ## 6. Points de reprise
 
 La sauvegarde doit être déclenchée sur des points stables : après une action

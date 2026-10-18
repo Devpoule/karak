@@ -25,8 +25,8 @@ baseline ou une révision explicite de celle-ci.
 ## Composition vérifiée
 
 - 28 fichiers de tests Angular.
-- 326 tests Angular réussis avec `npx ng test --no-watch --no-progress`.
-- 15 fichiers de scénarios Playwright.
+- 328 tests Angular réussis avec `npx ng test --no-watch --no-progress`.
+- 16 fichiers de scénarios Playwright.
 - Scénarios de stabilité mobile vérifiés sur 320×568, 375×667 et 430×932.
 - Parcours de partie complète, continuité IA et reprise après interruption vérifiés.
 - 143 mécanismes fonctionnels classés « Conforme vérifié » dans
