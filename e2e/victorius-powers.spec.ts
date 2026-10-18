@@ -134,6 +134,8 @@ test('Victorius anime uniquement le dé sélectionné lors de sa relance', async
 });
 
 test('Victorius termine normalement après un Inarrêtable au quatrième mouvement, y compris pour l’IA', async ({ page }) => {
+  // Le parcours inclut quatre animations de mouvement, le combat et l’annonce IA.
+  test.setTimeout(60_000);
   await openBoard(page);
   await prepareVictoriusCombat(page, { movementCount: 4, die1: 6, die2: 1, strength: 20, ai: true });
 

@@ -497,6 +497,7 @@ export class AiService {
 
     this.restorePlayerFacing(player);
     this.turnService.consumeMovement();
+    this.gameService.recordAstralWalkIfUsed(player, currentTile, destinationTile);
 
     this.gameService.resolveTileEntry(
       player,

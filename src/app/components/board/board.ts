@@ -82,6 +82,7 @@ export class Board {
   private announcementTimer: number | null = null;
   private observedSubstitutionRevision = 0;
   private observedHoranReincarnationRevision = 0;
+  private observedAstralWalkRevision = 0;
   private observedTokenChoice: unknown = null;
   constructor(
     private readonly dungeonService: DungeonService,
@@ -147,6 +148,17 @@ export class Board {
         if (hero && power) this.showPowerAnnouncement(hero, power, `${hero.name} revient à la vie grâce à Réincarnation.`);
       }
       this.observedHoranReincarnationRevision = revision;
+    });
+
+    effect(() => {
+      const revision = this.gameService.astralWalkRevision();
+      if (revision > this.observedAstralWalkRevision) {
+        const player = this.gameService.lastAstralWalkPlayer();
+        const hero = player?.heroId ? getHeroDefinition(player.heroId) : undefined;
+        const power = hero?.powers.find(candidate => candidate.id === 'astral-walk');
+        if (hero && power) this.showPowerAnnouncement(hero, power, `${hero.name} utilise Marche astrale.`);
+      }
+      this.observedAstralWalkRevision = revision;
     });
   }
 
@@ -998,6 +1010,7 @@ export class Board {
 
     if (this.moveActivePlayerTo(destination.x, destination.y, direction)) {
       this.consumePlayerMovement();
+      this.gameService.recordAstralWalkIfUsed(player, currentTile, destinationTile);
       this.gameService.resolveTileEntry(player, currentTile, destinationTile, false, true);
       this.finishPlayerMovement();
     }
@@ -1083,6 +1096,7 @@ export class Board {
 
       if (this.moveActivePlayerTo(destination.x, destination.y, direction)) {
         this.consumePlayerMovement();
+        this.gameService.recordAstralWalkIfUsed(player, currentTile, destinationTile);
         this.gameService.resolveTileEntry(player, currentTile, destinationTile, false, true);
         this.finishPlayerMovement();
       }

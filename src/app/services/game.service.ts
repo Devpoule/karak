@@ -204,6 +204,10 @@ export class GameService {
   readonly horanReincarnationRevision = signal(0);
   /** Joueur concerné par la dernière Réincarnation résolue. */
   readonly lastHoranReincarnationPlayer = signal<Player | null>(null);
+  /** Révision émise après un déplacement astral effectivement réalisé. */
+  readonly astralWalkRevision = signal(0);
+  /** Joueur concerné par le dernier déplacement astral. */
+  readonly lastAstralWalkPlayer = signal<Player | null>(null);
   /** Décision métier en attente pour la poursuite facultative de Victorius. */
   readonly pendingUnstoppableDecision = signal<PendingUnstoppableDecision | null>(null);
   /** Action facultative autorisée sur la tuile d'arrivée de Xanros. */
@@ -1486,6 +1490,15 @@ export class GameService {
     if (this.dungeonService.canMoveTo(actualSource, direction)) return true;
 
     return player.heroId === 'argentus' && !player.isCursed;
+  }
+
+  /** Signale Marche astrale uniquement après mutation réussie de la position. */
+  recordAstralWalkIfUsed(player: Player, sourceTile: PlacedTile, destinationTile: PlacedTile): void {
+    if (player.heroId !== 'argentus' || player.isCursed) return;
+    const direction = DIRECTIONS.find(candidate => this.dungeonService.getNeighbor(sourceTile, candidate) === destinationTile);
+    if (!direction || this.dungeonService.canMoveTo(sourceTile, direction)) return;
+    this.lastAstralWalkPlayer.set(player);
+    this.astralWalkRevision.update(revision => revision + 1);
   }
 
   /**
