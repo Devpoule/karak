@@ -11,7 +11,7 @@ import { PlayerService } from '../../services/player.service';
 import { DungeonService } from '../../services/dungeon.service';
 import { TurnService } from '../../services/turn.service';
 import { ExplorationService, PendingTilePlacement } from '../../services/exploration.service';
-import { GameService, PendingReward, PendingTreasure } from '../../services/game.service';
+import { GameService, PendingGroundEquipment, PendingReward, PendingTreasure } from '../../services/game.service';
 import { TREASURE_POINTS, Treasure } from '../../models/treasure';
 import { CombatOverlay } from '../combat-overlay/combat-overlay';
 import { HeroPowerCard, HeroPowerCardChoice } from '../hero-power-card/hero-power-card';
@@ -510,6 +510,47 @@ export class Board {
       { label: 'Ouvrir le coffre', kind: 'primary', disabled: !this.canOpenPendingTreasure },
       { label: this.gameService.isOptionalXanrosTreasure ? 'Ne pas ouvrir' : 'Continuer' },
     ];
+  }
+
+  /** Objet au sol nécessitant une décision humaine. */
+  get humanPendingGroundEquipment(): PendingGroundEquipment | null {
+    const pending = this.gameService.pendingGroundEquipment();
+    return pending?.player === this.gameService.activePlayer && pending.player.controller === 'human' ? pending : null;
+  }
+
+  /** Actions de récupération, remplacement ou abandon de l'objet au sol. */
+  get pendingGroundEquipmentActions(): readonly DecisionCardAction[] {
+    const pending = this.humanPendingGroundEquipment;
+    if (!pending) return [];
+    const actions: DecisionCardAction[] = [];
+    if (this.playerService.canAddEquipment(pending.player, pending.equipment)) {
+      actions.push({ label: 'Récupérer', kind: 'primary' });
+    } else {
+      const slots = pending.equipment.kind === 'weapon' ? 2 : pending.equipment.kind === 'spell' ? 3 : 1;
+      for (let index = 0; index < slots; index++) {
+        if (this.playerService.canReplaceEquipment(pending.player, pending.equipment, index)) {
+          actions.push({ label: `Remplacer l’emplacement ${index + 1}`, kind: 'primary' });
+        }
+      }
+    }
+    actions.push({ label: 'Laisser sur la tuile' });
+    return actions;
+  }
+
+  /** Résout le choix d'équipement via les opérations métier existantes. */
+  resolvePendingGroundEquipmentAction(index: number): void {
+    const pending = this.humanPendingGroundEquipment;
+    if (!pending) return;
+    if (this.playerService.canAddEquipment(pending.player, pending.equipment)) {
+      if (index === 0) this.gameService.collectGroundEquipment();
+      else this.gameService.leaveGroundEquipment();
+      return;
+    }
+    const slots = pending.equipment.kind === 'weapon' ? 2 : pending.equipment.kind === 'spell' ? 3 : 1;
+    const validSlots = Array.from({ length: slots }, (_, slot) => slot)
+      .filter(slot => this.playerService.canReplaceEquipment(pending.player, pending.equipment, slot));
+    if (index < validSlots.length) this.gameService.replaceGroundEquipment(validSlots[index]);
+    else this.gameService.leaveGroundEquipment();
   }
 
   /** Exécute l'action du coffre sans dupliquer les gardes du service métier. */

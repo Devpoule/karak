@@ -422,6 +422,19 @@
       />
     </div>
   }
+  @if (humanPendingGroundEquipment; as pending) {
+    <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
+      <app-decision-card
+        eyebrow="Équipement découvert"
+        [title]="pending.equipment.name"
+        description="Choisissez de récupérer cet objet, de remplacer un équipement compatible ou de le laisser sur la tuile."
+        [image]="pending.equipment.image"
+        [imageAlt]="pending.equipment.name"
+        [actions]="pendingGroundEquipmentActions"
+        (actionSelected)="resolvePendingGroundEquipmentAction($event)"
+      />
+    </div>
+  }
 
   <!-- Résolution d'une récompense : interface fixe, indépendante de la caméra. -->
   @if (humanPendingReward && (pendingTreasureReward || hasPendingCurse)) {

@@ -6,6 +6,7 @@ import { PlacedTile } from '../../models/tile';
 import { Equipment, KeyEquipment, SpellEquipment, WeaponEquipment } from '../../models/equipment';
 import { PlayerService } from '../../services/player.service';
 import { ExplorationService } from '../../services/exploration.service';
+import { DecisionCard, DecisionCardAction } from '../decision-card/decision-card';
 
 type InventoryGroup = 'weapons' | 'spells' | 'key';
 
@@ -20,7 +21,7 @@ interface DropSelection {
 
 /** Affichage de l’inventaire et demande de dépôt volontaire via GameService. */
 @Component({
-  imports: [],
+  imports: [DecisionCard],
   selector: 'app-inventory-panel',
   styleUrl: './inventory-panel.scss',
   templateUrl: './inventory-panel.html',
@@ -41,6 +42,20 @@ export class InventoryPanel implements DoCheck, OnDestroy {
       this.dropSelection = null;
     }
     return this.dropSelection;
+  }
+
+  /** Actions de confirmation du dépôt volontaire. */
+  get dropActions(): readonly DecisionCardAction[] {
+    return [
+      { label: 'Déposer', kind: 'primary', disabled: !this.canDropEquipment },
+      { label: 'Annuler' },
+    ];
+  }
+
+  /** Résout le choix de dépôt en réutilisant les gardes existantes. */
+  resolveDropAction(index: number): void {
+    if (index === 0) this.confirmDrop();
+    else this.cancelDrop();
   }
 
   get canDropEquipment(): boolean {
