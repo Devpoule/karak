@@ -1,7 +1,7 @@
 # Karak — Modèle de sauvegarde V2
 
-Statut : **contrat implémenté pour l’écriture et la restauration locale**
-Ticket : `V2.1-01`  
+Statut : **contrat implémenté pour l’écriture, la restauration et le rejet des sauvegardes invalides**
+Tickets : `V2.1-01` à `V2.1-04`
 Date : 18 octobre 2026
 
 Ce document définit le contrat de données destiné aux tickets
@@ -91,6 +91,9 @@ sauvegarde est refusée si elle ne peut pas l’être sans ambiguïté.
    tour actif.
 
 Une sauvegarde invalide est rejetée sans mutation de la partie affichée.
+Elle est également supprimée du stockage local afin de ne pas être reproposée
+à chaque démarrage. Une sauvegarde absente ou rejetée entraîne une nouvelle
+initialisation vierge.
 
 ## 6. Points de reprise
 

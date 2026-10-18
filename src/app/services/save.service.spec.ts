@@ -32,8 +32,20 @@ describe('SaveService', () => {
   it('rejette une enveloppe corrompue ou incompatible', () => {
     localStorage.setItem(SAVE_STORAGE_KEY, JSON.stringify({ schema: 'other', version: 1 }));
     expect(service.read()).toBeNull();
+    expect(localStorage.getItem(SAVE_STORAGE_KEY)).toBeNull();
     localStorage.setItem(SAVE_STORAGE_KEY, '{invalid');
     expect(service.read()).toBeNull();
+    expect(localStorage.getItem(SAVE_STORAGE_KEY)).toBeNull();
+  });
+
+  it('rejette une structure métier invalide et la retire du stockage', () => {
+    localStorage.setItem(SAVE_STORAGE_KEY, JSON.stringify({
+      schema: 'karak-save', version: 2, savedAt: new Date().toISOString(),
+      payload: { ...payload(), turn: { remainingMovements: 9, movementsMadeThisTurn: 0, suspendedMovements: null } },
+    }));
+
+    expect(service.read()).toBeNull();
+    expect(localStorage.getItem(SAVE_STORAGE_KEY)).toBeNull();
   });
 
   it('rejette un index de joueur hors limites sans mutation', () => {

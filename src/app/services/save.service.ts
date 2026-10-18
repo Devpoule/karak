@@ -7,10 +7,8 @@ export const SAVE_STORAGE_KEY = 'karak.save.v2';
 /**
  * Sérialise, valide et écrit une sauvegarde versionnée dans localStorage.
  *
- * Ce service ne reconstruit pas encore GameService : cette responsabilité
- * appartient à la campagne V2.1-03. Il garantit en revanche qu'une valeur
- * écrite respecte l'enveloppe et qu'une lecture invalide ne remonte jamais
- * comme une sauvegarde exploitable.
+ * Il garantit qu'une valeur écrite respecte l'enveloppe et qu'une lecture
+ * invalide ne remonte jamais comme une sauvegarde exploitable.
  */
 @Injectable({ providedIn: 'root' })
 export class SaveService {
@@ -38,8 +36,13 @@ export class SaveService {
       const raw = localStorage.getItem(SAVE_STORAGE_KEY);
       if (!raw) return null;
       const parsed: unknown = JSON.parse(raw);
-      return this.isValidEnvelope(parsed) ? parsed : null;
+      if (!this.isValidEnvelope(parsed)) {
+        this.clear();
+        return null;
+      }
+      return parsed;
     } catch {
+      this.clear();
       return null;
     }
   }
@@ -67,19 +70,33 @@ export class SaveService {
     if (!isRecord(value)) return false;
     const record = value as any;
     if (!['setup', 'playing', 'game-over'].includes(String(record.phase))) return false;
-    if (typeof record.setupStep !== 'string' || !Array.isArray(record.players)) return false;
+    if (!['player-count', 'hero-draw', 'first-player-roll'].includes(record.setupStep) || !Array.isArray(record.players)) return false;
     if (!isNullableIndex(record.firstPlayerIndex, record.players.length)) return false;
     if (!isNullableIndex(record.activePlayerIndex, record.players.length)) return false;
     if (!Array.isArray(record.firstPlayerRolls) || !Array.isArray(record.firstPlayerContenders)) return false;
     if (!isRecord(record.dungeon) || !isRecord(record.turn) || !isRecord(record.pending)) return false;
     if (!Array.isArray(record.finalRanking)) return false;
-    return record.players.every(isRecord)
+    return record.players.every((player: unknown) => {
+      if (!isRecord(player)) return false;
+      return (player['controller'] === 'human' || player['controller'] === 'ai')
+        && Number.isInteger(player['lives']) && player['lives'] >= 0 && player['lives'] <= 5
+        && ['none', 'pending', 'resting'].includes(String(player['recoveryState']))
+        && typeof player['isCursed'] === 'boolean'
+        && isRecord(player['inventory'])
+        && Array.isArray(player['treasures']);
+    })
       && record.firstPlayerContenders.every((item: unknown) => typeof item === 'number' && Number.isInteger(item) && item >= 0 && item < record.players.length)
       && record.dungeon.tiles instanceof Array
       && record.dungeon.remainingTileIds instanceof Array
       && record.dungeon.remainingTokenIds instanceof Array
+      && record.dungeon.remainingTileIds.every((id: unknown) => typeof id === 'string')
+      && record.dungeon.remainingTokenIds.every((id: unknown) => typeof id === 'string')
       && Number.isInteger(record.turn.remainingMovements)
-      && Number.isInteger(record.turn.movementsMadeThisTurn);
+      && record.turn.remainingMovements >= 0 && record.turn.remainingMovements <= 4
+      && Number.isInteger(record.turn.movementsMadeThisTurn)
+      && record.turn.movementsMadeThisTurn >= 0 && record.turn.movementsMadeThisTurn <= 4
+      && (record.turn.suspendedMovements === null
+        || (Number.isInteger(record.turn.suspendedMovements) && record.turn.suspendedMovements >= 0 && record.turn.suspendedMovements <= 4));
   }
 }
 
