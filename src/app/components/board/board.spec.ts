@@ -46,6 +46,16 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     expect(fixture.nativeElement.querySelectorAll('.board__ground-item img')).toHaveLength(0);
   });
 
+  it('expose le nom du monstre ou l’état du coffre sur le jeton révélé', () => {
+    const { fixture, dungeonService } = createBoard();
+    const tile = dungeonService.getTileAt(0, 0)!;
+    tile.tokenId = 'giant-rat';
+    tile.tokenFace = 'front';
+    expect(fixture.componentInstance.getTileTokenAlt(tile)).toBe('Le Rat Géant');
+    tile.tokenId = 'closed-chest';
+    expect(fixture.componentInstance.getTileTokenAlt(tile)).toBe('Coffre fermé');
+  });
+
   it('rend une seule fois l’équipement déposé après résolution complète du verso', () => {
     const { fixture, gameService, playerService, dungeonService } = createBoard();
     const player = playerService.players[0];

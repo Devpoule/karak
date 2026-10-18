@@ -351,6 +351,19 @@ export class Board {
     return token.image;
   }
 
+  /** Fournit un libellé accessible correspondant à la face du jeton visible. */
+  getTileTokenAlt(tile: PlacedTile): string {
+    if (!tile.tokenId) return '';
+    const token = getTokenDefinition(tile.tokenId);
+    if (!token) return 'Jeton inconnu';
+    if (tile.tokenFace !== 'back') {
+      return token.kind === 'monster'
+        ? token.name
+        : token.id === 'closed-chest' ? 'Coffre fermé' : 'Trésor';
+    }
+    return token.kind === 'monster' ? `Récompense de ${token.name}` : 'Coffre ouvert';
+  }
+
   /** Récompense actuellement proposée au joueur humain. */
   get humanPendingReward(): PendingReward | null {
     const pending = this.gameService.pendingReward();

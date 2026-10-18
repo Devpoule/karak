@@ -137,7 +137,27 @@
     pointer-events: none;
     user-select: none;
     filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.8));
+  &--revealed {
+    animation: room-token-reveal 520ms var(--karak-ease-emphasis) both;
   }
+  }
+
+@keyframes room-token-reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.55) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board__token--revealed {
+    animation: none;
+  }
+}
 }
 /* ==========================================================
     HÉROS

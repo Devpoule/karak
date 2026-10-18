@@ -91,7 +91,12 @@
     et n'est affiché que lorsqu'un tokenId est présent.
   -->
         @if (getTileTokenImage(tile); as tokenImage) {
-          <img class="board__token" [src]="tokenImage" alt="" draggable="false" />
+          <img
+            class="board__token board__token--revealed"
+            [src]="tokenImage"
+            [alt]="getTileTokenAlt(tile)"
+            draggable="false"
+          />
         }
         @if (getGroundEquipment(tile).length; as itemCount) {
           <div class="board__ground-items" [attr.aria-label]="(itemCount | quantity: 'équipement' : 'équipements') + ' au sol'">
