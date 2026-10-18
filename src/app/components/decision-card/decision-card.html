@@ -1,0 +1,21 @@
+<article class="decision-card" role="dialog" aria-modal="true" aria-labelledby="decision-card-title" tabindex="-1">
+  <div class="decision-card__aura" aria-hidden="true"></div>
+  @if (image) {
+    <img class="decision-card__image" [src]="image" [alt]="imageAlt" draggable="false" />
+  }
+  <div class="decision-card__content">
+    <span class="decision-card__eyebrow">{{ eyebrow }}</span>
+    <h2 id="decision-card-title">{{ title }}</h2>
+    <p>{{ description }}</p>
+    <div class="decision-card__actions">
+      @for (action of actions; track action.label; let index = $index) {
+        <button
+          type="button"
+          [class.decision-card__primary]="action.kind === 'primary'"
+          [disabled]="action.disabled ?? false"
+          (click)="selectAction(index)"
+        >{{ action.label }}</button>
+      }
+    </div>
+  </div>
+</article>

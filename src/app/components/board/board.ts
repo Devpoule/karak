@@ -16,6 +16,7 @@ import { TREASURE_POINTS, Treasure } from '../../models/treasure';
 import { CombatOverlay } from '../combat-overlay/combat-overlay';
 import { HeroPowerCard, HeroPowerCardChoice } from '../hero-power-card/hero-power-card';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
+import { DecisionCard, DecisionCardAction } from '../decision-card/decision-card';
 
 /**
  * Joueur prêt à être représenté sur le plateau.
@@ -73,7 +74,7 @@ interface PlayerMarkerPosition {
  */
 @Component({
   selector: 'app-board',
-  imports: [CombatOverlay, HeroPowerCard, QuantityPipe],
+  imports: [CombatOverlay, HeroPowerCard, DecisionCard, QuantityPipe],
   templateUrl: './board.html',
   styleUrl: './board.scss',
 })
@@ -503,6 +504,21 @@ export class Board {
       && pending.player.inventory.key !== null;
   }
 
+  /** Actions autorisées par l'état métier du coffre actuellement présenté. */
+  get pendingTreasureActions(): readonly DecisionCardAction[] {
+    return [
+      { label: 'Ouvrir le coffre', kind: 'primary', disabled: !this.canOpenPendingTreasure },
+      { label: this.gameService.isOptionalXanrosTreasure ? 'Ne pas ouvrir' : 'Continuer' },
+    ];
+  }
+
+  /** Exécute l'action du coffre sans dupliquer les gardes du service métier. */
+  resolvePendingTreasureAction(index: number): void {
+    if (index === 0) this.openPendingTreasure();
+    else if (this.gameService.isOptionalXanrosTreasure) this.declineOptionalXanrosTreasure();
+    else this.declinePendingTreasure();
+  }
+
 /** Gere openPendingTreasure et applique les gardes necessaires avant mutation. */
   openPendingTreasure(): void {
     if (this.canOpenPendingTreasure) {
@@ -543,6 +559,44 @@ export class Board {
       ? 'monster-treasure'
       : 'dragon-ruby';
     return TREASURE_POINTS[treasure];
+  }
+
+  /** Décrit la résolution de récompense visible dans la carte unifiée. */
+  get pendingRewardDescription(): string {
+    if (this.hasPendingCurse) return 'Choisissez le héros qui recevra la malédiction.';
+    return `Récompense de combat : ${this.pendingTreasureRewardPoints} point${this.pendingTreasureRewardPoints > 1 ? 's' : ''}.`;
+  }
+
+  /** Construit les actions à partir des choix déjà exposés par le domaine. */
+  get pendingRewardActions(): readonly DecisionCardAction[] {
+    const actions: DecisionCardAction[] = [];
+    if (this.pendingTreasureReward) actions.push({ label: 'Récupérer le trésor', kind: 'primary' });
+    if (this.hasPendingCurse) {
+      this.curseTargets.forEach(target => actions.push({
+        label: `J${target.index + 1} — ${this.getHeroDefinition(target.player)?.name ?? 'Héros'}`,
+      }));
+      if (this.gameService.cursedPlayer) actions.push({ label: 'Laisser la malédiction à son détenteur actuel' });
+    } else {
+      actions.push({ label: 'Laisser sur la tuile' });
+    }
+    return actions;
+  }
+
+  /** Traduit l'action visuelle en appel métier unique. */
+  resolvePendingRewardAction(index: number): void {
+    if (this.pendingTreasureReward) {
+      if (index === 0) { this.collectPendingTreasure(); return; }
+      index -= 1;
+    }
+    if (this.hasPendingCurse) {
+      const target = this.curseTargets[index];
+      if (target) { this.resolvePendingCurse(target.player); return; }
+      if (this.gameService.cursedPlayer && index === this.curseTargets.length) {
+        this.resolvePendingCurse(null);
+      }
+      return;
+    }
+    if (index === 0) this.leavePendingReward();
   }
 
 /** Gere collectPendingTreasure et applique les gardes necessaires avant mutation. */
