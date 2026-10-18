@@ -72,9 +72,13 @@
 </section>
 
 @if (selectedDrop; as selection) {
-  <div class="inventory-panel__drop-confirmation" role="group" aria-label="Confirmer le dépôt">
-    <p>Déposer {{ selection.equipment.name }} sur cette tuile ?</p>
-    <button type="button" (click)="confirmDrop()" [disabled]="!canDropEquipment">Déposer</button>
-    <button type="button" (click)="cancelDrop()">Annuler</button>
-  </div>
+  <app-decision-card
+    eyebrow="Inventaire"
+    [title]="'Déposer ' + selection.equipment.name"
+    description="L'objet sera placé sur la tuile actuelle et pourra être récupéré plus tard."
+    [image]="selection.equipment.image"
+    [imageAlt]="selection.equipment.name"
+    [actions]="dropActions"
+    (actionSelected)="resolveDropAction($event)"
+  />
 }
