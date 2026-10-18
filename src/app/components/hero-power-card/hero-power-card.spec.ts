@@ -68,7 +68,7 @@ describe('HeroPowerCard', () => {
     expect(element.querySelector('.hero-power-card__close')).toBeNull();
   });
 
-  it('présente les conditions et la fermeture en mode consultation', () => {
+  it('présente les conditions sans bouton de fermeture en mode consultation', () => {
     const cardFixture = TestBed.createComponent(HeroPowerCard);
     cardFixture.componentRef.setInput('hero', fixture.componentInstance.hero);
     cardFixture.componentRef.setInput('power', fixture.componentInstance.power);
@@ -77,8 +77,7 @@ describe('HeroPowerCard', () => {
     cardFixture.detectChanges();
     const element = cardFixture.nativeElement as HTMLElement;
     expect(element.textContent).toContain('Après le premier déplacement');
-    (element.querySelector('.hero-power-card__close') as HTMLButtonElement).click();
-    expect(cardFixture.componentInstance.closed.emit).toBeDefined();
+    expect(element.querySelector('.hero-power-card__close')).toBeNull();
   });
 
   it('présente deux choix directs sans ajouter de confirmation', () => {

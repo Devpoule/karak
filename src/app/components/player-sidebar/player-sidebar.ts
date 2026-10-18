@@ -111,13 +111,17 @@ export class PlayerSidebar {
 
 /** Gere togglePower et applique les gardes necessaires avant mutation. */
   togglePower(powerId: HeroPowerId, event?: Event): void {
-    if (this.player?.isCursed) return;
     this.biographyOpen = false;
     this.selectedPowerId = this.selectedPowerId === powerId ? null : powerId;
     this.powerSelected.emit({
       powerId: this.selectedPowerId,
       trigger: event?.currentTarget instanceof HTMLElement ? event.currentTarget : null,
     });
+  }
+
+  /** Réinitialise l'état visuel après la fermeture de la consultation globale. */
+  clearPowerSelection(): void {
+    this.selectedPowerId = null;
   }
 
 /** Gere toggleBiography et applique les gardes necessaires avant mutation. */

@@ -70,15 +70,96 @@ test('la consultation ignore le clic intérieur et se ferme par le fond extérie
     return {
       overflowY: getComputedStyle(element).overflowY,
       descriptionVisible: Boolean(description && description.getBoundingClientRect().bottom <= box.bottom),
-      closeVisible: Boolean(close && close.getBoundingClientRect().bottom <= box.bottom),
+    closeVisible: Boolean(close && close.getBoundingClientRect().bottom <= box.bottom),
     };
   });
   expect(geometry.overflowY).toBe('hidden');
   expect(geometry.descriptionVisible).toBe(true);
-  expect(geometry.closeVisible).toBe(true);
+  expect(geometry.closeVisible).toBe(false);
 
   await host.click({ position: { x: 5, y: 5 } });
   await expect(host).toHaveCount(0);
+});
+
+test('un pouvoir maudit reste consultable sans devenir activable', async ({ page }) => {
+  await openBoard(page);
+  await page.evaluate(() => {
+    const root = document.querySelector('app-root');
+    const ng = (window as Window & { ng?: { getComponent(node: Element): any } }).ng;
+    const game = ng?.getComponent(root?.querySelector('app-game') ?? root!);
+    const player = game?.gameService?.activePlayer;
+    const playerService = game?.gameService?.['playerService'];
+    if (!player || !playerService) throw new Error('Services de jeu indisponibles');
+    player.isCursed = true;
+    playerService.curseRevision.update((revision: number) => revision + 1);
+  });
+
+  const power = page.locator('.player-sidebar__power-badge:visible').first();
+  await expect(power).toBeVisible();
+  await power.click();
+  const card = page.locator('.player-hud__power-card-host .hero-power-card');
+  await expect(card).toBeVisible();
+  await expect(card).toContainText('Pouvoir spécial');
+  await expect(card.locator('.hero-power-card__activate')).toHaveCount(0);
+  await expect(card.locator('.hero-power-card__decline')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.player-hud__power-card-host')).toHaveCount(0);
+});
+
+test('les deux pouvoirs du joueur maudit restent consultables', async ({ page }) => {
+  await openBoard(page);
+  await page.evaluate(() => {
+    const root = document.querySelector('app-root');
+    const ng = (window as Window & { ng?: { getComponent(node: Element): any } }).ng;
+    const game = ng?.getComponent(root?.querySelector('app-game') ?? root!);
+    const player = game?.gameService?.activePlayer;
+    const playerService = game?.gameService?.['playerService'];
+    if (!player || !playerService) throw new Error('Services de jeu indisponibles');
+    player.isCursed = true;
+    playerService.curseRevision.update((revision: number) => revision + 1);
+  });
+
+  const powers = page.locator('.player-sidebar:visible').first().locator('.player-sidebar__power-badge:visible');
+  await expect(powers).toHaveCount(2);
+  for (let index = 0; index < 2; index++) {
+    await powers.nth(index).click();
+    const card = page.locator('.player-hud__power-card-host .hero-power-card');
+    await expect(card).toBeVisible();
+    await expect(card.locator('.hero-power-card__activate')).toHaveCount(0);
+    await expect(card.locator('.hero-power-card__decline')).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.player-hud__power-card-host')).toHaveCount(0);
+  }
+});
+
+test('la fiche reste entièrement accessible sur les viewports ciblés', async ({ page }) => {
+  await openBoard(page);
+  const viewports = [
+    { width: 1280, height: 800 },
+    { width: 390, height: 844 },
+    { width: 844, height: 390 },
+    { width: 390, height: 360 },
+  ];
+
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    const portrait = page.getByRole('button', { name: /Afficher les informations de/ }).first();
+    await expect(portrait).toBeVisible();
+    await portrait.click();
+    const dialog = page.locator('.codex-dialog');
+    const body = dialog.locator('.codex-dialog__body');
+    await expect(dialog).toBeVisible();
+    const metrics = await body.evaluate(element => ({
+      scrollHeight: element.scrollHeight,
+      clientHeight: element.clientHeight,
+      lastLine: element.getBoundingClientRect().bottom,
+      dialogBottom: element.closest('.codex-dialog')!.getBoundingClientRect().bottom,
+    }));
+    expect(metrics.scrollHeight).toBeGreaterThan(0);
+    expect(metrics.lastLine).toBeLessThanOrEqual(metrics.dialogBottom);
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+  }
 });
 
 test('la consultation reste contenue en portrait, paysage et faible hauteur', async ({ page }) => {
