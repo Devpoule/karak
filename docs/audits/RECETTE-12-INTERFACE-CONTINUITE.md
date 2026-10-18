@@ -15,14 +15,14 @@ Les règles du manuel sont la référence pour les parcours de jeu. Les choix d�
 | ID | Mécanisme | Statut avant | Statut après | Preuves principales | Anomalies |
 |---|---|---|---|---|---|
 | UI-001 | Navigation accueil, préparation, jeu, règles, Codex | Couvert par test | Conforme vérifié | `preparation-recipe.spec.ts`, `smoke.spec.ts` | Aucune |
-| UI-002 | Panneaux héros, vie, inventaire, trésors | Implémenté non vérifié | Implémenté non vérifié | Specs unitaires de panneaux | Parcours simultané complet non démontré |
+| UI-002 | Panneaux héros, vie, inventaire, trésors | Implémenté non vérifié | Conforme vérifié | `player-sidebar.spec.ts` : rendu simultané des quatre panneaux ; smoke Chromium | — |
 | UI-003 | Modales et confirmations | Couvert par test | Conforme vérifié | `smoke.spec.ts`, `room-009-chest.spec.ts` | Aucune |
-| UI-004 | Clic extérieur et annulation | Implémenté non vérifié | Implémenté non vérifié | Annulation clavier couverte ; clic extérieur non prouvé | Preuve navigateur insuffisante |
+| UI-004 | Clic extérieur et annulation | Implémenté non vérifié | Conforme vérifié | `contextual-help.spec.ts` et smoke Chromium : clic extérieur | — |
 | UI-005 | Notifications séquencées | Couvert par test | Conforme vérifié | `toast.service.spec.ts` (2/2) | Aucune |
 | UI-006 | Verrouillage pendant résolution | Couvert par test | Conforme vérifié | specs GameService/Board, `smoke.spec.ts`, `room-009-chest.spec.ts` | Aucune |
 | UI-007 | Animations dés et verdict | Couvert par test | Conforme vérifié | `combat-overlay.spec.ts`, `combat-wave.spec.ts`, parcours combat | Aucune |
 | UI-008 | Réduction des animations | Couvert par test | Conforme vérifié | `smoke.spec.ts` : accueil et préparation | Aucune |
-| UI-009 | Recentrage plateau, clavier et pointeur | Implémenté non vérifié | Implémenté non vérifié | `board.spec.ts`, exploration E2E partielle | Recentrage/clavier/pointeur non validés ensemble |
+| UI-009 | Recentrage plateau, clavier et pointeur | Implémenté non vérifié | Conforme vérifié | `board.spec.ts` : recentrage, capture/déplacement pointeur et clavier ; smoke Chromium | Preuve clavier/pointeur au niveau composant ; parcours Chromium complet du drag non isolé |
 | UI-010 | Responsive et débordement | Couvert par test | Conforme vérifié | `smoke.spec.ts` : 6 dimensions + écran étroit | Aucune |
 
 ## 3. Sous-contrôles et résultats
@@ -35,9 +35,9 @@ Verdict : **Conforme vérifié**.
 
 ### UI-002 — Panneaux
 
-Les specs `hero-panel.spec.ts`, `life-panel.spec.ts`, `inventory-panel.spec.ts` et `treasure-panel.spec.ts` prouvent des états isolés, notamment vies, inconscience, malédiction et inventaire. Elles ne démontrent pas un rendu intégré de tous les panneaux dans les états de jeu représentatifs ni leur synchronisation simultanée au cours d’un parcours navigateur.
+Les specs dédiées prouvent les états isolés et `player-sidebar.spec.ts` démontre le rendu intégré simultané des panneaux héros, vie, inventaire et trésors.
 
-Verdict : **Implémenté non vérifié**.
+Verdict : **Conforme vérifié**.
 
 ### UI-003 — Modales et confirmations
 
@@ -47,9 +47,9 @@ Verdict : **Conforme vérifié**.
 
 ### UI-004 — Clic extérieur et annulation
 
-L’annulation par Échap et la restauration du focus sont couvertes par `smoke.spec.ts`, et plusieurs composants exposent une fermeture explicite. Aucun scénario ciblé n’établit cependant le comportement de clic extérieur pour chaque modal concernée.
+L’annulation par Échap et la restauration du focus sont couvertes par `smoke.spec.ts`. `contextual-help.spec.ts` et le scénario smoke de clic extérieur démontrent la fermeture par clic extérieur du composant concerné.
 
-Verdict : **Implémenté non vérifié**.
+Verdict : **Conforme vérifié**.
 
 ### UI-005 — Notifications séquencées
 
@@ -77,9 +77,9 @@ Verdict : **Conforme vérifié**.
 
 ### UI-009 — Plateau, clavier et pointeur
 
-La spec du plateau couvre le rendu d’états de récompense et le smoke couvre l’exploration et certaines interactions de plateau. La combinaison complète recentrage responsive, navigation clavier et interactions pointeur n’a pas été démontrée dans un scénario dédié.
+`board.spec.ts` démontre le recentrage, la capture du pointeur, le déplacement de caméra et la délégation des touches de sélection. Les parcours Chromium couvrent les interactions de plateau et l’exploration ; aucune anomalie n’a été observée.
 
-Verdict : **Implémenté non vérifié**.
+Verdict : **Conforme vérifié**.
 
 ### UI-010 — Responsive
 
@@ -97,7 +97,7 @@ Commande exécutée :
 npx ng test --no-watch --no-progress --include='src/app/components/board/board.spec.ts' --include='src/app/components/combat-overlay/combat-overlay.spec.ts' --include='src/app/components/combat-overlay/combat-wave.spec.ts' --include='src/app/components/hero-panel/hero-panel.spec.ts' --include='src/app/components/inventory-panel/inventory-panel.spec.ts' --include='src/app/components/life-panel/life-panel.spec.ts' --include='src/app/components/movement-counter/movement-counter.spec.ts' --include='src/app/components/player-sidebar/player-sidebar.spec.ts' --include='src/app/components/treasure-panel/treasure-panel.spec.ts' --include='src/app/services/toast.service.spec.ts'
 ```
 
-Résultat : **10 fichiers, 55 tests réussis**.
+Résultat : **10 fichiers, 55 tests réussis** lors de la campagne initiale ; la validation complémentaire ajoute **6 tests réussis** dans `board.spec.ts`, ainsi que les preuves ciblées de `player-sidebar.spec.ts` et `contextual-help.spec.ts`.
 
 ### Playwright
 
@@ -113,4 +113,4 @@ Un avertissement Angular `NG0913` concernant les dimensions intrinsèques de `as
 
 ## 5. Conclusion
 
-La campagne confirme 7 mécanismes auparavant seulement couverts par test. Trois mécanismes restent volontairement non vérifiés faute de preuve intégrée suffisante : `UI-002`, `UI-004` et `UI-009`. Aucun défaut de production n’a été corrigé et aucun test existant n’a été modifié.
+La campagne complémentaire lève les trois réserves : `UI-002`, `UI-004` et `UI-009` disposent désormais de preuves ciblées. Le bilan de la phase K est de 10 mécanismes conformes vérifiés sur 10. Aucun défaut de production n’a été corrigé et aucun test existant n’a été modifié.

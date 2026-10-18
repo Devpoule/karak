@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 import { PlayerService } from '../../services/player.service';
 import { PlayerSidebar } from './player-sidebar';
@@ -48,5 +49,23 @@ describe('PlayerSidebar codex', () => {
 
     expect(sidebar.selectedPowerId).toBeNull();
     expect(sidebar.biographyOpen).toBe(false);
+  });
+
+  it('rend ensemble les panneaux héros, vie, inventaire et trésors', () => {
+    TestBed.configureTestingModule({ imports: [PlayerSidebar] });
+    const fixture = TestBed.createComponent(PlayerSidebar);
+    const service = TestBed.inject(PlayerService);
+    service.initialize(2);
+    service.drawHeroes();
+
+    fixture.componentInstance.side = 'left';
+    fixture.componentInstance.player = service.players[0];
+    fixture.componentInstance.playerIndex = 0;
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('app-hero-panel')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('app-life-panel')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('app-inventory-panel')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('app-treasure-panel')).not.toBeNull();
   });
 });

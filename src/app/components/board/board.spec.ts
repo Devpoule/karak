@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { getEquipmentDefinition } from '../../data/equipment-definitions';
 import { getTokenDefinition } from '../../data/token-definitions';
 import { PlacedTile } from '../../models/tile';
@@ -88,5 +88,57 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     expect(gameService.pendingReward()).toBeNull();
     expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['daggers']);
     expect(fixture.nativeElement.querySelectorAll('.board__reward-backdrop')).toHaveLength(0);
+  });
+
+  it('recentre la caméra et conserve les coordonnées logiques du donjon', () => {
+    const { fixture } = createBoard();
+    const board = fixture.componentInstance;
+
+    board.centerOnStartTile();
+    const startTransform = board.worldTransform;
+    board.offsetX = 240;
+    board.offsetY = -120;
+    const draggedTransform = board.worldTransform;
+
+    expect(startTransform).toContain('translate(');
+    expect(draggedTransform).not.toBe(startTransform);
+    expect(board.cameraTransitionEnabled).toBe(true);
+  });
+
+  it('déplace la caméra au pointeur avec capture et sans modifier la carte logique', () => {
+    const { fixture } = createBoard();
+    const board = fixture.componentInstance;
+    const element = {
+      setPointerCapture: vi.fn(),
+      hasPointerCapture: vi.fn(() => true),
+      releasePointerCapture: vi.fn(),
+    } as unknown as HTMLElement;
+
+    board.startDragging({ currentTarget: element, clientX: 10, clientY: 20, pointerId: 7 } as unknown as PointerEvent);
+    board.drag({ clientX: 30, clientY: 5 } as unknown as PointerEvent);
+    board.stopDragging({ currentTarget: element, pointerId: 7 } as unknown as PointerEvent);
+
+    expect(board.offsetX).toBe(20);
+    expect(board.offsetY).toBe(-15);
+    expect(board.cameraTransitionEnabled).toBe(false);
+    expect(element.setPointerCapture).toHaveBeenCalledWith(7);
+    expect(element.releasePointerCapture).toHaveBeenCalledWith(7);
+  });
+
+  it('traite les touches de sélection du portail de guérison', () => {
+    const { fixture, gameService, playerService, dungeonService } = createBoard();
+    const player = playerService.players[0];
+    player.controller = 'human';
+    player.inventory.spells.push({ ...getEquipmentDefinition('heart')! } as any);
+    dungeonService.tiles.push({ definitionId: 'healing-corner', x: 2, y: 0, rotation: 0 });
+    dungeonService.tiles.push({ definitionId: 'healing-corner', x: -2, y: 0, rotation: 0 });
+    expect(gameService.openHealingPortalSelection()).toBe(true);
+    const moveSelection = vi.spyOn(gameService, 'moveHealingPortalSelection');
+
+    const event = new KeyboardEvent('keydown', { key: 'ArrowRight', cancelable: true });
+    fixture.componentInstance.handleHealingPortalKeyboard(event);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(moveSelection).toHaveBeenCalledWith(1);
   });
 });

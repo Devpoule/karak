@@ -84,6 +84,19 @@ test('les aides contextuelles utilisent les commandes Karak et restaurent le foc
   await expect(help).toBeFocused();
 });
 
+test('une aide contextuelle se ferme par clic extérieur', async ({ page }) => {
+  await page.goto('/play');
+
+  const help = page.getByRole('button', { name: /Afficher l’aide/ }).first();
+  await help.click();
+  const popover = page.getByRole('dialog', { name: 'Choisir les joueurs' });
+  await expect(popover).toBeVisible();
+
+  await page.locator('h1').click({ position: { x: 2, y: 2 } });
+
+  await expect(popover).toBeHidden();
+});
+
 test('le Codex depuis l’accueil revient à l’accueil', async ({ page }) => {
   await page.goto('/');
   await page.locator('.home__lore').click();

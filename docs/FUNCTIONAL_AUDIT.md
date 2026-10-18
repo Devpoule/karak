@@ -262,14 +262,14 @@ La continuité d’une partie entièrement IA est exercée indirectement mais n�
 | ID | Mécanisme | Code/tests | Statut |
 |---|---|---|---|
 | UI-001 | Naviguer accueil, préparation, jeu, règles, Codex | routes/pages | Conforme vérifié |
-| UI-002 | Afficher panneaux héros, vie, inventaire, trésors | composants dédiés | Implémenté non vérifié |
+| UI-002 | Afficher panneaux héros, vie, inventaire, trésors | composants dédiés | Conforme vérifié |
 | UI-003 | Ouvrir/fermer modales et confirmations | pages/composants | Conforme vérifié |
-| UI-004 | Gérer clic extérieur et annulation | composants modaux | Implémenté non vérifié |
+| UI-004 | Gérer clic extérieur et annulation | composants modaux | Conforme vérifié |
 | UI-005 | Afficher notifications séquencées | `ToastService`, `UX_NOTIFICATIONS.md` | Conforme vérifié |
 | UI-006 | Verrouiller contrôles pendant résolution | flags `pending`, `turnTransitionPending` | Conforme vérifié |
 | UI-007 | Coordonner animations de dés et verdict | CombatOverlay et `combat-wave.spec.ts` | Conforme vérifié |
 | UI-008 | Respecter réduction des animations | préférence UI et CSS | Conforme vérifié |
-| UI-009 | Recentrer plateau et gérer clavier/pointeur | `BoardComponent` | Implémenté non vérifié |
+| UI-009 | Recentrer plateau et gérer clavier/pointeur | `BoardComponent` | Conforme vérifié |
 | UI-010 | Responsive et absence de débordement | SCSS + smoke E2E | Conforme vérifié |
 
 ## 4. Enchaînements à risque
@@ -297,12 +297,12 @@ Chaque ligne de l’inventaire possède un statut individuel. Le statut ne mesur
 
 | Statut | Nombre | Interprétation actuelle |
 |---|---:|---|
-| Conforme vérifié | 140 | conformité démontrée par règle, code, tests et parcours navigateur pour les mécanismes concernés |
+| Conforme vérifié | 143 | conformité démontrée par règle, code, tests et parcours navigateur pour les mécanismes concernés |
 | Couvert par test | 0 | aucun mécanisme ne reste dans cette catégorie après la campagne d’interface |
-| Implémenté non vérifié | 3 | chemin identifié dans le code, sans preuve de fonctionnement suffisante |
+| Implémenté non vérifié | 0 | chemin identifié dans le code, sans preuve de fonctionnement suffisante |
 | Écart constaté | 0 | comportement observé incompatible avec la règle telle qu’elle est formulée dans le manuel |
 | Absent | 0 | mécanisme officiel non trouvé dans l’implémentation |
-| À clarifier | 1 | règle, convention ou choix UX nécessitant une décision explicite |
+| À clarifier | 0 | règle, convention ou choix UX nécessitant une décision explicite |
 | **Total** | **143** | — |
 
 ### Répartition par phase
@@ -319,8 +319,8 @@ Chaque ligne de l’inventaire possède un statut individuel. Le statut ne mesur
 | H. Pouvoirs des héros | 13 | 13 | 0 | 0 | 0 | 0 | 0 |
 | I. Intelligence artificielle | 10 | 10 | 0 | 0 | 0 | 0 | 0 |
 | J. Fin de partie | 6 | 6 | 0 | 0 | 0 | 0 | 0 |
-| K. Interface/continuité | 10 | 7 | 0 | 3 | 0 | 0 | 0 |
-| **Total** | **143** | **140** | **0** | **3** | **0** | **0** | **0** |
+| K. Interface/continuité | 10 | 10 | 0 | 0 | 0 | 0 | 0 |
+| **Total** | **143** | **143** | **0** | **0** | **0** | **0** | **0** |
 
 Les cinq points de risque initiaux se répartissent ainsi : portails **Conforme vérifié**, soin direct **Conforme vérifié**, coffre automatique **Conforme vérifié**, Marche rampante d’Aderyn **Conforme vérifié**, départage du premier joueur **Conforme vérifié**. La convention de relance est cohérente et ses deux défauts de présentation ont été corrigés puis validés dans la recette 01. Les autres mécanismes « couverts par test » ne sont pas encore considérés comme conformes.
 
