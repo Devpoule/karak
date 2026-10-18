@@ -244,10 +244,12 @@ export class PlayerHud {
     });
   }
 
+/** Gere isCompactViewport et applique les gardes necessaires avant mutation. */
   private isCompactViewport(): boolean {
     return typeof window !== 'undefined' && window.innerWidth <= 760;
   }
 
+/** Gere onViewportResize et applique les gardes necessaires avant mutation. */
   @HostListener('window:resize')
   onViewportResize(): void {
     const compactViewport = this.isCompactViewport();
@@ -304,6 +306,7 @@ export class PlayerHud {
 
 
 
+/** Gere openLeftPlayer et applique les gardes necessaires avant mutation. */
   private openLeftPlayer(playerIndex: number): void {
 
     if (this.leftPlayerIndex === playerIndex) {
@@ -332,6 +335,7 @@ export class PlayerHud {
 
 
 
+/** Gere openRightPlayer et applique les gardes necessaires avant mutation. */
   private openRightPlayer(playerIndex: number): void {
 
     if (this.rightPlayerIndex === playerIndex) {

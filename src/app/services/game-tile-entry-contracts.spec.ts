@@ -7,6 +7,7 @@ import { PlayerService } from './player.service';
 import { TurnService } from './turn.service';
 import { CombatService } from './combat.service';
 import { TokenBagService } from './token-bag.service';
+import { DungeonService } from './dungeon.service';
 import { PlacedTile } from '../models/tile';
 import { Player } from '../models/player';
 
@@ -16,6 +17,7 @@ describe('GameService contrat d entrée dans une tuile', () => {
   let turnService: TurnService;
   let combatService: CombatService;
   let tokenBagService: TokenBagService;
+  let dungeonService: DungeonService;
   let player: Player;
 
   beforeEach(() => {
@@ -26,6 +28,7 @@ describe('GameService contrat d entrée dans une tuile', () => {
     turnService = TestBed.inject(TurnService);
     combatService = TestBed.inject(CombatService);
     tokenBagService = TestBed.inject(TokenBagService);
+    dungeonService = TestBed.inject(DungeonService);
     playerService.initialize(2);
     gameService.initialize();
     gameService.phase.set('playing');
@@ -55,6 +58,54 @@ describe('GameService contrat d entrée dans une tuile', () => {
     expect(turnService.remainingMovements()).toBe(4);
   });
 
+  it('soigne complètement le héros à son arrivée sur une fontaine et arrête le tour', () => {
+    const fountain = { ...tile(), definitionId: 'healing-corner', x: 2, y: 0 };
+    player.lives = 2;
+    player.isCursed = true;
+    turnService.consumeMovement();
+
+    expect(gameService.resolveTileEntry(player, tile(), fountain, false, true)).toBe('none');
+    expect(player.lives).toBe(5);
+    expect(player.isCursed).toBe(false);
+    expect(turnService.remainingMovements()).toBe(0);
+  });
+
+  it('ne modifie pas un héros déjà au maximum et ne soigne pas une tuile ordinaire', () => {
+    const ordinary = { ...tile(), x: 2, y: 0 };
+    expect(gameService.resolveTileEntry(player, tile(), ordinary)).toBe('none');
+    expect(player.lives).toBe(5);
+    expect(turnService.remainingMovements()).toBe(4);
+
+    const fountain = { ...tile(), definitionId: 'healing-corner', x: 2, y: 0 };
+    player.lives = 5;
+    expect(gameService.resolveTileEntry(player, tile(), fountain)).toBe('none');
+    expect(player.lives).toBe(5);
+    expect(turnService.remainingMovements()).toBe(0);
+  });
+
+  it('ne déclenche pas un second soin sans nouvelle arrivée', () => {
+    const fountain = { ...tile(), definitionId: 'healing-corner', x: 2, y: 0 };
+    player.lives = 2;
+    expect(gameService.resolveTileEntry(player, tile(), fountain)).toBe('none');
+    player.lives = 3;
+
+    expect(gameService.resolveTileEntry(player, fountain, fountain)).toBe('none');
+    expect(player.lives).toBe(3);
+  });
+
+  it('ne pioche pas de jeton en entrant dans une pièce déjà connue et vide', () => {
+    const room: PlacedTile = { ...tile(), definitionId: 'straight-room' };
+    dungeonService.tiles.push(room);
+    (tokenBagService as unknown as { bag: string[] }).bag = ['giant-rat'];
+    tokenBagService.remainingTokens.set(1);
+
+    expect(gameService.resolveTileEntry(player, tile(), room)).toBe('none');
+
+    expect(room.tokenId).toBeUndefined();
+    expect(tokenBagService.remainingTokens()).toBe(1);
+    expect(gameService.hasPendingTileResolution).toBe(false);
+  });
+
   it('ignore l entrée d un héros en récupération', () => {
     player.recoveryState = 'resting';
 
@@ -76,15 +127,16 @@ describe('GameService contrat d entrée dans une tuile', () => {
     expect(turnService.remainingMovements()).toBe(0);
   });
 
-  it('résout le monstre découvert avant de conserver Sneak pour les tuiles connues', () => {
+  it('propose Sneak aussi sur une pièce nouvellement découverte', () => {
     player.heroId = 'aderyn';
     const room = { ...tile(), definitionId: 'straight-room' };
     (tokenBagService as unknown as { bag: string[] }).bag = ['closed-chest', 'giant-rat'];
     tokenBagService.remainingTokens.set(2);
 
-    expect(gameService.resolveTileEntry(player, tile(), room, true)).toBe('combat');
+    expect(gameService.resolveTileEntry(player, tile(), room, true)).toBe('sneak-choice');
     expect(room.tokenId).toBe('giant-rat');
-    expect(combatService.hasPendingCombat).toBe(true);
+    expect(combatService.hasPendingCombat).toBe(false);
+    expect(gameService.choosePendingSneak('combat')).toBe(true);
 
     combatService.initialize();
     turnService.resetMovements();
@@ -92,8 +144,28 @@ describe('GameService contrat d entrée dans une tuile', () => {
     const chestRoom = { ...tile('closed-chest'), definitionId: 'straight-room' };
     playerService.addEquipment(player, getEquipmentDefinition('key')!);
     expect(gameService.resolveTileEntry(player, tile(), chestRoom)).toBe('treasure');
-    expect(chestRoom.tokenId).toBeUndefined();
-    expect(gameService.pendingTreasure()).toBeNull();
+    expect(chestRoom.tokenId).toBe('closed-chest');
+    expect(gameService.pendingTreasure()).not.toBeNull();
+  });
+
+  it('fait tirer deux jetons à Taia puis ne conserve qu’un jeton dans la pièce', () => {
+    player.heroId = 'taia';
+    const room: PlacedTile = { ...tile(), definitionId: 'straight-room' };
+    dungeonService.tiles.push(room);
+    (tokenBagService as unknown as { bag: string[] }).bag = ['giant-rat', 'closed-chest', 'skeleton-mummy'];
+    tokenBagService.remainingTokens.set(3);
+
+    expect(gameService.resolveTileEntry(player, tile(), room, true)).toBe('token-choice');
+    expect(tokenBagService.remainingTokens()).toBe(1);
+    expect(gameService.pendingTokenChoice()?.tokens.map(token => token.id)).toEqual([
+      'skeleton-mummy',
+      'closed-chest',
+    ]);
+
+    expect(gameService.choosePendingToken(1)).toBe(true);
+    expect(room.tokenId).toBe('closed-chest');
+    expect(tokenBagService.remainingTokens()).toBe(2);
+    expect(gameService.pendingTokenChoice()).toBeNull();
   });
 
   it('ne déclenche pas deux combats sur le même état pending', () => {
@@ -124,11 +196,38 @@ describe('GameService contrat d entrée dans une tuile', () => {
     expect(turnService.remainingMovements()).toBe(4);
   });
 
-  it('ouvre automatiquement un coffre fermé avec une clé', () => {
+  it('propose un coffre fermé avec une clé sans l ouvrir automatiquement', () => {
     const destination = tile('closed-chest');
     playerService.addEquipment(player, getEquipmentDefinition('key')!);
 
     expect(gameService.resolveTileEntry(player, tile(), destination)).toBe('treasure');
+    expect(gameService.pendingTreasure()).not.toBeNull();
+    expect(turnService.remainingMovements()).toBe(0);
+    expect(player.inventory.key).not.toBeNull();
+    expect(player.treasures).not.toContain('opened-chest');
+    expect(destination.tokenId).toBe('closed-chest');
+  });
+
+  it('reprend les mouvements et conserve le coffre après un refus', () => {
+    const destination = tile('closed-chest');
+    playerService.addEquipment(player, getEquipmentDefinition('key')!);
+    turnService.consumeMovement();
+
+    expect(gameService.resolveTileEntry(player, tile(), destination, false, true)).toBe('treasure');
+    expect(gameService.declinePendingTreasure()).toBe(true);
+    expect(gameService.pendingTreasure()).toBeNull();
+    expect(turnService.remainingMovements()).toBe(3);
+    expect(player.inventory.key).not.toBeNull();
+    expect(destination.tokenId).toBe('closed-chest');
+  });
+
+  it('ouvre explicitement le coffre une seule fois et termine le tour', () => {
+    const destination = tile('closed-chest');
+    playerService.addEquipment(player, getEquipmentDefinition('key')!);
+
+    expect(gameService.resolveTileEntry(player, tile(), destination)).toBe('treasure');
+    expect(gameService.openPendingTreasure()).toBe(true);
+    expect(gameService.openPendingTreasure()).toBe(false);
     expect(gameService.pendingTreasure()).toBeNull();
     expect(turnService.remainingMovements()).toBe(0);
     expect(player.inventory.key).toBeNull();
@@ -173,7 +272,7 @@ describe('GameService contrat d entrée dans une tuile', () => {
     expect(gameService.pendingTreasure()).toBeNull();
     expect(gameService.pendingReward()).toBeNull();
     expect(gameService.hasPendingTileResolution).toBe(false);
-    expect(destination.tokenId).toBeUndefined();
+    expect(destination.tokenId).toBe('closed-chest');
   });
 
   it('refuse la récupération directe lorsque l inventaire est plein', () => {
@@ -271,6 +370,6 @@ describe('GameService contrat d entrée dans une tuile', () => {
 
     expect(gameService.resolveTileEntry(player, tile(), destination)).toBe('treasure');
     expect(gameService.resolveTileEntry(player, tile(), tile('giant-rat'))).toBe('none');
-    expect(gameService.pendingTreasure()).toBeNull();
+    expect(gameService.pendingTreasure()).not.toBeNull();
   });
 });

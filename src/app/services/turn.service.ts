@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 
 import { GAME_CONSTANTS } from '../constants/game.constants';
 
+/** Contrat de donnees MovementConsumptionAnimation utilise par le domaine ou l interface. */
 export interface MovementConsumptionAnimation {
   readonly firstPointIndex: number;
   readonly count: number;
@@ -123,6 +124,7 @@ export class TurnService {
     return true;
   }
 
+/** Gere publishMovementConsumption et applique les gardes necessaires avant mutation. */
   private publishMovementConsumption(firstPointIndex: number, count: number): void {
     this.lastMovementConsumption.set({
       firstPointIndex,

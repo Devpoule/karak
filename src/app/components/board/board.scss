@@ -761,3 +761,31 @@
   position: absolute; inset: 0.18rem; border: 3px solid #f7d56c;
   border-radius: 50%; box-shadow: 0 0 1rem #f7d56c; content: ''; pointer-events: none;
 }
+
+.board__tile--portal-destination::after {
+  position: absolute;
+  inset: 0.18rem;
+  border: 3px solid rgba(190, 132, 232, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 0 1rem rgba(174, 103, 225, 0.75);
+  content: '';
+  pointer-events: none;
+}
+
+.board__tile--portal-selected::after {
+  border-color: #f7d56c;
+  box-shadow: 0 0 1rem #f7d56c;
+}
+
+.board__portal-travel-cancel {
+  position: absolute;
+  top: calc(50% + 2rem);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.2rem 0.45rem;
+  border: 1px solid rgba(238, 225, 197, 0.55);
+  border-radius: 0.25rem;
+  background: rgba(28, 24, 20, 0.88);
+  color: #eee1c5;
+  white-space: nowrap;
+}

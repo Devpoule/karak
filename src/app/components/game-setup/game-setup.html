@@ -362,12 +362,17 @@
             <div class="game-setup__stage-header">
               <h1>Qui commence ? <app-contextual-help [help]="preparationHelp.firstPlayer" /></h1>
 
-              @if (firstPlayerResolutionState() === 'tie') {
-                <p>
-                  Égalité ! Les aventuriers concernés doivent relancer les dés.
+              @if (firstPlayerResolutionState() === 'tie-transition') {
+                <p role="status">
+                  Égalité au meilleur score entre {{ getTiedPlayersLabel() }}.
+                  Les résultats restent affichés avant la manche de départage.
                 </p>
               } @else if (firstPlayerResolutionState() === 'winner') {
                 <p>Le premier aventurier est désigné.</p>
+              } @else if (isFirstPlayerTieBreakerRound()) {
+                <p>
+                  Manche de départage : les aventuriers concernés relancent les dés.
+                </p>
               } @else {
                 <p>
                   Lancez les dés dans l'ordre. Le total le plus élevé commence.
@@ -522,13 +527,16 @@
                   <p class="game-setup__turn-hint">
                     Joueur
                     {{ getNextPlayerToRoll()! + 1 }}
-                    lance les dés...
+                    {{ isFirstPlayerTieBreakerRound() ? 'relance' : 'lance' }}
+                    les dés...
                   </p>
                 } @else {
                   <p class="game-setup__turn-hint">
                     Joueur
                     {{ getNextPlayerToRoll()! + 1 }},
-                    à vous de lancer les dés.
+                    à vous de
+                    {{ isFirstPlayerTieBreakerRound() ? 'relancer' : 'lancer' }}
+                    les dés.
                   </p>
                 }
               }
@@ -562,6 +570,7 @@
               @if (
                 firstPlayerResolutionState() !== 'winner' &&
                 firstPlayerResolutionState() !== 'rolling' &&
+                firstPlayerResolutionState() !== 'tie-transition' &&
                 getNextPlayerToRoll() !== null &&
                 canHumanPlayerRoll(getNextPlayerToRoll()!)
               ) {
@@ -569,15 +578,15 @@
                   type="button"
                   class="game-setup__roll-trigger game-setup__roll-trigger--active"
                   [class.game-setup__roll-trigger--reroll]="
-                    firstPlayerResolutionState() === 'tie'
+                    isFirstPlayerTieBreakerRound()
                   "
                   [attr.aria-label]="
-                    firstPlayerResolutionState() === 'tie'
+                    isFirstPlayerTieBreakerRound()
                       ? 'Relancer les dés du joueur ' + (getNextPlayerToRoll()! + 1)
                       : 'Lancer les dés du joueur ' + (getNextPlayerToRoll()! + 1)
                   "
                   [attr.title]="
-                    firstPlayerResolutionState() === 'tie'
+                    isFirstPlayerTieBreakerRound()
                       ? 'Relancer les dés'
                       : 'Lancer les dés'
                   "
@@ -590,7 +599,7 @@
                     ⚄
                   </span>
 
-                  @if (firstPlayerResolutionState() === 'tie') {
+                  @if (isFirstPlayerTieBreakerRound()) {
                     <span
                       class="game-setup__roll-trigger-retry"
                       aria-hidden="true"

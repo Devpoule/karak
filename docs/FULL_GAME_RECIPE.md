@@ -4,7 +4,7 @@
 
 Cette recette couvre le parcours navigateur depuis la préparation d'une partie jusqu'à la défaite du Dragon et l'affichage du classement. Elle complète les tests unitaires existants et les scénarios Chromium de combat.
 
-La recette a été exécutée sur la branche `test/full-game-playthrough`, créée depuis `main` au commit `8a208ba`.
+La recette est désormais intégrée à la branche `main` et ses preuves sont reprises dans les recettes fonctionnelles 01 à 12.
 
 ## Méthode et déterminisme
 
@@ -26,8 +26,8 @@ La recette a été exécutée sur la branche `test/full-game-playthrough`, cré�
 | VALIDÉ | Partie intégrale jusqu'au classement du Dragon | `e2e/full-game-playthrough.spec.ts` |
 | NON COUVERT | Parcours complet naturel de toutes les tuiles et déplacements | À étendre |
 | NON COUVERT | Les six pouvoirs dans un parcours navigateur distinct | Les règles sont testées en métier, l'intégration navigateur reste à étendre |
-| NON COUVERT | IA complète sur plusieurs tours avec états bloquants variés | À étendre |
-| NON COUVERT | Inventaire, coffres, malédictions, repos et Portail en parcours Chromium dédiés | À étendre |
+| VALIDÉ | IA complète sur plusieurs tours avec états bloquants variés | `e2e/ai-continuity.spec.ts` |
+| PARTIELLEMENT COUVERT | Inventaire, coffres, malédictions, repos et Portail en parcours Chromium dédiés | Voir recettes 05 à 09 et leurs limites |
 | RÈGLE AMBIGUË | Aucune ambiguïté nouvelle rencontrée pendant cette recette | Les questions existantes restent dans `docs/RULES.md` |
 | BLOCAGE REPRODUIT | Aucun blocage fonctionnel confirmé après correction du fixture étroit | — |
 

@@ -9,6 +9,7 @@ import { PlacedTile } from '../models/tile';
 import { MonsterTokenDefinition } from '../models/token';
 import { TurnService } from './turn.service';
 
+/** Construit ou calcule le resultat de isWinningCombatRoll. */
 function isWinningCombatRoll(combat: PendingCombat, roll: CombatRoll): boolean {
   return roll.attackPower > combat.monster.strength
     || (
@@ -97,6 +98,7 @@ export class CombatService {
     return this.pendingCombat() !== null;
   }
 
+/** Gere initialize et applique les gardes necessaires avant mutation. */
   initialize(): void {
     this.pendingCombat.set(null);
     this.lastCombatResult.set(null);
@@ -405,6 +407,7 @@ export class CombatService {
     return player.inventory.spells.filter(spell => spell?.effect === 'magic-attack').length;
   }
 
+/** Gere consumeUsedMagicBolts et applique les gardes necessaires avant mutation. */
   private consumeUsedMagicBolts(player: Player, count: number): void {
     if (player.heroId === 'argentus' && !player.isCursed) return;
     for (let consumed = 0; consumed < count; consumed++) {

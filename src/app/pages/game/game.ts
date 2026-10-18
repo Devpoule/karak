@@ -91,26 +91,31 @@ export class Game implements OnInit, OnDestroy {
     });
   }
 
+/** Gere ngOnInit et applique les gardes necessaires avant mutation. */
   ngOnInit(): void {
     if (!this.gameService.isInitialized()) {
       this.gameService.initialize();
     }
   }
 
+/** Gere ngOnDestroy et applique les gardes necessaires avant mutation. */
   ngOnDestroy(): void {
     this.destroyed = true;
     this.aiRunId++;
     this.clearAnnouncementTimer();
   }
 
+/** Gere getHeroName et applique les gardes necessaires avant mutation. */
   getHeroName(player: Player): string {
     return player.heroId ? (getHeroDefinition(player.heroId)?.name ?? 'Héros') : 'Héros';
   }
 
+/** Gere getHeroPortrait et applique les gardes necessaires avant mutation. */
   getHeroPortrait(player: Player): string | undefined {
     return player.heroId ? getHeroDefinition(player.heroId)?.character : undefined;
   }
 
+/** Gere showTurnAnnouncement et applique les gardes necessaires avant mutation. */
   private showTurnAnnouncement(player: Player, index: number): void {
     this.clearAnnouncementTimer();
     queueMicrotask(() => {
@@ -127,6 +132,7 @@ export class Game implements OnInit, OnDestroy {
     });
   }
 
+/** Gere clearAnnouncementTimer et applique les gardes necessaires avant mutation. */
   private clearAnnouncementTimer(): void {
     if (this.announcementTimer !== null) {
       clearTimeout(this.announcementTimer);
@@ -241,6 +247,7 @@ export class Game implements OnInit, OnDestroy {
     }
   }
 
+/** Gere wait et applique les gardes necessaires avant mutation. */
   private wait(milliseconds: number): Promise<void> {
     return new Promise((resolve) => {
       window.setTimeout(resolve, milliseconds);

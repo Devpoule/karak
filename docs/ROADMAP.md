@@ -1,6 +1,6 @@
 # Karak — feuille de route réelle
 
-État relevé le 11 octobre 2026. Ce document décrit le dépôt observé, pas une promesse de livraison.
+État relevé le 18 octobre 2026. Ce document décrit le dépôt observé, pas une promesse de livraison.
 
 ## Déjà en place
 
@@ -14,9 +14,9 @@
 
 ## Incomplet ou à risque
 
-- La recette navigateur des récompenses, équipements, repos, Portail et fin de partie reste à étendre. Playwright/Chromium est opérationnel ; le serveur existant sur `http://127.0.0.1:4200` est réutilisé.
-- La stratégie IA spécifique au Portail de guérison reste à auditer avant de la considérer complète.
-- La couverture des composants visuels et des effets CSS est limitée par rapport aux tests métier.
+- Les recettes fonctionnelles 01 à 12 sont documentées. La recette d’interface laisse encore trois réserves ciblées : `UI-002`, `UI-004` et `UI-009`.
+- La stratégie IA spécifique au Portail de guérison a été vérifiée dans les suites métier ; les limites restantes sont décrites dans l’audit fonctionnel.
+- La couverture des composants visuels et des effets CSS reste limitée par rapport aux tests métier.
 - La compilation passe avec des avertissements de budget SCSS, notamment sur `CombatOverlay` et `GameSetup`.
 - `GameService` reste une façade large ; toute extraction doit être motivée par des usages concrets.
 - Les six héros disposent maintenant de leurs pouvoirs documentés et couverts par les tests : Aderyn, Argentus, Horan, Taia, Victorius et Xanros. Les relances, la Tisseuse de destin, la Réincarnation et Inarrêtable sont intégrés avec désactivation par malédiction.
@@ -24,11 +24,11 @@
 
 ## Dernière recette technique
 
-- 89 tests réussis sur 8 fichiers avec `npx ng test --no-watch --no-progress` ;
+- 317 tests réussis sur 27 fichiers avec `npx ng test --no-watch --no-progress` ;
 - compilation Angular réussie avec `npx ng build` ;
 - `git diff --check` réussi ;
-- recette Playwright Chromium étendue : 5 scénarios E2E, dont une vérification à 390 px, la progression jusqu'à l'écran du premier joueur et l'accès naturel au plateau/combat ;
-- avertissements de budget SCSS conservés sur `CombatOverlay` et `GameSetup` ;
+- recette Playwright Chromium : 22 scénarios ciblés réussis, dont les parcours d’interface, responsive, exploration, coffre, combat, fin et portail ;
+- avertissement `NG0913` du logo documenté ;
 - aucune anomalie fonctionnelle confirmée pendant cette recette.
 
 ## Validation combat Chromium — 11 octobre 2026

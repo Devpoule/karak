@@ -15,6 +15,7 @@ export class ContextualHelpComponent {
   isOpen = false;
   private previouslyFocusedElement: HTMLElement | null = null;
 
+/** Gere toggle et applique les gardes necessaires avant mutation. */
   toggle(): void {
     if (!this.isOpen) {
       this.previouslyFocusedElement = document.activeElement instanceof HTMLElement
@@ -24,6 +25,7 @@ export class ContextualHelpComponent {
     this.isOpen = !this.isOpen;
   }
 
+/** Gere close et applique les gardes necessaires avant mutation. */
   close(): void {
     this.isOpen = false;
     const focusTarget = this.previouslyFocusedElement
@@ -32,11 +34,13 @@ export class ContextualHelpComponent {
     queueMicrotask(() => focusTarget?.focus());
   }
 
+/** Gere closeOnEscape et applique les gardes necessaires avant mutation. */
   @HostListener('document:keydown.escape')
   closeOnEscape(): void {
     if (this.isOpen) this.close();
   }
 
+/** Gere closeOnOutsideClick et applique les gardes necessaires avant mutation. */
   @HostListener('document:click', ['$event'])
   closeOnOutsideClick(event: MouseEvent): void {
     if (this.isOpen && !this.elementRef.nativeElement.contains(event.target as Node)) this.close();

@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 
 export type ToastTone = 'info' | 'success' | 'warning' | 'combat';
+/** Contrat de donnees ToastMessage utilise par le domaine ou l interface. */
 export interface ToastMessage { readonly id: number; readonly text: string; readonly tone: ToastTone; }
 
 /** File unique de notifications informatives, non bloquantes. */
@@ -19,6 +20,7 @@ export class ToastService {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private fadeTimer: ReturnType<typeof setTimeout> | null = null;
 
+/** Gere show et applique les gardes necessaires avant mutation. */
   show(text: string, tone: ToastTone = 'info'): void {
     const message = { id: ++this.nextId, text, tone };
     if (this.current()) {
@@ -29,6 +31,7 @@ export class ToastService {
     this.display(message);
   }
 
+/** Gere dismiss et applique les gardes necessaires avant mutation. */
   dismiss(): void {
     if (!this.current() || this.isDismissing()) return;
 
@@ -38,11 +41,13 @@ export class ToastService {
     this.fadeTimer = setTimeout(() => this.finishDismissal(), this.toastFadeDuration);
   }
 
+/** Gere display et applique les gardes necessaires avant mutation. */
   private display(message: ToastMessage): void {
     this.current.set(message);
     this.schedule(message);
   }
 
+/** Gere schedule et applique les gardes necessaires avant mutation. */
   private schedule(message: ToastMessage): void {
     this.timer = setTimeout(() => {
       if (this.current()?.id === message.id) this.dismiss();
@@ -55,6 +60,7 @@ export class ToastService {
     )));
   }
 
+/** Gere finishDismissal et applique les gardes necessaires avant mutation. */
   private finishDismissal(): void {
     this.fadeTimer = null;
     this.isDismissing.set(false);

@@ -52,10 +52,12 @@ type HeroDrawState =
  */
 type FirstPlayerResolutionState =
   | 'rolling'
+  | 'tie-transition'
   | 'tie'
   | 'winner'
   | 'waiting';
 
+/** Service ou composant GameSetup ; coordonne sa responsabilite de domaine ou d interface. */
 @Component({
   selector: 'app-game-setup',
   imports: [ContextualHelpComponent, QuantityPipe],
@@ -221,6 +223,27 @@ export class GameSetup {
     );
 
   /**
+   * Indique que les lancers suivants appartiennent
+   * à une manche de départage.
+   *
+   * Cet état reste actif entre les lancers successifs
+   * afin que l'interface conserve le libellé « Relancer ».
+   */
+  readonly isFirstPlayerTieBreakerRound =
+    signal(false);
+
+  /**
+   * Instantané des résultats ex æquo conservés
+   * pendant la transition vers la manche de départage.
+   *
+   * GameService peut ainsi préparer immédiatement
+   * la manche suivante sans faire disparaître
+   * la preuve visuelle de l'égalité.
+   */
+  private readonly tieTransitionRolls =
+    signal<Record<number, FirstPlayerRoll>>({});
+
+  /**
    * Indique qu'un lancer automatique de l'IA
    * a déjà été programmé.
    *
@@ -237,6 +260,12 @@ export class GameSetup {
    * inutilement la préparation.
    */
   private readonly aiRollDelay = 750;
+
+  /**
+   * Durée pendant laquelle les résultats ex æquo
+   * restent visibles avant d'autoriser les relances.
+   */
+  private readonly tieResultsDisplayDelay = 1800;
 
   constructor(
     readonly gameService: GameService,
@@ -418,6 +447,7 @@ export class GameSetup {
     );
   }
 
+/** Gere goToSetupStep et applique les gardes necessaires avant mutation. */
   goToSetupStep(step: 'players' | 'heroes'): void {
     const target: SetupStep = step === 'players' ? 'player-count' : 'hero-draw';
     this.gameService.goBackToSetupStep(target);
@@ -426,12 +456,17 @@ export class GameSetup {
     this.revealedPlayerIndexes.set([]);
     this.rollingPlayerIndex.set(null);
     this.firstPlayerResolutionState.set('waiting');
+    this.isFirstPlayerTieBreakerRound.set(false);
+    this.tieTransitionRolls.set({});
     this.aiRollScheduled = false;
   }
 
+/** Gere continueAfterHeroDraw et applique les gardes necessaires avant mutation. */
   continueAfterHeroDraw(): void {
     this.gameService.continueAfterHeroDraw();
     this.firstPlayerResolutionState.set('waiting');
+    this.isFirstPlayerTieBreakerRound.set(false);
+    this.tieTransitionRolls.set({});
   }
 
   get canNavigatePrevious(): boolean { return this.gameService.setupStep() !== 'player-count'; }
@@ -442,11 +477,13 @@ export class GameSetup {
       : this.gameService.setupStep() === 'hero-draw' && this.heroDrawState() === 'revealed';
   }
 
+/** Gere navigatePrevious et applique les gardes necessaires avant mutation. */
   navigatePrevious(): void {
     if (this.gameService.setupStep() === 'first-player-roll') this.goToSetupStep('heroes');
     else if (this.gameService.setupStep() === 'hero-draw') this.goToSetupStep('players');
   }
 
+/** Gere navigateNext et applique les gardes necessaires avant mutation. */
   navigateNext(): void {
     if (!this.canNavigateNext) return;
     if (this.gameService.setupStep() === 'hero-draw') this.continueAfterHeroDraw();
@@ -558,6 +595,12 @@ export class GameSetup {
       'waiting',
     );
 
+    this.isFirstPlayerTieBreakerRound.set(
+      false,
+    );
+
+    this.tieTransitionRolls.set({});
+
     /**
      * Autorise la programmation du prochain
      * éventuel lancer automatique.
@@ -610,6 +653,13 @@ export class GameSetup {
     if (
       this.rollingPlayerIndex()
       !== null
+    ) {
+      return;
+    }
+
+    if (
+      this.firstPlayerResolutionState()
+      === 'tie-transition'
     ) {
       return;
     }
@@ -824,11 +874,23 @@ export class GameSetup {
       return;
     }
 
+    const completedRoundRolls =
+      this.gameService
+        .firstPlayerRolls()
+        .filter(
+          (roll) =>
+            contenders.includes(
+              roll.playerIndex,
+            ),
+        );
+
     const result =
       this.gameService
         .resolveFirstPlayerRoll();
 
     if (result === 'winner') {
+      this.tieTransitionRolls.set({});
+
       this.firstPlayerResolutionState.set(
         'winner',
       );
@@ -841,38 +903,43 @@ export class GameSetup {
         this.gameService
           .firstPlayerContenders();
 
-      this.revealedPlayerIndexes
-        .update(
-          (indexes) =>
-            indexes.filter(
-              (playerIndex) =>
-                !tiedPlayers.includes(
-                  playerIndex,
-                ),
-            ),
+      const tiedRolls =
+        completedRoundRolls.reduce<
+          Record<number, FirstPlayerRoll>
+        >(
+          (rolls, roll) => {
+            if (
+              !tiedPlayers.includes(
+                roll.playerIndex,
+              )
+            ) {
+              return rolls;
+            }
+
+            rolls[roll.playerIndex] = roll;
+
+            return rolls;
+          },
+          {},
         );
 
-      this.displayedDice.update(
-        (dice) => {
-          const nextDice = {
-            ...dice,
-          };
+      this.tieTransitionRolls.set(
+        tiedRolls,
+      );
 
-          for (
-            const playerIndex
-            of tiedPlayers
-          ) {
-            delete nextDice[
-              playerIndex
-            ];
-          }
-
-          return nextDice;
-        },
+      this.isFirstPlayerTieBreakerRound.set(
+        true,
       );
 
       this.firstPlayerResolutionState.set(
-        'tie',
+        'tie-transition',
+      );
+
+      window.setTimeout(
+        () => this.finishTieTransition(
+          tiedPlayers,
+        ),
+        this.tieResultsDisplayDelay,
       );
 
       return;
@@ -880,6 +947,70 @@ export class GameSetup {
 
     this.firstPlayerResolutionState.set(
       'waiting',
+    );
+  }
+
+  /**
+   * Termine la pause visuelle d'une égalité et prépare
+   * l'affichage de la manche de départage.
+   *
+   * Les gardes empêchent un ancien timer de modifier
+   * un écran quitté ou une manche déjà résolue.
+   */
+  private finishTieTransition(
+    tiedPlayers: number[],
+  ): void {
+    const currentContenders =
+      this.gameService
+        .firstPlayerContenders();
+
+    const sameContenders =
+      currentContenders.length
+        === tiedPlayers.length
+      && currentContenders.every(
+        (playerIndex) =>
+          tiedPlayers.includes(
+            playerIndex,
+          ),
+      );
+
+    if (
+      this.gameService.setupStep()
+        !== 'first-player-roll'
+      || this.gameService.firstPlayerIndex()
+        !== null
+      || this.firstPlayerResolutionState()
+        !== 'tie-transition'
+      || !sameContenders
+    ) {
+      return;
+    }
+
+    this.revealedPlayerIndexes.update(
+      (indexes) =>
+        indexes.filter(
+          (playerIndex) =>
+            !tiedPlayers.includes(
+              playerIndex,
+            ),
+        ),
+    );
+
+    this.displayedDice.update(
+      (dice) => {
+        const nextDice = { ...dice };
+
+        for (const playerIndex of tiedPlayers) {
+          delete nextDice[playerIndex];
+        }
+
+        return nextDice;
+      },
+    );
+
+    this.tieTransitionRolls.set({});
+    this.firstPlayerResolutionState.set(
+      'tie',
     );
   }
 
@@ -967,6 +1098,8 @@ export class GameSetup {
       this.gameService
         .firstPlayerIndex()
         === null
+      && this.firstPlayerResolutionState()
+        !== 'tie-transition'
       && this.rollingPlayerIndex()
         === null
       && this.gameService
@@ -1106,6 +1239,10 @@ export class GameSetup {
     }
 
     return (
+      this.tieTransitionRolls()[
+        playerIndex
+      ]
+      ??
       this.gameService
         .firstPlayerRolls()
         .find(
@@ -1115,6 +1252,29 @@ export class GameSetup {
         )
       ?? null
     );
+  }
+
+  /**
+   * Décrit explicitement les joueurs ex æquo
+   * pendant la transition de départage.
+   */
+  getTiedPlayersLabel(): string {
+    const labels =
+      this.gameService
+        .firstPlayerContenders()
+        .map(
+          (playerIndex) =>
+            `Joueur ${playerIndex + 1}`,
+        );
+
+    if (labels.length <= 1) {
+      return labels[0] ?? '';
+    }
+
+    return [
+      labels.slice(0, -1).join(', '),
+      labels.at(-1),
+    ].join(' et ');
   }
 
   /**

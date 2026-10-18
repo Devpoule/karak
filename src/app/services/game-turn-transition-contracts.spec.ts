@@ -85,6 +85,10 @@ describe('GameService contrat de transition de tour', () => {
     vi.clearAllTimers();
     gameService.initialize();
 
+    // Une nouvelle initialisation efface désormais les anciens joueurs ;
+    // cette seconde partie doit donc déclarer sa nouvelle configuration.
+    playerService.initialize(3);
+
     gameService.phase.set('playing');
     gameService.activePlayerIndex.set(0);
     playerService.players[0].position = { x: 0, y: 0 };

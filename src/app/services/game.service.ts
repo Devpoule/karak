@@ -28,6 +28,13 @@ export interface FirstPlayerRoll {
   die2: number;
   total: number;
 }
+
+/** Sélection temporaire de destination pour un voyage entre portails. */
+export interface PortalTravelSelection {
+  player: Player;
+  destinations: readonly PlacedTile[];
+  destination: PlacedTile | null;
+}
 /**
  * Coffre dont la résolution est obligatoire après l'entrée
  * d'un héros sur sa tuile.
@@ -60,6 +67,7 @@ export interface PendingGroundEquipment {
   index: number;
 }
 
+/** Contrat de donnees PendingTokenChoice utilise par le domaine ou l interface. */
 export interface PendingTokenChoice {
   player: Player;
   tile: PlacedTile;
@@ -76,6 +84,7 @@ export interface PendingSneakChoice {
   movementConsumed: boolean;
 }
 
+/** Contrat de donnees HealingPortalSelection utilise par le domaine ou l interface. */
 export interface HealingPortalSelection {
   readonly user: Player;
   readonly target: Player | null;
@@ -110,11 +119,13 @@ type TileEntryClassification =
   | { kind: 'closed-chest-without-key' }
   | { kind: 'treasure'; token: TreasureTokenDefinition };
 
+/** Service ou composant GameService ; coordonne sa responsabilite de domaine ou d interface. */
 @Injectable({
   providedIn: 'root',
 })
 export class GameService {
   private initialized = false;
+  private initializedPlayerConfigurationVersion = 0;
 
   /**
    * Phase globale actuelle de la partie.
@@ -191,12 +202,14 @@ export class GameService {
   readonly pendingUnstoppableDecision = signal<PendingUnstoppableDecision | null>(null);
   /** Action facultative autorisée sur la tuile d'arrivée de Xanros. */
   readonly pendingXanrosSubstitutionAction = signal<PendingXanrosSubstitutionAction | null>(null);
+  readonly portalTravelSelection = signal<PortalTravelSelection | null>(null);
 
   /** Objets déposés indépendamment des jetons monstres/trésors. */
   private groundEquipmentByTile = new Map<string, Equipment>();
   /** Révision réactive de l'affichage des équipements au sol. */
   readonly groundEquipmentRevision = signal(0);
 
+/** Gere groundKey et applique les gardes necessaires avant mutation. */
   private groundKey(tile: PlacedTile): string {
     return `${tile.x}:${tile.y}`;
   }
@@ -260,6 +273,7 @@ export class GameService {
       && this.xanrosSubstitutionTargets.length > 0;
   }
 
+/** Gere openXanrosSubstitution et applique les gardes necessaires avant mutation. */
   openXanrosSubstitution(): boolean {
     if (!this.canUseXanrosSubstitution) return false;
     this.xanrosSubstitutionPlayer = this.activePlayer;
@@ -267,6 +281,7 @@ export class GameService {
     return true;
   }
 
+/** Gere cancelXanrosSubstitution et applique les gardes necessaires avant mutation. */
   cancelXanrosSubstitution(): void {
     this.xanrosSubstitutionPlayer = null;
     this.xanrosSubstitutionSelectionOpen.set(false);
@@ -300,6 +315,7 @@ export class GameService {
   finishXanrosSubstitutionAction(): boolean {
     if (!this.canResolveXanrosSubstitutionAction) return false;
     this.pendingXanrosSubstitutionAction.set(null);
+    this.portalTravelSelection.set(null);
     this.endTurn();
     return true;
   }
@@ -386,6 +402,7 @@ export class GameService {
     return true;
   }
 
+/** Gere canContinueUnstoppable et applique les gardes necessaires avant mutation. */
   private canContinueUnstoppable(player: Player): boolean {
     return this.phase() === 'playing'
       && !this.turnTransitionPending()
@@ -411,6 +428,7 @@ export class GameService {
     this.endTurn();
   }
 
+/** Gere confirmXanrosSubstitution et applique les gardes necessaires avant mutation. */
   confirmXanrosSubstitution(target: Player): boolean {
     const player = this.activePlayer;
     if (!this.canConfirmXanrosSubstitution(player, target)) return false;
@@ -507,6 +525,21 @@ export class GameService {
     this.endTurn();
     return true;
   }
+
+  /** Refuse un coffre facultatif et reprend les mouvements suspendus. */
+  declinePendingTreasure(): boolean {
+    const pending = this.pendingTreasure();
+    if (!pending || pending.player !== this.activePlayer) return false;
+    if (this.optionalXanrosTreasure) return this.declineOptionalXanrosTreasure();
+
+    this.pendingTreasure.set(null);
+    if (this.turnService.resumeSuspendedMovements()) {
+      if (!this.turnService.canMove) this.endTurn();
+    } else {
+      this.endTurn();
+    }
+    return true;
+  }
   constructor(
     private readonly dungeonService: DungeonService,
     private readonly explorationService: ExplorationService,
@@ -518,6 +551,7 @@ export class GameService {
     private readonly toastService: ToastService,
   ) {}
 
+/** Gere actorLabel et applique les gardes necessaires avant mutation. */
   private actorLabel(player: Player): string {
     return (player.heroId ? getHeroDefinition(player.heroId)?.name : undefined) ?? 'Le héros';
   }
@@ -576,6 +610,16 @@ export class GameService {
    * - sachet monstres/trésors.
    */
   initialize(): void {
+    // Une nouvelle partie doit repartir sans joueurs ni références
+    // hérités. Lors de la toute première ouverture, les joueurs ne
+    // sont pas encore configurés et doivent donc rester intacts si un
+    // appelant prépare la configuration avant l'initialisation du jeu.
+    if (
+      this.initialized
+      && this.playerService.configurationVersion === this.initializedPlayerConfigurationVersion
+    ) {
+      this.playerService.reset();
+    }
     if (this.turnTransitionTimer !== null) {
       clearTimeout(this.turnTransitionTimer);
       this.turnTransitionTimer = null;
@@ -598,6 +642,7 @@ export class GameService {
     this.pendingGroundEquipment.set(null);
     this.pendingSneakChoice.set(null);
     this.pendingTokenChoice.set(null);
+    this.portalTravelSelection.set(null);
     this.healingPortalSelection.set(null);
     this.horanReincarnationSelection.set(null);
     this.clearUnstoppableContinuation();
@@ -609,6 +654,7 @@ export class GameService {
     this.initializeTileDeck();
     this.initializeTokenBag();
     this.initializeCombat();
+    this.initializedPlayerConfigurationVersion = this.playerService.configurationVersion;
     this.initialized = true;
   }
 
@@ -905,6 +951,7 @@ export class GameService {
     tile.tokenFace = 'front';
   }
 
+/** Gere choosePendingToken et applique les gardes necessaires avant mutation. */
   choosePendingToken(index: 0 | 1): boolean {
     const pending = this.pendingTokenChoice();
     if (
@@ -1000,10 +1047,24 @@ export class GameService {
       this.revealNewRoom(destinationTile, player, sourceTile);
       if (this.pendingTokenChoice()) return 'token-choice';
     }
-    // Une salle nouvellement découverte impose la résolution de son contenu.
-    // Sneak reste disponible uniquement lors d'un déplacement vers une tuile
-    // déjà connue, où Aderyn peut choisir de traverser le monstre sans combat.
-    const classification = this.classifyTileEntry(player, destinationTile, !revealRoom);
+
+    // La Marche rampante reste disponible lors de toute rencontre éligible,
+    // y compris lorsque le contenu vient d'être révélé sur une nouvelle tuile.
+    const classification = this.classifyTileEntry(player, destinationTile, true);
+
+    // Une arrivée sur une fontaine sans événement de jeton met fin au
+    // déplacement et soigne immédiatement le héros. Les contenus présents
+    // sur la tuile restent prioritaires afin de préserver leur résolution.
+    if ((classification.kind === 'empty' || classification.kind === 'already-resolved')
+      && this.isNewHealingFountainArrival(sourceTile, destinationTile)) {
+      this.turnService.stopMovements();
+      this.playerService.restoreCompletely(player, 5);
+      this.toastService.show(
+        `${this.actorLabel(player)} récupère tous ses points de vie à la fontaine.`,
+        'success',
+      );
+      return 'none';
+    }
 
     if (classification.kind === 'sneak') {
       this.turnService.stopMovements();
@@ -1059,10 +1120,16 @@ export class GameService {
       treasureTile: destinationTile,
       sourceTile,
     });
-    if (classification.token.id === 'closed-chest' && player.inventory.key !== null) {
-      this.openPendingTreasure();
-    }
     return 'treasure';
+  }
+
+  /** Vérifie qu'une entrée ordinaire arrive réellement sur une fontaine. */
+  private isNewHealingFountainArrival(sourceTile: PlacedTile, destinationTile: PlacedTile): boolean {
+    if (sourceTile.x === destinationTile.x && sourceTile.y === destinationTile.y) {
+      return false;
+    }
+
+    return this.dungeonService.getTileDefinition(destinationTile)?.feature === 'healing-fountain';
   }
 
   /** Classifie le contenu d'une tuile sans modifier l'état du jeu. */
@@ -1265,6 +1332,59 @@ export class GameService {
     );
   }
 
+  /** Retourne les tuiles portail déjà découvertes. */
+  getPortalTiles(): readonly PlacedTile[] {
+    return this.dungeonService.tiles.filter(tile =>
+      this.dungeonService.getTileDefinition(tile)?.feature === 'portal',
+    );
+  }
+
+  /** Vérifie les conditions communes d’un voyage entre portails. */
+  canUsePortalTravel(player: Player | null): boolean {
+    if (!this.canPerformNormalMovement(player) || !player?.position) return false;
+    const source = this.dungeonService.getTileAt(player.position.x, player.position.y);
+    if (!source || this.dungeonService.getTileDefinition(source)?.feature !== 'portal') return false;
+    return this.getPortalTiles().some(tile => tile !== source);
+  }
+
+  /** Ouvre la sélection des destinations portail pour le joueur actif. */
+  openPortalTravelSelection(): boolean {
+    const player = this.activePlayer;
+    if (!this.canUsePortalTravel(player) || this.portalTravelSelection()) return false;
+    if (!player?.position) return false;
+    const source = this.dungeonService.getTileAt(player.position.x, player.position.y)!;
+    const destinations = this.getPortalTiles().filter(tile => tile !== source);
+    this.portalTravelSelection.set({ player, destinations, destination: destinations[0] ?? null });
+    return true;
+  }
+
+/** Gere selectPortalTravelDestination et applique les gardes necessaires avant mutation. */
+  selectPortalTravelDestination(destination: PlacedTile): boolean {
+    const selection = this.portalTravelSelection();
+    if (!selection || !selection.destinations.includes(destination)) return false;
+    this.portalTravelSelection.set({ ...selection, destination });
+    return true;
+  }
+
+/** Gere closePortalTravelSelection et applique les gardes necessaires avant mutation. */
+  closePortalTravelSelection(): void {
+    this.portalTravelSelection.set(null);
+  }
+
+  /** Déplace le héros vers le portail choisi et consomme exactement un mouvement. */
+  confirmPortalTravel(): boolean {
+    const selection = this.portalTravelSelection();
+    const player = this.activePlayer;
+    const destination = selection?.destination;
+    if (!selection || selection.player !== player || !destination || !this.canUsePortalTravel(player)) return false;
+
+    this.playerService.movePlayerTo(player, destination.x, destination.y, player.facing ?? 'south');
+    this.turnService.consumeMovement();
+    this.portalTravelSelection.set(null);
+    if (!this.turnService.canMove && !this.hasPendingTileResolution) this.endTurn();
+    return true;
+  }
+
   /** Valide les invariants communs à un déplacement normal de héros. */
   canPerformNormalMovement(player: Player | null): boolean {
     return this.phase() === 'playing'
@@ -1360,6 +1480,7 @@ export class GameService {
       && this.getHealingFountains().length > 0;
   }
 
+/** Gere openHealingPortalSelection et applique les gardes necessaires avant mutation. */
   openHealingPortalSelection(): boolean {
     if (!this.canUseHealingPortal || !this.activePlayer) return false;
     const fountains = this.getHealingFountains();
@@ -1367,22 +1488,26 @@ export class GameService {
     return true;
   }
 
+/** Gere closeHealingPortalSelection et applique les gardes necessaires avant mutation. */
   closeHealingPortalSelection(): void {
     this.healingPortalSelection.set(null);
   }
 
+/** Gere selectHealingPortalTarget et applique les gardes necessaires avant mutation. */
   selectHealingPortalTarget(target: Player): void {
     const selection = this.healingPortalSelection();
     if (!selection || !this.playerService.players.includes(target)) return;
     this.healingPortalSelection.set({ ...selection, target });
   }
 
+/** Gere selectHealingPortalDestination et applique les gardes necessaires avant mutation. */
   selectHealingPortalDestination(destination: PlacedTile): void {
     const selection = this.healingPortalSelection();
     if (!selection || !this.getHealingFountains().includes(destination)) return;
     this.healingPortalSelection.set({ ...selection, destination });
   }
 
+/** Gere moveHealingPortalSelection et applique les gardes necessaires avant mutation. */
   moveHealingPortalSelection(step: 1 | -1): void {
     const selection = this.healingPortalSelection();
     const fountains = this.getHealingFountains();

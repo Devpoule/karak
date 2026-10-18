@@ -42,6 +42,8 @@ export const EQUIPMENT_DEFINITIONS = {
   key: { id: 'key', name: 'Clé', kind: 'key', image: `${TOKEN_ASSET_PATH}/key.png` },
 } as const satisfies Record<string, Equipment>;
 
+/** Construit ou calcule le resultat de getEquipmentDefinition. */
+/** Construit ou calcule le resultat de getEquipmentDefinition. */
 export function getEquipmentDefinition(id: string): Equipment | undefined {
   return Object.values(EQUIPMENT_DEFINITIONS).find((item) => item.id === id);
 }

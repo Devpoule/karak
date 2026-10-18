@@ -209,7 +209,7 @@ describe('AiService résolutions obligatoires', () => {
     const tile = chestTile();
     expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile)).toBe('treasure');
 
-    expect(aiService.resolveMandatoryAction()).toBe('none');
+    expect(aiService.resolveMandatoryAction()).toBe('resolved');
     expect(player.inventory.key).toBeNull();
     expect(player.treasures).toEqual(['opened-chest']);
     expect(tile.tokenId).toBeUndefined();
@@ -225,8 +225,8 @@ describe('AiService résolutions obligatoires', () => {
 
     expect(aiService.playAction()).toBe(false);
     expect(player.position).toBe(positionBefore);
-    expect(gameService.pendingTreasure()).toBeNull();
-    expect(gameService.turnTransitionPending()).toBe(true);
+    expect(gameService.pendingTreasure()).not.toBeNull();
+    expect(gameService.turnTransitionPending()).toBe(false);
   });
 
   it('Taia IA reprend ses mouvements apres un coffre sans cle', () => {
@@ -789,8 +789,8 @@ describe('AiService déplacements et exploration', () => {
 
     expect(aiService.playAction()).toBe(false);
     expect(turnService.remainingMovements()).toBe(movementsBefore);
-    expect(gameService.pendingTreasure()).toBeNull();
-    expect(gameService.turnTransitionPending()).toBe(true);
+    expect(gameService.pendingTreasure()).not.toBeNull();
+    expect(gameService.turnTransitionPending()).toBe(false);
   });
 
   it('termine le tour après une Substitution vers une tuile sans interaction', () => {

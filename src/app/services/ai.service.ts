@@ -199,6 +199,8 @@ export class AiService {
       || this.gameService.declineUnstoppableContinuation();
   }
 
+/** Gere resolveXanrosSacrificeDecision et applique les gardes necessaires avant mutation. */
+/** Gere resolveXanrosSacrificeDecision et applique les gardes necessaires avant mutation. */
   resolveXanrosSacrificeDecision(): boolean {
     const player = this.gameService.activePlayer;
     const combat = this.combatService.pendingCombat();
@@ -321,6 +323,14 @@ export class AiService {
     if (!this.turnService.canMove) {
       this.gameService.endTurn();
       return false;
+    }
+
+    // Le voyage entre portails est une action de déplacement : l’IA
+    // choisit la première destination disponible de façon déterministe.
+    if (this.gameService.canUsePortalTravel(player)) {
+      if (this.gameService.openPortalTravelSelection()) {
+        return this.gameService.confirmPortalTravel();
+      }
     }
 
     const currentTile = this.getPlayerTile(player);

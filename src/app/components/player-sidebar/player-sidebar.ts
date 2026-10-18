@@ -101,29 +101,34 @@ export class PlayerSidebar {
     return this.player?.heroId ? getHeroDefinition(this.player.heroId) ?? null : null;
   }
 
+/** Gere togglePower et applique les gardes necessaires avant mutation. */
   togglePower(powerId: HeroPowerId): void {
     if (this.player?.isCursed) return;
     this.biographyOpen = false;
     this.selectedPowerId = this.selectedPowerId === powerId ? null : powerId;
   }
 
+/** Gere toggleBiography et applique les gardes necessaires avant mutation. */
   toggleBiography(): void {
     this.selectedPowerId = null;
     this.biographyOpen = !this.biographyOpen;
   }
 
+/** Gere openCurseDialog et applique les gardes necessaires avant mutation. */
   openCurseDialog(): void {
     this.selectedPowerId = null;
     this.biographyOpen = false;
     this.curseDialogOpen = true;
   }
 
+/** Gere closeDetails et applique les gardes necessaires avant mutation. */
   closeDetails(): void {
     this.selectedPowerId = null;
     this.biographyOpen = false;
     this.curseDialogOpen = false;
   }
 
+/** Gere powerImage et applique les gardes necessaires avant mutation. */
   powerImage(powerIndex: number): string {
     const hero = this.heroDefinition;
     const powerKind = powerIndex === 0 ? 'primary' : 'secondary';
@@ -132,6 +137,7 @@ export class PlayerSidebar {
       : '';
   }
 
+/** Gere onEscape et applique les gardes necessaires avant mutation. */
   @HostListener('document:keydown.escape')
   onEscape(): void {
     this.closeDetails();

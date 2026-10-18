@@ -2,6 +2,7 @@ import { KeyEquipment, SpellEquipment, WeaponEquipment } from './equipment';
 
 export type InventorySlot<TItem = never> = TItem | null;
 
+/** Contrat de donnees PlayerInventory utilise par le domaine ou l interface. */
 export interface PlayerInventory {
   weapons: InventorySlot<WeaponEquipment>[];
   spells: InventorySlot<SpellEquipment>[];
@@ -14,6 +15,7 @@ export const PLAYER_INVENTORY_CAPACITY = {
   key: 1,
 } as const;
 
+/** Construit ou calcule le resultat de createEmptyPlayerInventory. */
 export function createEmptyPlayerInventory(): PlayerInventory {
   return {
     weapons: Array.from({ length: PLAYER_INVENTORY_CAPACITY.weapons }, () => null),

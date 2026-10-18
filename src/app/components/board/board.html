@@ -68,6 +68,8 @@
       <div
         class="board__tile"
         [class.board__tile--healing-selected]="healingPortalSelection?.destination === tile || horanReincarnationSelection?.destination === tile"
+        [class.board__tile--portal-selected]="portalTravelSelection?.destination === tile"
+        [class.board__tile--portal-destination]="portalTravelSelection?.destinations?.includes(tile)"
         [style.left.px]="mapCenterInPixels + tile.x * tileSize - tileSize / 2"
         [style.top.px]="mapCenterInPixels + tile.y * tileSize - tileSize / 2"
         (click)="handleTileClick(tile)"
@@ -327,6 +329,22 @@
         </button>
       </div>
     }
+    @if (portalTravelSelection; as selection) {
+      <div
+        class="board__movement-controls board__healing-portal-controls board__portal-travel-controls"
+        [style.left.px]="healingPortalControlLeft(selection.destination)"
+        [style.top.px]="healingPortalControlTop(selection.destination)"
+        (pointerdown)="$event.stopPropagation()"
+      >
+        <span class="board__healing-portal-count" aria-live="polite">
+          Portail · {{ selection.destinations.indexOf(selection.destination!) + 1 }} / {{ selection.destinations.length }}
+        </span>
+        <button type="button" class="board__movement-control board__healing-portal-confirm" (click)="confirmPortalTravel()" aria-label="Confirmer le déplacement entre portails" title="Confirmer le déplacement entre portails">
+          <span aria-hidden="true">↗</span>
+        </button>
+        <button type="button" class="board__portal-travel-cancel" (click)="closePortalTravel()">Annuler</button>
+      </div>
+    }
     @if (humanPendingXanrosSubstitutionAction; as action) {
       <div
         class="board__movement-controls board__xanros-action-controls"
@@ -382,6 +400,8 @@
           </button>
             @if (gameService.isOptionalXanrosTreasure) {
               <button type="button" (click)="declineOptionalXanrosTreasure()">Ne pas ouvrir</button>
+            } @else {
+              <button type="button" (click)="declinePendingTreasure()">Continuer</button>
             }
         </div>
       </section>

@@ -505,6 +505,7 @@ describe('GameService Tisseuse de destin de Taia', () => {
 
     expect(gameService.resolveTileEntry(taia, source, destination, true)).toBe('token-choice');
     expect(gameService.choosePendingToken(0)).toBe(true);
+    expect(gameService.openPendingTreasure()).toBe(true);
     expect(destination.tokenId).toBeUndefined();
     expect(taia.inventory.key).toBeNull();
     expect(taia.treasures).toContain('opened-chest');
@@ -1021,7 +1022,8 @@ describe('GameService coffre fermé', () => {
     playerService.addEquipment(playerService.players[0], key!);
     const { player, tile } = preparePendingChest();
 
-    expect(gameService.pendingTreasure()).toBeNull();
+    expect(gameService.pendingTreasure()).not.toBeNull();
+    expect(gameService.openPendingTreasure()).toBe(true);
     expect(player.inventory.key).toBeNull();
     expect(player.treasures).toEqual(['opened-chest']);
     expect(tile.tokenId).toBeUndefined();
@@ -1060,7 +1062,8 @@ describe('GameService coffre fermé', () => {
     expect(gameService.dropInventoryEquipment(playerService.players[0], 'weapon', 0)).toBe(true);
     const { tile } = preparePendingChest();
     const groundBefore = gameService.getGroundEquipment(tile);
-    expect(gameService.pendingTreasure()).toBeNull();
+    expect(gameService.pendingTreasure()).not.toBeNull();
+    expect(gameService.openPendingTreasure()).toBe(true);
     expect(gameService.openPendingTreasure()).toBe(false);
     expect(tile.tokenId).toBeUndefined();
     expect(gameService.getGroundEquipment(tile)).toEqual(groundBefore);
@@ -1595,8 +1598,8 @@ describe('GameService audit coffre inaccessible', () => {
     const tile = chestTile();
 
     expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile)).toBe('treasure');
-    expect(gameService.pendingTreasure()).toBeNull();
-    expect(tile.tokenId).toBeUndefined();
+    expect(gameService.pendingTreasure()).not.toBeNull();
+    expect(tile.tokenId).toBe('closed-chest');
     expect(turnService.remainingMovements()).toBe(0);
   });
 
@@ -1654,14 +1657,26 @@ describe('GameService résolution des salles découvertes par Aderyn', () => {
     } as PlacedTile;
   }
 
-  it('déclenche le combat pour un monstre découvert malgré Sneak', () => {
+  it('propose le choix Sneak pour un monstre découvert sur une nouvelle tuile', () => {
     const player = playerService.players[0];
     player.heroId = 'aderyn';
     const tile = roomWithToken('giant-rat');
 
-    expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile, true)).toBe('combat');
-    expect(combatService.hasPendingCombat).toBe(true);
+    expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile, true)).toBe('sneak-choice');
+    expect(gameService.pendingSneakChoice()?.monster.id).toBe('giant-rat');
+    expect(combatService.hasPendingCombat).toBe(false);
     expect(turnService.remainingMovements()).toBe(0);
+  });
+
+  it('désactive Sneak sur une nouvelle tuile lorsque Aderyn est maudite', () => {
+    const player = playerService.players[0];
+    player.heroId = 'aderyn';
+    player.isCursed = true;
+    const tile = roomWithToken('giant-rat');
+
+    expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile, true)).toBe('combat');
+    expect(gameService.pendingSneakChoice()).toBeNull();
+    expect(combatService.hasPendingCombat).toBe(true);
   });
 
   it('propose le choix Sneak pour un monstre déjà présent sur le plan', () => {
@@ -1761,8 +1776,8 @@ describe('GameService résolution des salles découvertes par Aderyn', () => {
     const tile = roomWithToken('closed-chest');
 
     expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, tile, true)).toBe('treasure');
-    expect(tile.tokenId).toBeUndefined();
-    expect(player.treasures).toContain('opened-chest');
+    expect(tile.tokenId).toBe('closed-chest');
+    expect(player.treasures).not.toContain('opened-chest');
   });
 
   it('résout normalement un objet découvert et un monstre découvert sous malédiction', () => {
@@ -1778,8 +1793,8 @@ describe('GameService résolution des salles découvertes par Aderyn', () => {
     const chest = roomWithToken('closed-chest');
     playerService.addEquipment(player, getEquipmentDefinition('key')!);
     expect(gameService.resolveTileEntry(player, { x: 0, y: 0 } as PlacedTile, chest, true)).toBe('treasure');
-    expect(gameService.pendingTreasure()).toBeNull();
-    expect(chest.tokenId).toBeUndefined();
+    expect(gameService.pendingTreasure()).not.toBeNull();
+    expect(chest.tokenId).toBe('closed-chest');
     expect(turnService.remainingMovements()).toBe(0);
   });
 });

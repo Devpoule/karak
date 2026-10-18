@@ -76,6 +76,30 @@ export class PlayerService {
   readonly treasuresRevision = signal(0);
   /** Notification réactive des changements de malédiction. */
   readonly curseRevision = signal(0);
+  private configurationRevision = 0;
+
+  /** Version de la dernière configuration valide des participants. */
+  get configurationVersion(): number {
+    return this.configurationRevision;
+  }
+
+  /**
+   * Efface l’état joueur d’une partie terminée ou abandonnée.
+   *
+   * Cette opération est distincte de `initialize`, qui crée une
+   * nouvelle composition de joueurs. Elle permet à GameService de
+   * remettre l’application dans l’état vierge de l’étape de choix
+   * des participants, sans conserver de référence vers un ancien
+   * héros dans les signaux d’interface.
+   */
+  reset(): void {
+    this.players.length = 0;
+    this.lastLifeLoss.set(null);
+    this.livesRevision.update(revision => revision + 1);
+    this.inventoryRevision.update(revision => revision + 1);
+    this.treasuresRevision.update(revision => revision + 1);
+    this.curseRevision.update(revision => revision + 1);
+  }
   /** Applique ou lève la malédiction sans modifier les autres attributs du héros. */
   setCursed(player: Player, isCursed: boolean): boolean {
     if (!this.players.includes(player) || player.isCursed === isCursed) return false;
@@ -257,6 +281,7 @@ export class PlayerService {
      * complètement la composition précédente.
      */
     this.players.length = 0;
+    this.configurationRevision += 1;
     this.livesRevision.update((revision) => revision + 1);
     this.curseRevision.update(revision => revision + 1);
     this.treasuresRevision.update(revision => revision + 1);

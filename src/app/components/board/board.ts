@@ -114,20 +114,27 @@ export class Board {
     return this.gameService.horanReincarnationSelection();
   }
 
+  get portalTravelSelection() {
+    return this.gameService.portalTravelSelection();
+  }
+
   get healingFountains(): readonly PlacedTile[] { return this.gameService.getHealingFountains(); }
 
   get healingPortalImage(): string {
     return getEquipmentDefinition('heart')?.image ?? '';
   }
 
+/** Gere healingPortalControlLeft et applique les gardes necessaires avant mutation. */
   healingPortalControlLeft(tile: PlacedTile | null | undefined): number {
     return this.mapCenterInPixels + (tile?.x ?? 0) * this.tileSize;
   }
 
+/** Gere healingPortalControlTop et applique les gardes necessaires avant mutation. */
   healingPortalControlTop(tile: PlacedTile | null | undefined): number {
     return this.mapCenterInPixels + (tile?.y ?? 0) * this.tileSize - this.tileSize * 0.75;
   }
 
+/** Gere confirmHealingPortal et applique les gardes necessaires avant mutation. */
   confirmHealingPortal(): void {
     const selection = this.healingPortalSelection;
     if (selection?.target && selection.destination && this.gameService.useHealingPortal(selection.target, selection.destination)) {
@@ -135,7 +142,20 @@ export class Board {
     }
   }
 
+/** Gere handleTileClick et applique les gardes necessaires avant mutation. */
   handleTileClick(tile: PlacedTile): void {
+    if (this.portalTravelSelection) {
+      this.gameService.selectPortalTravelDestination(tile);
+      this.centerOnPosition(tile.x, tile.y);
+      return;
+    }
+    if (this.gameService.canUsePortalTravel(this.gameService.activePlayer)
+      && this.gameService.getPortalTiles().includes(tile)) {
+      this.gameService.openPortalTravelSelection();
+      this.gameService.selectPortalTravelDestination(tile);
+      this.centerOnPosition(tile.x, tile.y);
+      return;
+    }
     if (this.horanReincarnationSelection) {
       this.gameService.selectHoranReincarnationDestination(tile);
       this.centerOnPosition(tile.x, tile.y);
@@ -152,14 +172,17 @@ export class Board {
     }
   }
 
+/** Gere confirmXanrosSubstitution et applique les gardes necessaires avant mutation. */
   confirmXanrosSubstitution(target: Player): void {
     if (this.gameService.confirmXanrosSubstitution(target)) this.centerOnActivePlayer();
   }
 
+/** Gere finishXanrosSubstitutionAction et applique les gardes necessaires avant mutation. */
   finishXanrosSubstitutionAction(): void {
     this.gameService.finishXanrosSubstitutionAction();
   }
 
+/** Gere moveHealingPortalSelection et applique les gardes necessaires avant mutation. */
   moveHealingPortalSelection(step: 1 | -1): void {
     if (!this.healingPortalSelection) return;
     this.gameService.moveHealingPortalSelection(step);
@@ -167,6 +190,7 @@ export class Board {
     if (destination) this.centerOnPosition(destination.x, destination.y);
   }
 
+/** Gere moveHoranReincarnationSelection et applique les gardes necessaires avant mutation. */
   moveHoranReincarnationSelection(step: 1 | -1): void {
     if (!this.horanReincarnationSelection) return;
     this.gameService.moveHoranReincarnationSelection(step);
@@ -174,10 +198,12 @@ export class Board {
     if (destination) this.centerOnPosition(destination.x, destination.y);
   }
 
+/** Gere confirmHoranReincarnation et applique les gardes necessaires avant mutation. */
   confirmHoranReincarnation(): void {
     this.gameService.confirmHoranReincarnation();
   }
 
+/** Gere handleHealingPortalKeyboard et applique les gardes necessaires avant mutation. */
   @HostListener('window:keydown', ['$event'])
   handleHealingPortalKeyboard(event: KeyboardEvent): void {
     if (this.horanReincarnationSelection) {
@@ -355,12 +381,19 @@ export class Board {
       && pending.player.inventory.key !== null;
   }
 
+/** Gere openPendingTreasure et applique les gardes necessaires avant mutation. */
   openPendingTreasure(): void {
     if (this.canOpenPendingTreasure) {
       this.gameService.openPendingTreasure();
     }
   }
 
+/** Gere declinePendingTreasure et applique les gardes necessaires avant mutation. */
+  declinePendingTreasure(): void {
+    this.gameService.declinePendingTreasure();
+  }
+
+/** Gere declineOptionalXanrosTreasure et applique les gardes necessaires avant mutation. */
   declineOptionalXanrosTreasure(): void {
     this.gameService.declineOptionalXanrosTreasure();
   }
@@ -390,6 +423,7 @@ export class Board {
     return TREASURE_POINTS[treasure];
   }
 
+/** Gere collectPendingTreasure et applique les gardes necessaires avant mutation. */
   collectPendingTreasure(): void {
     if (this.pendingTreasureReward) {
       this.gameService.collectPendingTreasure();
@@ -413,6 +447,7 @@ export class Board {
     this.gameService.offerGroundEquipmentAt(tile, index);
   }
 
+/** Gere getGroundEquipment et applique les gardes necessaires avant mutation. */
   getGroundEquipment(tile: PlacedTile): readonly Equipment[] {
     return this.gameService.getGroundEquipment(tile);
   }
@@ -432,11 +467,13 @@ export class Board {
     }));
   }
 
+/** Gere resolvePendingCurse et applique les gardes necessaires avant mutation. */
   resolvePendingCurse(player: Player | null): void {
     if (!this.hasPendingCurse) return;
     this.gameService.resolvePendingCurse(player);
   }
 
+/** Gere leavePendingReward et applique les gardes necessaires avant mutation. */
   leavePendingReward(): void {
     if (!this.humanPendingReward) return;
     this.gameService.leavePendingReward();
@@ -862,6 +899,7 @@ export class Board {
     this.turnService.consumeMovement();
   }
 
+/** Gere finishPlayerMovement et applique les gardes necessaires avant mutation. */
   private finishPlayerMovement(): void {
     if (!this.turnService.canMove && !this.gameService.hasPendingTileResolution) {
       this.gameService.endTurn();
@@ -1028,6 +1066,21 @@ export class Board {
     return this.canMoveTo(tile, direction) || this.canExplore(tile, direction);
   }
 
+/** Gere openPortalTravel et applique les gardes necessaires avant mutation. */
+  openPortalTravel(): void {
+    this.gameService.openPortalTravelSelection();
+  }
+
+/** Gere confirmPortalTravel et applique les gardes necessaires avant mutation. */
+  confirmPortalTravel(): void {
+    this.gameService.confirmPortalTravel();
+  }
+
+/** Gere closePortalTravel et applique les gardes necessaires avant mutation. */
+  closePortalTravel(): void {
+    this.gameService.closePortalTravelSelection();
+  }
+
   /**
    * Fait pivoter la tuile actuellement en attente.
    */
@@ -1113,22 +1166,28 @@ export class Board {
   // besoin avant d'en supprimer certaines.
   // ==========================================================
 
+/** Expose la presence d'une ouverture dans une direction du plateau. */
+/** Gere hasTileOpening et applique les gardes necessaires avant mutation. */
   hasTileOpening(tile: PlacedTile, direction: Direction): boolean {
     return this.dungeonService.hasTileOpening(tile, direction);
   }
 
+/** Gere getNeighborPosition et applique les gardes necessaires avant mutation. */
   getNeighborPosition(tile: PlacedTile, direction: Direction): { x: number; y: number } {
     return this.dungeonService.getNeighborPosition(tile, direction);
   }
 
+/** Gere getTileAt et applique les gardes necessaires avant mutation. */
   getTileAt(x: number, y: number): PlacedTile | undefined {
     return this.dungeonService.getTileAt(x, y);
   }
 
+/** Gere getNeighbor et applique les gardes necessaires avant mutation. */
   getNeighbor(tile: PlacedTile, direction: Direction): PlacedTile | undefined {
     return this.dungeonService.getNeighbor(tile, direction);
   }
 
+/** Gere canMoveTo et applique les gardes necessaires avant mutation. */
   canMoveTo(tile: PlacedTile, direction: Direction): boolean {
     const destination = this.dungeonService.getNeighbor(tile, direction);
     return this.gameService.canMoveTo(this.gameService.activePlayer, tile, destination ?? null);

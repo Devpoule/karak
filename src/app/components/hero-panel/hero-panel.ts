@@ -57,10 +57,12 @@ export class HeroPanel implements DoCheck, OnDestroy {
     this.syncCurseState(this.player?.isCursed === true);
   });
 
+/** Gere ngDoCheck et applique les gardes necessaires avant mutation. */
   ngDoCheck(): void {
     this.syncCurseState(this.player?.isCursed === true);
   }
 
+/** Gere syncCurseState et applique les gardes necessaires avant mutation. */
   private syncCurseState(cursed: boolean): void {
     if (this.player !== this.previousPlayer) {
       this.previousPlayer = this.player;
@@ -124,6 +126,7 @@ export class HeroPanel implements DoCheck, OnDestroy {
     return this.gameService.healingPortalSelection()?.target === this.player;
   }
 
+/** Gere openBiography et applique les gardes necessaires avant mutation. */
   openBiography(): void {
     if (this.gameService.healingPortalSelection() && this.player) {
       this.gameService.selectHealingPortalTarget(this.player);

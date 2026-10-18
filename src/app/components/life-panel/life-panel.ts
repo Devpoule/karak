@@ -5,8 +5,10 @@ import { CombatService } from '../../services/combat.service';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
 
 const MAX_LIVES = 5;
+/** Contrat de donnees LifeSlot utilise par le domaine ou l interface. */
 interface LifeSlot { index: number; active: boolean; }
 
+/** Service ou composant LifePanel ; coordonne sa responsabilite de domaine ou d interface. */
 @Component({
   imports: [QuantityPipe],
   selector: 'app-life-panel',
@@ -42,6 +44,7 @@ export class LifePanel implements DoCheck, OnDestroy {
     }));
   }
 
+/** Gere ngDoCheck et applique les gardes necessaires avant mutation. */
   ngDoCheck(): void {
     const currentLives = this.lives;
     const combatResultVisible = this.combatService.lastCombatResult() !== null;
@@ -96,7 +99,9 @@ export class LifePanel implements DoCheck, OnDestroy {
     this.showFeedback(feedback, changedSlots);
   }
 
+/** Gere isChangedSlot et applique les gardes necessaires avant mutation. */
   isChangedSlot(index: number): boolean { return this.changedSlots.includes(index); }
+/** Gere showFeedback et applique les gardes necessaires avant mutation. */
   private showFeedback(feedback: 'damage' | 'heal', changedSlots: number[]): void {
     this.resetFeedback();
     this.feedback = feedback;
@@ -104,6 +109,7 @@ export class LifePanel implements DoCheck, OnDestroy {
     const duration = feedback === 'damage' ? 2800 : 1100;
     this.feedbackTimer = setTimeout(() => this.resetFeedback(), duration);
   }
+/** Gere resetFeedback et applique les gardes necessaires avant mutation. */
   private resetFeedback(): void {
     if (this.feedbackTimer !== null) {
       clearTimeout(this.feedbackTimer);
@@ -112,6 +118,7 @@ export class LifePanel implements DoCheck, OnDestroy {
     this.feedback = null;
     this.changedSlots = [];
   }
+/** Gere ngOnDestroy et applique les gardes necessaires avant mutation. */
   ngOnDestroy(): void {
     this.destroyed = true;
     this.pendingDamageSlots = [];

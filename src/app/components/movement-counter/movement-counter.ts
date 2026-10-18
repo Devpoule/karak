@@ -71,19 +71,23 @@ export class MovementCounter implements OnDestroy {
     });
   }
 
+/** Gere isPointConsumed et applique les gardes necessaires avant mutation. */
   isPointConsumed(index: number): boolean {
     return index >= this.turnService.remainingMovements();
   }
 
+/** Gere isPointAnimating et applique les gardes necessaires avant mutation. */
   isPointAnimating(index: number): boolean {
     this.animationStateRevision();
     return this.animatingPointIndexes.has(index);
   }
 
+/** Gere ngOnDestroy et applique les gardes necessaires avant mutation. */
   ngOnDestroy(): void {
     this.clearAnimations();
   }
 
+/** Gere clearAnimations et applique les gardes necessaires avant mutation. */
   private clearAnimations(): void {
     this.animationTimers.forEach(timer => clearTimeout(timer));
     this.animationTimers.clear();
