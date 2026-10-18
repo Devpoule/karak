@@ -26,6 +26,22 @@ async function openPreparedGame(page: import('@playwright/test').Page): Promise<
 
   await page.getByRole('button', { name: 'Entrer dans le donjon' }).click();
   await expect(page.locator('app-board')).toBeVisible();
+  await expect(page.locator('app-movement-counter')).toHaveCount(1);
+  await expect(page.locator('.game__turn-announcement')).toBeVisible();
+
+  const initialTurnState = await page.evaluate(() => {
+    const root = document.querySelector('app-root');
+    const ng = (window as Window & { ng?: { getComponent(node: Element): any } }).ng;
+    const game = root && ng?.getComponent(root.querySelector('app-game') ?? root);
+    return {
+      phase: game?.gameService?.phase(),
+      movementsMade: game?.gameService?.turnService?.movementsMadeThisTurn(),
+      activePlayerIndex: game?.gameService?.activePlayerIndex(),
+    };
+  });
+  expect(initialTurnState.phase).toBe('playing');
+  expect(initialTurnState.movementsMade).toBe(0);
+  expect(initialTurnState.activePlayerIndex).toBeGreaterThanOrEqual(0);
 }
 
 test('partie intégrale déterministe jusqu’au classement du Dragon', async ({ page }) => {
@@ -66,7 +82,10 @@ test('partie intégrale déterministe jusqu’au classement du Dragon', async ({
   await expect(page.locator('.combat-overlay')).toBeVisible();
   await page.getByRole('button', { name: 'Lancer les dés' }).click({ force: true });
   await expect(page.locator('.combat-overlay__verdict-title')).toContainText('gagne', { timeout: 15_000 });
+  await expect(page.locator('.combat-overlay__score--hero')).toHaveCount(1);
+  await expect(page.locator('.combat-overlay__score--monster')).toHaveCount(1);
   await expect(page.getByRole('heading', { name: 'Récompense du combat' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Récupérer le trésor' })).toHaveCount(1);
   await expect(page.locator('app-toast-container .toast-container')).toHaveCount(0);
   await page.getByRole('button', { name: 'Récupérer le trésor' }).click();
 
