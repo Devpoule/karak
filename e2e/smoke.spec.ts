@@ -163,6 +163,36 @@ test('la préparation reste lisible sur écran étroit', async ({ page }) => {
   });
 });
 
+test('le header contient et centre son logo et ses onglets', async ({ page }) => {
+  for (const viewport of [{ width: 1920, height: 1080 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/play');
+    await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
+
+    const geometry = await page.locator('.game-header').evaluate(header => {
+      const headerBox = header.getBoundingClientRect();
+      const logoBox = header.querySelector('.game-header__logo')?.getBoundingClientRect();
+      const homeBox = header.querySelector('.game-header__home')?.getBoundingClientRect();
+      const codexBox = header.querySelector('.game-header__link')?.getBoundingClientRect();
+      return {
+        header: { top: headerBox.top, bottom: headerBox.bottom, center: headerBox.top + headerBox.height / 2 },
+        logo: logoBox && { top: logoBox.top, bottom: logoBox.bottom, center: logoBox.top + logoBox.height / 2 },
+        home: homeBox && { center: homeBox.top + homeBox.height / 2 },
+        codex: codexBox && { center: codexBox.top + codexBox.height / 2 },
+      };
+    });
+
+    expect(geometry.logo).toBeTruthy();
+    expect(geometry.home).toBeTruthy();
+    expect(geometry.codex).toBeTruthy();
+    expect(geometry.logo!.top).toBeGreaterThanOrEqual(geometry.header.top);
+    expect(geometry.logo!.bottom).toBeLessThanOrEqual(geometry.header.bottom);
+    expect(Math.abs(geometry.logo!.center - geometry.header.center)).toBeLessThanOrEqual(2);
+    expect(Math.abs(geometry.home!.center - geometry.header.center)).toBeLessThanOrEqual(2);
+    expect(Math.abs(geometry.codex!.center - geometry.header.center)).toBeLessThanOrEqual(2);
+  }
+});
+
 test('la préférence de mouvement réduit neutralise les animations de préparation', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/play');

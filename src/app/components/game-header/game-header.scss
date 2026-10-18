@@ -35,7 +35,7 @@
     inset 0 -3px 0 rgba(0, 0, 0, 0.45),
     0 5px 12px rgba(0, 0, 0, 0.6);
 
-  overflow: visible;
+  overflow: hidden;
 
   &::after {
     content: '';
@@ -58,8 +58,10 @@
 
   display: block;
 
-  width: clamp(130px, 10vw, 190px);
-  height: auto;
+  width: auto;
+  max-width: min(190px, 24vw);
+  height: 72px;
+  max-height: 100%;
 
   object-fit: contain;
 
@@ -141,6 +143,8 @@
 .game-header__home {
   justify-self: start;
   align-self: center;
+  display: inline-flex;
+  align-items: center;
 }
 
 .game-header__actions {
@@ -168,7 +172,9 @@
   }
 
   .game-header__logo {
-    width: clamp(90px, 25vw, 130px);
+    width: auto;
+    max-width: min(130px, 25vw);
+    height: 48px;
   }
 
   .game-header__actions {
