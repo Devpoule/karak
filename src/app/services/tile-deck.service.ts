@@ -107,4 +107,12 @@ export class TileDeckService {
   initialize(): void {
     this.deck = createShuffledTileDeck();
   }
+
+  /** Restaure l'ordre restant de la pioche persistée. */
+  restore(remainingTileIds: readonly string[]): boolean {
+    const knownIds = new Set(TILE_DEFINITIONS.map((tile) => tile.id));
+    if (remainingTileIds.some((id) => !knownIds.has(id) || id === 'start')) return false;
+    this.deck = [...remainingTileIds];
+    return true;
+  }
 }

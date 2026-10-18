@@ -94,7 +94,7 @@ export class Game implements OnInit, OnDestroy {
 /** Gere ngOnInit et applique les gardes necessaires avant mutation. */
   ngOnInit(): void {
     if (!this.gameService.isInitialized()) {
-      this.gameService.initialize();
+      this.gameService.restoreOrInitialize();
     }
   }
 

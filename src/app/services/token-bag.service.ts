@@ -81,6 +81,14 @@ export class TokenBagService {
     this.updateRemainingTokens();
   }
 
+  /** Restaure le contenu ordonné restant du sachet persisté. */
+  restore(remainingTokenIds: readonly string[]): boolean {
+    if (remainingTokenIds.some((id) => !getTokenDefinition(id))) return false;
+    this.bag = [...remainingTokenIds] as TokenDefinitionId[];
+    this.updateRemainingTokens();
+    return true;
+  }
+
 
   /**
    * Tire un jeton du sachet.

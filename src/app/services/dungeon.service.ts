@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Direction, PlacedTile, TileDefinition, areConnected, hasOpening } from '../models/tile';
 
 import { TILE_DEFINITIONS } from '../data/tile-definitions';
+import { DungeonSaveV2 } from '../models/save';
 
 /**
  * Gère la structure physique du donjon.
@@ -303,5 +304,21 @@ export class DungeonService {
       y: 0,
       rotation: 0,
     });
+  }
+
+  /** Restaure les occurrences de tuiles persistées. */
+  restore(saved: DungeonSaveV2): boolean {
+    const tiles: PlacedTile[] = saved.tiles.map((tile) => ({
+      definitionId: String(tile['definitionId']),
+      x: Number(tile['x']),
+      y: Number(tile['y']),
+      rotation: Number(tile['rotation']),
+      ...(typeof tile['tokenId'] === 'string' ? { tokenId: tile['tokenId'] } : {}),
+      ...(tile['tokenFace'] === 'front' || tile['tokenFace'] === 'back' ? { tokenFace: tile['tokenFace'] as 'front' | 'back' } : {}),
+    }));
+    if (!tiles.length || tiles.some((tile) => !this.getTileDefinition(tile) || ![0, 90, 180, 270].includes(tile.rotation))) return false;
+    if (!tiles.some((tile) => tile.definitionId === 'start' && tile.x === 0 && tile.y === 0)) return false;
+    this.tiles.splice(0, this.tiles.length, ...tiles);
+    return true;
   }
 }

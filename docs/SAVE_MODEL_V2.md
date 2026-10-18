@@ -1,19 +1,19 @@
 # Karak — Modèle de sauvegarde V2
 
-Statut : **contrat implémenté pour l’écriture locale**
+Statut : **contrat implémenté pour l’écriture et la restauration locale**
 Ticket : `V2.1-01`  
 Date : 18 octobre 2026
 
 Ce document définit le contrat de données destiné aux tickets
 `V2.1-02` à `V2.1-05`. `SaveService` implémente désormais l’écriture, la
-lecture validée et la suppression de l’enveloppe locale. La reconstruction de
-`GameService` reste le périmètre de `V2.1-03`.
+lecture validée et la suppression de l’enveloppe locale. `GameService` tente
+la restauration au démarrage de `/play`, puis initialise une nouvelle partie
+si aucune sauvegarde exploitable n’est présente.
 
 ## 1. État actuel
 
-Karak ne possède actuellement aucun mécanisme de persistance applicative.
-L’état est conservé en mémoire dans les services Angular et disparaît lors
-du rechargement de la page. Le modèle doit donc sérialiser l’état métier,
+L’état métier est conservé en mémoire dans les services Angular et disparaît
+normalement lors du rechargement de la page. Le modèle doit donc sérialiser l’état métier,
 jamais les instances de services, les signaux Angular ou les références
 croisées entre objets.
 

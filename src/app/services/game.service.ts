@@ -17,6 +17,8 @@ import { CombatService } from './combat.service';
 import type { CombatResult } from './combat.service';
 import { ToastService } from './toast.service';
 import { getHeroDefinition } from '../data/hero-definitions';
+import { GameSavePayloadV2, SaveEnvelopeV2 } from '../models/save';
+import { SaveService } from './save.service';
 
 /**
  * Résultat du lancer effectué par un joueur
@@ -549,7 +551,39 @@ export class GameService {
     private readonly turnService: TurnService,
     private readonly combatService: CombatService,
     private readonly toastService: ToastService,
+    private readonly saveService: SaveService,
   ) {}
+
+  /** Restaure une sauvegarde stable avant l'affichage de la partie. */
+  restoreSavedGame(envelope: SaveEnvelopeV2): boolean {
+    const payload: GameSavePayloadV2 = envelope.payload;
+    if (!this.playerService.restore(payload.players)) return false;
+    if (!this.dungeonService.restore(payload.dungeon)) return false;
+    if (!this.tileDeckService.restore(payload.dungeon.remainingTileIds)) return false;
+    if (!this.tokenBagService.restore(payload.dungeon.remainingTokenIds)) return false;
+    if (!this.turnService.restore(
+      payload.turn.remainingMovements,
+      payload.turn.movementsMadeThisTurn,
+      payload.turn.suspendedMovements,
+    )) return false;
+    this.phase.set(payload.phase);
+    this.setupStep.set(payload.setupStep);
+    this.firstPlayerIndex.set(payload.firstPlayerIndex);
+    this.activePlayerIndex.set(payload.activePlayerIndex);
+    this.firstPlayerContenders.set([...payload.firstPlayerContenders]);
+    this.firstPlayerRolls.set(payload.firstPlayerRolls as unknown as FirstPlayerRoll[]);
+    this.finalRanking.set([]);
+    this.winners.set([]);
+    this.initializedPlayerConfigurationVersion = this.playerService.configurationVersion;
+    this.initialized = true;
+    return true;
+  }
+
+  /** Tente la reprise locale et revient à une nouvelle partie si elle échoue. */
+  restoreOrInitialize(): void {
+    const savedGame = this.saveService.read();
+    if (!savedGame || !this.restoreSavedGame(savedGame)) this.initialize();
+  }
 
 /** Gere actorLabel et applique les gardes necessaires avant mutation. */
   private actorLabel(player: Player): string {

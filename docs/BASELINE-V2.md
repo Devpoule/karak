@@ -55,7 +55,7 @@ npx playwright test e2e/mobile-stability.spec.ts e2e/smoke.spec.ts --workers=1
 
 | Contrôle | Résultat |
 |---|---|
-| Suite Angular complète | 322/322 réussis |
+| Suite Angular complète | 327/327 réussis |
 | Build Angular production | réussi |
 | Références Markdown locales | 38 fichiers valides |
 | Full game + continuité IA | 2/2 scénarios réussis |

@@ -172,4 +172,16 @@ export class TurnService {
     this.movementsMadeThisTurn.set(0);
     this.lastMovementConsumption.set(null);
   }
+
+  /** Restaure les compteurs d'un tour sans rejouer une animation passée. */
+  restore(remaining: number, made: number, suspended: number | null): boolean {
+    if (!Number.isInteger(remaining) || remaining < 0 || remaining > GAME_CONSTANTS.movement.perTurn) return false;
+    if (!Number.isInteger(made) || made < 0 || made > GAME_CONSTANTS.movement.perTurn) return false;
+    if (suspended !== null && (!Number.isInteger(suspended) || suspended < 0 || suspended > GAME_CONSTANTS.movement.perTurn)) return false;
+    this.suspendedMovements = suspended;
+    this.remainingMovements.set(remaining);
+    this.movementsMadeThisTurn.set(made);
+    this.lastMovementConsumption.set(null);
+    return true;
+  }
 }

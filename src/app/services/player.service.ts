@@ -2,10 +2,12 @@ import { Injectable, signal } from '@angular/core';
 import { HERO_DEFINITIONS } from '../data/hero-definitions';
 import { HeroId } from '../models/hero';
 import { createEmptyPlayerInventory, PLAYER_INVENTORY_CAPACITY } from '../models/inventory';
-import { Equipment, EquipmentKind } from '../models/equipment';
+import { Equipment, EquipmentKind, KeyEquipment, SpellEquipment, WeaponEquipment } from '../models/equipment';
 import { Player } from '../models/player';
 import { createEmptyTreasures, Treasure } from '../models/treasure';
 import { Direction } from '../models/tile';
+import { PlayerSaveV2 } from '../models/save';
+import { getEquipmentDefinition } from '../data/equipment-definitions';
 /**
  * Nombre minimal de joueurs participant
  * à une partie dans l'application.
@@ -305,6 +307,65 @@ export class PlayerService {
         treasures: createEmptyTreasures(),
       });
     }
+  }
+
+  /** Reconstruit les joueurs persistés en conservant leur ordre. */
+  restore(players: readonly PlayerSaveV2[]): boolean {
+    const restored = players.map((saved) => {
+      const player: Player = {
+        controller: saved.controller,
+        lives: saved.lives,
+        recoveryState: saved.recoveryState,
+        isCursed: saved.isCursed,
+        inventory: createEmptyPlayerInventory(),
+        treasures: saved.treasures
+          .map((treasure) => this.restoreTreasure(treasure))
+          .filter((treasure): treasure is Treasure => treasure !== null),
+      };
+      if (saved.heroId) player.heroId = saved.heroId as HeroId;
+      if (saved.position) player.position = { ...saved.position };
+      if (saved.facing) player.facing = saved.facing as Direction;
+      const savedWeapons = Array.isArray(saved.inventory['weapons']) ? saved.inventory['weapons'] : [];
+      const savedSpells = Array.isArray(saved.inventory['spells']) ? saved.inventory['spells'] : [];
+      player.inventory.weapons = Array.from({ length: 2 }, (_, index) => this.restoreEquipment(savedWeapons[index], 'weapon'));
+      player.inventory.spells = Array.from({ length: 3 }, (_, index) => this.restoreEquipment(savedSpells[index], 'spell'));
+      player.inventory.key = this.restoreEquipment(saved.inventory['key'], 'key');
+      return player;
+    });
+    if (restored.some((player) => player.lives < 0 || player.lives > 5 || player.inventory.weapons.length !== 2 || player.inventory.spells.length !== 3)) return false;
+    this.players.splice(0, this.players.length, ...restored);
+    this.configurationRevision += 1;
+    this.livesRevision.update((revision) => revision + 1);
+    this.inventoryRevision.update((revision) => revision + 1);
+    this.treasuresRevision.update((revision) => revision + 1);
+    this.curseRevision.update((revision) => revision + 1);
+    return true;
+  }
+
+  /** Résout un équipement sauvegardé vers sa définition immuable du catalogue. */
+  private restoreEquipment(value: unknown, kind: 'weapon'): WeaponEquipment | null;
+  private restoreEquipment(value: unknown, kind: 'spell'): SpellEquipment | null;
+  private restoreEquipment(value: unknown, kind: 'key'): KeyEquipment | null;
+  private restoreEquipment(value: unknown, kind: EquipmentKind): Equipment | null {
+    if (value === null || value === undefined) return null;
+    const id = typeof value === 'string'
+      ? value
+      : typeof value === 'object' && value !== null
+        ? (value as Record<string, unknown>)['id']
+        : undefined;
+    if (typeof id !== 'string') return null;
+    const equipment = getEquipmentDefinition(id);
+    return equipment?.kind === kind ? equipment : null;
+  }
+
+  /** Résout un trésor persisté vers l'un des identifiants métier autorisés. */
+  private restoreTreasure(value: unknown): Treasure | null {
+    const id = typeof value === 'string'
+      ? value
+      : typeof value === 'object' && value !== null
+        ? (value as Record<string, unknown>)['id']
+        : undefined;
+    return id === 'opened-chest' || id === 'monster-treasure' || id === 'dragon-ruby' ? id : null;
   }
   // ==========================================================
   // DÉPLACEMENT TEMPORAIRE
