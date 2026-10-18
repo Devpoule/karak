@@ -1,0 +1,58 @@
+<article
+  [class]="'hero-power-card hero-power-card--' + hero.id"
+  [class.hero-power-card--announcement]="mode === 'announcement'"
+  [class.hero-power-card--choice]="mode === 'choice'"
+  [class.hero-power-card--consultation]="mode === 'consultation'"
+  [attr.role]="mode === 'announcement' ? 'status' : 'dialog'"
+  [attr.aria-modal]="mode === 'announcement' ? null : 'true'"
+  [attr.aria-labelledby]="'hero-power-card-title-' + hero.id"
+  [attr.aria-describedby]="'hero-power-card-description-' + hero.id"
+  tabindex="-1"
+>
+  <div class="hero-power-card__aura" aria-hidden="true"></div>
+  <img
+    class="hero-power-card__portrait"
+    [src]="hero.characterTransparent"
+    [alt]="hero.name"
+    draggable="false"
+  />
+  <div class="hero-power-card__content">
+    <span class="hero-power-card__eyebrow">Pouvoir spécial</span>
+    <h2 [id]="'hero-power-card-title-' + hero.id">{{ hero.name }}</h2>
+    <p class="hero-power-card__power">{{ power.name }}</p>
+    <p [id]="'hero-power-card-description-' + hero.id">{{ mode === 'announcement' && message ? message : mode === 'consultation' ? power.description : power.summary }}</p>
+    @if (mode === 'consultation' && conditions) {
+      <p class="hero-power-card__conditions"><strong>Conditions :</strong> {{ conditions }}</p>
+    }
+    @if (mode === 'decision') {
+      <div class="hero-power-card__actions">
+        <button type="button" class="hero-power-card__activate" autofocus (click)="activated.emit()">
+          {{ activateLabel }}
+        </button>
+        <button type="button" class="hero-power-card__decline" (click)="declined.emit()">
+          Continuer sans
+        </button>
+      </div>
+    } @else if (mode === 'choice') {
+      <div class="hero-power-card__choices" role="group" [attr.aria-label]="'Choix de ' + power.name">
+        @for (choice of choices; track choice.label; let index = $index) {
+          <button type="button" class="hero-power-card__choice" (click)="choiceSelected.emit(index)">
+            <img [src]="choice.image" [alt]="choice.alt" draggable="false" />
+            <span>{{ choice.label }}</span>
+          </button>
+        }
+        @if (choiceCancelable) {
+          <button type="button" class="hero-power-card__decline" (click)="choiceCancelled.emit()">
+            Annuler
+          </button>
+        }
+      </div>
+    } @else if (mode === 'consultation') {
+      <div class="hero-power-card__actions">
+        <button type="button" class="hero-power-card__close" (click)="closed.emit()">
+          Fermer
+        </button>
+      </div>
+    }
+  </div>
+</article>

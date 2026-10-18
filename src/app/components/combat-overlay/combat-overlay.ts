@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 
 import { getHeroDefinition } from '../../data/hero-definitions';
+import { HeroDefinition, HeroPowerDefinition } from '../../models/hero';
 
 import {
   CombatOutcome,
@@ -22,6 +23,7 @@ import { GameService } from '../../services/game.service';
 import { AiService } from '../../services/ai.service';
 import { ToastService } from '../../services/toast.service';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
+import { HeroPowerCard } from '../hero-power-card/hero-power-card';
 
 /**
  * Étapes visuelles de présentation d'un combat.
@@ -34,6 +36,12 @@ type CombatPresentationState =
   | 'result';
 
 type CombatDie = 'die1' | 'die2';
+
+interface PowerAnnouncement {
+  hero: HeroDefinition;
+  power: HeroPowerDefinition;
+  message: string;
+}
 
 export type CombatWaveTarget = 'hero' | 'monster' | null;
 export type CombatWaveDirection = 'left-to-right' | 'right-to-left';
@@ -64,7 +72,7 @@ export function getCombatWaveDirection(
 /** Service ou composant CombatOverlay ; coordonne sa responsabilite de domaine ou d interface. */
 @Component({
   selector: 'app-combat-overlay',
-  imports: [QuantityPipe],
+  imports: [HeroPowerCard, QuantityPipe],
   templateUrl: './combat-overlay.html',
   styleUrl: './combat-overlay.scss',
 })
@@ -78,6 +86,8 @@ export class CombatOverlay implements OnDestroy {
 
   readonly presentationState =
     signal<CombatPresentationState>('intro');
+  /** Annonce temporaire d’une activation IA déjà confirmée par le domaine. */
+  readonly powerAnnouncement = signal<PowerAnnouncement | null>(null);
 
   readonly displayedDice = signal({
     die1: 1,
@@ -297,6 +307,57 @@ export class CombatOverlay implements OnDestroy {
     return this.isDecisionVisible
       && !this.xanrosSacrificeDeclined()
       && this.combatService.canUseXanrosSacrifice();
+  }
+
+  /** Pouvoir facultatif prioritaire présenté par la carte cinématique. */
+  get optionalPowerPresentation(): { hero: HeroDefinition; power: HeroPowerDefinition; activateLabel: string } | null {
+    if (!this.isDecisionVisible || !this.combat?.player) return null;
+    const player = this.combat.player;
+    if (!player.heroId) return null;
+    const hero = getHeroDefinition(player.heroId);
+    if (!hero) return null;
+
+    const powerId = this.availableHeroRerolls.length > 0
+      ? player.heroId === 'horan' ? 'double-attack' : 'combat-training'
+      : this.canUseXanrosSacrifice ? 'sacrifice' : null;
+    if (!powerId) return null;
+    const power = hero.powers.find(candidate => candidate.id === powerId);
+    return power
+      ? { hero, power, activateLabel: powerId === 'sacrifice' ? 'Activer le pouvoir' : 'Relancer avec le pouvoir' }
+      : null;
+  }
+
+  /** Active le premier choix admissible en conservant les gardes du combat. */
+  activateOptionalPower(): void {
+    const presentation = this.optionalPowerPresentation;
+    if (!presentation) return;
+    if (presentation.power.id === 'sacrifice') {
+      this.useXanrosSacrifice();
+      return;
+    }
+    const reroll = this.availableHeroRerolls[0];
+    if (reroll) this.useHeroReroll(reroll);
+  }
+
+  /** Refuse le pouvoir courant et reprend le chemin de décision existant. */
+  declineOptionalPower(): void {
+    const presentation = this.optionalPowerPresentation;
+    if (!presentation) return;
+    if (presentation.power.id === 'sacrifice') {
+      this.declineXanrosSacrifice();
+      return;
+    }
+    this.resolveCombatAfterRoll();
+  }
+
+  /** Décrit la carte d’Inarrêtable après un combat admissible. */
+  get unstoppablePowerPresentation(): { hero: HeroDefinition; power: HeroPowerDefinition } | null {
+    const decision = this.integratedUnstoppableDecision;
+    if (!decision || decision.player.controller !== 'human') return null;
+    if (!decision.player.heroId) return null;
+    const hero = getHeroDefinition(decision.player.heroId);
+    const power = hero?.powers.find(candidate => candidate.id === 'unstoppable');
+    return hero && power ? { hero, power } : null;
   }
 
   /**
@@ -636,12 +697,25 @@ export class CombatOverlay implements OnDestroy {
     if (reroll) {
       const nextRoll = this.combatService.pendingCombatRoll();
       if (!nextRoll) return;
-
-      this.presentationState.set('rolling');
-      this.animateDice(
-        nextRoll,
-        reroll === 'both' ? ['die1', 'die2'] : [reroll],
-      );
+      const hero = roll.player.heroId ? getHeroDefinition(roll.player.heroId) : undefined;
+      const power = hero?.powers.find(candidate =>
+        candidate.id === (roll.player.heroId === 'horan' ? 'double-attack' : 'combat-training'));
+      if (hero && power) {
+        this.powerAnnouncement.set({
+          hero,
+          power,
+          message: `${hero.name} (IA) utilise ${power.name}.`,
+        });
+        this.schedule(() => {
+          this.powerAnnouncement.set(null);
+          if (this.presentationState() !== 'decision' || this.combatService.pendingCombatRoll() !== nextRoll) return;
+          this.presentationState.set('rolling');
+          this.animateDice(nextRoll, reroll === 'both' ? ['die1', 'die2'] : [reroll]);
+        }, 3500);
+      } else {
+        this.presentationState.set('rolling');
+        this.animateDice(nextRoll, reroll === 'both' ? ['die1', 'die2'] : [reroll]);
+      }
       return;
     }
 
@@ -650,6 +724,25 @@ export class CombatOverlay implements OnDestroy {
     this.aiService.resolveMagicBoltDecision();
     const boltsUsed = (this.combatService.pendingCombatRoll()?.magicBoltsUsed ?? boltsBefore) - boltsBefore;
     if (boltsUsed > 0) this.triggerMagicBoltFeedback(boltsUsed);
+
+    const hero = roll.player.heroId ? getHeroDefinition(roll.player.heroId) : undefined;
+    const powerId = roll.player.heroId === 'xanros' ? 'sacrifice' : 'combat-training';
+    const power = hero?.powers.find(candidate => candidate.id === powerId);
+    if (hero && power) {
+      this.powerAnnouncement.set({
+        hero,
+        power,
+        message: `${hero.name} (IA) continue sans utiliser ${power.name}.`,
+      });
+      this.schedule(() => {
+        this.powerAnnouncement.set(null);
+        if (this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() === roll) {
+          this.resolveCombatAfterRoll();
+        }
+      }, 1800);
+      return;
+    }
+
     this.resolveCombatAfterRoll();
   }
 

@@ -1,9 +1,9 @@
-import { Component, effect, HostListener } from '@angular/core';
+import { Component, effect, HostListener, signal } from '@angular/core';
 import { getPlayerUiConfig } from '../../constants/player-ui.constants';
 import { getHeroDefinition } from '../../data/hero-definitions';
 import { getTokenDefinition } from '../../data/token-definitions';
 import { getEquipmentDefinition } from '../../data/equipment-definitions';
-import { HeroDefinition } from '../../models/hero';
+import { HeroDefinition, HeroPowerDefinition } from '../../models/hero';
 import { Equipment } from '../../models/equipment';
 import { Player } from '../../models/player';
 import { Direction, PlacedTile, TileDefinition } from '../../models/tile';
@@ -14,6 +14,7 @@ import { ExplorationService, PendingTilePlacement } from '../../services/explora
 import { GameService, PendingReward, PendingTreasure } from '../../services/game.service';
 import { TREASURE_POINTS, Treasure } from '../../models/treasure';
 import { CombatOverlay } from '../combat-overlay/combat-overlay';
+import { HeroPowerCard, HeroPowerCardChoice } from '../hero-power-card/hero-power-card';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
 
 /**
@@ -24,6 +25,12 @@ interface BoardPlayerView {
   playerIndex: number;
   label: string;
   color: string;
+}
+
+interface PowerAnnouncement {
+  hero: HeroDefinition;
+  power: HeroPowerDefinition;
+  message: string;
 }
 
 /**
@@ -66,11 +73,17 @@ interface PlayerMarkerPosition {
  */
 @Component({
   selector: 'app-board',
-  imports: [CombatOverlay, QuantityPipe],
+  imports: [CombatOverlay, HeroPowerCard, QuantityPipe],
   templateUrl: './board.html',
   styleUrl: './board.scss',
 })
 export class Board {
+  readonly powerAnnouncement = signal<PowerAnnouncement | null>(null);
+  private announcementTimer: number | null = null;
+  private observedSubstitutionRevision = 0;
+  private observedHoranReincarnationRevision = 0;
+  private observedAstralWalkRevision = 0;
+  private observedTokenChoice: unknown = null;
   constructor(
     private readonly dungeonService: DungeonService,
     private readonly explorationService: ExplorationService,
@@ -104,6 +117,59 @@ export class Board {
         else this.centerOnActivePlayer();
       });
     });
+
+    effect(() => {
+      const revision = this.gameService.xanrosSubstitutionRevision();
+      if (revision > this.observedSubstitutionRevision) {
+        const player = this.gameService.lastXanrosSubstitutionPlayer();
+        const hero = player?.heroId ? getHeroDefinition(player.heroId) : undefined;
+        const power = hero?.powers.find(candidate => candidate.id === 'substitution');
+        if (hero && power) this.showPowerAnnouncement(hero, power, `${hero.name} utilise Substitution.`);
+      }
+      this.observedSubstitutionRevision = revision;
+    });
+
+    effect(() => {
+      const choice = this.gameService.pendingTokenChoice();
+      if (choice && choice.player.controller === 'ai' && choice !== this.observedTokenChoice) {
+        const hero = choice.player.heroId ? getHeroDefinition(choice.player.heroId) : undefined;
+        const power = hero?.powers.find(candidate => candidate.id === 'fate-weaver');
+        if (hero && power) this.showPowerAnnouncement(hero, power, `${hero.name} utilise Tisseuse de destin.`);
+      }
+      this.observedTokenChoice = choice;
+    });
+
+    effect(() => {
+      const revision = this.gameService.horanReincarnationRevision();
+      if (revision > this.observedHoranReincarnationRevision) {
+        const player = this.gameService.lastHoranReincarnationPlayer();
+        const hero = player?.heroId ? getHeroDefinition(player.heroId) : undefined;
+        const power = hero?.powers.find(candidate => candidate.id === 'reincarnation');
+        if (hero && power) this.showPowerAnnouncement(hero, power, `${hero.name} revient à la vie grâce à Réincarnation.`);
+      }
+      this.observedHoranReincarnationRevision = revision;
+    });
+
+    effect(() => {
+      const revision = this.gameService.astralWalkRevision();
+      if (revision > this.observedAstralWalkRevision) {
+        const player = this.gameService.lastAstralWalkPlayer();
+        const hero = player?.heroId ? getHeroDefinition(player.heroId) : undefined;
+        const power = hero?.powers.find(candidate => candidate.id === 'astral-walk');
+        if (hero && power) this.showPowerAnnouncement(hero, power, `${hero.name} utilise Marche astrale.`);
+      }
+      this.observedAstralWalkRevision = revision;
+    });
+  }
+
+  /** Affiche une annonce sans modifier la décision métier existante. */
+  private showPowerAnnouncement(hero: HeroDefinition, power: HeroPowerDefinition, message: string): void {
+    if (this.announcementTimer !== null) window.clearTimeout(this.announcementTimer);
+    this.powerAnnouncement.set({ hero, power, message });
+    this.announcementTimer = window.setTimeout(() => {
+      this.powerAnnouncement.set(null);
+      this.announcementTimer = null;
+    }, 3500);
   }
 
   get healingPortalSelection() {
@@ -112,6 +178,49 @@ export class Board {
 
   get horanReincarnationSelection() {
     return this.gameService.horanReincarnationSelection();
+  }
+
+  /** Prépare les deux jetons de Tisseuse de destin pour la carte unique. */
+  get fateWeaverChoices(): readonly HeroPowerCardChoice[] {
+    const choice = this.gameService.pendingTokenChoice();
+    return choice?.tokens.map(token => ({ label: token.id, image: token.image, alt: token.id })) ?? [];
+  }
+
+  /** Prépare les fontaines éligibles déjà calculées par le service métier. */
+  get horanReincarnationChoices(): readonly HeroPowerCardChoice[] {
+    return this.healingFountains.map((fountain, index) => {
+      const definition = this.getTileDefinition(fountain);
+      return {
+        label: `Fontaine ${index + 1} · (${fountain.x}, ${fountain.y})`,
+        image: definition?.image ?? '',
+        alt: `Fontaine d’eau curative ${index + 1}`,
+      };
+    });
+  }
+
+  /** Sélectionne puis confirme une fontaine sans dupliquer les règles métier. */
+  chooseHoranReincarnationDestination(index: number): void {
+    const fountain = this.healingFountains[index];
+    if (!fountain || !this.horanReincarnationSelection) return;
+    this.gameService.selectHoranReincarnationDestination(fountain);
+    this.gameService.confirmHoranReincarnation();
+  }
+
+  /** Prépare les cibles autorisées par les gardes métier de Substitution. */
+  get xanrosSubstitutionChoices(): readonly HeroPowerCardChoice[] {
+    return this.gameService.xanrosSubstitutionTargets.map((target) => {
+      const hero = target.heroId ? getHeroDefinition(target.heroId) : undefined;
+      return {
+        label: hero?.name ?? 'Héros',
+        image: hero?.character ?? '',
+        alt: hero?.name ?? 'Héros disponible',
+      };
+    });
+  }
+
+  /** Retourne la cible métier correspondant à l'index affiché par la carte. */
+  getXanrosSubstitutionTarget(index: number): Player | undefined {
+    return this.gameService.xanrosSubstitutionTargets[index];
   }
 
   get portalTravelSelection() {
@@ -583,6 +692,11 @@ export class Board {
     return getHeroDefinition(player.heroId);
   }
 
+  /** Fournit le pouvoir précis présenté par une décision facultative. */
+  getHeroPower(player: Player, powerId: 'sneak' | 'fate-weaver' | 'substitution' | 'reincarnation') {
+    return this.getHeroDefinition(player)?.powers.find(power => power.id === powerId);
+  }
+
   /**
    * Asset du pion correspondant à l'orientation actuelle
    * du héros du joueur.
@@ -896,6 +1010,7 @@ export class Board {
 
     if (this.moveActivePlayerTo(destination.x, destination.y, direction)) {
       this.consumePlayerMovement();
+      this.gameService.recordAstralWalkIfUsed(player, currentTile, destinationTile);
       this.gameService.resolveTileEntry(player, currentTile, destinationTile, false, true);
       this.finishPlayerMovement();
     }
@@ -981,6 +1096,7 @@ export class Board {
 
       if (this.moveActivePlayerTo(destination.x, destination.y, direction)) {
         this.consumePlayerMovement();
+        this.gameService.recordAstralWalkIfUsed(player, currentTile, destinationTile);
         this.gameService.resolveTileEntry(player, currentTile, destinationTile, false, true);
         this.finishPlayerMovement();
       }

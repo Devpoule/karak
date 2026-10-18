@@ -28,7 +28,7 @@ async function openBoard(page: import('@playwright/test').Page): Promise<void> {
   await expect(page.locator('app-board')).toBeVisible();
 }
 
-test('Aderyn reprend ses mouvements après Passer discrètement', async ({ page }) => {
+test('Aderyn reprend ses mouvements après avoir refusé Marche rampante', async ({ page }) => {
   await openBoard(page);
 
   await page.evaluate(() => {
@@ -64,9 +64,9 @@ test('Aderyn reprend ses mouvements après Passer discrètement', async ({ page 
     }
   });
 
-  const dialog = page.getByRole('dialog', { name: /Marche rampante/ });
+  const dialog = page.getByRole('dialog', { name: 'Aderyn' });
   await expect(dialog).toBeVisible();
-  await dialog.getByRole('button', { name: 'Passer discrètement' }).click();
+  await dialog.getByRole('button', { name: 'Utiliser le pouvoir' }).click();
   await expect(dialog).toBeHidden();
 
   const state = await page.evaluate(() => {
@@ -91,4 +91,53 @@ test('Aderyn reprend ses mouvements après Passer discrètement', async ({ page 
   expect(state.pendingSneak).toBeNull();
   expect(state.pendingCombat).toBe(false);
   expect(state.turnTransitionPending).toBe(false);
+});
+
+test('la carte de Marche rampante reste utilisable en mobile avec mouvement réduit', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await openBoard(page);
+
+  await page.evaluate(() => {
+    const root = document.querySelector('app-root');
+    const ng = (window as Window & { ng?: { getComponent(node: Element): any } }).ng;
+    const game = ng?.getComponent(root?.querySelector('app-game') ?? root!);
+    const gameService = game?.gameService;
+    const player = gameService?.activePlayer;
+    if (!gameService || !player) throw new Error('Game services unavailable');
+    player.controller = 'human';
+    player.heroId = 'aderyn';
+    const source = { definitionId: 'start', x: 0, y: 0, rotation: 0 };
+    const destination = {
+      definitionId: 'room-01', x: 1, y: 0, rotation: 0,
+      tokenId: 'giant-rat', tokenFace: 'front',
+    };
+    if (gameService.resolveTileEntry(player, source, destination) !== 'sneak-choice') {
+      throw new Error('Sneak choice was not created');
+    }
+  });
+
+  const card = page.locator('app-hero-power-card');
+  await expect(card).toBeVisible();
+  await expect(card.getByRole('button', { name: 'Utiliser le pouvoir' })).toBeVisible();
+  await expect(card.getByRole('button', { name: 'Continuer sans' })).toBeVisible();
+  for (const viewport of [{ width: 390, height: 844 }, { width: 844, height: 390 }, { width: 390, height: 360 }]) {
+    await page.setViewportSize(viewport);
+    const visual = await card.evaluate(element => {
+      const box = element.getBoundingClientRect();
+      const buttons = [...element.querySelectorAll('button')].map(button => button.getBoundingClientRect());
+      return {
+        width: box.width,
+        right: box.right,
+        bottom: box.bottom,
+        animation: getComputedStyle(element.querySelector('.hero-power-card')!).animationName,
+        buttonsInViewport: buttons.every(button => button.right <= window.innerWidth && button.bottom <= window.innerHeight),
+      };
+    });
+    expect(visual.width).toBeLessThanOrEqual(viewport.width);
+    expect(visual.right).toBeLessThanOrEqual(viewport.width);
+    expect(visual.bottom).toBeLessThanOrEqual(viewport.height);
+    expect(visual.buttonsInViewport).toBe(true);
+    expect(visual.animation).toBe('none');
+  }
 });

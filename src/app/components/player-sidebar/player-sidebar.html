@@ -62,7 +62,7 @@
                 [attr.aria-label]="'Pouvoir ' + (index + 1) + ' : ' + power.name"
                 [attr.title]="player?.isCursed ? 'Pouvoir annulé par la malédiction en cours' : power.name + ' — ' + power.summary"
                 [attr.data-tooltip]="player?.isCursed ? 'Pouvoir annulé par la malédiction en cours' : power.name + ' — ' + power.description"
-                (click)="togglePower(power.id)"
+                (click)="togglePower(power.id, $event)"
               >
                 <img [src]="powerImage(index)" alt="" draggable="false" />
                 <span class="sr-only">Pouvoir {{ index + 1 }} : {{ power.name }}</span>
@@ -98,18 +98,6 @@
         />
       }
 
-      @if (selectedPower; as power) {
-        <app-codex-dialog
-          [title]="power.name"
-          [subtitle]="hero.name + ' — ' + hero.nickname"
-          [icon]="powerImage(hero.powers.indexOf(power))"
-          [iconAlt]="power.name"
-          [body]="power.description"
-          [note]="player?.isCursed ? 'Pouvoir indisponible sous malédiction — consultation uniquement' : ''"
-          [placement]="side"
-          (closed)="closeDetails()"
-        />
-      }
     }
   }
 
