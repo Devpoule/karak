@@ -44,6 +44,19 @@ async function openPreparedGame(page: import('@playwright/test').Page): Promise<
   expect(initialTurnState.activePlayerIndex).toBeGreaterThanOrEqual(0);
 }
 
+test('une partie active reprend après une interruption par le Codex', async ({ page }) => {
+  await openPreparedGame(page);
+
+  await page.getByRole('link', { name: 'Codex' }).click();
+  await expect(page).toHaveURL(/\/codex\?from=game$/);
+  await expect(page.getByRole('button', { name: '← Retour à la partie' })).toBeVisible();
+
+  await page.getByRole('button', { name: '← Retour à la partie' }).click();
+  await expect(page.locator('app-board')).toBeVisible();
+  await expect(page.locator('app-movement-counter')).toHaveCount(1);
+  await expect(page.locator('.game__turn-announcement')).toBeVisible();
+});
+
 test('partie intégrale déterministe jusqu’au classement du Dragon', async ({ page }) => {
   await openPreparedGame(page);
 
