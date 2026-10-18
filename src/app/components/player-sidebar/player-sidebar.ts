@@ -17,6 +17,11 @@ import { CodexDialog } from '../codex-dialog/codex-dialog';
  */
 export type PlayerSide = 'left' | 'right';
 
+export interface PowerSelection {
+  powerId: HeroPowerId | null;
+  trigger: HTMLElement | null;
+}
+
 
 /**
  * Fiche visuelle d'un joueur.
@@ -80,6 +85,9 @@ export class PlayerSidebar {
    */
   @Output() playerTabClicked = new EventEmitter<void>();
 
+  /** Informe le HUD de la sélection d’un pouvoir à consulter. */
+  @Output() powerSelected = new EventEmitter<PowerSelection>();
+
 
   // ==========================================================
   // PANNEAUX VISIBLES
@@ -102,10 +110,14 @@ export class PlayerSidebar {
   }
 
 /** Gere togglePower et applique les gardes necessaires avant mutation. */
-  togglePower(powerId: HeroPowerId): void {
+  togglePower(powerId: HeroPowerId, event?: Event): void {
     if (this.player?.isCursed) return;
     this.biographyOpen = false;
     this.selectedPowerId = this.selectedPowerId === powerId ? null : powerId;
+    this.powerSelected.emit({
+      powerId: this.selectedPowerId,
+      trigger: event?.currentTarget instanceof HTMLElement ? event.currentTarget : null,
+    });
   }
 
 /** Gere toggleBiography et applique les gardes necessaires avant mutation. */
@@ -126,6 +138,7 @@ export class PlayerSidebar {
     this.selectedPowerId = null;
     this.biographyOpen = false;
     this.curseDialogOpen = false;
+    this.powerSelected.emit({ powerId: null, trigger: null });
   }
 
 /** Gere powerImage et applique les gardes necessaires avant mutation. */

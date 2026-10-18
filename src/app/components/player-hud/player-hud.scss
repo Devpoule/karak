@@ -19,6 +19,31 @@
   height: 100%;
 }
 
+.player-hud__power-card-host {
+  position: fixed;
+  inset: 0;
+  z-index: var(--karak-z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 1rem;
+  overflow: auto;
+  scrollbar-width: none;
+  background: rgba(12, 10, 9, .72);
+}
+
+.player-hud__power-card-host::-webkit-scrollbar {
+  display: none;
+}
+
+.player-hud__power-card-host app-hero-power-card {
+  display: block;
+  width: min(560px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+}
+
 /* ==========================================================
    FICHES JOUEURS
    ========================================================== */

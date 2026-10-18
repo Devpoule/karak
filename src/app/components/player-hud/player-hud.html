@@ -34,6 +34,7 @@
         [showPlayer]="true"
         [showInventory]="true"
         (playerTabClicked)="togglePlayerPanel(leftPlayerIndex)"
+        (powerSelected)="openPowerConsultation(player, $event)"
       />
     </aside>
   }
@@ -71,6 +72,7 @@
         [showPlayer]="true"
         [showInventory]="true"
         (playerTabClicked)="togglePlayerPanel(rightPlayerIndex)"
+        (powerSelected)="openPowerConsultation(player, $event)"
       />
     </aside>
   }
@@ -208,3 +210,17 @@
   </div>
 
 </div>
+
+@if (consultationHero; as hero) {
+  @if (consultationPower; as power) {
+    <div class="player-hud__power-card-host" role="presentation">
+      <app-hero-power-card
+        mode="consultation"
+        [hero]="hero"
+        [power]="power"
+        [conditions]="consultation?.player?.isCursed ? 'Pouvoir indisponible sous malédiction.' : ''"
+        (closed)="closePowerConsultation()"
+      />
+    </div>
+  }
+}

@@ -718,8 +718,20 @@
   text-align: center;
 }
 
-.combat-overlay__decision--unstoppable {
-  top: calc(50% + 188px);
+.combat-overlay__power-card {
+  position: absolute;
+  z-index: 35;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.combat-overlay__power-announcement {
+  position: absolute;
+  z-index: 40;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .combat-overlay__decision-actions {
@@ -727,11 +739,6 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-}
-
-.combat-overlay__decision--unstoppable .combat-overlay__decision-actions {
-  flex-wrap: nowrap;
-  gap: 12px;
 }
 
 .combat-overlay__verdict {

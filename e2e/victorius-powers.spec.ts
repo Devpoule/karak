@@ -95,14 +95,14 @@ test('Victorius peut refuser une relance et choisir de poursuivre son tour', asy
   await prepareVictoriusCombat(page, { movementCount: 1, die1: 6, die2: 1, strength: 20 });
 
   await page.getByRole('button', { name: 'Lancer les dés' }).click({ force: true });
-  await expect(page.getByRole('button', { name: 'Conserver ce résultat' })).toBeVisible({ timeout: 10_000 });
-  await page.getByRole('button', { name: 'Conserver ce résultat' }).click({ force: true });
+  await expect(page.getByRole('button', { name: 'Continuer sans' })).toBeVisible({ timeout: 10_000 });
+  await page.getByRole('button', { name: 'Continuer sans' }).click({ force: true });
   await expect(page.locator('.combat-overlay__verdict-title')).toContainText('gagne', { timeout: 10_000 });
   const combatOverlay = page.locator('.combat-overlay');
   await expect(combatOverlay).toBeVisible({ timeout: 10_000 });
   await expect(page.locator('.board__reward-backdrop').filter({ hasText: 'Victorius' })).toHaveCount(0);
 
-  const unstoppableChoice = page.getByRole('group', { name: 'Choix Inarrêtable' });
+  const unstoppableChoice = page.getByRole('dialog', { name: 'Victorius' });
   await expect(unstoppableChoice).toBeVisible();
   await unstoppableChoice.getByRole('button', { name: 'Continuer le tour' }).click({ force: true });
 
@@ -124,8 +124,8 @@ test('Victorius anime uniquement le dé sélectionné lors de sa relance', async
   await prepareVictoriusCombat(page, { movementCount: 1, die1: 6, die2: 1, strength: 20 });
 
   await page.getByRole('button', { name: 'Lancer les dés' }).click({ force: true });
-  await expect(page.getByRole('button', { name: 'Relancer le dé 2' })).toBeVisible({ timeout: 10_000 });
-  await page.getByRole('button', { name: 'Relancer le dé 2' }).click({ force: true });
+  await expect(page.getByRole('button', { name: 'Relancer avec le pouvoir' })).toBeVisible({ timeout: 10_000 });
+  await page.getByRole('button', { name: 'Relancer avec le pouvoir' }).click({ force: true });
 
   const rollingDice = page.locator('.combat-overlay__die--rolling');
   await expect(rollingDice).toHaveCount(1);
@@ -159,13 +159,13 @@ test('Victorius peut terminer son tour depuis la conclusion du combat', async ({
   await prepareVictoriusCombat(page, { movementCount: 1, die1: 6, die2: 1, strength: 20 });
 
   await page.getByRole('button', { name: /Lancer les/ }).click({ force: true });
-  await expect(page.getByRole('button', { name: /Conserver ce r.sultat/ })).toBeVisible({ timeout: 10_000 });
-  await page.getByRole('button', { name: /Conserver ce r.sultat/ }).click({ force: true });
+  await expect(page.getByRole('button', { name: 'Continuer sans' })).toBeVisible({ timeout: 10_000 });
+  await page.getByRole('button', { name: 'Continuer sans' }).click({ force: true });
 
   const combatOverlay = page.locator('.combat-overlay');
-  const unstoppableChoice = combatOverlay.getByRole('group', { name: 'Choix Inarrêtable' });
+  const unstoppableChoice = combatOverlay.getByRole('dialog', { name: 'Victorius' });
   await expect(unstoppableChoice).toBeVisible({ timeout: 10_000 });
-  await unstoppableChoice.getByRole('button', { name: 'Terminer le tour' }).click({ force: true });
+  await unstoppableChoice.locator('.hero-power-card__decline').click();
   await expect(combatOverlay).toBeHidden({ timeout: 10_000 });
 
   await expect.poll(async () => page.evaluate(() => {

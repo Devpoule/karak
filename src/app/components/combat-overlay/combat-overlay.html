@@ -18,6 +18,17 @@
     <!-- Fond cinématique indépendant de la caméra du plateau. -->
     <div class="combat-overlay__backdrop"></div>
 
+    @if (powerAnnouncement(); as announcement) {
+      <div class="combat-overlay__power-announcement">
+        <app-hero-power-card
+          mode="announcement"
+          [hero]="announcement.hero"
+          [power]="announcement.power"
+          [message]="announcement.message"
+        />
+      </div>
+    }
+
     <!-- Lignes de vitesse lors de l'arrivée des combattants. -->
     <div class="combat-overlay__speed-lines" aria-hidden="true"></div>
 
@@ -218,6 +229,17 @@
     </div>
 
     @if (isDecisionVisible && currentCombat.player.controller === 'human') {
+      @if (optionalPowerPresentation; as optionalPower) {
+        <div class="combat-overlay__power-card">
+          <app-hero-power-card
+            [hero]="optionalPower.hero"
+            [power]="optionalPower.power"
+            [activateLabel]="optionalPower.activateLabel"
+            (activated)="activateOptionalPower()"
+            (declined)="declineOptionalPower()"
+          />
+        </div>
+      } @else {
       <div class="combat-overlay__decision">
         @if (canUseHeroReroll) {
           @if (availableHeroRerolls.includes('both')) {
@@ -275,6 +297,7 @@
           </button>
         }
       </div>
+      }
     }
 
     <!-- VERDICT -->
@@ -303,20 +326,15 @@
       </div>
     }
 
-    @if (isUnstoppableDecisionVisible) {
-      <div
-        class="combat-overlay__decision combat-overlay__decision--unstoppable"
-        role="group"
-        aria-label="Choix Inarrêtable"
-      >
-        <div class="combat-overlay__decision-actions">
-          <button type="button" class="combat-overlay__continue" autofocus (click)="continueUnstoppable()">
-            Continuer le tour
-          </button>
-          <button type="button" class="combat-overlay__continue" (click)="finishUnstoppable()">
-            Terminer le tour
-          </button>
-        </div>
+    @if (unstoppablePowerPresentation; as unstoppablePower) {
+      <div class="combat-overlay__power-card">
+        <app-hero-power-card
+          [hero]="unstoppablePower.hero"
+          [power]="unstoppablePower.power"
+          activateLabel="Continuer le tour"
+          (activated)="continueUnstoppable()"
+          (declined)="finishUnstoppable()"
+        />
       </div>
     }
   </div>

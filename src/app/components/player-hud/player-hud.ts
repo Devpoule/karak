@@ -13,7 +13,10 @@ import { PlayerService } from '../../services/player.service';
 
 import { MovementCounter } from '../movement-counter/movement-counter';
 
-import { PlayerSidebar } from '../player-sidebar/player-sidebar';
+import { PlayerSidebar, PowerSelection } from '../player-sidebar/player-sidebar';
+import { HeroPowerCard } from '../hero-power-card/hero-power-card';
+import { HeroPowerId } from '../../models/hero';
+import { getHeroDefinition } from '../../data/hero-definitions';
 
 
 
@@ -91,7 +94,7 @@ interface HudPlayerEntry {
 
   selector: 'app-player-hud',
 
-  imports: [PlayerSidebar, MovementCounter],
+  imports: [PlayerSidebar, MovementCounter, HeroPowerCard],
 
   templateUrl: './player-hud.html',
 
@@ -100,6 +103,41 @@ interface HudPlayerEntry {
 })
 
 export class PlayerHud {
+  consultation: { player: Player; powerId: HeroPowerId; trigger: HTMLElement | null } | null = null;
+
+  /** Ouvre la consultation globale hors du panneau animé. */
+  openPowerConsultation(player: Player, selection: PowerSelection): void {
+    if (!selection.powerId) {
+      this.closePowerConsultation();
+      return;
+    }
+    this.consultation = { player, powerId: selection.powerId, trigger: selection.trigger };
+    setTimeout(() => document.querySelector<HTMLElement>('.player-hud__power-card-host .hero-power-card')?.focus());
+  }
+
+  /** Ferme la consultation globale. */
+  closePowerConsultation(): void {
+    const trigger = this.consultation?.trigger;
+    this.consultation = null;
+    setTimeout(() => trigger?.focus());
+  }
+
+  /** Résout le pouvoir actuellement consulté. */
+  get consultationPower() {
+    if (!this.consultation?.player.heroId) return null;
+    const power = getHeroDefinition(this.consultation.player.heroId)?.powers.find(
+      power => power.id === this.consultation?.powerId,
+    ) ?? null;
+    return power;
+  }
+
+  /** Résout le héros actuellement consulté. */
+  get consultationHero() {
+    const hero = this.consultation?.player.heroId
+      ? getHeroDefinition(this.consultation.player.heroId) ?? null
+      : null;
+    return hero;
+  }
   private compactViewport = false;
 
 
@@ -256,6 +294,9 @@ export class PlayerHud {
     if (compactViewport === this.compactViewport) return;
 
     this.compactViewport = compactViewport;
+    if (this.consultation) {
+      return;
+    }
     if (compactViewport) {
       this.leftPanelOpen = false;
       this.rightPanelOpen = false;

@@ -63,9 +63,11 @@ test('Taia reprend ses mouvements après le choix d’un coffre sans clé', asyn
     }
   });
 
-  const dialog = page.getByRole('dialog', { name: 'Choisir un jeton' });
-  await expect(dialog).toBeVisible();
-  await dialog.getByRole('button', { name: /closed-chest/ }).click();
+  const card = page.locator('.board__reward-backdrop app-hero-power-card');
+  await expect(card).toBeVisible();
+  await expect(card.getByText('Tisseuse de destin')).toBeVisible();
+  await expect(card.locator('.hero-power-card__choice')).toHaveCount(2);
+  await card.getByRole('button', { name: /closed-chest/ }).click();
 
   const state = await page.evaluate(() => {
     const root = document.querySelector('app-root');

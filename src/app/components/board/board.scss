@@ -36,6 +36,23 @@
     cursor: grabbing;
   }
 }
+
+.board__power-announcement {
+  position: absolute;
+  z-index: var(--karak-z-modal);
+  top: 1rem;
+  left: 50%;
+  width: min(560px, calc(100vw - 2rem));
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.board__power-announcement app-hero-power-card {
+  display: block;
+  width: 100%;
+  transform: scale(.82);
+  transform-origin: top center;
+}
 /* ==========================================================
    MONDE DU DONJON
    ========================================================== */

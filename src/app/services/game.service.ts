@@ -200,6 +200,10 @@ export class GameService {
   readonly healingPortalSelection = signal<HealingPortalSelection | null>(null);
   /** Décision métier en attente après la défaite de Horan à 0 PV. */
   readonly horanReincarnationSelection = signal<HoranReincarnationSelection | null>(null);
+  /** Révision émise après une Réincarnation effectivement résolue. */
+  readonly horanReincarnationRevision = signal(0);
+  /** Joueur concerné par la dernière Réincarnation résolue. */
+  readonly lastHoranReincarnationPlayer = signal<Player | null>(null);
   /** Décision métier en attente pour la poursuite facultative de Victorius. */
   readonly pendingUnstoppableDecision = signal<PendingUnstoppableDecision | null>(null);
   /** Action facultative autorisée sur la tuile d'arrivée de Xanros. */
@@ -220,6 +224,10 @@ export class GameService {
   readonly turnTransitionPending = signal(false);
   /** Sélection temporaire de cible pour la Substitution de Xanros. */
   readonly xanrosSubstitutionSelectionOpen = signal(false);
+  /** Révision émise uniquement après un échange de positions réussi. */
+  readonly xanrosSubstitutionRevision = signal(0);
+  /** Joueur dont le dernier échange de Substitution a réussi. */
+  readonly lastXanrosSubstitutionPlayer = signal<Player | null>(null);
   private xanrosSubstitutionPlayer: Player | null = null;
   private optionalXanrosTreasure = false;
   /** Révision UI émise lorsqu'un héros entre réellement en tour de récupération. */
@@ -445,6 +453,8 @@ export class GameService {
     player.position = { ...targetPosition };
     target.position = { ...playerPosition };
     this.cancelXanrosSubstitution();
+    this.lastXanrosSubstitutionPlayer.set(player);
+    this.xanrosSubstitutionRevision.update(revision => revision + 1);
     this.prepareXanrosSubstitutionAction(player, destinationTile);
     return true;
   }
@@ -1672,6 +1682,8 @@ export class GameService {
     if (!restored) return false;
 
     this.horanReincarnationSelection.set(null);
+    this.lastHoranReincarnationPlayer.set(selection.player);
+    this.horanReincarnationRevision.update(revision => revision + 1);
     this.toastService.show(`${this.actorLabel(selection.player)} : Horan revient avec tous ses points de vie.`, 'success');
 
     // La Réincarnation est une résolution de fin de combat : elle ne rend

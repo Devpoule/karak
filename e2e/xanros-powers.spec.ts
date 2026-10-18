@@ -68,7 +68,10 @@ test('Substitution échange les héros sans résoudre automatiquement la tuile d
       throw new Error('Xanros substitution could not be opened');
     }
   });
-  await page.locator('.board__substitution-options button').filter({ hasText: /aderyn/i }).evaluate((button) => (button as HTMLButtonElement).click());
+  const card = page.locator('.board__reward-backdrop app-hero-power-card');
+  await expect(card).toBeVisible();
+  await expect(card.locator('.hero-power-card__choice')).toHaveCount(1);
+  await card.locator('.hero-power-card__choice').click();
 
   await expect.poll(async () => page.evaluate(() => {
     const root = document.querySelector('app-root');
