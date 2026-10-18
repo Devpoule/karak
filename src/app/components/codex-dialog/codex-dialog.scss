@@ -15,14 +15,16 @@
 
 .codex-dialog {
   position: relative;
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
   min-width: 0;
   width: min(42rem, calc(100vw - 2.5rem));
   max-height: min(78vh, 38rem);
   overflow: hidden;
-  color: var(--karak-text-light);
-  background: linear-gradient(145deg, #2c3544, #151b26 72%);
-  border: var(--karak-border-strong);
+  color: #f4ead1;
+  background: linear-gradient(125deg, rgba(30, 23, 19, .98), rgba(67, 42, 25, .97));
+  border: 1px solid rgba(245, 216, 132, .7);
   border-radius: var(--karak-radius-lg);
   box-shadow: var(--karak-shadow-lg), inset 0 0 0 1px rgba(255, 245, 213, .18);
 }
@@ -32,8 +34,8 @@
   align-items: center;
   gap: var(--karak-space-4);
   padding: 1.25rem var(--karak-space-5) 1rem;
-  background: linear-gradient(135deg, rgba(101, 135, 170, .34), rgba(31, 43, 60, .2));
-  border-bottom: var(--karak-border-subtle);
+  background: linear-gradient(135deg, rgba(129, 82, 35, .32), rgba(53, 31, 20, .2));
+  border-bottom: 1px solid rgba(245, 216, 132, .28);
 }
 
 .codex-dialog__header img {
@@ -46,7 +48,7 @@
 
 .codex-dialog__eyebrow {
   margin: 0 0 .25rem;
-  color: var(--karak-info);
+  color: #d9b974;
   font: 700 var(--karak-font-size-xs)/1.2 var(--karak-font-body);
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -54,21 +56,33 @@
 
 .codex-dialog h2 {
   margin: 0;
-  color: var(--karak-text-highlight);
+  color: #fff1bc;
   font: 700 var(--karak-font-size-lg)/var(--karak-line-heading) var(--karak-font-display);
 }
 
 .codex-dialog__body {
+  min-height: 0;
+  flex: 1 1 auto;
   max-height: calc(min(78vh, 38rem) - 8rem);
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(217, 185, 116, .7) rgba(28, 21, 18, .45);
   padding: 1.25rem var(--karak-space-5) var(--karak-space-5);
   font: 400 clamp(.95rem, 1.5vw, 1.08rem)/1.6 var(--karak-font-body);
+}
+
+.codex-dialog__body::-webkit-scrollbar { width: .45rem; }
+.codex-dialog__body::-webkit-scrollbar-track { background: rgba(28, 21, 18, .45); }
+.codex-dialog__body::-webkit-scrollbar-thumb {
+  background: rgba(217, 185, 116, .7);
+  border-radius: 999px;
 }
 
 .codex-dialog__body p { margin: 0; white-space: pre-line; }
 .codex-dialog__powers { margin-top: 1.25rem; }
 .codex-dialog__power + .codex-dialog__power { margin-top: 1rem; }
-.codex-dialog__power h3 { margin: 0 0 .3rem; color: var(--karak-text-highlight); font: 700 var(--karak-font-size-md)/1.3 var(--karak-font-display); }
+.codex-dialog__power h3 { margin: 0 0 .3rem; color: #f5be41; font: 700 var(--karak-font-size-md)/1.3 var(--karak-font-display); }
 .codex-dialog__note { margin-top: 1rem !important; color: #ffb8ad; font-weight: 700; }
 
 @media (max-width: 600px) {

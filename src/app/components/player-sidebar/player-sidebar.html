@@ -58,10 +58,10 @@
                 [class.player-sidebar__power-badge--selected]="selectedPowerId === power.id"
                 [class.player-sidebar__power-badge--disabled]="player?.isCursed"
                 [attr.aria-pressed]="selectedPowerId === power.id"
-                [attr.aria-disabled]="player?.isCursed ? 'true' : null"
-                [attr.aria-label]="'Pouvoir ' + (index + 1) + ' : ' + power.name"
-                [attr.title]="player?.isCursed ? 'Pouvoir annulé par la malédiction en cours' : power.name + ' — ' + power.summary"
-                [attr.data-tooltip]="player?.isCursed ? 'Pouvoir annulé par la malédiction en cours' : power.name + ' — ' + power.description"
+                [attr.aria-disabled]="null"
+                [attr.aria-label]="'Consulter pouvoir ' + (index + 1) + ' : ' + power.name + (player?.isCursed ? ' — pouvoir indisponible' : '')"
+                [attr.title]="player?.isCursed ? 'Pouvoir indisponible en jeu ; cliquer pour consulter sa description' : power.name + ' — ' + power.summary"
+                [attr.data-tooltip]="player?.isCursed ? 'Pouvoir indisponible en jeu ; cliquer pour consulter sa description' : power.name + ' — ' + power.description"
                 (click)="togglePower(power.id, $event)"
               >
                 <img [src]="powerImage(index)" alt="" draggable="false" />

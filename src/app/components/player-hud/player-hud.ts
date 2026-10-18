@@ -1,4 +1,4 @@
-import { Component, effect, HostListener } from '@angular/core';
+import { Component, effect, HostListener, QueryList, ViewChildren } from '@angular/core';
 
 
 
@@ -103,6 +103,8 @@ interface HudPlayerEntry {
 })
 
 export class PlayerHud {
+  @ViewChildren(PlayerSidebar) private readonly sidebars!: QueryList<PlayerSidebar>;
+
   consultation: { player: Player; powerId: HeroPowerId; trigger: HTMLElement | null } | null = null;
 
   /** Ouvre la consultation globale hors du panneau animé. */
@@ -119,6 +121,7 @@ export class PlayerHud {
   closePowerConsultation(): void {
     const trigger = this.consultation?.trigger;
     this.consultation = null;
+    this.sidebars?.forEach(sidebar => sidebar.clearPowerSelection());
     setTimeout(() => trigger?.focus());
   }
 

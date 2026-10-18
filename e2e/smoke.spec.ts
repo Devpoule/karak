@@ -323,7 +323,7 @@ test('les fiches de héros sont accessibles depuis le plateau', async ({ page })
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
-  await expect(page.getByRole('button', { name: /^Pouvoir 1 :/ }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Consulter pouvoir 1 :/ }).first()).toBeVisible();
 });
 
 test('quitter la préparation réinitialise la partie sans confirmation', async ({ page }) => {
