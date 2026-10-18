@@ -234,6 +234,9 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     expect(monsterScore?.textContent).toContain(`${result.monsterStrength} pts`);
     expect(heroScore?.textContent).not.toContain('Score de combat');
     expect(monsterScore?.textContent).not.toContain('Force');
+    const verdict = fixture.nativeElement.querySelector('.combat-overlay__verdict') as HTMLElement | null;
+    expect(verdict?.getAttribute('role')).toBe('status');
+    expect(verdict?.getAttribute('aria-live')).toBe('assertive');
     fixture.destroy();
   });
 

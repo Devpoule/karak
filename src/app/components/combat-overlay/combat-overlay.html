@@ -281,6 +281,10 @@
     @if (isResultVisible && result; as combatResult) {
       <div
         class="combat-overlay__verdict"
+        role="status"
+        aria-live="assertive"
+        aria-atomic="true"
+        [attr.aria-label]="'Résultat du combat : ' + getVerdictLabel(combatResult.outcome)"
         [class.combat-overlay__verdict--victory]="combatResult.outcome === 'victory'"
         [class.combat-overlay__verdict--tie]="combatResult.outcome === 'tie'"
         [class.combat-overlay__verdict--defeat]="combatResult.outcome === 'defeat'"
