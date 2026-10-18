@@ -213,12 +213,13 @@
 
 @if (consultationHero; as hero) {
   @if (consultationPower; as power) {
-    <div class="player-hud__power-card-host" role="presentation">
+    <div class="player-hud__power-card-host" role="presentation" (click)="closePowerConsultation()">
       <app-hero-power-card
         mode="consultation"
         [hero]="hero"
         [power]="power"
         [conditions]="consultation?.player?.isCursed ? 'Pouvoir indisponible sous malédiction.' : ''"
+        (click)="$event.stopPropagation()"
         (closed)="closePowerConsultation()"
       />
     </div>

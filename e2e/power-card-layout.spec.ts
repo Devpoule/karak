@@ -36,7 +36,7 @@ async function openFirstPowerConsultation(page: import('@playwright/test').Page)
   if (await closedPlayerTab.isVisible().catch(() => false)) {
     await closedPlayerTab.click();
   }
-  const power = page.locator('.player-sidebar__power-badge').first();
+  const power = page.locator('.player-sidebar__power-badge:visible').first();
   await expect(power).toBeVisible();
   await power.click();
   await expect(page.locator('.player-hud__power-card-host .hero-power-card')).toBeVisible();
@@ -54,8 +54,34 @@ test('la consultation du pouvoir reste centrée et refermable au clavier', async
   await expect(trigger).toBeFocused();
 });
 
+test('la consultation ignore le clic intérieur et se ferme par le fond extérieur', async ({ page }) => {
+  await openBoard(page);
+  await openFirstPowerConsultation(page);
+
+  const host = page.locator('.player-hud__power-card-host');
+  const card = host.locator('.hero-power-card');
+  await card.click({ position: { x: 20, y: 20 } });
+  await expect(host).toBeVisible();
+
+  const geometry = await card.evaluate(element => {
+    const box = element.getBoundingClientRect();
+    const description = element.querySelector<HTMLElement>('.hero-power-card__content > p:not(.hero-power-card__power)');
+    const close = element.querySelector<HTMLElement>('.hero-power-card__close');
+    return {
+      overflowY: getComputedStyle(element).overflowY,
+      descriptionVisible: Boolean(description && description.getBoundingClientRect().bottom <= box.bottom),
+      closeVisible: Boolean(close && close.getBoundingClientRect().bottom <= box.bottom),
+    };
+  });
+  expect(geometry.overflowY).toBe('hidden');
+  expect(geometry.descriptionVisible).toBe(true);
+  expect(geometry.closeVisible).toBe(true);
+
+  await host.click({ position: { x: 5, y: 5 } });
+  await expect(host).toHaveCount(0);
+});
+
 test('la consultation reste contenue en portrait, paysage et faible hauteur', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
   await openBoard(page);
   await openFirstPowerConsultation(page);
   for (const viewport of [{ width: 390, height: 844 }, { width: 844, height: 390 }, { width: 390, height: 360 }]) {

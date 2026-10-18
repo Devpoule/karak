@@ -122,6 +122,14 @@ export class PlayerHud {
     setTimeout(() => trigger?.focus());
   }
 
+  /** Ferme une consultation annulable avec la touche Échap. */
+  @HostListener('document:keydown.escape', ['$event'])
+  closePowerConsultationOnEscape(event: Event): void {
+    if (!this.consultation) return;
+    event.preventDefault();
+    this.closePowerConsultation();
+  }
+
   /** Résout le pouvoir actuellement consulté. */
   get consultationPower() {
     if (!this.consultation?.player.heroId) return null;
