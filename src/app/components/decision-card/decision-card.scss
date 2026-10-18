@@ -1,0 +1,31 @@
+:host { display: block; width: min(560px, calc(100vw - 2rem)); }
+
+.decision-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(90px, 30%) 1fr;
+  align-items: center;
+  max-height: calc(100dvh - 2rem);
+  overflow: hidden;
+  padding: 1.25rem 1.5rem 1.25rem 0;
+  border: 1px solid rgba(245, 216, 132, .7);
+  border-radius: 16px;
+  background: linear-gradient(125deg, rgba(30, 23, 19, .98), rgba(67, 42, 25, .97));
+  color: #f4ead1;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .7);
+  animation: decision-card-in 320ms ease-out both;
+}
+.decision-card__aura { position: absolute; inset: -35%; z-index: -1; background: radial-gradient(circle, rgba(245, 190, 65, .22), transparent 58%); }
+.decision-card__image { width: 100%; max-height: 220px; object-fit: contain; filter: drop-shadow(0 8px 8px rgba(0, 0, 0, .65)); }
+.decision-card__content { min-width: 0; padding-left: 1rem; }
+.decision-card__eyebrow { color: #d9b974; font-size: .72rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.decision-card h2 { margin: .25rem 0 .55rem; color: #fff1bc; font: 800 clamp(1.35rem, 4vw, 2rem)/1.05 var(--karak-font-display); }
+.decision-card p { margin: 0; line-height: 1.45; }
+.decision-card__actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.25rem; }
+.decision-card button { min-height: 44px; padding: .65rem .9rem; border: 1px solid rgba(245, 216, 132, .7); border-radius: 6px; background: rgba(28, 21, 18, .8); color: #f4ead1; font: 700 .95rem var(--karak-font-display); cursor: pointer; }
+.decision-card button:focus-visible { outline: 3px solid #fff1bc; outline-offset: 3px; }
+.decision-card__primary { background: linear-gradient(180deg, #a86d24, #633812) !important; box-shadow: 0 0 16px rgba(245, 190, 65, .3); }
+.decision-card button:hover { filter: brightness(1.16); }
+@keyframes decision-card-in { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (max-width: 600px) { .decision-card { grid-template-columns: 74px 1fr; padding-right: .8rem; } .decision-card__image { max-height: 170px; } .decision-card__content { padding-left: .7rem; } .decision-card__actions { margin-top: .9rem; } .decision-card button { flex: 1 1 100%; } }
+@media (prefers-reduced-motion: reduce) { .decision-card { animation: none; } }
