@@ -80,7 +80,18 @@
  * automatique. Le drag manuel reste immédiatement réactif.
  */
 .board__world--camera-transition {
-  transition: transform 3500ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform var(--karak-motion-dramatic) var(--karak-ease-emphasis);
+}
+
+/* Les déplacements de caméra restent instantanés lorsque l'utilisateur le demande. */
+@media (prefers-reduced-motion: reduce) {
+  .board__world--camera-transition {
+    transition: none;
+  }
+
+  .board__hero--active > img {
+    animation: none;
+  }
 }
 /* ==========================================================
    TUILES POSÉES

@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('V2.1-05 : reprend une partie sauvegardée après rechargement', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/play');
 
   await page.evaluate(() => {
@@ -55,6 +56,11 @@ test('V2.1-05 : reprend une partie sauvegardée après rechargement', async ({ p
   await expect(page.locator('.movement-counter')).toHaveAttribute('aria-label', '2 mouvements disponibles');
   await expect(page.locator('.game__turn-announcement')).toContainText('Argentus');
   await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toHaveCount(0);
+  const cameraTransition = await page.locator('.board__world').evaluate((element) => {
+    element.classList.add('board__world--camera-transition');
+    return getComputedStyle(element).transitionDuration;
+  });
+  expect(cameraTransition).toBe('0s');
   await expect.poll(() => page.evaluate(() => localStorage.getItem('karak.save.v2')))
     .toContain('karak-save');
 });
