@@ -100,3 +100,66 @@ test('Substitution échange les héros sans résoudre automatiquement la tuile d
     pendingAction: null,
   });
 });
+
+test('Xanros poursuit la résolution après un lancer à égalité contre une force 8', async ({ page }) => {
+  await openBoard(page);
+
+  await page.evaluate(() => {
+    const root = document.querySelector('app-root');
+    const ng = (window as Window & { ng?: { getComponent(node: Element): any } }).ng;
+    if (!root || !ng) throw new Error('Angular dev injector unavailable');
+
+    const game = ng.getComponent(root.querySelector('app-game') ?? root);
+    const gameService = game?.gameService;
+    const playerService = gameService?.['playerService'];
+    const combatService = game?.combatService;
+    const dungeonService = gameService?.['dungeonService'];
+    if (!gameService || !playerService || !combatService || !dungeonService) {
+      throw new Error('Game services unavailable');
+    }
+
+    const player = playerService.players.find((candidate: any) => candidate.controller === 'human');
+    if (!player) throw new Error('Human player unavailable');
+    player.heroId = 'xanros';
+    player.isCursed = false;
+    player.lives = 5;
+    player.inventory.weapons = [
+      { id: 'sword', name: 'Épée', attackBonus: 2, image: '/assets/equipment/sword.png' },
+      { id: 'dagger', name: 'Poignards', attackBonus: 1, image: '/assets/equipment/dagger.png' },
+    ];
+    const sourceTile = dungeonService.getTileAt(0, 0) ?? { definitionId: 'start', x: 0, y: 0, rotation: 0 };
+    const monsterTile = {
+      definitionId: 'room-01', x: 1, y: 0, rotation: 0,
+      tokenId: 'skeleton-key-guardian', tokenFace: 'front',
+    };
+    if (!combatService.startCombat(player, sourceTile, monsterTile)) throw new Error('Could not start Xanros combat');
+    combatService.pendingCombat().monster.strength = 8;
+    const originalRoll = combatService.rollPendingCombat.bind(combatService);
+    combatService.rollPendingCombat = () => {
+      const roll = originalRoll();
+      if (!roll) return null;
+      const fixed = { ...roll, die1: 3, die2: 2, diceTotal: 5, attackPower: 8, monsterStrength: 8 };
+      combatService.pendingCombatRoll.set(fixed);
+      return fixed;
+    };
+  });
+
+  await page.getByRole('button', { name: 'Lancer les dés' }).click({ force: true });
+  const combat = page.locator('.combat-overlay');
+  const card = combat.locator('.hero-power-card');
+  await expect(card).toBeVisible({ timeout: 10_000 });
+  const bounds = await card.evaluate(element => {
+    const box = element.getBoundingClientRect();
+    return { top: box.top, bottom: box.bottom, left: box.left, right: box.right };
+  });
+  const viewport = page.viewportSize()!;
+  expect(bounds.top).toBeGreaterThanOrEqual(0);
+  expect(bounds.bottom).toBeLessThanOrEqual(viewport.height);
+  expect(bounds.left).toBeGreaterThanOrEqual(0);
+  expect(bounds.right).toBeLessThanOrEqual(viewport.width);
+  await expect(combat.getByRole('heading', { name: 'Xanros' })).toBeVisible();
+  await expect(combat.getByText('Sacrifice')).toBeVisible();
+
+  await combat.locator('.hero-power-card__decline').click();
+  await expect(combat.locator('.combat-overlay__verdict-title')).toBeVisible({ timeout: 5_000 });
+});

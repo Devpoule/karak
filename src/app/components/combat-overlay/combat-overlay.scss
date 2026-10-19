@@ -15,14 +15,12 @@
 
   display: flex;
   align-items: center;
-  justify-content: center;
+  place-content:center;
 
   overflow: hidden;
   isolation: isolate;
 
   pointer-events: auto;
-  user-select: none;
-
   --combat-gold: #f5d884;
   --combat-cream: #f4ead1;
   --combat-wave-start: -320%;
@@ -703,16 +701,16 @@
   position: absolute;
   z-index: 30;
 
-  left: 50%;
-  top: calc(50% + 190px);
+  inset: .75rem;
 
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: safe center;
   gap: 5px;
-  width: min(360px, 92vw);
+  box-sizing: border-box;
+  overflow: auto;
 
-  transform: translateX(-50%);
   color: rgba(244, 232, 207, 0.95);
   font-size: .9rem;
   text-align: center;
@@ -720,10 +718,12 @@
 
 .combat-overlay__power-card {
   position: absolute;
-  z-index: 35;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  inset:.75rem;
+  z-index:35;
+  display: flex;
+  align-items: safe center;
+  justify-content: center;
+  overflow:auto;
 }
 
 .combat-overlay__power-announcement {
@@ -1557,11 +1557,10 @@
 }
 
 @media (max-width: 900px) {
-  .combat-overlay__decision { top: calc(50% + 165px); }
   .combat-overlay__verdict { top: calc(50% + 100px); }
 }
 @media (max-width: 620px) {
-  .combat-overlay__decision { top: calc(50% + 135px); font-size: .8rem; }
+  .combat-overlay__decision { font-size: .8rem; }
   /* Le verdict dispose d'une bande dédiée sous l'arène et ses dés. */
   .combat-overlay__verdict {
     top: auto;
@@ -1577,9 +1576,7 @@
   }
 
   .combat-overlay__decision {
-    top: calc(50% + 108px);
-    max-height: calc(100% - 1rem);
-    overflow-y: auto;
+    inset: .5rem;
   }
 
   .combat-overlay__fighter-footer {

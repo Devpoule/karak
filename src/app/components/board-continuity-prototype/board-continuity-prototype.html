@@ -1,0 +1,70 @@
+<main class="continuity-prototype">
+  <header class="continuity-prototype__header">
+    <div>
+      <p class="continuity-prototype__eyebrow">Prototype expérimental</p>
+      <h1>Continuité visuelle du donjon</h1>
+      <p>Comparaison des PNG actuels avec une couche SVG limitée aux connexions réellement présentes.</p>
+    </div>
+    <nav class="continuity-prototype__controls" aria-label="Options du prototype">
+      @for (layout of layouts; track layout.label; let index = $index) {
+        <button type="button" [class.is-active]="selectedLayoutIndex === index" (click)="selectedLayoutIndex = index">{{ layout.label }}</button>
+      }
+      <button type="button" [class.is-active]="mode === 'original'" (click)="mode = 'original'">Original</button>
+      <button type="button" [class.is-active]="mode === 'continuous'" (click)="mode = 'continuous'">Continu</button>
+      <button type="button" [class.is-active]="mode === 'continuous-contours'" (click)="mode = 'continuous-contours'">Continu + contours</button>
+      <button type="button" [attr.aria-pressed]="showBoundaries" (click)="showBoundaries = !showBoundaries">Frontières</button>
+    </nav>
+  </header>
+
+  <section class="continuity-prototype__comparison" aria-label="Comparaison des rendus">
+    <article class="continuity-prototype__panel">
+      <h2>{{ mode === 'original' ? 'Rendu original' : 'Rendu continu' }}</h2>
+      <div
+        class="continuity-prototype__stage"
+        [class.continuity-prototype__stage--boundaries]="showBoundaries"
+        [style.width.px]="width"
+        [style.height.px]="height"
+      >
+        <div class="continuity-prototype__tiles">
+          @for (tile of selectedLayout; track tile.id + '-' + tile.x + '-' + tile.y) {
+            <img
+              class="continuity-prototype__tile"
+              [src]="getTileImage(tile)"
+              [alt]="tile.id + ', ouvertures : ' + getOpenings(tile).join(', ')"
+              [style]="getTileStyle(tile)"
+              [style.transform]="getTileRotation(tile)"
+              draggable="false"
+            />
+          }
+        </div>
+        @if (mode !== 'original') {
+          <svg class="continuity-prototype__joins" [attr.viewBox]="'0 0 ' + width + ' ' + height" aria-hidden="true">
+            @for (connection of connections; track connection.key) {
+              <rect
+                class="continuity-prototype__join"
+                [class.continuity-prototype__join--vertical]="connection.orientation === 'vertical'"
+                [attr.x]="connection.orientation === 'horizontal' ? connection.x - 5 : connection.x - 26"
+                [attr.y]="connection.orientation === 'horizontal' ? connection.y - 26 : connection.y - 5"
+                [attr.width]="connection.orientation === 'horizontal' ? 10 : openingVisualWidth"
+                [attr.height]="connection.orientation === 'horizontal' ? openingVisualWidth : 10"
+              />
+            }
+            @if (mode === 'continuous-contours') {
+              @for (contour of contours; track contour.key) {
+                <line
+                  class="continuity-prototype__contour"
+                  [attr.x1]="contour.x1"
+                  [attr.y1]="contour.y1"
+                  [attr.x2]="contour.x2"
+                  [attr.y2]="contour.y2"
+                />
+              }
+            }
+          </svg>
+        }
+      </div>
+    </article>
+  </section>
+
+  <p class="continuity-prototype__note">{{ connections.length }} raccord(s), {{ contours.length }} contour(s) de mur détecté(s). Les éléments SVG sont non interactifs et ne modifient pas le plateau de jeu.</p>
+</main>
