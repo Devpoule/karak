@@ -234,6 +234,52 @@ export class Board {
     return getEquipmentDefinition('heart')?.image ?? '';
   }
 
+  /** Actions de la carte unique de sélection du Portail de guérison. */
+  get healingPortalActions(): readonly DecisionCardAction[] {
+    const selection = this.healingPortalSelection;
+    if (!selection) return [];
+    const fountains = this.healingFountains;
+    return [
+      ...this.playerService.players.map(player => ({
+        label: `Cibler ${player.heroId ? getHeroDefinition(player.heroId)?.name ?? 'le héros' : 'le héros'}`,
+        kind: player === selection.target ? 'primary' as const : 'secondary' as const,
+      })),
+      ...fountains.map((_, index) => ({
+        label: `Fontaine ${index + 1}`,
+        kind: index === fountains.indexOf(selection.destination!) ? 'primary' as const : 'secondary' as const,
+      })),
+      { label: 'Utiliser le portail', kind: 'primary', disabled: !selection.target || !selection.destination },
+      { label: 'Annuler' },
+    ];
+  }
+
+  get healingPortalTargetLabel(): string {
+    const heroId = this.healingPortalSelection?.target?.heroId;
+    return heroId ? getHeroDefinition(heroId)?.name ?? 'aucun héros' : 'aucun héros';
+  }
+
+  /** Applique un choix d'interface en réutilisant les gardes de GameService. */
+  resolveHealingPortalAction(index: number): void {
+    const selection = this.healingPortalSelection;
+    if (!selection) return;
+    const players = this.playerService.players;
+    const fountains = this.healingFountains;
+    if (index < players.length) {
+      this.gameService.selectHealingPortalTarget(players[index]);
+      return;
+    }
+    const fountainIndex = index - players.length;
+    if (fountainIndex < fountains.length) {
+      this.gameService.selectHealingPortalDestination(fountains[fountainIndex]);
+      return;
+    }
+    if (fountainIndex === fountains.length) {
+      this.confirmHealingPortal();
+      return;
+    }
+    this.gameService.closeHealingPortalSelection();
+  }
+
 /** Gere healingPortalControlLeft et applique les gardes necessaires avant mutation. */
   healingPortalControlLeft(tile: PlacedTile | null | undefined): number {
     return this.mapCenterInPixels + (tile?.x ?? 0) * this.tileSize;
