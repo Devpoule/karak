@@ -17,7 +17,7 @@
           @if (weapon) {
             <button type="button" class="inventory-panel__item-button" [disabled]="!canDropEquipment"
               [attr.aria-label]="'Déposer volontairement ' + weapon.name"
-              [attr.title]="'Déposer volontairement ' + weapon.name"
+              [attr.title]="weapon.name"
               (click)="selectDrop('weapon', slotIndex, weapon)">
               <img class="inventory-panel__item" [src]="weapon.image" [alt]="weapon.name" draggable="false" />
             </button>
@@ -35,7 +35,7 @@
           @if (spell) {
             <button type="button" class="inventory-panel__item-button" [disabled]="!canDropEquipment"
               [attr.aria-label]="spell.effect === 'healing-portal' && canUseHealingPortal ? 'Utiliser ' + spell.name : 'Déposer volontairement ' + spell.name"
-              [attr.title]="spell.effect === 'healing-portal' && canUseHealingPortal ? 'Utiliser ' + spell.name : 'Déposer volontairement ' + spell.name"
+              [attr.title]="spell.effect === 'healing-portal' && canUseHealingPortal ? 'Utiliser ' + spell.name : spell.name"
               (click)="handleSpellClick(slotIndex, spell)">
               <img class="inventory-panel__item" [src]="spell.image" [alt]="spell.name" draggable="false" />
             </button>
@@ -52,7 +52,7 @@
         @if (keyItem; as key) {
           <button type="button" class="inventory-panel__item-button" [disabled]="!canDropEquipment"
             [attr.aria-label]="'Déposer volontairement ' + key.name"
-            [attr.title]="'Déposer volontairement ' + key.name"
+            [attr.title]="key.name"
             (click)="selectDrop('key', 0, key)">
             <img class="inventory-panel__item" [src]="key.image" [alt]="key.name" draggable="false" />
           </button>

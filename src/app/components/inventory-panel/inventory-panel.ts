@@ -21,6 +21,7 @@ interface DropSelection {
 
 /** Affichage de l’inventaire et demande de dépôt volontaire via GameService. */
 @Component({
+  standalone: true,
   imports: [DecisionCard],
   selector: 'app-inventory-panel',
   styleUrl: './inventory-panel.scss',
