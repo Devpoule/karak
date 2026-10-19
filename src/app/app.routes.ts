@@ -32,4 +32,9 @@ export const routes: Routes = [
     path: 'codex',
     loadComponent: () => import('./pages/codex/codex').then(({ Codex }) => Codex),
   },
+  {
+    path: 'continuity-prototype',
+    loadComponent: () => import('./components/board-continuity-prototype/board-continuity-prototype')
+      .then(({ BoardContinuityPrototype }) => BoardContinuityPrototype),
+  },
 ];
