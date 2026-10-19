@@ -23,6 +23,7 @@ import { GameService } from '../../services/game.service';
 import { AiService } from '../../services/ai.service';
 import { ToastService } from '../../services/toast.service';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
+import { DecisionCard, DecisionCardAction } from '../decision-card/decision-card';
 import { HeroPowerCard } from '../hero-power-card/hero-power-card';
 
 /**
@@ -72,7 +73,7 @@ export function getCombatWaveDirection(
 /** Service ou composant CombatOverlay ; coordonne sa responsabilite de domaine ou d interface. */
 @Component({
   selector: 'app-combat-overlay',
-  imports: [HeroPowerCard, QuantityPipe],
+  imports: [HeroPowerCard, DecisionCard, QuantityPipe],
   templateUrl: './combat-overlay.html',
   styleUrl: './combat-overlay.scss',
 })
@@ -282,6 +283,20 @@ export class CombatOverlay implements OnDestroy {
     return this.remainingMagicBolts > 0
       && !!roll
       && roll.attackPower <= roll.monsterStrength;
+  }
+
+  /** Actions du choix de Tir magique, sans modifier la décision métier. */
+  get magicBoltActions(): readonly DecisionCardAction[] {
+    return [
+      { label: `Utiliser Tir magique (${this.remainingMagicBolts})`, kind: 'primary' },
+      { label: 'Conserver ce résultat' },
+    ];
+  }
+
+  /** Applique l'action choisie via les méthodes existantes du combat. */
+  resolveMagicBoltAction(index: number): void {
+    if (index === 0) this.useMagicBolt();
+    else this.confirmCombatResolution();
   }
 
   get displayedSacrificeBonus(): number {
