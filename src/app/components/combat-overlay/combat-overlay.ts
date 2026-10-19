@@ -719,7 +719,7 @@ export class CombatOverlay implements OnDestroy {
         this.powerAnnouncement.set({
           hero,
           power,
-          message: `${hero.name} (IA) utilise ${power.name}.`,
+          message: `${hero.name} utilise ${power.name}.`,
         });
         this.schedule(() => {
           this.powerAnnouncement.set(null);
@@ -747,7 +747,7 @@ export class CombatOverlay implements OnDestroy {
       this.powerAnnouncement.set({
         hero,
         power,
-        message: `${hero.name} (IA) continue sans utiliser ${power.name}.`,
+        message: `${hero.name} continue sans utiliser ${power.name}.`,
       });
       this.schedule(() => {
         this.powerAnnouncement.set(null);

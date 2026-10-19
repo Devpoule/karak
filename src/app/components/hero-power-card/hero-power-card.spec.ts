@@ -59,7 +59,7 @@ describe('HeroPowerCard', () => {
     cardFixture.componentRef.setInput('hero', fixture.componentInstance.hero);
     cardFixture.componentRef.setInput('power', fixture.componentInstance.power);
     cardFixture.componentRef.setInput('mode', 'announcement');
-    cardFixture.componentRef.setInput('message', 'Aderyn (IA) utilise Marche rampante.');
+    cardFixture.componentRef.setInput('message', 'Aderyn utilise Marche rampante.');
     cardFixture.detectChanges();
     const element = cardFixture.nativeElement as HTMLElement;
     expect(element.textContent).toContain('Marche rampante');
