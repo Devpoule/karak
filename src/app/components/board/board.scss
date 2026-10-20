@@ -574,8 +574,8 @@
 .board__camera-tools {
   position: absolute;
   z-index: 50;
-  right: 14px;
-  bottom: 14px;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
   display: flex;
   gap: 6px;
   padding: 5px;
@@ -670,8 +670,9 @@
   }
 
   .board__camera-tools {
-    right: .5rem;
-    bottom: .5rem;
+    top: max(.5rem, env(safe-area-inset-top));
+    right: max(.5rem, env(safe-area-inset-right));
+    bottom: auto;
     gap: .35rem;
   }
 

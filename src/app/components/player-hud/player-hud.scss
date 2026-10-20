@@ -470,13 +470,40 @@
 
   .player-hud__turn-controls {
     bottom: max(.75rem, env(safe-area-inset-bottom));
-    width: calc(100% - 1rem);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    width: min(34rem, calc(100% - 1rem));
+    max-width: calc(100% - 1rem);
     gap: .35rem;
-    justify-content: center;
+    align-items: end;
   }
 
   .player-hud__players {
     gap: .25rem;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-inline: contain;
+  }
+
+  .player-hud__players::-webkit-scrollbar {
+    display: none;
+  }
+
+  .player-hud__players--human {
+    justify-content: flex-end;
+  }
+
+  .player-hud__players--ai {
+    justify-content: flex-start;
+  }
+
+  .player-hud__turn-center {
+    min-width: 0;
+  }
+
+  .player-hud__movements {
+    max-width: 100%;
   }
 
   .player-hud__player-control {

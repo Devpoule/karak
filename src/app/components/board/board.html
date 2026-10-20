@@ -24,16 +24,7 @@
        La caméra ne déplace pas les tuiles individuellement :
        elle déplace l'ensemble du monde via worldTransform.
        ===================================================== -->
-  <div
-    class="board__world"
-    [class.board__world--camera-transition]="cameraTransitionEnabled"
-    [style.width.px]="mapSizeInPixels"
-    [style.height.px]="mapSizeInPixels"
-    [style.transform]="worldTransform"
-  >
-  <!-- =====================================================
-     OUTILS DE CAMÉRA
-     ===================================================== -->
+  <!-- Les outils restent attachés à la fenêtre du plateau, pas au monde déplacé. -->
   <div
     class="board__camera-tools"
     (pointerdown)="$event.stopPropagation()"
@@ -57,6 +48,14 @@
       ⌂
     </button>
   </div>
+
+  <div
+    class="board__world"
+    [class.board__world--camera-transition]="cameraTransitionEnabled"
+    [style.width.px]="mapSizeInPixels"
+    [style.height.px]="mapSizeInPixels"
+    [style.transform]="worldTransform"
+  >
     <!-- ===================================================
          TUILES POSÉES
          ===================================================
