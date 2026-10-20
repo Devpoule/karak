@@ -54,6 +54,52 @@ test('la consultation du pouvoir reste centrée et refermable au clavier', async
   await expect(trigger).toBeFocused();
 });
 
+test('le bouton du pouvoir retrouve son apparence normale après fermeture', async ({ page }) => {
+  await openBoard(page);
+  const power = page.locator('.player-sidebar:visible').first().locator('.player-sidebar__power-badge:visible').nth(1);
+  await expect(power).toBeVisible();
+
+  await power.click();
+  await expect(page.locator('.player-hud__power-card-host .hero-power-card')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.player-hud__power-card-host')).toHaveCount(0);
+  await page.mouse.move(0, 0);
+
+  const afterEscape = await power.evaluate(element => {
+    const style = getComputedStyle(element);
+    return {
+      className: element.className,
+      ariaPressed: element.getAttribute('aria-pressed'),
+      backgroundImage: style.backgroundImage,
+      boxShadow: style.boxShadow,
+      transform: style.transform,
+      filter: style.filter,
+      active: element.matches(':active'),
+    };
+  });
+  expect(afterEscape.className).not.toContain('player-sidebar__power-badge--selected');
+  expect(afterEscape.ariaPressed).toBe('false');
+  expect(afterEscape.backgroundImage).toContain('linear-gradient');
+  expect(afterEscape.boxShadow).toBe('none');
+  expect(afterEscape.transform).toBe('none');
+  expect(afterEscape.active).toBe(false);
+
+});
+
+test('le bouton retrouve son apparence normale après fermeture par clic extérieur', async ({ page }) => {
+  await openBoard(page);
+  const power = page.locator('.player-sidebar:visible').first().locator('.player-sidebar__power-badge:visible').nth(1);
+  await power.click();
+  const powerLabel = await power.getAttribute('aria-label');
+  await expect(page.locator('.player-hud__power-card-host .hero-power-card')).toBeVisible();
+  await page.locator('.player-hud__power-card-host').click({ position: { x: 5, y: 5 } });
+  await expect(page.locator('.player-hud__power-card-host')).toHaveCount(0);
+  await page.mouse.move(0, 0);
+  const closedPower = page.locator(`button[aria-label="${powerLabel}"]`);
+  await expect(closedPower).toHaveAttribute('aria-pressed', 'false');
+  await expect(closedPower).not.toHaveClass(/player-sidebar__power-badge--selected/);
+});
+
 test('la consultation ignore le clic intérieur et se ferme par le fond extérieur', async ({ page }) => {
   await openBoard(page);
   await openFirstPowerConsultation(page);

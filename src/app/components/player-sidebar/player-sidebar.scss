@@ -253,8 +253,16 @@
 }
 
 .player-sidebar__power-badge:focus-visible {
+  background: linear-gradient(#866a43, #3e2d1e);
+  box-shadow: none;
   outline: 3px solid #fff1bc;
   outline-offset: 2px;
+}
+
+.player-sidebar__power-badge:not(.player-sidebar__power-badge--selected):active {
+  background: linear-gradient(#866a43, #3e2d1e);
+  box-shadow: none;
+  transform: none;
 }
 
 .player-sidebar__power-badge--selected {

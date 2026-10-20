@@ -105,7 +105,7 @@ interface HudPlayerEntry {
 export class PlayerHud {
   @ViewChildren(PlayerSidebar) private readonly sidebars!: QueryList<PlayerSidebar>;
 
-  consultation: { player: Player; powerId: HeroPowerId; trigger: HTMLElement | null } | null = null;
+  consultation: { player: Player; powerId: HeroPowerId; trigger: HTMLElement | null; sidebar?: PlayerSidebar } | null = null;
 
   /** Ouvre la consultation globale hors du panneau animé. */
   openPowerConsultation(player: Player, selection: PowerSelection): void {
@@ -113,16 +113,29 @@ export class PlayerHud {
       this.closePowerConsultation();
       return;
     }
-    this.consultation = { player, powerId: selection.powerId, trigger: selection.trigger };
+    this.consultation = { player, powerId: selection.powerId, trigger: selection.trigger, sidebar: selection.sidebar };
     setTimeout(() => document.querySelector<HTMLElement>('.player-hud__power-card-host .hero-power-card')?.focus());
   }
 
   /** Ferme la consultation globale. */
-  closePowerConsultation(): void {
+  closePowerConsultation(event?: Event): void {
+    event?.stopPropagation();
+    event?.stopImmediatePropagation();
     const trigger = this.consultation?.trigger;
-    this.consultation = null;
-    this.sidebars?.forEach(sidebar => sidebar.clearPowerSelection());
-    setTimeout(() => trigger?.focus());
+    const sourceSidebar = this.consultation?.sidebar;
+    const clearSelection = (): void => {
+      sourceSidebar?.clearPowerSelection();
+      this.sidebars?.forEach(sidebar => sidebar.clearPowerSelection());
+    };
+    const close = (): void => {
+      this.consultation = null;
+      trigger?.focus();
+    };
+
+    // Stopper la propagation du clic de fond évite qu’il ne soit interprété
+    // comme une nouvelle interaction avec le bouton d’origine.
+    clearSelection();
+    close();
   }
 
   /** Ferme une consultation annulable avec la touche Échap. */

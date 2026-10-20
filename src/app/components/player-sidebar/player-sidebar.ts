@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, HostListener, Input, Optional, Output } from '@angular/core';
 
 import { getHeroDefinition } from '../../data/hero-definitions';
 import { HeroPowerId } from '../../models/hero';
@@ -20,6 +20,7 @@ export type PlayerSide = 'left' | 'right';
 export interface PowerSelection {
   powerId: HeroPowerId | null;
   trigger: HTMLElement | null;
+  sidebar?: PlayerSidebar;
 }
 
 
@@ -51,6 +52,8 @@ export interface PowerSelection {
   styleUrl: './player-sidebar.scss',
 })
 export class PlayerSidebar {
+  constructor(@Optional() private readonly changeDetector?: ChangeDetectorRef) {}
+
   selectedPowerId: HeroPowerId | null = null;
   biographyOpen = false;
   curseDialogOpen = false;
@@ -116,12 +119,14 @@ export class PlayerSidebar {
     this.powerSelected.emit({
       powerId: this.selectedPowerId,
       trigger: event?.currentTarget instanceof HTMLElement ? event.currentTarget : null,
+      sidebar: this,
     });
   }
 
   /** Réinitialise l'état visuel après la fermeture de la consultation globale. */
   clearPowerSelection(): void {
     this.selectedPowerId = null;
+    this.changeDetector?.detectChanges();
   }
 
 /** Gere toggleBiography et applique les gardes necessaires avant mutation. */
@@ -142,7 +147,7 @@ export class PlayerSidebar {
     this.selectedPowerId = null;
     this.biographyOpen = false;
     this.curseDialogOpen = false;
-    this.powerSelected.emit({ powerId: null, trigger: null });
+    this.powerSelected.emit({ powerId: null, trigger: null, sidebar: this });
   }
 
 /** Gere powerImage et applique les gardes necessaires avant mutation. */

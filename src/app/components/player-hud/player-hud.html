@@ -213,7 +213,7 @@
 
 @if (consultationHero; as hero) {
   @if (consultationPower; as power) {
-    <div class="player-hud__power-card-host" role="presentation" (click)="closePowerConsultation()">
+    <div class="player-hud__power-card-host" role="presentation" (click)="closePowerConsultation($event)">
       <app-hero-power-card
         mode="consultation"
         [hero]="hero"
