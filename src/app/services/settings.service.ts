@@ -2,16 +2,19 @@ import { Injectable, signal } from '@angular/core';
 
 export type MotionPreference = 'system' | 'reduced';
 export type TextScale = 'standard' | 'large';
+export type ContrastPreference = 'standard' | 'high';
 
 interface StoredSettings {
   motionPreference: MotionPreference;
   textScale: TextScale;
+  contrastPreference: ContrastPreference;
 }
 
 const SETTINGS_STORAGE_KEY = 'karak-settings-v1';
 const DEFAULT_SETTINGS: StoredSettings = {
   motionPreference: 'system',
   textScale: 'standard',
+  contrastPreference: 'standard',
 };
 
 /** Préférences de confort locales, indépendantes de l'état d'une partie. */
@@ -19,6 +22,7 @@ const DEFAULT_SETTINGS: StoredSettings = {
 export class SettingsService {
   readonly motionPreference = signal<MotionPreference>(DEFAULT_SETTINGS.motionPreference);
   readonly textScale = signal<TextScale>(DEFAULT_SETTINGS.textScale);
+  readonly contrastPreference = signal<ContrastPreference>(DEFAULT_SETTINGS.contrastPreference);
 
   constructor() {
     this.restore();
@@ -35,9 +39,15 @@ export class SettingsService {
     this.sync();
   }
 
+  setContrastPreference(preference: ContrastPreference): void {
+    this.contrastPreference.set(preference);
+    this.sync();
+  }
+
   reset(): void {
     this.motionPreference.set(DEFAULT_SETTINGS.motionPreference);
     this.textScale.set(DEFAULT_SETTINGS.textScale);
+    this.contrastPreference.set(DEFAULT_SETTINGS.contrastPreference);
     this.sync();
   }
 
@@ -54,6 +64,9 @@ export class SettingsService {
       if (stored.textScale === 'standard' || stored.textScale === 'large') {
         this.textScale.set(stored.textScale);
       }
+      if (stored.contrastPreference === 'standard' || stored.contrastPreference === 'high') {
+        this.contrastPreference.set(stored.contrastPreference);
+      }
     } catch {
       localStorage.removeItem(SETTINGS_STORAGE_KEY);
     }
@@ -68,6 +81,7 @@ export class SettingsService {
     const settings: StoredSettings = {
       motionPreference: this.motionPreference(),
       textScale: this.textScale(),
+      contrastPreference: this.contrastPreference(),
     };
     this.persist(settings);
     this.apply(settings);
@@ -87,6 +101,12 @@ export class SettingsService {
       root.dataset['karakTextScale'] = 'large';
     } else {
       delete root.dataset['karakTextScale'];
+    }
+
+    if (settings.contrastPreference === 'high') {
+      root.dataset['karakContrast'] = 'high';
+    } else {
+      delete root.dataset['karakContrast'];
     }
   }
 }

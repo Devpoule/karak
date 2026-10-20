@@ -7,3 +7,21 @@
   margin: 0;
   padding: 0;
 }
+
+.app__skip-link {
+  position: fixed;
+  top: -5rem;
+  left: 1rem;
+  z-index: var(--karak-z-cinematic);
+  padding: .7rem 1rem;
+  color: var(--karak-button-text);
+  font-weight: 700;
+  background: var(--karak-button-danger-bg);
+  border: var(--karak-border-strong);
+  border-radius: var(--karak-radius-sm);
+  transition: top var(--karak-motion-fast) var(--karak-ease-standard);
+}
+
+.app__skip-link:focus {
+  top: 1rem;
+}

@@ -223,3 +223,19 @@ html[data-karak-motion='reduced'] *::after {
 html[data-karak-text-scale='large'] {
   font-size: 112.5%;
 }
+
+html[data-karak-contrast='high'] {
+  --karak-text-light: #fff;
+  --karak-text-muted: #fff;
+  --karak-text-highlight: #fff4b0;
+  --karak-stone-highlight: #ffe36e;
+  --karak-focus-color: #00ffff;
+  --karak-button-text: #fff;
+  --karak-button-bg: linear-gradient(#5f5f5f, #171717);
+  --karak-button-danger-bg: linear-gradient(#ae3f32, #631410);
+}
+
+html[data-karak-contrast='high'] :where(button, a, input, select, textarea):focus-visible {
+  outline-width: 3px;
+  outline-offset: 4px;
+}

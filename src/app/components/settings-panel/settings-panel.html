@@ -84,6 +84,31 @@
               <span>Grande</span>
             </label>
           </fieldset>
+
+          <fieldset>
+            <legend>Contraste</legend>
+            <p class="settings-panel__hint">Renforcez les couleurs du texte, des commandes et du focus clavier.</p>
+            <label>
+              <input
+                type="radio"
+                name="settings-contrast"
+                value="standard"
+                [checked]="settings.contrastPreference() === 'standard'"
+                (change)="setContrastPreference('standard')"
+              />
+              <span>Standard</span>
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="settings-contrast"
+                value="high"
+                [checked]="settings.contrastPreference() === 'high'"
+                (change)="setContrastPreference('high')"
+              />
+              <span>Contraste renforcé</span>
+            </label>
+          </fieldset>
         </div>
 
         <footer class="settings-panel__actions">

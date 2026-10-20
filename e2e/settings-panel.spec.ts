@@ -7,18 +7,22 @@ test('le panneau de paramètres applique et conserve les préférences', async (
   await expect(page.getByRole('dialog', { name: 'Paramètres' })).toBeVisible();
   await page.getByRole('radio', { name: 'Animations réduites' }).check();
   await page.getByRole('radio', { name: 'Grande' }).check();
+  await page.getByRole('radio', { name: 'Contraste renforcé' }).check();
 
   await expect(page.locator('html')).toHaveAttribute('data-karak-motion', 'reduced');
   await expect(page.locator('html')).toHaveAttribute('data-karak-text-scale', 'large');
+  await expect(page.locator('html')).toHaveAttribute('data-karak-contrast', 'high');
 
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-karak-motion', 'reduced');
   await expect(page.locator('html')).toHaveAttribute('data-karak-text-scale', 'large');
+  await expect(page.locator('html')).toHaveAttribute('data-karak-contrast', 'high');
 
   await page.getByRole('button', { name: 'Paramètres' }).click();
   await page.getByRole('button', { name: 'Réinitialiser' }).click();
   await expect(page.locator('html')).not.toHaveAttribute('data-karak-motion');
   await expect(page.locator('html')).not.toHaveAttribute('data-karak-text-scale');
+  await expect(page.locator('html')).not.toHaveAttribute('data-karak-contrast');
 
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog', { name: 'Paramètres' })).toBeHidden();

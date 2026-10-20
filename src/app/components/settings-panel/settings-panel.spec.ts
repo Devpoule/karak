@@ -18,6 +18,7 @@ describe('SettingsPanel', () => {
     localStorage.clear();
     document.documentElement.removeAttribute('data-karak-motion');
     document.documentElement.removeAttribute('data-karak-text-scale');
+    document.documentElement.removeAttribute('data-karak-contrast');
   });
 
   it('ouvre le panneau et le ferme avec Échap', () => {
@@ -41,14 +42,17 @@ describe('SettingsPanel', () => {
     const inputs = fixture.nativeElement.querySelectorAll('input') as NodeListOf<HTMLInputElement>;
     const reducedMotion = Array.from(inputs).find(input => input.value === 'reduced');
     const largeText = Array.from(inputs).find(input => input.value === 'large');
-    if (!reducedMotion || !largeText) throw new Error('Settings inputs unavailable');
+    const highContrast = Array.from(inputs).find(input => input.value === 'high');
+    if (!reducedMotion || !largeText || !highContrast) throw new Error('Settings inputs unavailable');
 
     reducedMotion.parentElement?.click();
     largeText.parentElement?.click();
+    highContrast.parentElement?.click();
     fixture.detectChanges();
 
     expect(document.documentElement.dataset['karakMotion']).toBe('reduced');
     expect(document.documentElement.dataset['karakTextScale']).toBe('large');
+    expect(document.documentElement.dataset['karakContrast']).toBe('high');
   });
 
   it('réinitialise les préférences depuis le panneau', () => {
@@ -60,5 +64,6 @@ describe('SettingsPanel', () => {
 
     expect(document.documentElement.dataset['karakMotion']).toBeUndefined();
     expect(document.documentElement.dataset['karakTextScale']).toBeUndefined();
+    expect(document.documentElement.dataset['karakContrast']).toBeUndefined();
   });
 });

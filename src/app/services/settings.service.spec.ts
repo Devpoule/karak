@@ -6,6 +6,7 @@ describe('SettingsService', () => {
     localStorage.clear();
     document.documentElement.removeAttribute('data-karak-motion');
     document.documentElement.removeAttribute('data-karak-text-scale');
+    document.documentElement.removeAttribute('data-karak-contrast');
     TestBed.resetTestingModule();
   });
 
@@ -13,20 +14,24 @@ describe('SettingsService', () => {
     localStorage.clear();
     document.documentElement.removeAttribute('data-karak-motion');
     document.documentElement.removeAttribute('data-karak-text-scale');
+    document.documentElement.removeAttribute('data-karak-contrast');
   });
 
   it('restaure et applique les préférences enregistrées', () => {
     localStorage.setItem('karak-settings-v1', JSON.stringify({
       motionPreference: 'reduced',
       textScale: 'large',
+      contrastPreference: 'high',
     }));
 
     const service = TestBed.inject(SettingsService);
 
     expect(service.motionPreference()).toBe('reduced');
     expect(service.textScale()).toBe('large');
+    expect(service.contrastPreference()).toBe('high');
     expect(document.documentElement.dataset['karakMotion']).toBe('reduced');
     expect(document.documentElement.dataset['karakTextScale']).toBe('large');
+    expect(document.documentElement.dataset['karakContrast']).toBe('high');
   });
 
   it('persiste les changements et les applique au document', () => {
@@ -34,13 +39,16 @@ describe('SettingsService', () => {
 
     service.setMotionPreference('reduced');
     service.setTextScale('large');
+    service.setContrastPreference('high');
 
     expect(JSON.parse(localStorage.getItem('karak-settings-v1') ?? '{}')).toEqual({
       motionPreference: 'reduced',
       textScale: 'large',
+      contrastPreference: 'high',
     });
     expect(document.documentElement.dataset['karakMotion']).toBe('reduced');
     expect(document.documentElement.dataset['karakTextScale']).toBe('large');
+    expect(document.documentElement.dataset['karakContrast']).toBe('high');
   });
 
   it('réinitialise les préférences sur les valeurs par défaut', () => {
@@ -54,5 +62,6 @@ describe('SettingsService', () => {
     expect(service.textScale()).toBe('standard');
     expect(document.documentElement.dataset['karakMotion']).toBeUndefined();
     expect(document.documentElement.dataset['karakTextScale']).toBeUndefined();
+    expect(document.documentElement.dataset['karakContrast']).toBeUndefined();
   });
 });
