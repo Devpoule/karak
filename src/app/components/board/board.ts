@@ -232,6 +232,10 @@ export class Board {
 
   get canUseHealingFountain(): boolean { return this.gameService.canUseHealingFountain; }
 
+  get canUsePortalTravel(): boolean {
+    return this.gameService.canUsePortalTravel(this.gameService.activePlayer);
+  }
+
   isActivePlayerOnTile(tile: PlacedTile): boolean {
     const position = this.gameService.activePlayer?.position;
     return position?.x === tile.x && position?.y === tile.y;

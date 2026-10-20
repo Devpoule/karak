@@ -190,4 +190,31 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     expect(tile).not.toBeNull();
     expect(tile ? getComputedStyle(tile).zIndex : '').toBe('10');
   });
+
+  it('affiche une action portail désactivée sans destination', () => {
+    const { fixture, dungeonService, playerService } = createBoard();
+    dungeonService.tiles[0] = { definitionId: 'portal-straight-01', x: 0, y: 0, rotation: 0 };
+    playerService.players[0].position = { x: 0, y: 0 };
+    fixture.detectChanges();
+
+    const button = fixture.nativeElement.querySelector('.board__context-action--portal') as HTMLButtonElement | null;
+    expect(button).not.toBeNull();
+    expect(button?.disabled).toBe(true);
+    expect(button?.getAttribute('aria-label')).toBe('Utiliser le portail de téléportation');
+    expect(button?.querySelector('.board__portal-icon')).not.toBeNull();
+  });
+
+  it('ouvre le sélecteur portail au clavier lorsqu’une destination existe', () => {
+    const { fixture, gameService, dungeonService, playerService } = createBoard();
+    dungeonService.tiles[0] = { definitionId: 'portal-straight-01', x: 0, y: 0, rotation: 0 };
+    dungeonService.tiles.push({ definitionId: 'portal-straight-01', x: 2, y: 0, rotation: 0 });
+    playerService.players[0].position = { x: 0, y: 0 };
+    fixture.detectChanges();
+
+    const button = fixture.nativeElement.querySelector('.board__context-action--portal') as HTMLButtonElement;
+    expect(button.disabled).toBe(false);
+    button.focus();
+    button.click();
+    expect(gameService.portalTravelSelection()?.destinations).toHaveLength(1);
+  });
 });
