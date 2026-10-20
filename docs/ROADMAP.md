@@ -12,7 +12,8 @@
 - Portail de guérison côté métier et parcours humain avec sélection/confirmation ;
 - panneaux de vie, trésors et inventaire, animations et harmonisation visuelle partielle ;
 - écran de fin de partie enrichi avec emblème du Dragon, vainqueur mis en avant et classement détaillé par héros ;
-- panneau de paramètres partagé entre l'accueil et la partie, avec préférences persistantes de mouvement et de taille du texte.
+- panneau de paramètres partagé entre l'accueil et la partie, avec préférences persistantes de mouvement et de taille du texte ;
+- tutoriel interactif consultatif en cinq étapes, accessible depuis l'accueil et l'en-tête de partie.
 
 ## Incomplet ou à risque
 

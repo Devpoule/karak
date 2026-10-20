@@ -17,6 +17,7 @@
   />
 
   <div class="game-header__actions">
+    <app-tutorial-panel [compact]="true" />
     <app-settings-panel [compact]="true" />
     @if (context === 'game') {
       @if (navigationLocked) {

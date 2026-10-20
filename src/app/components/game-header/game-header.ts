@@ -4,10 +4,11 @@ import { Router, RouterLink } from '@angular/router';
 import { CombatService } from '../../services/combat.service';
 import { GameService } from '../../services/game.service';
 import { SettingsPanel } from '../settings-panel/settings-panel';
+import { TutorialPanel } from '../tutorial-panel/tutorial-panel';
 
 /** Service ou composant GameHeader ; coordonne sa responsabilite de domaine ou d interface. */
 @Component({
-  imports: [NgOptimizedImage, RouterLink, SettingsPanel],
+  imports: [NgOptimizedImage, RouterLink, SettingsPanel, TutorialPanel],
   selector: 'app-game-header',
   styleUrl: './game-header.scss',
   templateUrl: './game-header.html',

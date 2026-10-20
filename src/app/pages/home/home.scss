@@ -128,7 +128,8 @@
 
 .home__play,
 .home__lore,
-.home__navigation app-settings-panel {
+.home__navigation app-settings-panel,
+.home__navigation app-tutorial-panel {
   position: relative;
 
   display: inline-flex;
@@ -149,6 +150,11 @@
 }
 
 .home__navigation app-settings-panel {
+  display: block;
+  width: 100%;
+}
+
+.home__navigation app-tutorial-panel {
   display: block;
   width: 100%;
 }
