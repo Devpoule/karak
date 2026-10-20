@@ -819,6 +819,8 @@
   content: '';
   pointer-events: none;
 }
+.board__context-action { position: absolute; z-index: 5; top: -0.4rem; right: -0.4rem; width: 2.2rem; height: 2.2rem; border: 2px solid #f7d56c; border-radius: 50%; color: #fff5cf; background: #3d2d18; box-shadow: 0 0 .8rem rgba(247, 213, 108, .65); cursor: pointer; }
+.board__context-action:disabled { color: #817d73; background: #2d2c2a; border-color: #69655d; box-shadow: none; cursor: not-allowed; opacity: .7; }
 
 .board__tile--portal-selected::after {
   border-color: #f7d56c;

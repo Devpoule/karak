@@ -754,12 +754,47 @@ describe('AiService déplacements et exploration', () => {
     const ai = playerService.players[1];
     ai.lives = 3;
     playerService.addEquipment(ai, getEquipmentDefinition('heart')!);
+    dungeonService.tiles[0] = { definitionId: 'portal-straight-01', x: 0, y: 0, rotation: 0 };
     dungeonService.placeTile({ definitionId: 'healing-corner', x: 2, y: 0, rotation: 0 });
 
     expect(aiService.playAction()).toBe(true);
     expect(gameService.healingPortalSelection()).toBeNull();
     expect(ai.inventory.spells.filter(Boolean)).toHaveLength(0);
     expect(gameService.turnTransitionPending()).toBe(false);
+  });
+
+  it('utilise une fontaine occupée si elle soigne ou lève une malédiction', () => {
+    const ai = playerService.players[1];
+    ai.position = { x: 0, y: 0 };
+    ai.lives = 2;
+    ai.isCursed = true;
+    gameService.activePlayerIndex.set(1);
+    gameService.turnTransitionPending.set(false);
+
+    expect(gameService.canUseHealingFountain).toBe(true);
+    expect(aiService.playAction()).toBe(true);
+    expect(ai.lives).toBe(5);
+    expect(ai.isCursed).toBe(false);
+    expect(turnService.remainingMovements()).toBe(0);
+    expect(gameService.healingFountainUse()?.player).toBe(ai);
+
+    gameService.turnTransitionPending.set(false);
+    turnService.resetMovements();
+    expect(gameService.canUseHealingFountain).toBe(false);
+  });
+
+  it('n’utilise pas une fontaine sans bénéfice', () => {
+    const ai = playerService.players[1];
+    ai.position = { x: 0, y: 0 };
+    ai.lives = 5;
+    ai.isCursed = false;
+    gameService.activePlayerIndex.set(1);
+    gameService.turnTransitionPending.set(false);
+
+    expect(gameService.canUseHealingFountain).toBe(false);
+    expect(aiService.playAction()).toBe(true);
+    expect(ai.lives).toBe(5);
+    expect(gameService.healingFountainUse()).toBeNull();
   });
 
   it('explore une ouverture libre avec une pioche déterministe', () => {

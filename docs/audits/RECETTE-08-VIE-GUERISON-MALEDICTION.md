@@ -16,7 +16,7 @@ Cette campagne couvre exclusivement `LIFE-001` à `LIFE-011`. Le manuel de base 
 | LIFE-008 | Couvert par test | Conforme vérifié | Conforme | guérison complète et suppression de la malédiction |
 | LIFE-009 | Couvert par test | Conforme vérifié | Conforme | application du jeton de malédiction |
 | LIFE-010 | Couvert par test | Conforme vérifié | Conforme | transfert/refus et cible légale unique |
-| LIFE-011 | Absent | Conforme vérifié | Conforme après correction ciblée | `resolveTileEntry`, tests d’entrée dans une tuile |
+| LIFE-011 | Absent | Variante produit vérifiée | Conforme dans la variante | `resolveTileEntry`, `useHealingFountain`, tests unitaires et E2E |
 
 ## Référentiel normatif
 
@@ -26,7 +26,7 @@ Le manuel prévoit notamment :
 - une fontaine peut soigner complètement le héros ; le Portail de guérison permet de déplacer un héros vers une fontaine et de le soigner ;
 - la guérison complète retire aussi la malédiction ;
 - vaincre une momie applique la malédiction à un héros choisi, avec un seul détenteur simultané et des pouvoirs neutralisés tant qu’elle n’est pas retirée ;
-- l’arrivée sur une tuile de fontaine permet de terminer le tour et de soigner complètement le héros, en levant également la malédiction.
+- historiquement, le comportement officiel retenu par l’application arrêtait le déplacement à l’arrivée sur une fontaine et appliquait le soin complet ; cette décision est conservée comme trace historique, tandis que la branche actuelle applique une variante produit facultative.
 
 Les limites numériques utilisées par l’application sont cohérentes avec le matériel : cinq vies maximum et aucune vie négative.
 
@@ -58,11 +58,11 @@ Résultat : conforme vérifié.
 
 ### LIFE-011 — arrivée directe sur une fontaine
 
-Le manuel prévoit le soin direct en fin de tour lors de l’arrivée sur une fontaine. Le correctif ajoute cette détection dans `GameService.resolveTileEntry`, point commun aux déplacements humains et IA. Une nouvelle arrivée sur une tuile `healing-fountain` arrête les mouvements, appelle `PlayerService.restoreCompletely`, restaure cinq vies au maximum et lève la malédiction.
+Le comportement officiel documenté reste le soin complet associé à la fontaine. La branche `fix/healing-fountain-optional-action` applique explicitement une variante produit : l’arrivée ne résout plus automatiquement le soin ; `GameService.canUseHealingFountain` expose une action volontaire et `GameService.useHealingFountain` appelle `PlayerService.restoreCompletely`, consomme les mouvements restants et lève la malédiction.
 
-L’appel exige des coordonnées source et destination distinctes afin qu’une résolution répétée sur le même état ne provoque pas un second soin. Le voyage par Portail de guérison reste inchangé et conserve son chemin métier dédié ; il réalise déjà le même soin complet.
+Une utilisation est mémorisée par joueur et tuile pendant la présence continue ; le changement de tour ne la réinitialise pas, tandis qu’une sortie de tuile réautorise une nouvelle utilisation. Le voyage par Portail de guérison et la Réincarnation de Horan restent inchangés.
 
-Résultat : conforme vérifié.
+Résultat : conforme vérifié pour la guérison complète et la levée de malédiction.
 
 ## Tests et preuves exécutés
 
@@ -80,15 +80,15 @@ npx playwright test e2e/horan-powers.spec.ts e2e/taia-powers.spec.ts e2e/smoke.s
 Résultat : 19 scénarios réussis.
 ```
 
-Les tests existants fournissent les preuves nécessaires pour LIFE-001 à LIFE-010. Des tests ciblés ont été ajoutés pour LIFE-011 : arrivée avec vies manquantes et malédiction, plafond à cinq vies, tuile ordinaire, absence de seconde guérison et arrêt des mouvements.
+Les tests existants fournissent les preuves nécessaires pour LIFE-001 à LIFE-010. La variante LIFE-011 est couverte par l’arrivée sans soin automatique, l’activation volontaire, la limite d’une utilisation par présence, la réutilisation après sortie, l’IA, l’accessibilité et le responsive.
 
 ## Correction ciblée et validation complémentaire
 
-Cause racine : `resolveTileEntry` classifiait la tuile sans traiter sa propriété `feature: 'healing-fountain'`. Le correctif est limité à `GameService` et à ses tests de contrat d’entrée. Aucun changement n’a été apporté à `useHealingPortal`, au déplacement entre portails ou aux autres règles métier.
+Décision de variante : `resolveTileEntry` ne déclenche plus le soin automatique sur `feature: 'healing-fountain'`. `GameService.useHealingFountain` porte l’activation volontaire. Aucun changement n’a été apporté à `useHealingPortal`, au déplacement entre portails ou à la Réincarnation de Horan.
 
 ## Limites
 
-- La validation navigateur couvre les parcours disponibles ; elle ne peut pas démontrer un parcours direct de fontaine inexistant.
+- La validation navigateur couvre désormais l’arrivée, l’activation au clavier et les viewport mobile/paysage de la variante produit.
 - Angular signale `NG0913` sur la taille intrinsèque de `assets/logo.png` ; l’avertissement est sans rapport avec cette phase.
 - La phase H des pouvoirs de héros n’est pas auditée dans cette recette.
 

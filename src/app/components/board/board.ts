@@ -230,6 +230,18 @@ export class Board {
 
   get healingFountains(): readonly PlacedTile[] { return this.gameService.getHealingFountains(); }
 
+  get canUseHealingFountain(): boolean { return this.gameService.canUseHealingFountain; }
+
+  isActivePlayerOnTile(tile: PlacedTile): boolean {
+    const position = this.gameService.activePlayer?.position;
+    return position?.x === tile.x && position?.y === tile.y;
+  }
+
+  useHealingFountain(event: Event): void {
+    event.stopPropagation();
+    this.gameService.useHealingFountain();
+  }
+
   get healingPortalImage(): string {
     return getEquipmentDefinition('heart')?.image ?? '';
   }

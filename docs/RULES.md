@@ -49,7 +49,7 @@ Le manuel prévaut sur le code. Une formulation présente dans le code mais abse
 | `TREASURE-CHEST-KEY` | Trésors | à vérifier | testée |
 | `TREASURE-SCORING` | Score | à vérifier | testée |
 | `DRAGON-RUBY` | Victoire | à vérifier | partiellement testée |
-| `RECOVERY-REST` | Récupération | à vérifier | testée |
+| `RECOVERY-REST` | Récupération | divergence (variante produit documentée) | testée |
 | `CURSE-MUMMY` | Malédiction | à vérifier | partiellement testée |
 | `PORTAL-HEALING` | Guérison | adaptation numérique | testée |
 | `HERO-ADERYN-BACKSTAB` | Aderyn | à vérifier | partiellement testée |
@@ -66,6 +66,8 @@ Le manuel prévaut sur le code. Une formulation présente dans le code mais abse
 | `HERO-XANROS-SUBSTITUTION` | Xanros | incertaine / adaptation numérique | testée |
 
 Les règles générales et les fiches détaillées sont en cours de consolidation ; `à vérifier` signifie que la confrontation page par page reste à établir.
+
+> Variante produit `fix/healing-fountain-optional-action` : une fontaine occupée expose une action volontaire, sans soin automatique à l’arrivée. L’utilisation est limitée à une fois par présence continue et consomme les mouvements restants. Le comportement officiel historique et ses limites sont détaillés dans [Récupération et malédiction](rules/recovery-and-curse.md) et dans la recette LIFE-011.
 
 ## Matrice règle → implémentation → tests
 

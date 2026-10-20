@@ -82,6 +82,19 @@
           alt=""
           draggable="false"
         />
+        @if (getTileDefinition(tile)?.feature === 'healing-fountain' && isActivePlayerOnTile(tile)) {
+          <button
+            type="button"
+            class="board__context-action board__context-action--fountain"
+            [disabled]="!canUseHealingFountain"
+            aria-label="Utiliser la fontaine de régénération"
+            title="Utiliser la fontaine de régénération"
+            (pointerdown)="$event.stopPropagation()"
+            (click)="useHealingFountain($event)"
+          >
+            <span aria-hidden="true">✚</span>
+          </button>
+        }
         <!--
     Jeton actuellement présent sur la tuile.
     Il peut s'agir à ce stade :
