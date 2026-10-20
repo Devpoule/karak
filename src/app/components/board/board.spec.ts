@@ -135,6 +135,21 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     expect(element.releasePointerCapture).toHaveBeenCalledWith(7);
   });
 
+  it('conserve un sprite avec une orientation absente ou invalide', () => {
+    const { fixture, playerService } = createBoard();
+    const player = playerService.players[0];
+    player.heroId = 'taia';
+    player.position = { x: 0, y: 0 };
+
+    expect(fixture.componentInstance.getHeroPawnImage(player)).toBe('/assets/heroes/taia/sprite-south.png');
+
+    player.facing = 'invalid' as never;
+    expect(fixture.componentInstance.getHeroPawnImage(player)).toBe('/assets/heroes/taia/sprite-south.png');
+
+    player.facing = 'east';
+    expect(fixture.componentInstance.getHeroPawnImage(player)).toBe('/assets/heroes/taia/sprite-east.png');
+  });
+
   it('traite les touches de sélection du portail de guérison', () => {
     const { fixture, gameService, playerService, dungeonService } = createBoard();
     const player = playerService.players[0];
@@ -189,6 +204,25 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     const tile = fixture.nativeElement.querySelector('.board__tile--active-player') as HTMLElement | null;
     expect(tile).not.toBeNull();
     expect(tile ? getComputedStyle(tile).zIndex : '').toBe('10');
+  });
+
+  it('affiche le pion au-dessus de la tuile active et sous ses contrôles', () => {
+    const { fixture, playerService } = createBoard();
+    const player = playerService.players[0];
+    player.heroId = 'taia';
+    player.position = { x: 0, y: 0 };
+    player.facing = 'south';
+    fixture.detectChanges();
+
+    const hero = fixture.nativeElement.querySelector('.board__hero') as HTMLElement | null;
+    const tile = fixture.nativeElement.querySelector('.board__tile--active-player') as HTMLElement | null;
+    const controls = fixture.nativeElement.querySelector('.board__movement-controls') as HTMLElement | null;
+
+    expect(hero).not.toBeNull();
+    expect(tile).not.toBeNull();
+    expect(controls).not.toBeNull();
+    expect(Number(getComputedStyle(hero!).zIndex)).toBeGreaterThan(Number(getComputedStyle(tile!).zIndex));
+    expect(Number(getComputedStyle(hero!).zIndex)).toBeLessThan(Number(getComputedStyle(controls!).zIndex));
   });
 
   it('affiche une action portail désactivée sans destination', () => {

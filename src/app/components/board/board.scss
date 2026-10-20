@@ -196,7 +196,8 @@
   */
 .board__hero {
   position: absolute;
-  z-index: 5;
+  /* Le pion doit rester au-dessus des tuiles, mais sous les contrôles. */
+  z-index: 15;
   display: flex;
   align-items: center;
   justify-content: center;
