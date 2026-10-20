@@ -116,23 +116,146 @@
 .game__game-over {
   position: relative;
   z-index: var(--karak-z-dialog);
-  width: min(520px, 90vw);
+  width: min(760px, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
   margin: auto;
-  padding: 2rem;
-  border: 1px solid rgba(245, 216, 132, .65);
-  border-radius: 12px;
-  background: rgba(25, 18, 14, .94);
+  overflow-y: auto;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  border: 1px solid rgba(245, 216, 132, .7);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(153, 91, 36, .2), transparent 42%),
+    rgba(25, 18, 14, .97);
   color: #f4ead1;
   text-align: center;
-  box-shadow: 0 0 28px rgba(245, 190, 65, .25);
+  box-shadow: 0 0 35px rgba(245, 190, 65, .28), 0 16px 40px rgba(0, 0, 0, .45);
+  animation: game-over-reveal 360ms ease-out both;
+}
+
+.game__game-over-header {
+  display: grid;
+  justify-items: center;
+  gap: .35rem;
+}
+
+.game__game-over-emblem {
+  width: 76px;
+  height: 76px;
+  margin-bottom: .25rem;
+  object-fit: contain;
+  filter: drop-shadow(0 0 14px rgba(245, 190, 65, .5));
+}
+
+.game__game-over-eyebrow {
+  margin: 0;
+  color: #f5d884;
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
 }
 
 .game__game-over h1,
-.game__game-over h2 { color: #f5d884; }
-.game__game-over ol { margin: 1rem 0; padding-left: 1.5rem; text-align: left; }
-.game__game-over li { display: flex; justify-content: space-between; gap: 1rem; padding: .35rem .5rem; }
-.game__game-over .game__winner { color: #ffe98a; font-weight: 800; }
-.game__winner-label { color: #ffe98a; font-weight: 800; }
+.game__game-over h2 {
+  margin: 0;
+  color: #f5d884;
+}
+
+.game__game-over h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); }
+.game__game-over h2 { font-size: 1rem; letter-spacing: .08em; text-transform: uppercase; }
+
+.game__game-over-intro {
+  max-width: 52ch;
+  margin: .65rem auto 0;
+  color: rgba(244, 234, 209, .82);
+}
+
+.game__game-over-winner,
+.game__ranking {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid rgba(245, 216, 132, .22);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, .16);
+}
+
+.game__winner-label {
+  margin: .5rem 0 0;
+  color: #ffe98a;
+  font-weight: 800;
+}
+
+.game__ranking-list {
+  display: grid;
+  gap: .55rem;
+  margin: .85rem 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.game__ranking-entry {
+  display: grid;
+  grid-template-columns: 2rem 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .75rem;
+  min-height: 56px;
+  padding: .45rem .65rem;
+  border: 1px solid rgba(244, 234, 209, .12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .035);
+}
+
+.game__ranking-entry--winner {
+  border-color: rgba(255, 233, 138, .72);
+  background: linear-gradient(90deg, rgba(255, 209, 71, .16), rgba(255, 255, 255, .04));
+  box-shadow: inset 3px 0 #ffe98a;
+}
+
+.game__ranking-position {
+  color: rgba(244, 234, 209, .64);
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.game__ranking-portrait {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .22);
+}
+
+.game__ranking-player {
+  display: grid;
+  gap: .15rem;
+  min-width: 0;
+}
+
+.game__ranking-player strong {
+  overflow: hidden;
+  color: #f4ead1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game__ranking-entry--winner .game__ranking-player strong { color: #ffe98a; }
+
+.game__ranking-player small {
+  color: rgba(244, 234, 209, .68);
+  font-size: .78rem;
+}
+
+.game__ranking-score {
+  color: #f5d884;
+  white-space: nowrap;
+}
+
+@keyframes game-over-reveal {
+  from { opacity: 0; transform: translateY(14px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 
 .game__turn-announcement {
   position: absolute;
@@ -182,6 +305,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .game__game-over,
   .game__turn-announcement { animation: none; }
 }
 
@@ -189,4 +313,31 @@
   .game {
     grid-template-rows: 56px minmax(0, 1fr);
   }
+
+  .game__game-over {
+    width: calc(100% - 1rem);
+    max-height: calc(100% - 1rem);
+    padding: 1.25rem .8rem;
+  }
+
+  .game__game-over-emblem {
+    width: 58px;
+    height: 58px;
+  }
+
+  .game__game-over-winner,
+  .game__ranking { padding: .8rem .6rem; }
+
+  .game__ranking-entry {
+    grid-template-columns: 1.5rem 38px minmax(0, 1fr) auto;
+    gap: .5rem;
+    padding: .4rem .45rem;
+  }
+
+  .game__ranking-portrait {
+    width: 38px;
+    height: 38px;
+  }
+
+  .game__ranking-score { font-size: .9rem; }
 }

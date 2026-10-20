@@ -105,5 +105,43 @@ test('partie intégrale déterministe jusqu’au classement du Dragon', async ({
   await expect(page.getByRole('heading', { name: 'Fin de la partie' })).toBeVisible();
   await expect(page.getByText('Rubis du Dragon')).toBeVisible();
   await expect(page.getByText(/Vainqueur/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Classement final' })).toBeVisible();
+  await expect(page.locator('.game__game-over-emblem')).toBeVisible();
+  await expect(page.locator('.game__ranking-entry')).toHaveCount(2);
+  await expect(page.locator('.game__ranking-entry--winner')).toHaveCount(1);
+  await expect(page.locator('.game__ranking-entry').first().locator('.game__ranking-position')).toHaveText('1');
+  await expect(page.locator('.game__ranking-entry').first().locator('.game__ranking-portrait')).toBeVisible();
   await expect(page.locator('app-board')).toHaveCount(0);
+});
+
+test('présentation de fin de partie adaptée au mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openPreparedGame(page);
+
+  await page.evaluate(() => {
+    const root = document.querySelector('app-root');
+    const ng = (window as Window & { ng?: { getComponent(node: Element): any } }).ng;
+    if (!root || !ng) throw new Error('Angular dev injector unavailable');
+    const game = ng.getComponent(root.querySelector('app-game') ?? root);
+    const gameService = game?.gameService;
+    const players = gameService?.['playerService']?.players;
+    if (!gameService || !players?.[0] || !players[1]) throw new Error('Game services unavailable');
+
+    players[0].heroId = 'argentus';
+    players[1].heroId = 'taia';
+    gameService.finalRanking.set([
+      { player: players[0], points: 4 },
+      { player: players[1], points: 2 },
+    ]);
+    gameService.winners.set([players[0]]);
+    gameService.phase.set('game-over');
+  });
+
+  await expect(page.getByRole('heading', { name: 'Fin de la partie' })).toBeVisible();
+  await expect(page.locator('.game__ranking-entry')).toHaveCount(2);
+  const layout = await page.locator('.game__game-over').evaluate(element => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth + 1);
 });

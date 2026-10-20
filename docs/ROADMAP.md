@@ -10,7 +10,8 @@
 - combats avec lancer différé, bonus d'armes, Tir magique, verdicts et récompenses ;
 - coffres, trésors, malédictions et classement de fin après le Dragon ;
 - Portail de guérison côté métier et parcours humain avec sélection/confirmation ;
-- panneaux de vie, trésors et inventaire, animations et harmonisation visuelle partielle.
+- panneaux de vie, trésors et inventaire, animations et harmonisation visuelle partielle ;
+- écran de fin de partie enrichi avec emblème du Dragon, vainqueur mis en avant et classement détaillé par héros.
 
 ## Incomplet ou à risque
 

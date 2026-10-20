@@ -72,21 +72,55 @@
 
     @if (gameService.phase() === 'game-over') {
       <section class="game__game-over" aria-labelledby="game-over-title">
-        <h1 id="game-over-title">Fin de la partie</h1>
-        <p>Le Dragon a été vaincu. Le rubis du Dragon vaut 1,5 points.</p>
-        <h2>Classement</h2>
-        <ol>
-          @for (entry of gameService.finalRanking(); track entry.player) {
-            <li [class.game__winner]="gameService.winners().includes(entry.player)">
-              <span>{{ getHeroName(entry.player) }}</span>
-              <strong>{{ entry.points | quantity: 'PT' : 'PTS' }}</strong>
-            </li>
-          }
-        </ol>
-        <p class="game__winner-label">
-          Vainqueur{{ gameService.winners().length > 1 ? 's' : '' }} :
-          {{ gameService.winners().map(player => getHeroName(player)).join(', ') }}
-        </p>
+        <header class="game__game-over-header">
+          <img
+            class="game__game-over-emblem"
+            src="/assets/tokens/dragon.png"
+            alt=""
+            draggable="false"
+          />
+          <p class="game__game-over-eyebrow">Le Dragon est vaincu</p>
+          <h1 id="game-over-title">Fin de la partie</h1>
+          <p class="game__game-over-intro">
+            Le <strong>Rubis du Dragon</strong> vaut 1,5 points. Voici le classement final des héros.
+          </p>
+        </header>
+
+        <section class="game__game-over-winner" aria-labelledby="game-over-winner-title">
+          <h2 id="game-over-winner-title">Victoire</h2>
+          <p class="game__winner-label">
+            Vainqueur{{ gameService.winners().length > 1 ? 's' : '' }} :
+            {{ gameService.winners().map(player => getHeroName(player)).join(', ') }}
+          </p>
+        </section>
+
+        <section class="game__ranking" aria-labelledby="game-over-ranking-title">
+          <h2 id="game-over-ranking-title">Classement final</h2>
+          <ol class="game__ranking-list">
+            @for (entry of gameService.finalRanking(); track entry.player) {
+              <li
+                class="game__ranking-entry"
+                [class.game__ranking-entry--winner]="gameService.winners().includes(entry.player)"
+              >
+                <span class="game__ranking-position" aria-label="Rang {{ $index + 1 }}">{{ $index + 1 }}</span>
+                @if (getHeroPortrait(entry.player); as portrait) {
+                  <img
+                    class="game__ranking-portrait"
+                    [src]="portrait"
+                    alt=""
+                    aria-hidden="true"
+                    draggable="false"
+                  />
+                }
+                <span class="game__ranking-player">
+                  <strong>{{ getHeroName(entry.player) }}</strong>
+                  <small>{{ entry.player.treasures.length | quantity: 'trésor' : 'trésors' }}</small>
+                </span>
+                <strong class="game__ranking-score">{{ entry.points | quantity: 'PT' : 'PTS' }}</strong>
+              </li>
+            }
+          </ol>
+        </section>
       </section>
     }
 
