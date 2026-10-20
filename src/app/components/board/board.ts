@@ -6,7 +6,7 @@ import { getEquipmentDefinition } from '../../data/equipment-definitions';
 import { HeroDefinition, HeroPowerDefinition } from '../../models/hero';
 import { Equipment } from '../../models/equipment';
 import { Player } from '../../models/player';
-import { Direction, PlacedTile, TileDefinition } from '../../models/tile';
+import { DIRECTIONS, Direction, PlacedTile, TileDefinition } from '../../models/tile';
 import { PlayerService } from '../../services/player.service';
 import { DungeonService } from '../../services/dungeon.service';
 import { TurnService } from '../../services/turn.service';
@@ -859,11 +859,13 @@ export class Board {
    * du héros du joueur.
    */
   getHeroPawnImage(player: Player): string | undefined {
-    if (!player.facing) {
+    const hero = this.getHeroDefinition(player);
+    if (!hero) {
       return undefined;
     }
 
-    return this.getHeroDefinition(player)?.pawn[player.facing];
+    const facing = DIRECTIONS.includes(player.facing as Direction) ? player.facing as Direction : 'south';
+    return hero.pawn[facing];
   }
 
   /**

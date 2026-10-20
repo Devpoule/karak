@@ -1,6 +1,7 @@
 import { PlayerService } from './player.service';
 import { calculateTreasurePoints } from '../models/treasure';
 import { getEquipmentDefinition } from '../data/equipment-definitions';
+import { PlayerSaveV2 } from '../models/save';
 
 describe('PlayerService treasures', () => {
   it('initialise les trésors vides pour la création et la réinitialisation', () => {
@@ -54,6 +55,34 @@ describe('PlayerService récupération', () => {
 
     expect(service.completeRecoveryTurn(player)).toBe(true);
     expect(player.recoveryState).toBe('none');
+  });
+});
+
+describe('PlayerService restauration graphique', () => {
+  it('attribue south si une position est restaurée sans orientation valide', () => {
+    const service = new PlayerService();
+    const saved = {
+      controller: 'human',
+      lives: 5,
+      recoveryState: 'none',
+      isCursed: false,
+      heroId: 'taia',
+      position: { x: 2, y: -1 },
+      inventory: { weapons: [], spells: [], key: null },
+      treasures: [],
+    } satisfies PlayerSaveV2;
+
+    expect(service.restore([saved])).toBe(true);
+    expect(service.players[0].position).toEqual({ x: 2, y: -1 });
+    expect(service.players[0].facing).toBe('south');
+
+    const invalid = { ...saved, facing: 'upside-down' } satisfies PlayerSaveV2;
+    expect(service.restore([invalid])).toBe(true);
+    expect(service.players[0].facing).toBe('south');
+
+    const valid = { ...saved, facing: 'west' } satisfies PlayerSaveV2;
+    expect(service.restore([valid])).toBe(true);
+    expect(service.players[0].facing).toBe('west');
   });
 });
 

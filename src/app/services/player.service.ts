@@ -5,7 +5,7 @@ import { createEmptyPlayerInventory, PLAYER_INVENTORY_CAPACITY } from '../models
 import { Equipment, EquipmentKind, KeyEquipment, SpellEquipment, WeaponEquipment } from '../models/equipment';
 import { Player } from '../models/player';
 import { createEmptyTreasures, Treasure } from '../models/treasure';
-import { Direction } from '../models/tile';
+import { DIRECTIONS, Direction } from '../models/tile';
 import { PlayerSaveV2 } from '../models/save';
 import { getEquipmentDefinition } from '../data/equipment-definitions';
 /**
@@ -323,8 +323,12 @@ export class PlayerService {
           .filter((treasure): treasure is Treasure => treasure !== null),
       };
       if (saved.heroId) player.heroId = saved.heroId as HeroId;
-      if (saved.position) player.position = { ...saved.position };
-      if (saved.facing) player.facing = saved.facing as Direction;
+      if (saved.position) {
+        player.position = { ...saved.position };
+        player.facing = DIRECTIONS.includes(saved.facing as Direction)
+          ? saved.facing as Direction
+          : 'south';
+      }
       const savedWeapons = Array.isArray(saved.inventory['weapons']) ? saved.inventory['weapons'] : [];
       const savedSpells = Array.isArray(saved.inventory['spells']) ? saved.inventory['spells'] : [];
       player.inventory.weapons = Array.from({ length: 2 }, (_, index) => this.restoreEquipment(savedWeapons[index], 'weapon'));
