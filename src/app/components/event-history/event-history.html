@@ -1,0 +1,44 @@
+<div class="event-history">
+  <button
+    class="event-history__toggle"
+    type="button"
+    aria-controls="event-history-panel"
+    [attr.aria-expanded]="isOpen()"
+    (click)="toggle()"
+  >
+    <span aria-hidden="true">📜</span>
+    <span>Journal</span>
+    <span class="event-history__count" aria-label="événements enregistrés">{{
+      entries().length
+    }}</span>
+  </button>
+
+  @if (isOpen()) {
+    <section
+      id="event-history-panel"
+      class="event-history__panel"
+      role="region"
+      aria-labelledby="event-history-title"
+    >
+      <header class="event-history__header">
+        <h2 id="event-history-title">Historique des événements</h2>
+        <button class="event-history__close" type="button" (click)="close()">Fermer</button>
+      </header>
+
+      @if (entries().length) {
+        <ol class="event-history__list">
+          @for (entry of entries(); track entry.id) {
+            <li [class]="'event-history__entry event-history__entry--' + entry.tone">
+              <span class="event-history__marker" aria-hidden="true">{{
+                entry.tone === 'combat' ? '⚔' : '✦'
+              }}</span>
+              <span>{{ entry.text }}</span>
+            </li>
+          }
+        </ol>
+      } @else {
+        <p class="event-history__empty">Aucun événement enregistré pour le moment.</p>
+      }
+    </section>
+  }
+</div>

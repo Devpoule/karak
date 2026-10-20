@@ -573,6 +573,7 @@ export class GameService {
 
   /** Restaure une sauvegarde stable avant l'affichage de la partie. */
   restoreSavedGame(envelope: SaveEnvelopeV2): boolean {
+    this.toastService.clearHistory();
     const payload: GameSavePayloadV2 = envelope.payload;
     if (!this.playerService.restore(payload.players)) return false;
     if (!this.dungeonService.restore(payload.dungeon)) return false;
@@ -661,6 +662,7 @@ export class GameService {
    * - sachet monstres/trésors.
    */
   initialize(): void {
+    this.toastService.clearHistory();
     // Une nouvelle partie doit repartir sans joueurs ni références
     // hérités. Lors de la toute première ouverture, les joueurs ne
     // sont pas encore configurés et doivent donc rester intacts si un

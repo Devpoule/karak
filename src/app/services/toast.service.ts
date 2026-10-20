@@ -7,6 +7,7 @@ export interface ToastMessage { readonly id: number; readonly text: string; read
 /** File unique de notifications informatives, non bloquantes. */
 @Injectable({ providedIn: 'root' })
 export class ToastService {
+  private readonly historyLimit = 50;
   private readonly toastDurationMinimum = 4400;
   private readonly toastDurationMaximum = 10400;
   private readonly toastCharactersPerSecond = 42;
@@ -15,6 +16,7 @@ export class ToastService {
 
   readonly current = signal<ToastMessage | null>(null);
   readonly isDismissing = signal(false);
+  readonly history = signal<readonly ToastMessage[]>([]);
   private readonly queue: ToastMessage[] = [];
   private nextId = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
@@ -25,10 +27,17 @@ export class ToastService {
     const message = { id: ++this.nextId, text, tone };
     if (this.current()) {
       if (this.queue.some(item => item.text === text) || this.current()?.text === text) return;
+      this.addToHistory(message);
       this.queue.push(message);
       return;
     }
+    this.addToHistory(message);
     this.display(message);
+  }
+
+  /** Réinitialise les événements affichés pour une nouvelle partie. */
+  clearHistory(): void {
+    this.history.set([]);
   }
 
 /** Gere dismiss et applique les gardes necessaires avant mutation. */
@@ -45,6 +54,10 @@ export class ToastService {
   private display(message: ToastMessage): void {
     this.current.set(message);
     this.schedule(message);
+  }
+
+  private addToHistory(message: ToastMessage): void {
+    this.history.update(history => [...history, message].slice(-this.historyLimit));
   }
 
 /** Gere schedule et applique les gardes necessaires avant mutation. */
