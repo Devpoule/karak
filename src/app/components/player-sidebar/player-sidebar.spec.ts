@@ -68,4 +68,29 @@ describe('PlayerSidebar codex', () => {
     expect(fixture.nativeElement.querySelector('app-inventory-panel')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('app-treasure-panel')).not.toBeNull();
   });
+
+  it('réserve l’état sélectionné à la consultation et synchronise aria-pressed', () => {
+    TestBed.configureTestingModule({ imports: [PlayerSidebar] });
+    const fixture = TestBed.createComponent(PlayerSidebar);
+    const service = TestBed.inject(PlayerService);
+    service.initialize(2);
+    service.drawHeroes();
+    fixture.componentInstance.side = 'left';
+    fixture.componentInstance.player = service.players[0];
+    fixture.detectChanges();
+
+    const buttons = fixture.nativeElement.querySelectorAll('.player-sidebar__power-badge') as NodeListOf<HTMLButtonElement>;
+    expect(buttons).toHaveLength(2);
+    expect(buttons[0].classList.contains('player-sidebar__power-badge--selected')).toBe(false);
+    expect(buttons[0].getAttribute('aria-pressed')).toBe('false');
+
+    buttons[0].click();
+    fixture.detectChanges();
+    expect(buttons[0].classList.contains('player-sidebar__power-badge--selected')).toBe(true);
+    expect(buttons[0].getAttribute('aria-pressed')).toBe('true');
+
+    fixture.componentInstance.clearPowerSelection();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.selectedPowerId).toBeNull();
+  });
 });
