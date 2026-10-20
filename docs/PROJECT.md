@@ -2,7 +2,7 @@
 
 ## Vision
 
-Karak est une adaptation numérique du jeu de société Karak, réalisée en Angular, TypeScript et SCSS. Le projet vise une expérience lisible et soignée, jouable avec des héros humains et des adversaires IA, puis publiable sur le Web. Le respect des règles du jeu de base prime sur les extensions et les effets sonores, qui ne sont pas prioritaires. Le multijoueur en ligne est une évolution future, pas une capacité actuelle.
+Karak est une adaptation numérique du jeu de société Karak, réalisée en Angular, TypeScript et SCSS. Le projet vise une expérience lisible et soignée, jouable avec des héros humains et des adversaires IA, puis publiable sur le Web. Le respect des règles du jeu de base prime sur les extensions et les effets sonores, qui restent facultatifs. Le multijoueur en ligne est une évolution future, pas une capacité actuelle.
 
 Les règles officielles et les choix propres à l'adaptation sont toujours distingués. Le manuel local est référencé dans [`RULES.md`](./RULES.md).
 
@@ -16,7 +16,8 @@ Le projet couvre notamment :
 - équipements, clés, coffres, trésors et objets au sol ;
 - malédictions et Portail de guérison ;
 - victoire contre le Dragon, classement et état `game-over` ;
-- HUD, inventaires, vies, trésors et retours visuels.
+- HUD, inventaires, vies, trésors et retours visuels ;
+- retour sonore optionnel des notifications, désactivé par défaut.
 
 ## Organisation
 
@@ -39,6 +40,8 @@ Responsabilités principales :
 - `PlayerService` : joueurs, inventaires, vies, malédictions, récupération et trésors ;
 - `CombatService` : combats en attente, lancer, bonus, résolution et résultats ;
 - `AiService` : actions obligatoires, combats et déplacements IA ;
+- `SettingsService` : préférences persistantes de confort, dont l'audio facultatif ;
+- `AudioService` : création lazy de signaux sonores courts sans asset ni dépendance externe ;
 - `Board` : rendu du plateau et contrôles d'action ;
 - `PlayerHud`, `PlayerSidebar`, `HeroPanel`, `LifePanel`, `InventoryPanel`, `TreasurePanel` : présentation des joueurs.
 

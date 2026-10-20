@@ -12,8 +12,9 @@
 - Portail de guérison côté métier et parcours humain avec sélection/confirmation ;
 - panneaux de vie, trésors et inventaire, animations et harmonisation visuelle partielle ;
 - écran de fin de partie enrichi avec emblème du Dragon, vainqueur mis en avant et classement détaillé par héros ;
-- panneau de paramètres partagé entre l'accueil et la partie, avec préférences persistantes de mouvement et de taille du texte ;
+- panneau de paramètres partagé entre l'accueil et la partie, avec préférences persistantes de mouvement, contraste, taille du texte et audio facultatif ;
 - tutoriel interactif consultatif en cinq étapes, accessible depuis l'accueil et l'en-tête de partie.
+- signal sonore court et optionnel pour les notifications, désactivé par défaut et tolérant à l'absence de Web Audio.
 
 ## Incomplet ou à risque
 
@@ -23,7 +24,7 @@
 - La compilation passe avec des avertissements de budget SCSS, notamment sur `CombatOverlay` et `GameSetup`.
 - `GameService` reste une façade large ; toute extraction doit être motivée par des usages concrets.
 - Les six héros disposent maintenant de leurs pouvoirs documentés et couverts par les tests : Aderyn, Argentus, Horan, Taia, Victorius et Xanros. Les relances, la Tisseuse de destin, la Réincarnation et Inarrêtable sont intégrés avec désactivation par malédiction.
-- Les extensions, le son et le multijoueur en ligne ne sont pas prioritaires.
+- Les effets sonores avancés, les extensions et le multijoueur en ligne ne sont pas prioritaires.
 
 ## Dernière recette technique
 

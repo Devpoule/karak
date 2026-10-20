@@ -7,6 +7,14 @@ Les notifications non bloquantes sont affichées par `ToastService` et `ToastCon
 - Les messages en attente restent dans leur file et sont affichés après la fin complète de l’animation.
 - Les nouvelles notifications doivent continuer à utiliser `ToastService` afin de conserver cette convention commune.
 
+## Retour sonore facultatif
+
+`AudioService` peut jouer un signal court pour chaque notification acceptée par
+`ToastService`. Cette préférence est désactivée par défaut dans `SettingsService`
+et reste indépendante des règles métier, des décisions obligatoires et des
+animations. Le contexte Web Audio n'est créé qu'après activation explicite ; un
+navigateur sans support audio continue donc à fonctionner sans erreur.
+
 ## Historique des événements
 
 Les notifications acceptées par `ToastService` sont conservées dans un historique

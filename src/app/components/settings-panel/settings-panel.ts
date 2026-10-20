@@ -1,5 +1,5 @@
 import { Component, ElementRef, HostListener, Input, ViewChild } from '@angular/core';
-import { ContrastPreference, MotionPreference, SettingsService, TextScale } from '../../services/settings.service';
+import { AudioPreference, ContrastPreference, MotionPreference, SettingsService, TextScale } from '../../services/settings.service';
 
 /** Panneau de préférences de confort partagé par l'accueil et la partie. */
 @Component({
@@ -41,6 +41,10 @@ export class SettingsPanel {
 
   setContrastPreference(preference: ContrastPreference): void {
     this.settings.setContrastPreference(preference);
+  }
+
+  setAudioPreference(preference: AudioPreference): void {
+    this.settings.setAudioPreference(preference);
   }
 
   reset(): void {

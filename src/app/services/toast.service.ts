@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, Optional, signal } from '@angular/core';
+import { AudioService } from './audio.service';
 
 export type ToastTone = 'info' | 'success' | 'warning' | 'combat';
 /** Contrat de donnees ToastMessage utilise par le domaine ou l interface. */
@@ -22,6 +23,8 @@ export class ToastService {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private fadeTimer: ReturnType<typeof setTimeout> | null = null;
 
+  constructor(@Optional() private readonly audioService?: AudioService) {}
+
 /** Gere show et applique les gardes necessaires avant mutation. */
   show(text: string, tone: ToastTone = 'info'): void {
     const message = { id: ++this.nextId, text, tone };
@@ -33,6 +36,7 @@ export class ToastService {
     }
     this.addToHistory(message);
     this.display(message);
+    this.audioService?.play('notification');
   }
 
   /** Réinitialise les événements affichés pour une nouvelle partie. */

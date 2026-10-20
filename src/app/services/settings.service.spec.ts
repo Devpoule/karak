@@ -7,6 +7,7 @@ describe('SettingsService', () => {
     document.documentElement.removeAttribute('data-karak-motion');
     document.documentElement.removeAttribute('data-karak-text-scale');
     document.documentElement.removeAttribute('data-karak-contrast');
+    document.documentElement.removeAttribute('data-karak-audio');
     TestBed.resetTestingModule();
   });
 
@@ -15,6 +16,7 @@ describe('SettingsService', () => {
     document.documentElement.removeAttribute('data-karak-motion');
     document.documentElement.removeAttribute('data-karak-text-scale');
     document.documentElement.removeAttribute('data-karak-contrast');
+    document.documentElement.removeAttribute('data-karak-audio');
   });
 
   it('restaure et applique les préférences enregistrées', () => {
@@ -22,6 +24,7 @@ describe('SettingsService', () => {
       motionPreference: 'reduced',
       textScale: 'large',
       contrastPreference: 'high',
+      audioPreference: 'on',
     }));
 
     const service = TestBed.inject(SettingsService);
@@ -29,6 +32,7 @@ describe('SettingsService', () => {
     expect(service.motionPreference()).toBe('reduced');
     expect(service.textScale()).toBe('large');
     expect(service.contrastPreference()).toBe('high');
+    expect(service.audioPreference()).toBe('on');
     expect(document.documentElement.dataset['karakMotion']).toBe('reduced');
     expect(document.documentElement.dataset['karakTextScale']).toBe('large');
     expect(document.documentElement.dataset['karakContrast']).toBe('high');
@@ -40,15 +44,18 @@ describe('SettingsService', () => {
     service.setMotionPreference('reduced');
     service.setTextScale('large');
     service.setContrastPreference('high');
+    service.setAudioPreference('on');
 
     expect(JSON.parse(localStorage.getItem('karak-settings-v1') ?? '{}')).toEqual({
       motionPreference: 'reduced',
       textScale: 'large',
       contrastPreference: 'high',
+      audioPreference: 'on',
     });
     expect(document.documentElement.dataset['karakMotion']).toBe('reduced');
     expect(document.documentElement.dataset['karakTextScale']).toBe('large');
     expect(document.documentElement.dataset['karakContrast']).toBe('high');
+    expect(document.documentElement.dataset['karakAudio']).toBe('on');
   });
 
   it('réinitialise les préférences sur les valeurs par défaut', () => {
@@ -63,5 +70,6 @@ describe('SettingsService', () => {
     expect(document.documentElement.dataset['karakMotion']).toBeUndefined();
     expect(document.documentElement.dataset['karakTextScale']).toBeUndefined();
     expect(document.documentElement.dataset['karakContrast']).toBeUndefined();
+    expect(document.documentElement.dataset['karakAudio']).toBeUndefined();
   });
 });

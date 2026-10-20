@@ -109,6 +109,31 @@
               <span>Contraste renforcé</span>
             </label>
           </fieldset>
+
+          <fieldset>
+            <legend>Sons</legend>
+            <p class="settings-panel__hint">Activez un retour sonore discret pour les notifications. Désactivé par défaut.</p>
+            <label>
+              <input
+                type="radio"
+                name="settings-audio"
+                value="off"
+                [checked]="settings.audioPreference() === 'off'"
+                (change)="setAudioPreference('off')"
+              />
+              <span>Désactivés</span>
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="settings-audio"
+                value="on"
+                [checked]="settings.audioPreference() === 'on'"
+                (change)="setAudioPreference('on')"
+              />
+              <span>Activés</span>
+            </label>
+          </fieldset>
         </div>
 
         <footer class="settings-panel__actions">
