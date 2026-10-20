@@ -1,0 +1,56 @@
+# Déploiement web de Karak
+
+## Générer le livrable
+
+Depuis la racine du projet :
+
+```powershell
+npm ci
+npm run build:production
+```
+
+Le livrable statique est généré dans `dist/karak/browser`. Le contenu de ce
+répertoire doit être envoyé à la racine documentaire du domaine ou du
+sous-domaine OVH, sans envoyer le répertoire parent `browser` lui-même.
+
+Le build production utilise l'optimisation Angular, le hachage des fichiers
+JavaScript/CSS et les budgets configurés dans `angular.json`. Le fichier
+`.htaccess` est copié dans le livrable pour permettre le rechargement direct
+des routes Angular (`/play`, `/codex` et `/continuity-prototype`) sur un
+hébergement Apache.
+
+## Contrôles avant transfert
+
+- vérifier que `dist/karak/browser/index.html` et `.htaccess` existent ;
+- vérifier que le dossier `assets` est présent ;
+- conserver les noms hachés des fichiers générés ;
+- transférer le contenu complet de `dist/karak/browser` ;
+- ne pas publier les sources, `node_modules`, `.angular` ou les rapports de
+  test.
+
+Les chemins d'assets actuels commencent par `/assets`. Le livrable est donc
+prévu pour la racine d'un domaine ou d'un sous-domaine (`https://jeu.exemple/`),
+pas pour un sous-répertoire (`https://exemple/karak/`). Le support d'un
+sous-répertoire nécessite une configuration de base URL dédiée et reste hors
+du périmètre de ce ticket.
+
+## Recette après transfert
+
+Depuis le domaine publié, vérifier :
+
+1. l'accueil et le chargement des images ;
+2. les navigations vers `/play`, `/codex` et `/continuity-prototype` ;
+3. le rechargement direct de chacune de ces URLs ;
+4. le démarrage d'une partie, les paramètres, la sauvegarde et la restauration ;
+5. l'absence d'erreurs dans la console et de requêtes `404` vers `assets`.
+
+Ce ticket prépare le livrable mais ne déclenche aucun transfert ni déploiement
+OVH.
+
+Pour tester une instance locale différente de celle du serveur de développement
+habituel, Playwright accepte une URL de base explicite :
+
+```powershell
+$env:PLAYWRIGHT_BASE_URL = 'http://127.0.0.1:4300'
+npx playwright test e2e/smoke.spec.ts --workers=1
+```

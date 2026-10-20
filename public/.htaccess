@@ -1,0 +1,11 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Laisser Apache servir les fichiers et répertoires existants.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Les routes Angular sont gérées côté client après le chargement initial.
+  RewriteRule ^ index.html [L]
+</IfModule>
