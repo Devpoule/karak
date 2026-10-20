@@ -83,6 +83,23 @@
           alt=""
           draggable="false"
         />
+        @if (getTileDefinition(tile)?.feature === 'portal' && isActivePlayerOnTile(tile)) {
+          <button
+            type="button"
+            class="board__context-action board__context-action--portal"
+            [disabled]="!canUsePortalTravel"
+            aria-label="Utiliser le portail de téléportation"
+            title="Utiliser le portail de téléportation"
+            (pointerdown)="$event.stopPropagation()"
+            (click)="$event.stopPropagation(); openPortalTravel()"
+          >
+            <svg class="board__portal-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+              <ellipse class="board__portal-icon-ring" cx="16" cy="16" rx="9" ry="11" />
+              <path class="board__portal-icon-vortex" d="M12 11c4-3 9 0 8 4-1 4-7 3-7 6 0 2 3 3 6 1" />
+              <path class="board__portal-icon-spark" d="m16 5 .8 2.1L19 8l-2.2.9L16 11l-.8-2.1L13 8l2.2-.9Z" />
+            </svg>
+          </button>
+        }
         @if (getTileDefinition(tile)?.feature === 'healing-fountain' && isActivePlayerOnTile(tile)) {
           <button
             type="button"

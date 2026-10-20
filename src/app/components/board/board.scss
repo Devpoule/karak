@@ -867,6 +867,22 @@
 .board__fountain-icon-stream { fill: none; stroke: #55e7e0; stroke-linecap: round; stroke-width: 1.7; }
 .board__fountain-icon-highlight { fill: none; stroke: #e4fff1; stroke-linecap: round; stroke-width: 0.8; opacity: 0.85; }
 
+.board__portal-icon { width: 100%; height: 100%; overflow: visible; }
+.board__portal-icon-ring { fill: rgba(58, 37, 92, 0.78); stroke: #c59cff; stroke-width: 1.2; filter: drop-shadow(0 0 1.4px rgba(195, 139, 255, 0.9)); }
+.board__portal-icon-vortex { fill: none; stroke: #72e9ff; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+.board__portal-icon-spark { fill: #ecdcff; stroke: #8eeaff; stroke-width: 0.45; }
+
+.board__context-action--portal {
+  border-color: rgba(197, 156, 255, 0.9);
+  background: radial-gradient(circle at 50% 35%, #523b70 0, #2b1c48 62%, #1c1530 100%);
+  box-shadow: 0 0 0.7rem rgba(177, 112, 255, 0.62), inset 0 0 0 1px rgba(240, 225, 255, 0.24);
+}
+
+.board__context-action--portal:hover:not(:disabled),
+.board__context-action--portal:focus-visible:not(:disabled) {
+  box-shadow: 0 0 1rem rgba(198, 141, 255, 0.9), inset 0 0 0 1px rgba(250, 240, 255, 0.48);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .board__context-action { transition: none; }
 }
