@@ -248,12 +248,19 @@
   object-fit: contain;
 }
 
-.player-sidebar__power-badge:hover,
-.player-sidebar__power-badge:focus-visible,
+.player-sidebar__power-badge:hover {
+  filter: brightness(1.08);
+}
+
+.player-sidebar__power-badge:focus-visible {
+  outline: 3px solid #fff1bc;
+  outline-offset: 2px;
+}
+
 .player-sidebar__power-badge--selected {
   color: #24180f;
   background: #f1d27e;
-  outline: none;
+  box-shadow: 0 0 0 2px rgba(245, 190, 65, .65), 0 0 10px rgba(245, 190, 65, .3);
 }
 
 .player-sidebar__power-badge--disabled {
