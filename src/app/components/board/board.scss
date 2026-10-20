@@ -176,6 +176,14 @@
   }
 }
 }
+
+/*
+ * Chaque tuile reste isolée, mais la tuile du héros actif doit placer
+ * ses contrôles contextuels au-dessus des tuiles voisines.
+ */
+.board__tile--active-player {
+  z-index: 10;
+}
 /* ==========================================================
     HÉROS
     ========================================================== */
@@ -818,6 +826,49 @@
   box-shadow: 0 0 1rem rgba(174, 103, 225, 0.75);
   content: '';
   pointer-events: none;
+}
+.board__context-action {
+  position: absolute;
+  z-index: 5;
+  top: -0.4rem;
+  right: -0.4rem;
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0.22rem;
+  place-items: center;
+  border: 1px solid rgba(146, 219, 216, 0.9);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #315d62 0, #18343c 62%, #10252d 100%);
+  box-shadow: 0 0 0.7rem rgba(41, 223, 218, 0.55), inset 0 0 0 1px rgba(224, 246, 232, 0.24);
+  cursor: pointer;
+  transition: filter 160ms ease, box-shadow 160ms ease;
+}
+
+.board__context-action:hover:not(:disabled),
+.board__context-action:focus-visible:not(:disabled) {
+  filter: brightness(1.15);
+  box-shadow: 0 0 1rem rgba(63, 240, 226, 0.8), inset 0 0 0 1px rgba(239, 255, 237, 0.45);
+}
+
+.board__context-action:disabled {
+  border-color: #656967;
+  background: #343b3b;
+  box-shadow: none;
+  cursor: not-allowed;
+  filter: grayscale(1) brightness(0.72);
+  opacity: 0.78;
+}
+
+.board__fountain-icon { width: 100%; height: 100%; overflow: visible; }
+.board__fountain-icon-stone { fill: #a8b0ad; stroke: #475455; stroke-width: 1; }
+.board__fountain-icon-basin { fill: #829291; stroke: #3c4d4d; stroke-width: 1; }
+.board__fountain-icon-water { fill: #63f1e6; stroke: #d4fff1; stroke-width: 0.65; filter: drop-shadow(0 0 1.2px rgba(80, 255, 239, 0.9)); }
+.board__fountain-icon-stream { fill: none; stroke: #55e7e0; stroke-linecap: round; stroke-width: 1.7; }
+.board__fountain-icon-highlight { fill: none; stroke: #e4fff1; stroke-linecap: round; stroke-width: 0.8; opacity: 0.85; }
+
+@media (prefers-reduced-motion: reduce) {
+  .board__context-action { transition: none; }
 }
 
 .board__tile--portal-selected::after {

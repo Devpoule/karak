@@ -198,6 +198,8 @@ export class GameService {
   readonly pendingSneakChoice = signal<PendingSneakChoice | null>(null);
   /** Sélection temporaire partagée entre l'inventaire et le plateau. */
   readonly healingPortalSelection = signal<HealingPortalSelection | null>(null);
+  /** Présence déjà utilisée : elle persiste entre les tours tant que le héros reste sur la tuile. */
+  readonly healingFountainUse = signal<{ player: Player; tileKey: string } | null>(null);
   /** Décision métier en attente après la défaite de Horan à 0 PV. */
   readonly horanReincarnationSelection = signal<HoranReincarnationSelection | null>(null);
   /** Révision émise après une Réincarnation effectivement résolue. */
@@ -234,6 +236,7 @@ export class GameService {
   readonly lastXanrosSubstitutionPlayer = signal<Player | null>(null);
   private xanrosSubstitutionPlayer: Player | null = null;
   private optionalXanrosTreasure = false;
+  private healingFountainPresenceKey: string | null = null;
   /** Révision UI émise lorsqu'un héros entre réellement en tour de récupération. */
   readonly recoveryRevision = signal(0);
   private readonly turnTransitionDelay = 2800;
@@ -692,6 +695,8 @@ export class GameService {
     this.pendingTokenChoice.set(null);
     this.portalTravelSelection.set(null);
     this.healingPortalSelection.set(null);
+    this.healingFountainUse.set(null);
+    this.healingFountainPresenceKey = null;
     this.horanReincarnationSelection.set(null);
     this.clearUnstoppableContinuation();
     this.groundEquipmentByTile = new Map<string, Equipment>();
@@ -1091,6 +1096,7 @@ export class GameService {
     if (this.turnTransitionPending() || this.hasPendingTileResolution) {
       return 'none';
     }
+    this.clearHealingFountainUseOnDeparture(player, destinationTile);
     if (revealRoom) {
       this.revealNewRoom(destinationTile, player, sourceTile);
       if (this.pendingTokenChoice()) return 'token-choice';
@@ -1099,20 +1105,6 @@ export class GameService {
     // La Marche rampante reste disponible lors de toute rencontre éligible,
     // y compris lorsque le contenu vient d'être révélé sur une nouvelle tuile.
     const classification = this.classifyTileEntry(player, destinationTile, true);
-
-    // Une arrivée sur une fontaine sans événement de jeton met fin au
-    // déplacement et soigne immédiatement le héros. Les contenus présents
-    // sur la tuile restent prioritaires afin de préserver leur résolution.
-    if ((classification.kind === 'empty' || classification.kind === 'already-resolved')
-      && this.isNewHealingFountainArrival(sourceTile, destinationTile)) {
-      this.turnService.stopMovements();
-      this.playerService.restoreCompletely(player, 5);
-      this.toastService.show(
-        `${this.actorLabel(player)} récupère tous ses points de vie à la fontaine.`,
-        'success',
-      );
-      return 'none';
-    }
 
     if (classification.kind === 'sneak') {
       this.turnService.stopMovements();
@@ -1169,15 +1161,6 @@ export class GameService {
       sourceTile,
     });
     return 'treasure';
-  }
-
-  /** Vérifie qu'une entrée ordinaire arrive réellement sur une fontaine. */
-  private isNewHealingFountainArrival(sourceTile: PlacedTile, destinationTile: PlacedTile): boolean {
-    if (sourceTile.x === destinationTile.x && sourceTile.y === destinationTile.y) {
-      return false;
-    }
-
-    return this.dungeonService.getTileDefinition(destinationTile)?.feature === 'healing-fountain';
   }
 
   /** Classifie le contenu d'une tuile sans modifier l'état du jeu. */
@@ -1535,6 +1518,59 @@ export class GameService {
       && this.healingPortalSelection() === null
       && player.inventory.spells.some(spell => spell?.effect === 'healing-portal')
       && this.getHealingFountains().length > 0;
+  }
+
+  /** Indique si le joueur actif peut volontairement utiliser la fontaine occupée. */
+  get canUseHealingFountain(): boolean {
+    const player = this.activePlayer;
+    const tile = player?.position ? this.dungeonService.getTileAt(player.position.x, player.position.y) : undefined;
+    const tileKey = tile ? this.groundKey(tile) : null;
+    return this.phase() === 'playing'
+      && !!player
+      && player.lives > 0
+      && player.recoveryState === 'none'
+      && !this.turnTransitionPending()
+      && !this.hasPendingTileResolution
+      && !this.explorationService.pendingTile
+      && this.healingPortalSelection() === null
+      && this.turnService.canMove
+      && !!tile
+      && this.dungeonService.getTileDefinition(tile)?.feature === 'healing-fountain'
+      && !this.isHealingFountainUsed(player, tileKey!)
+      && (player.lives < 5 || player.isCursed);
+  }
+
+  /** Soigne volontairement le héros présent sur sa fontaine et termine son tour. */
+  useHealingFountain(): boolean {
+    if (!this.canUseHealingFountain) return false;
+    const player = this.activePlayer;
+    const tile = player?.position ? this.dungeonService.getTileAt(player.position.x, player.position.y) : undefined;
+    if (!player || !tile || !this.playerService.restoreCompletely(player, 5)) return false;
+    if (!this.turnService.consumeAllMovements()) return false;
+    this.healingFountainUse.set({ player, tileKey: this.groundKey(tile) });
+    this.toastService.show(`${this.actorLabel(player)} récupère tous ses points de vie à la fontaine.`, 'success');
+    this.endTurn();
+    return true;
+  }
+
+  private refreshHealingFountainPresence(player: Player | null, tileKey: string | null): void {
+    const presenceKey = player && tileKey ? `${this.playerService.players.indexOf(player)}:${tileKey}` : null;
+    if (presenceKey === this.healingFountainPresenceKey) return;
+    this.healingFountainPresenceKey = presenceKey;
+    const used = this.healingFountainUse();
+    if (!used || !player || used.player !== player || used.tileKey !== tileKey) this.healingFountainUse.set(null);
+  }
+
+  private isHealingFountainUsed(player: Player, tileKey: string): boolean {
+    const used = this.healingFountainUse();
+    return used?.player === player && used.tileKey === tileKey;
+  }
+
+  private clearHealingFountainUseOnDeparture(player: Player, destinationTile: PlacedTile): void {
+    const used = this.healingFountainUse();
+    if (!used || used.player !== player) return;
+    const destinationKey = this.groundKey(destinationTile);
+    if (used.tileKey !== destinationKey) this.healingFountainUse.set(null);
   }
 
 /** Gere openHealingPortalSelection et applique les gardes necessaires avant mutation. */

@@ -67,6 +67,7 @@
     @for (tile of tiles; track $index) {
       <div
         class="board__tile"
+        [class.board__tile--active-player]="isActivePlayerOnTile(tile)"
         [class.board__tile--healing-selected]="healingPortalSelection?.destination === tile || horanReincarnationSelection?.destination === tile"
         [class.board__tile--portal-selected]="portalTravelSelection?.destination === tile"
         [class.board__tile--portal-destination]="portalTravelSelection?.destinations?.includes(tile)"
@@ -82,6 +83,25 @@
           alt=""
           draggable="false"
         />
+        @if (getTileDefinition(tile)?.feature === 'healing-fountain' && isActivePlayerOnTile(tile)) {
+          <button
+            type="button"
+            class="board__context-action board__context-action--fountain"
+            [disabled]="!canUseHealingFountain"
+            aria-label="Utiliser la fontaine de régénération"
+            title="Utiliser la fontaine de régénération"
+            (pointerdown)="$event.stopPropagation()"
+            (click)="useHealingFountain($event)"
+          >
+            <svg class="board__fountain-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+              <path class="board__fountain-icon-stone" d="M7 22.5h18l-1.4 4H8.4z" />
+              <path class="board__fountain-icon-basin" d="M9 19.5h14l-1.1 3H10.1z" />
+              <path class="board__fountain-icon-water" d="M16 7c-2.2 2.7-2.8 4.1-2.8 5.7a2.8 2.8 0 0 0 5.6 0C18.8 11.1 18.2 9.7 16 7Z" />
+              <path class="board__fountain-icon-stream" d="M16 14v5" />
+              <path class="board__fountain-icon-highlight" d="M12.5 20h7" />
+            </svg>
+          </button>
+        }
         <!--
     Jeton actuellement présent sur la tuile.
     Il peut s'agir à ce stade :

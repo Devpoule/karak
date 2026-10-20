@@ -58,16 +58,48 @@ describe('GameService contrat d entrée dans une tuile', () => {
     expect(turnService.remainingMovements()).toBe(4);
   });
 
-  it('soigne complètement le héros à son arrivée sur une fontaine et arrête le tour', () => {
+  it('laisse poursuivre le héros après son arrivée sur une fontaine', () => {
     const fountain = { ...tile(), definitionId: 'healing-corner', x: 2, y: 0 };
     player.lives = 2;
     player.isCursed = true;
     turnService.consumeMovement();
 
     expect(gameService.resolveTileEntry(player, tile(), fountain, false, true)).toBe('none');
+    expect(player.lives).toBe(2);
+    expect(player.isCursed).toBe(true);
+    expect(turnService.remainingMovements()).toBe(3);
+  });
+
+  it('soigne volontairement une fontaine, lève la malédiction et consomme les mouvements restants', () => {
+    const fountain = { ...tile(), definitionId: 'healing-corner', x: 2, y: 0 };
+    dungeonService.tiles.push(fountain);
+    player.position = { x: 2, y: 0 };
+    player.lives = 2;
+    player.isCursed = true;
+    turnService.consumeMovement();
+
+    expect(gameService.canUseHealingFountain).toBe(true);
+    expect(gameService.useHealingFountain()).toBe(true);
     expect(player.lives).toBe(5);
     expect(player.isCursed).toBe(false);
     expect(turnService.remainingMovements()).toBe(0);
+    expect(gameService.canUseHealingFountain).toBe(false);
+  });
+
+  it('réautorise la fontaine après une sortie puis une nouvelle arrivée', () => {
+    const fountain = { ...tile(), definitionId: 'healing-corner', x: 2, y: 0 };
+    dungeonService.tiles.push(fountain);
+    player.position = { x: 2, y: 0 };
+    player.lives = 2;
+    expect(gameService.useHealingFountain()).toBe(true);
+
+    player.position = { x: 1, y: 0 };
+    gameService.turnTransitionPending.set(false);
+    gameService.resolveTileEntry(player, fountain, tile());
+    player.lives = 3;
+    turnService.resetMovements();
+    player.position = { x: 2, y: 0 };
+    expect(gameService.canUseHealingFountain).toBe(true);
   });
 
   it('ne modifie pas un héros déjà au maximum et ne soigne pas une tuile ordinaire', () => {
@@ -80,7 +112,7 @@ describe('GameService contrat d entrée dans une tuile', () => {
     player.lives = 5;
     expect(gameService.resolveTileEntry(player, tile(), fountain)).toBe('none');
     expect(player.lives).toBe(5);
-    expect(turnService.remainingMovements()).toBe(0);
+    expect(turnService.remainingMovements()).toBe(4);
   });
 
   it('ne déclenche pas un second soin sans nouvelle arrivée', () => {

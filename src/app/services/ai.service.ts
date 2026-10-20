@@ -280,6 +280,8 @@ export class AiService {
       return false;
     }
 
+    if (this.gameService.canUseHealingFountain && this.gameService.useHealingFountain()) return true;
+
     // Choix déterministe : l'IA soigne son propre héros dès que le portail
     // est utilisable, en privilégiant la première fontaine découverte.
     if (player.inventory.spells.some(spell => spell?.effect === 'healing-portal')) {
