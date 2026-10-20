@@ -209,3 +209,17 @@ app-root {
     scroll-behavior: auto !important;
   }
 }
+
+/* Préférences appliquées par le panneau de paramètres. */
+html[data-karak-motion='reduced'] *,
+html[data-karak-motion='reduced'] *::before,
+html[data-karak-motion='reduced'] *::after {
+  animation-duration: .01ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+  transition-duration: .01ms !important;
+}
+
+html[data-karak-text-scale='large'] {
+  font-size: 112.5%;
+}

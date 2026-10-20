@@ -159,6 +159,8 @@
   gap: 0.8rem;
 }
 
+.game-header__actions app-settings-panel { display: inline-block; }
+
 @media (max-width: 600px) {
   .game-header {
     padding: 0 0.5rem;

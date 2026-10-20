@@ -11,7 +11,8 @@
 - coffres, trésors, malédictions et classement de fin après le Dragon ;
 - Portail de guérison côté métier et parcours humain avec sélection/confirmation ;
 - panneaux de vie, trésors et inventaire, animations et harmonisation visuelle partielle ;
-- écran de fin de partie enrichi avec emblème du Dragon, vainqueur mis en avant et classement détaillé par héros.
+- écran de fin de partie enrichi avec emblème du Dragon, vainqueur mis en avant et classement détaillé par héros ;
+- panneau de paramètres partagé entre l'accueil et la partie, avec préférences persistantes de mouvement et de taille du texte.
 
 ## Incomplet ou à risque
 

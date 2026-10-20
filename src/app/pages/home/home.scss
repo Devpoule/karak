@@ -127,7 +127,8 @@
 }
 
 .home__play,
-.home__lore {
+.home__lore,
+.home__navigation app-settings-panel {
   position: relative;
 
   display: inline-flex;
@@ -145,6 +146,11 @@
     border-color var(--karak-motion-fast) var(--karak-ease-standard),
     box-shadow var(--karak-motion-fast) var(--karak-ease-standard),
     filter var(--karak-motion-fast) var(--karak-ease-standard);
+}
+
+.home__navigation app-settings-panel {
+  display: block;
+  width: 100%;
 }
 
 .home__play {

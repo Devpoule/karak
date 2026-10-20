@@ -17,6 +17,7 @@
   />
 
   <div class="game-header__actions">
+    <app-settings-panel [compact]="true" />
     @if (context === 'game') {
       @if (navigationLocked) {
         <span class="game-header__link game-header__link--disabled game-header__codex-link" aria-disabled="true" aria-label="Codex" title="Découvrir l'univers du jeu">
