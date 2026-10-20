@@ -6,12 +6,22 @@ Depuis la racine du projet :
 
 ```powershell
 npm ci
-npm run build:production
+npm run prepare:hosting
 ```
 
-Le livrable statique est généré dans `dist/karak/browser`. Le contenu de ce
-répertoire doit être envoyé à la racine documentaire du domaine ou du
-sous-domaine OVH, sans envoyer le répertoire parent `browser` lui-même.
+La commande compile l'application puis vérifie automatiquement le livrable.
+Celui-ci est généré dans `dist/karak/browser`. Le contenu de ce répertoire
+doit être envoyé à la racine documentaire du domaine ou du sous-domaine OVH,
+sans envoyer le répertoire parent `browser` lui-même.
+
+La vérification contrôle la présence de `index.html`, `.htaccess` et `assets`,
+la base URL racine, le fallback Angular, l'absence de cartes source et
+l'absence de fichiers de développement dans le livrable. Elle peut être
+relancée seule après un contrôle ou une copie locale :
+
+```powershell
+npm run verify:hosting
+```
 
 Le build production utilise l'optimisation Angular, le hachage des fichiers
 JavaScript/CSS et les budgets configurés dans `angular.json`. Le fichier
@@ -33,6 +43,28 @@ prévu pour la racine d'un domaine ou d'un sous-domaine (`https://jeu.exemple/`)
 pas pour un sous-répertoire (`https://exemple/karak/`). Le support d'un
 sous-répertoire nécessite une configuration de base URL dédiée et reste hors
 du périmètre de ce ticket.
+
+## Installation OVH sans toucher au site existant
+
+Le déploiement doit utiliser une racine documentaire dédiée à Karak, par
+exemple celle d'un sous-domaine. Il ne faut pas envoyer le contenu de Karak
+dans la racine documentaire actuellement utilisée par `justindev.fr`.
+
+Avant tout transfert :
+
+1. créer ou identifier la racine documentaire dédiée dans l'espace OVH ;
+2. conserver une copie de la version actuellement publiée dans cette racine ;
+3. transférer uniquement le contenu de `dist/karak/browser` ;
+4. vérifier les permissions usuelles de l'hébergement (dossiers `755`, fichiers
+   `644`) si OVH les signale comme nécessaires ;
+5. réaliser la recette ci-dessous depuis l'URL dédiée.
+
+Pour un retour arrière, conserver l'ancien contenu jusqu'à la fin de la
+recette, puis restaurer cette copie dans la même racine documentaire. Aucun
+identifiant, secret ou fichier de configuration local ne doit être transféré.
+
+Cette préparation ne configure ni DNS, ni compte OVH, ni transfert FTP/SFTP,
+et ne modifie pas `justindev.fr`.
 
 ## Recette après transfert
 
