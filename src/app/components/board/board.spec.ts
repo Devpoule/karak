@@ -165,6 +165,7 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     expect(button?.type).toBe('button');
     expect(button?.disabled).toBe(true);
     expect(button?.getAttribute('aria-label')).toBe('Utiliser la fontaine de régénération');
+    expect(button?.querySelector('.board__fountain-icon')).not.toBeNull();
   });
 
   it('ne mélange pas l’action fontaine avec les contrôles de portail', () => {
@@ -178,5 +179,15 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     expect(gameService.healingPortalSelection()).toBeNull();
     expect(fixture.nativeElement.querySelector('.board__context-action--fountain')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.board__portal-travel-controls')).toBeNull();
+  });
+
+  it('élève la tuile du héros actif pour garder ses actions visibles', () => {
+    const { fixture, playerService } = createBoard();
+    playerService.players[0].position = { x: 0, y: 0 };
+    fixture.detectChanges();
+
+    const tile = fixture.nativeElement.querySelector('.board__tile--active-player') as HTMLElement | null;
+    expect(tile).not.toBeNull();
+    expect(tile ? getComputedStyle(tile).zIndex : '').toBe('10');
   });
 });
