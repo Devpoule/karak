@@ -308,7 +308,7 @@ export class PlayerHud {
 
 /** Gere isCompactViewport et applique les gardes necessaires avant mutation. */
   private isCompactViewport(): boolean {
-    return typeof window !== 'undefined' && window.innerWidth <= 760;
+    return typeof window !== 'undefined' && window.innerWidth <= 640;
   }
 
 /** Gere onViewportResize et applique les gardes necessaires avant mutation. */
