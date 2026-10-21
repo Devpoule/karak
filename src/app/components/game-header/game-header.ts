@@ -59,7 +59,6 @@ export class GameHeader {
 /** Gere leaveGame et applique les gardes necessaires avant mutation. */
   leaveGame(): void {
     this.showLeaveConfirmation = false;
-    this.gameService.initialize();
     void this.router.navigateByUrl('/');
   }
 

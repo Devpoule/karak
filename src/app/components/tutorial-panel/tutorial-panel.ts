@@ -9,6 +9,7 @@ import { TUTORIAL_STEPS } from '../../data/tutorial-steps';
 })
 export class TutorialPanel {
   @Input() compact = false;
+  @Input() disabled = false;
   @ViewChild('dialogElement') private dialogElement?: ElementRef<HTMLElement>;
 
   readonly steps = TUTORIAL_STEPS;
@@ -25,6 +26,7 @@ export class TutorialPanel {
   }
 
   open(): void {
+    if (this.disabled) return;
     this.currentIndex = 0;
     this.previouslyFocusedElement = document.activeElement instanceof HTMLElement
       ? document.activeElement

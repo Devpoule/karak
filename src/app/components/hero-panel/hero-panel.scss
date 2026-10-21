@@ -170,6 +170,15 @@
   pointer-events: none;
 }
 
+/* Le contour reprend exclusivement la couleur du joueur actif. */
+.hero-panel--active .hero-panel__card {
+  border-color: var(--player-color, #f2c94c);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, .8),
+    0 0 8px var(--player-color, #f2c94c),
+    0 0 16px color-mix(in srgb, var(--player-color, #f2c94c) 65%, transparent);
+}
+
 /*
  * Médaillon de malédiction placé dans l'angle intérieur supérieur
  * de la fiche. Il reste superposé sans affecter la taille du panneau.

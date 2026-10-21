@@ -256,18 +256,14 @@
  * le halo ne fait que rendre cette information lisible sur
  * le plateau initial.
  */
-.board__hero--active {
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 14%;
-    border: 2px solid var(--player-color, rgba(245, 213, 138, 0.95));
-    border-radius: 50%;
-    box-shadow:
-      0 0 8px var(--player-color, rgba(245, 213, 138, 0.75)),
-      0 0 18px rgba(255, 255, 255, 0.35);
-    pointer-events: none;
-  }
+.board__hero--active > .board__hero-pawn {
+  filter:
+    drop-shadow(0 0 2px #fff)
+    drop-shadow(0 0 5px var(--player-color, rgba(245, 213, 138, .95)))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--player-color, #f5d58a) 70%, transparent))
+    drop-shadow(1px 0 1px rgba(0, 0, 0, .95))
+    drop-shadow(-1px 0 1px rgba(0, 0, 0, .95))
+    drop-shadow(0 4px 3px rgba(0, 0, 0, .75));
 }
 .board__hero--active > img {
   animation: active-hero-arrival 700ms ease-out;

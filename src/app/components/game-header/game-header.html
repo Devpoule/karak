@@ -17,8 +17,8 @@
   />
 
   <div class="game-header__actions">
-    <app-tutorial-panel [compact]="true" />
-    <app-settings-panel [compact]="true" />
+    <app-tutorial-panel [compact]="true" [disabled]="navigationLocked" />
+    <app-settings-panel [compact]="true" [disabled]="navigationLocked" />
     @if (context === 'game') {
       @if (navigationLocked) {
         <span class="karak-header-action game-header__link game-header__link--disabled game-header__codex-link" aria-disabled="true" aria-label="Codex" title="Codex">

@@ -9,6 +9,7 @@ import { AudioPreference, ContrastPreference, MotionPreference, SettingsService,
 })
 export class SettingsPanel {
   @Input() compact = false;
+  @Input() disabled = false;
   @ViewChild('dialogElement') private dialogElement?: ElementRef<HTMLElement>;
 
   isOpen = false;
@@ -17,6 +18,7 @@ export class SettingsPanel {
   constructor(readonly settings: SettingsService) {}
 
   open(): void {
+    if (this.disabled) return;
     this.previouslyFocusedElement = document.activeElement instanceof HTMLElement
       ? document.activeElement
       : null;
