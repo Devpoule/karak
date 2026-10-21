@@ -73,6 +73,10 @@ règles métier des adaptations numériques.
 
 La diffusion publique des assets reste soumise à l'[audit des droits de diffusion](docs/RIGHTS_AUDIT.md). Aucun transfert vers OVH ne doit être effectué tant que les autorisations et attributions requises ne sont pas documentées.
 
+L'étude préalable du multijoueur est documentée dans
+[`MULTIPLAYER_ARCHITECTURE.md`](docs/MULTIPLAYER_ARCHITECTURE.md) ; elle ne
+modifie pas le mode local ni le déploiement statique actuel.
+
 ## Architecture
 
 Le code applicatif est situé dans :
