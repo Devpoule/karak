@@ -87,6 +87,9 @@ Le contrat des commandes et événements est décrit dans
 La stratégie de déconnexion et de reprise est détaillée dans
 [`MULTIPLAYER_RECONNECTION.md`](docs/MULTIPLAYER_RECONNECTION.md).
 
+La matrice de validation multijoueur est disponible dans
+[`MULTIPLAYER_TEST_STRATEGY.md`](docs/MULTIPLAYER_TEST_STRATEGY.md).
+
 ## Architecture
 
 Le code applicatif est situé dans :
