@@ -28,7 +28,7 @@ function collectFiles(directory) {
 if (!existsSync(artifactPath) || !lstatSync(artifactPath).isDirectory()) {
   fail(`missing artifact directory: ${artifactPath}`);
 } else {
-  const requiredEntries = ['index.html', '.htaccess', 'assets'];
+  const requiredEntries = ['index.html', '.htaccess', 'assets', 'manifest.webmanifest', 'ngsw.json'];
 
   for (const entry of requiredEntries) {
     if (!existsSync(join(artifactPath, entry))) {
@@ -38,6 +38,7 @@ if (!existsSync(artifactPath) || !lstatSync(artifactPath).isDirectory()) {
 
   const indexPath = join(artifactPath, 'index.html');
   const htaccessPath = join(artifactPath, '.htaccess');
+  const manifestPath = join(artifactPath, 'manifest.webmanifest');
 
   if (existsSync(indexPath)) {
     const indexHtml = readFileSync(indexPath, 'utf8');
@@ -52,6 +53,41 @@ if (!existsSync(artifactPath) || !lstatSync(artifactPath).isDirectory()) {
 
     if (!/RewriteRule\s+\^\s+index\.html\s+\[L\]/.test(htaccess)) {
       fail('.htaccess must route unknown paths to index.html');
+    }
+  }
+
+  if (existsSync(manifestPath)) {
+    let manifest;
+
+    try {
+      manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    } catch {
+      fail('manifest.webmanifest is not valid JSON');
+    }
+
+    if (manifest) {
+      if (manifest.start_url !== '/' || manifest.scope !== '/') {
+        fail('manifest.webmanifest must target the domain or subdomain root');
+      }
+
+      if (manifest.display !== 'standalone') {
+        fail('manifest.webmanifest must declare standalone display mode');
+      }
+
+      if (!Array.isArray(manifest.icons) || manifest.icons.length < 2) {
+        fail('manifest.webmanifest must declare at least two install icons');
+      }
+
+      for (const icon of manifest.icons ?? []) {
+        if (typeof icon.src !== 'string') {
+          fail('manifest icon entries must declare a source path');
+          continue;
+        }
+
+        if (!existsSync(join(artifactPath, icon.src.replace(/^\//, '')))) {
+          fail(`manifest icon is missing from the artifact: ${icon.src}`);
+        }
+      }
     }
   }
 
