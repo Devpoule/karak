@@ -60,6 +60,15 @@ Aucun backend ni base de données ne sont nécessaires à ce stade.
 
 ---
 
+## Documentation utilisateur
+
+Le [guide utilisateur](docs/USER_GUIDE.md) décrit les parcours de jeu,
+l'accessibilité, la continuité locale et l'installation PWA.
+
+Les règles détaillées sont disponibles dans le [référentiel des
+règles](docs/RULES.md), qui renvoie au manuel officiel et distingue les
+règles métier des adaptations numériques.
+
 ## Architecture
 
 Le code applicatif est situé dans :
