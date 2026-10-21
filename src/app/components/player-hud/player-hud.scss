@@ -443,29 +443,44 @@
  * préserver la zone centrale du plateau. PlayerHud ferme le panneau
  * opposé quand le viewport est compact.
  */
-@media (max-width: 760px) {
+/* Le tiroir inférieur est réservé aux vrais écrans étroits. À 759 px,
+ * deux panneaux latéraux compacts restent encore exploitables. */
+@media (max-width: 640px) {
   .player-hud {
-    --sidebar-width: min(22rem, calc(100vw - 1rem));
+    /* Conserver le dimensionnement historique piloté par la hauteur. */
+    --sidebar-width: clamp(150px, 18vh, 220px);
     --sidebar-edge: .5rem;
   }
 
   .player-hud__side {
-    top: auto;
-    bottom: calc(4.75rem + env(safe-area-inset-bottom));
-    max-height: min(62dvh, 34rem);
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    top: 50%;
+    bottom: auto;
+    width: var(--sidebar-width);
+    max-width: calc(100vw - 1rem);
+    max-height: calc(100% - 1rem);
+    overflow: visible;
   }
 
   .player-hud__side--left,
   .player-hud__side--right {
-    left: 50%;
-    right: auto;
-    transform: translate(-50%, calc(100% + 1rem));
+    top: 50%;
   }
 
-  .player-hud__side--open {
-    transform: translate(-50%, 0);
+  .player-hud__side--left {
+    left: var(--sidebar-edge);
+    right: auto;
+    transform: translateY(-50%) translateX(calc(-100% - var(--sidebar-edge)));
+  }
+
+  .player-hud__side--right {
+    right: var(--sidebar-edge);
+    left: auto;
+    transform: translateY(-50%) translateX(calc(100% + var(--sidebar-edge)));
+  }
+
+  .player-hud__side--left.player-hud__side--open,
+  .player-hud__side--right.player-hud__side--open {
+    transform: translateY(-50%) translateX(0);
   }
 
   .player-hud__turn-controls {
