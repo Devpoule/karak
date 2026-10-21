@@ -193,6 +193,56 @@ test('le header contient et centre son logo et ses onglets', async ({ page }) =>
   }
 });
 
+test('les actions du header sont uniformes et iconographiques sur mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/play');
+  await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
+
+  const actions = page.locator('.game-header .karak-header-action');
+  await expect(actions).toHaveCount(4);
+
+  for (const [selector, title] of [
+    ['.game-header__home', 'Accueil'],
+    ['.tutorial-panel__trigger', 'Tutoriel'],
+    ['.settings-panel__trigger', 'Paramètres'],
+    ['.game-header__codex-link', 'Codex'],
+  ] as const) {
+    const action = page.locator(selector);
+    const label = action.locator('.karak-header-action__label');
+    await expect(action).toHaveAttribute('title', title);
+    await expect(label).toHaveCSS('position', 'absolute');
+    await expect(label).toHaveCSS('width', '1px');
+    await expect(label).toHaveCSS('height', '1px');
+  }
+
+  const styleSignatures = await actions.evaluateAll(elements => elements.map(element => {
+    const style = getComputedStyle(element);
+    return {
+      height: style.height,
+      width: style.width,
+      border: style.border,
+      borderRadius: style.borderRadius,
+      backgroundImage: style.backgroundImage,
+      color: style.color,
+      fontFamily: style.fontFamily,
+      fontWeight: style.fontWeight,
+    };
+  }));
+
+  expect(new Set(styleSignatures.map(signature => JSON.stringify(signature))).size).toBe(1);
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.reload();
+  for (const selector of [
+    '.game-header__home',
+    '.tutorial-panel__trigger',
+    '.settings-panel__trigger',
+    '.game-header__codex-link',
+  ]) {
+    await expect(page.locator(selector).locator('.karak-header-action__label')).toBeVisible();
+  }
+});
+
 test('la préférence de mouvement réduit neutralise les animations de préparation', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/play');

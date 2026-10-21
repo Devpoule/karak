@@ -35,6 +35,13 @@ describe('SettingsPanel', () => {
     expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
   });
 
+  it('expose le libellé du bouton dans son titre', () => {
+    const trigger = fixture.nativeElement.querySelector('button[aria-label="Paramètres"]') as HTMLButtonElement;
+
+    expect(trigger.title).toBe('Paramètres');
+    expect(trigger.classList.contains('karak-header-action')).toBe(true);
+  });
+
   it('applique les deux préférences proposées', () => {
     const trigger = fixture.nativeElement.querySelector('button[aria-label="Paramètres"]') as HTMLButtonElement;
     trigger.click();

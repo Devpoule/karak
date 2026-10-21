@@ -1,9 +1,10 @@
 <div class="tutorial-panel" [class.tutorial-panel--compact]="compact">
   <button
     type="button"
-    class="tutorial-panel__trigger"
+    class="karak-header-action tutorial-panel__trigger"
     [class.tutorial-panel__trigger--compact]="compact"
     aria-label="Tutoriel"
+    title="Tutoriel"
     aria-haspopup="dialog"
     [attr.aria-expanded]="isOpen"
     (click)="open()"
@@ -12,7 +13,7 @@
       <path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H20v17H7.5A2.5 2.5 0 0 0 5 21.5z" />
       <path d="M5 4.5v17M8 5.5h8M8 9h8M8 12.5h5" />
     </svg>
-    <span class="tutorial-panel__label">Tutoriel</span>
+    <span class="karak-header-action__label tutorial-panel__label">Tutoriel</span>
   </button>
 
   @if (isOpen) {

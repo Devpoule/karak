@@ -4,31 +4,7 @@
   display: inline-block;
 }
 
-.settings-panel__trigger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: .45rem;
-  min-height: 2.75rem;
-  padding: .5rem .85rem;
-  color: var(--karak-button-text);
-  font: 700 1rem / 1.2 var(--karak-font-display);
-  letter-spacing: .02em;
-  background: var(--karak-button-bg);
-  border: var(--karak-border-default);
-  border-radius: var(--karak-radius-sm);
-  box-shadow: var(--karak-shadow-sm);
-  cursor: pointer;
-  transition: filter var(--karak-motion-fast) var(--karak-ease-standard),
-    transform var(--karak-motion-fast) var(--karak-ease-standard);
-}
-
 .settings-panel:not(.settings-panel--compact) .settings-panel__trigger { width: 100%; }
-
-.settings-panel__trigger:hover {
-  filter: brightness(1.12);
-  transform: translateY(-1px);
-}
 
 .settings-panel__icon {
   flex: 0 0 auto;
@@ -180,20 +156,6 @@
 }
 
 @media (max-width: 600px) {
-  .settings-panel__trigger--compact {
-    width: 2.75rem;
-    padding: .5rem;
-  }
-
-  .settings-panel__trigger--compact .settings-panel__label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
-
   .settings-panel__dialog { width: calc(100vw - 1rem); }
   .settings-panel__header { padding: 1rem; }
   .settings-panel__body { padding: 1rem; }

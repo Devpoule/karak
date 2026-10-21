@@ -27,6 +27,13 @@ describe('TutorialPanel', () => {
     expect(fixture.nativeElement.querySelector('h2')?.textContent).toContain('Explorez les catacombes');
   });
 
+  it('expose le libellé du bouton dans son titre', () => {
+    const trigger = fixture.nativeElement.querySelector('button[aria-label="Tutoriel"]') as HTMLButtonElement;
+
+    expect(trigger.title).toBe('Tutoriel');
+    expect(trigger.classList.contains('karak-header-action')).toBe(true);
+  });
+
   it('revient en arrière et ferme avec Échap', () => {
     const trigger = fixture.nativeElement.querySelector('button[aria-label="Tutoriel"]') as HTMLButtonElement;
     trigger.click();

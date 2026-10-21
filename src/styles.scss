@@ -235,6 +235,59 @@ html[data-karak-contrast='high'] {
   --karak-button-danger-bg: linear-gradient(#ae3f32, #631410);
 }
 
+/* Contrat visuel commun aux quatre actions du header. */
+.karak-header-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: .5rem .85rem;
+  color: var(--karak-button-text);
+  font: 700 1rem / 1.2 var(--karak-font-display);
+  letter-spacing: .02em;
+  text-decoration: none;
+  white-space: nowrap;
+  background: var(--karak-button-bg);
+  border: var(--karak-border-default);
+  border-radius: var(--karak-radius-sm);
+  box-shadow: var(--karak-shadow-sm);
+  cursor: pointer;
+  appearance: none;
+  transition: filter var(--karak-motion-fast) var(--karak-ease-standard),
+    transform var(--karak-motion-fast) var(--karak-ease-standard);
+}
+
+.karak-header-action:hover:not([aria-disabled='true']) {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+.karak-header-action[aria-disabled='true'],
+.karak-header-action--disabled {
+  cursor: not-allowed;
+  opacity: var(--karak-button-disabled-opacity);
+  pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  .karak-header-action {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    padding-inline: .5rem;
+  }
+
+  .karak-header-action__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
 html[data-karak-contrast='high'] :where(button, a, input, select, textarea):focus-visible {
   outline-width: 3px;
   outline-offset: 4px;
