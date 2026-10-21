@@ -171,8 +171,9 @@
           @if (getHeroPawnImage(occupant.player); as pawnImage) {
             @let hero = getHeroDefinition(occupant.player);
             <img
-              class="board__hero-pawn"
+              [class]="'board__hero-pawn board__hero-pawn--' + (hero?.id ?? 'default')"
               [class.board__hero-pawn--active]="isActivePlayer(occupant.playerIndex)"
+              [style.--player-color]="occupant.color"
               [src]="pawnImage"
               [alt]="hero?.name ?? 'Héros'"
               draggable="false"
