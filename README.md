@@ -77,6 +77,10 @@ L'étude préalable du multijoueur est documentée dans
 [`MULTIPLAYER_ARCHITECTURE.md`](docs/MULTIPLAYER_ARCHITECTURE.md) ; elle ne
 modifie pas le mode local ni le déploiement statique actuel.
 
+La conception détaillée des salons est disponible dans
+[`MULTIPLAYER_ROOMS.md`](docs/MULTIPLAYER_ROOMS.md) ; elle reste une
+spécification sans backend implémenté.
+
 ## Architecture
 
 Le code applicatif est situé dans :
