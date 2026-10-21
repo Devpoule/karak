@@ -27,14 +27,17 @@
 
 .inventory-panel__items {
   position: absolute;
-  inset: 0;
+  top: -6.12%;
+  left: 0;
+  width: 100%;
+  aspect-ratio: 2 / 3;
   pointer-events: none;
 }
 
-/* Coordonnées proportionnelles au support (référence : 1024 × 1536).
- * Colonnes centrées approximativement à 31 % et 70 %.
- * Rangées centrées approximativement à 24 %, 48 % et 72 %.
- * Ces valeurs peuvent être affinées après contrôle visuel dans le jeu.
+/*
+ * L'overlay reprend le ratio et le décalage du support 1024 × 1536.
+ * Les groupes sont ainsi positionnés dans le même repère que les cases
+ * gravées, ce qui garantit le centrage horizontal et vertical des items.
  */
 .inventory-panel__group {
   position: absolute;
@@ -45,21 +48,21 @@
 }
 
 .inventory-panel__group--weapons {
-  top: 12%;
+  top: 12.5%;
   left: 13.5%;
-  height: 48%;
+  height: 51.5%;
 }
 
 .inventory-panel__group--spells {
-  top: 12%;
-  left: 52.5%;
-  height: 72%;
+  top: 12.5%;
+  left: 52.3%;
+  height: 78%;
 }
 
 .inventory-panel__group--key {
-  top: 60%;
+  top: 64%;
   left: 13.5%;
-  height: 24%;
+  height: 27%;
 }
 
 .inventory-panel__slot {
