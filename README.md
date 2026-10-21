@@ -84,6 +84,9 @@ spécification sans backend implémenté.
 Le contrat des commandes et événements est décrit dans
 [`MULTIPLAYER_ACTION_SYNC.md`](docs/MULTIPLAYER_ACTION_SYNC.md).
 
+La stratégie de déconnexion et de reprise est détaillée dans
+[`MULTIPLAYER_RECONNECTION.md`](docs/MULTIPLAYER_RECONNECTION.md).
+
 ## Architecture
 
 Le code applicatif est situé dans :
