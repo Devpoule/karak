@@ -43,7 +43,8 @@
   position: absolute;
   display: flex;
   flex-direction: column;
-  width: 35%;
+  /* Largeur du contour intérieur d'une case, hors bordure gravée. */
+  width: 34%;
   pointer-events: none;
 }
 
@@ -55,7 +56,7 @@
 
 .inventory-panel__group--spells {
   top: 12.5%;
-  left: 52.3%;
+  left: 52.5%;
   height: 78%;
 }
 
@@ -96,11 +97,11 @@
 
 .inventory-panel__item {
   display: block;
-  /* Laisser visibles les bords de la case évite les chevauchements. */
-  inline-size: 92%;
-  max-inline-size: 92%;
-  block-size: 92%;
-  max-block-size: 92%;
+  /* Le bouton épouse exactement le contour noir de la case. */
+  inline-size: 100%;
+  max-inline-size: 100%;
+  block-size: 100%;
+  max-block-size: 100%;
   object-fit: contain;
   object-position: center;
   user-select: none;
