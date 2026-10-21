@@ -1,4 +1,4 @@
-<aside class="player-sidebar" [class.player-sidebar--left]="side === 'left'" [class.player-sidebar--right]="side === 'right'">
+<aside class="player-sidebar" [class.player-sidebar--left]="side === 'left'" [class.player-sidebar--right]="side === 'right'" [class.player-sidebar--active]="isActive">
 
   <!-- =====================================================
        JOUEUR
@@ -28,7 +28,7 @@
   }
 
   @if (showPlayer) {
-    <app-hero-panel [player]="player" [side]="side" (portraitClicked)="toggleBiography()" (curseClicked)="openCurseDialog()" />
+    <app-hero-panel [player]="player" [side]="side" [isActive]="isActive" (portraitClicked)="toggleBiography()" (curseClicked)="openCurseDialog()" />
     <app-life-panel [player]="player" />
   }
 

@@ -58,7 +58,7 @@ export class TreasurePanel {
     switch (type) {
       case 'opened-chest': return '/assets/tokens/open-chest.png';
       case 'monster-treasure': return '/assets/tokens/treasure.png';
-      case 'dragon-ruby': return '/assets/tokens/treasure.png';
+      case 'dragon-ruby': return '/assets/tokens/dragon.png';
     }
   }
 }

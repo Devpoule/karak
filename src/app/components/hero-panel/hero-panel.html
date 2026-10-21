@@ -4,6 +4,7 @@
   [class.hero-panel--right]="side === 'right'"
   [class.hero-panel--unconscious]="isUnconscious"
   [class.hero-panel--healing-target]="isHealingPortalTarget"
+  [class.hero-panel--active]="isActive"
   [class.hero-panel--curse-applying]="curseAnimation() === 'hero-panel__curse--appearing'"
   [attr.aria-label]="isUnconscious ? 'Héros inconscient : récupération obligatoire' : null"
 >

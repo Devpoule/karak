@@ -10,7 +10,7 @@
 export const PLAYER_UI_CONFIG = [
   {
     label: 'J1',
-    color: '#f2c94c',
+    color: '#ff9f1c',
   },
   {
     label: 'J2',

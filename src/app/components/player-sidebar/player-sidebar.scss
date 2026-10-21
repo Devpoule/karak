@@ -273,6 +273,7 @@
 
 .player-sidebar__power-badge--disabled {
   opacity: 0.62;
+  box-shadow: 0 0 0 1px rgba(229, 57, 53, .65), 0 0 9px rgba(229, 57, 53, .7);
 }
 
 .player-sidebar__power-badge--disabled::after {
