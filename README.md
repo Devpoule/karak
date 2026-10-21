@@ -81,6 +81,9 @@ La conception détaillée des salons est disponible dans
 [`MULTIPLAYER_ROOMS.md`](docs/MULTIPLAYER_ROOMS.md) ; elle reste une
 spécification sans backend implémenté.
 
+Le contrat des commandes et événements est décrit dans
+[`MULTIPLAYER_ACTION_SYNC.md`](docs/MULTIPLAYER_ACTION_SYNC.md).
+
 ## Architecture
 
 Le code applicatif est situé dans :
