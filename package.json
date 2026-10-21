@@ -6,6 +6,7 @@
     "start": "ng serve",
     "build": "ng build",
     "build:production": "ng build --configuration production",
+    "audit:rights": "node scripts/audit-content-provenance.mjs",
     "prepare:hosting": "npm run build:production && npm run verify:hosting",
     "verify:hosting": "node scripts/verify-hosting-artifact.mjs",
     "watch": "ng build --watch --configuration development",

@@ -69,6 +69,10 @@ Les règles détaillées sont disponibles dans le [référentiel des
 règles](docs/RULES.md), qui renvoie au manuel officiel et distingue les
 règles métier des adaptations numériques.
 
+## Droits de diffusion
+
+La diffusion publique des assets reste soumise à l'[audit des droits de diffusion](docs/RIGHTS_AUDIT.md). Aucun transfert vers OVH ne doit être effectué tant que les autorisations et attributions requises ne sont pas documentées.
+
 ## Architecture
 
 Le code applicatif est situé dans :

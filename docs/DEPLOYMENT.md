@@ -6,8 +6,12 @@ Depuis la racine du projet :
 
 ```powershell
 npm ci
+npm run audit:rights
 npm run prepare:hosting
 ```
+
+L'audit des droits doit être lu avant toute décision de transfert. Il s'agit
+d'un contrôle technique de provenance, pas d'une autorisation juridique.
 
 La commande compile l'application puis vérifie automatiquement le livrable.
 Celui-ci est généré dans `dist/karak/browser`. Le contenu de ce répertoire
@@ -76,8 +80,9 @@ Depuis le domaine publié, vérifier :
 4. le démarrage d'une partie, les paramètres, la sauvegarde et la restauration ;
 5. l'absence d'erreurs dans la console et de requêtes `404` vers `assets`.
 
-Ce ticket prépare le livrable mais ne déclenche aucun transfert ni déploiement
-OVH.
+Le livrable ne doit pas être transféré tant que `docs/RIGHTS_AUDIT.md` ne
+porte pas le statut de diffusion autorisée. Ce ticket prépare le livrable mais
+ne déclenche aucun transfert ni déploiement OVH.
 
 Pour tester une instance locale différente de celle du serveur de développement
 habituel, Playwright accepte une URL de base explicite :
