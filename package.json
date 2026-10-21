@@ -14,7 +14,8 @@
     "test:coverage": "ng test --no-watch --no-progress --coverage",
     "test:coverage:domain": "ng test --no-watch --no-progress --coverage --coverage-include=src/app/services/**/*.ts",
     "test:coverage:app": "ng test --no-watch --no-progress --coverage",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:production": "npm run prepare:hosting && playwright test --config=playwright.production.config.ts e2e/publication-recipe.spec.ts e2e/pwa.spec.ts e2e/save-continuity.spec.ts e2e/settings-panel.spec.ts"
   },
   "private": true,
   "packageManager": "npm@11.19.0",

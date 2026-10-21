@@ -48,6 +48,20 @@ pas pour un sous-répertoire (`https://exemple/karak/`). Le support d'un
 sous-répertoire nécessite une configuration de base URL dédiée et reste hors
 du périmètre de ce ticket.
 
+## Recette locale du livrable
+
+Après la préparation du build, la recette automatisée peut servir exactement
+le dossier statique de production avec un fallback local des routes Angular :
+
+```powershell
+npm run test:e2e:production
+```
+
+Cette commande contrôle les routes publiques et leur rechargement direct, les
+assets et les icônes PWA, la sauvegarde/restauration, les paramètres et un
+écran mobile. Elle ne publie rien sur OVH. Le serveur local de recette ne
+remplace pas une vérification navigateur sur le domaine OVH réel.
+
 ## Installation OVH sans toucher au site existant
 
 Le déploiement doit utiliser une racine documentaire dédiée à Karak, par
