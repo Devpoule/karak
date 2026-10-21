@@ -271,14 +271,33 @@ html[data-karak-contrast='high'] {
   pointer-events: none;
 }
 
-@media (max-width: 600px) {
-  .karak-header-action {
+@media (min-width: 641px) and (max-width: 900px) {
+  .game-header .karak-header-action,
+  .tutorial-panel--compact .karak-header-action,
+  .settings-panel--compact .karak-header-action {
+    flex-direction: column;
+    width: 5rem;
+    min-width: 5rem;
+    min-height: 3.25rem;
+    gap: .15rem;
+    padding: .3rem .25rem;
+    font-size: .7rem;
+    line-height: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .game-header .karak-header-action,
+  .tutorial-panel--compact .karak-header-action,
+  .settings-panel--compact .karak-header-action {
     width: 2.75rem;
     min-width: 2.75rem;
     padding-inline: .5rem;
   }
 
-  .karak-header-action__label {
+  .game-header .karak-header-action__label,
+  .tutorial-panel--compact .karak-header-action__label,
+  .settings-panel--compact .karak-header-action__label {
     position: absolute;
     width: 1px;
     height: 1px;

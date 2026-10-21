@@ -193,53 +193,111 @@ test('le header contient et centre son logo et ses onglets', async ({ page }) =>
   }
 });
 
-test('les actions du header sont uniformes et iconographiques sur mobile', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/play');
-  await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
-
-  const actions = page.locator('.game-header .karak-header-action');
-  await expect(actions).toHaveCount(4);
-
-  for (const [selector, title] of [
+test('la navigation du header reste compacte et sans chevauchement sur toutes les largeurs', async ({ page }) => {
+  const viewports = [200, 320, 375, 607, 640, 667, 768, 1024, 1366];
+  const actions = [
     ['.game-header__home', 'Accueil'],
     ['.tutorial-panel__trigger', 'Tutoriel'],
     ['.settings-panel__trigger', 'Paramètres'],
     ['.game-header__codex-link', 'Codex'],
-  ] as const) {
-    const action = page.locator(selector);
-    const label = action.locator('.karak-header-action__label');
-    await expect(action).toHaveAttribute('title', title);
-    await expect(label).toHaveCSS('position', 'absolute');
-    await expect(label).toHaveCSS('width', '1px');
-    await expect(label).toHaveCSS('height', '1px');
-  }
+  ] as const;
 
-  const styleSignatures = await actions.evaluateAll(elements => elements.map(element => {
-    const style = getComputedStyle(element);
-    return {
-      height: style.height,
-      width: style.width,
-      border: style.border,
-      borderRadius: style.borderRadius,
-      backgroundImage: style.backgroundImage,
-      color: style.color,
-      fontFamily: style.fontFamily,
-      fontWeight: style.fontWeight,
-    };
-  }));
+  for (const width of viewports) {
+    await page.setViewportSize({ width, height: 871 });
+    await page.goto('/play');
+    await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
 
-  expect(new Set(styleSignatures.map(signature => JSON.stringify(signature))).size).toBe(1);
+    const headerActions = page.locator('.game-header .karak-header-action');
+    await expect(headerActions).toHaveCount(4);
 
-  await page.setViewportSize({ width: 1280, height: 800 });
-  await page.reload();
-  for (const selector of [
-    '.game-header__home',
-    '.tutorial-panel__trigger',
-    '.settings-panel__trigger',
-    '.game-header__codex-link',
-  ]) {
-    await expect(page.locator(selector).locator('.karak-header-action__label')).toBeVisible();
+    for (const [selector, title] of actions) {
+      const action = page.locator(selector);
+      const label = action.locator('.karak-header-action__label');
+      await expect(action).toHaveAttribute('title', title);
+
+      if (width <= 640) {
+        await expect(label).toHaveCSS('position', 'absolute');
+        await expect(label).toHaveCSS('width', '1px');
+        await expect(label).toHaveCSS('height', '1px');
+      } else if (width <= 900) {
+        await expect(label).toHaveCSS('position', 'static');
+        await expect(label).toHaveCSS('white-space', 'nowrap');
+        await expect(label).toBeVisible();
+        await expect(action).toHaveCSS('flex-direction', 'column');
+        await expect(action).toHaveCSS('width', '80px');
+      } else {
+        await expect(label).toBeVisible();
+        await expect(action).toHaveCSS('flex-direction', 'row');
+      }
+    }
+
+    const geometry = await page.locator('.game-header').evaluate(header => {
+      const headerBox = header.getBoundingClientRect();
+      const headerStyle = getComputedStyle(header);
+      const logo = header.querySelector('.game-header__logo')?.getBoundingClientRect();
+      const actionsGroup = header.querySelector('.game-header__actions')?.getBoundingClientRect();
+      const actionBoxes = Array.from(header.querySelectorAll<HTMLElement>('.karak-header-action'))
+        .map(action => action.getBoundingClientRect());
+      if (!logo) throw new Error('Logo du header introuvable');
+
+      const overlaps = actionBoxes.some(action =>
+        action.left < logo.right && action.right > logo.left &&
+        action.top < logo.bottom && action.bottom > logo.top,
+      );
+      const contained = actionBoxes.every(action =>
+        action.left >= headerBox.left && action.right <= headerBox.right &&
+        action.top >= headerBox.top && action.bottom <= headerBox.bottom,
+      );
+
+      return {
+        overlaps,
+        contained,
+        logoActionGap: actionsGroup ? actionsGroup.left - logo.right : Number.NEGATIVE_INFINITY,
+        headerBackgroundImage: headerStyle.backgroundImage,
+        headerBackgroundColor: headerStyle.backgroundColor,
+        headerBorderBottomWidth: headerStyle.borderBottomWidth,
+        headerHeight: headerBox.height,
+        topSpace: Math.min(...actionBoxes.map(action => action.top - headerBox.top)),
+        bottomSpace: Math.min(...actionBoxes.map(action => headerBox.bottom - action.bottom)),
+        actionSizes: actionBoxes.map(action => ({ width: action.width, height: action.height })),
+      };
+    });
+
+    expect(geometry.overlaps).toBe(false);
+    expect(geometry.contained).toBe(true);
+    expect(geometry.headerBackgroundImage).toBe('none');
+    expect(geometry.headerBackgroundColor).toBe('rgb(98, 83, 69)');
+    expect(geometry.headerBorderBottomWidth).toBe('0px');
+    if (width > 900) {
+      expect(geometry.logoActionGap).toBeGreaterThanOrEqual(16);
+    } else if (width > 640) {
+      expect(geometry.logoActionGap).toBeGreaterThanOrEqual(32);
+    }
+    expect(geometry.actionSizes.every(action => action.width >= 44 && action.height >= 44)).toBe(true);
+
+    if (width <= 600) {
+      expect(geometry.headerHeight).toBeGreaterThanOrEqual(64);
+      expect(geometry.bottomSpace).toBeGreaterThanOrEqual(8);
+      expect(Math.abs(geometry.topSpace - geometry.bottomSpace)).toBeLessThanOrEqual(1);
+    }
+
+    if (width > 640 && width <= 900) {
+      await expect(page.locator('.game-header__actions')).toHaveCSS('gap', '8px');
+    }
+
+    const styleSignatures = await headerActions.evaluateAll(elements => elements.map(element => {
+      const style = getComputedStyle(element);
+      return {
+        border: style.border,
+        borderRadius: style.borderRadius,
+        backgroundImage: style.backgroundImage,
+        color: style.color,
+        fontFamily: style.fontFamily,
+        fontWeight: style.fontWeight,
+      };
+    }));
+
+    expect(new Set(styleSignatures.map(signature => JSON.stringify(signature))).size).toBe(1);
   }
 });
 

@@ -311,7 +311,12 @@
 
 @media (max-width: 600px) {
   .game {
-    grid-template-rows: 56px minmax(0, 1fr);
+    /*
+     * Les actions mobiles occupent 44 px au minimum. Une rangée de 64 px
+     * laisse une marge visible sous les boutons afin que la barre les
+     * contienne réellement, bordure comprise.
+     */
+    grid-template-rows: 64px minmax(0, 1fr);
   }
 
   .game__game-over {
@@ -340,4 +345,10 @@
   }
 
   .game__ranking-score { font-size: .9rem; }
+}
+
+@media (max-width: 240px) {
+  .game {
+    grid-template-rows: 160px minmax(0, 1fr);
+  }
 }
