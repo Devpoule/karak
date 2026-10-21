@@ -1,5 +1,11 @@
 :host { position: absolute; inset: 0; z-index: var(--karak-z-feedback); pointer-events: none; }
-.toast-container { position: absolute; top: 5.5rem; left: 50%; display: flex; align-items: center; gap: var(--karak-space-3); width: fit-content; max-width: min(34rem, calc(100vw - 2rem)); padding: .8rem var(--karak-space-4); transform: translateX(-50%); border: var(--karak-border-default); border-radius: var(--karak-radius-md); background: rgba(25, 35, 51, .96); color: var(--karak-text-light); box-shadow: var(--karak-shadow-md); font: 600 1.02rem/1.4 var(--karak-font-body); animation: toast-in var(--karak-motion-fast) var(--karak-ease-standard) both; }
+.toast-container { position: fixed; top: 5.5rem; left: 50%; z-index: var(--karak-z-feedback); display: flex; align-items: center; gap: var(--karak-space-3); width: fit-content; max-width: min(34rem, calc(100vw - 2rem)); padding: .8rem var(--karak-space-4); transform: translateX(-50%); border: var(--karak-border-default); border-radius: var(--karak-radius-md); background: rgba(25, 35, 51, .96); color: var(--karak-text-light); box-shadow: var(--karak-shadow-md); font: 600 1.02rem/1.4 var(--karak-font-body); animation: toast-in var(--karak-motion-fast) var(--karak-ease-standard) both; }
+.toast-container--contextual {
+  top: 0;
+  /* L’animation générique modifie transform et annulerait le placement
+     calculé par rapport à l’ancre d’inventaire. */
+  animation: none;
+}
 .toast-container span { color: var(--karak-text-highlight); font-size: 1.4rem; }
 .toast-container p { margin: 0; }
 .toast-container--info { border-color: var(--karak-parchment-dark); }

@@ -1,5 +1,7 @@
 <section
   class="life-panel"
+  [attr.data-toast-anchor]="'life'"
+  [attr.data-player-index]="playerIndex"
   [class.life-panel--damage]="feedback === 'damage'"
   [class.life-panel--heal]="feedback === 'heal'"
   [attr.aria-label]="(lives | quantity: 'point de vie' : 'points de vie') + ' sur 5'"

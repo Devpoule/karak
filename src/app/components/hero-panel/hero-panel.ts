@@ -44,6 +44,7 @@ export class HeroPanel implements DoCheck, OnDestroy {
    * Joueur dont le héros est représenté.
   */
   @Input() player: Player | null = null;
+  @Input() playerIndex: number | null = null;
   /** Active le contour de la carte uniquement pour le joueur dont c'est le tour. */
   @Input() isActive = false;
   @Input() curseImagePath = '/assets/tokens/curse.png';

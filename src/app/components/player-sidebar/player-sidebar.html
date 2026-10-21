@@ -28,8 +28,8 @@
   }
 
   @if (showPlayer) {
-    <app-hero-panel [player]="player" [side]="side" [isActive]="isActive" (portraitClicked)="toggleBiography()" (curseClicked)="openCurseDialog()" />
-    <app-life-panel [player]="player" />
+    <app-hero-panel [player]="player" [playerIndex]="playerIndex" [side]="side" [isActive]="isActive" (portraitClicked)="toggleBiography()" (curseClicked)="openCurseDialog()" />
+    <app-life-panel [player]="player" [playerIndex]="playerIndex" />
   }
 
 
@@ -40,14 +40,16 @@
   @if (showInventory) {
     <app-inventory-panel
       [player]="player"
+      [playerIndex]="playerIndex"
     />
 
     <app-treasure-panel
       [player]="player"
+      [playerIndex]="playerIndex"
     />
 
     @if (heroDefinition; as hero) {
-      <section class="player-sidebar__technical" aria-label="Informations du héros">
+      <section class="player-sidebar__technical" aria-label="Informations du héros" data-toast-anchor="power" [attr.data-player-index]="playerIndex">
         <img src="/assets/board/hero-powers-panel.png" alt="" draggable="false" />
         <div class="player-sidebar__technical-content">
           <div class="player-sidebar__powers" role="group" aria-label="Pouvoirs du héros">

@@ -1,14 +1,12 @@
 :host {
-  position: absolute;
-  inset: 0;
+  display: block;
+  position: relative;
   z-index: var(--karak-z-feedback);
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .event-history {
-  position: absolute;
-  top: var(--karak-space-3);
-  right: var(--karak-space-3);
+  position: relative;
   pointer-events: auto;
 }
 
@@ -47,16 +45,19 @@
 
 .event-history__panel {
   position: absolute;
-  top: calc(100% + var(--karak-space-2));
-  right: 0;
+  z-index: 100;
+  top: auto;
+  bottom: calc(100% + var(--karak-space-2));
+  left: 0;
+  right: auto;
   display: flex;
   flex-direction: column;
   width: min(25rem, calc(100vw - 1.5rem));
-  max-height: min(32rem, calc(100dvh - 7rem));
+  max-height: min(32rem, calc(100dvh - 9rem));
   overflow: hidden;
   border: var(--karak-border-default);
   border-radius: var(--karak-radius-md);
-  background: rgba(25, 18, 14, 0.97);
+  background: #19120e;
   color: var(--karak-text-light);
   box-shadow: var(--karak-shadow-lg);
 }
@@ -131,6 +132,6 @@
   }
 
   .event-history__panel {
-    max-height: calc(100dvh - 5rem);
+    max-height: calc(100dvh - 6rem);
   }
 }

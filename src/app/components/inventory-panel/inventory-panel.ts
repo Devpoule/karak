@@ -29,6 +29,7 @@ interface DropSelection {
 })
 export class InventoryPanel implements DoCheck, OnDestroy {
   @Input() player: Player | null = null;
+  @Input() playerIndex: number | null = null;
 
   constructor(
     private readonly gameService: GameService,

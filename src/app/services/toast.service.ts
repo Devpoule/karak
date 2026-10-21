@@ -2,8 +2,10 @@ import { Injectable, Optional, signal } from '@angular/core';
 import { AudioService } from './audio.service';
 
 export type ToastTone = 'info' | 'success' | 'warning' | 'combat';
+export type ToastAnchor = 'global' | 'life' | 'inventory-top' | 'inventory-weapons' | 'inventory-spells' | 'inventory-key' | 'treasure' | 'power' | 'curse';
+export interface ToastTarget { readonly playerIndex: number; readonly anchor: Exclude<ToastAnchor, 'global'>; }
 /** Contrat de donnees ToastMessage utilise par le domaine ou l interface. */
-export interface ToastMessage { readonly id: number; readonly text: string; readonly tone: ToastTone; }
+export interface ToastMessage { readonly id: number; readonly text: string; readonly tone: ToastTone; readonly target?: ToastTarget; }
 
 /** File unique de notifications informatives, non bloquantes. */
 @Injectable({ providedIn: 'root' })
@@ -26,8 +28,8 @@ export class ToastService {
   constructor(@Optional() private readonly audioService?: AudioService) {}
 
 /** Gere show et applique les gardes necessaires avant mutation. */
-  show(text: string, tone: ToastTone = 'info'): void {
-    const message = { id: ++this.nextId, text, tone };
+  show(text: string, tone: ToastTone = 'info', target?: ToastTarget): void {
+    const message = { id: ++this.nextId, text, tone, target };
     if (this.current()) {
       if (this.queue.some(item => item.text === text) || this.current()?.text === text) return;
       this.addToHistory(message);

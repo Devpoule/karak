@@ -590,10 +590,10 @@
    OUTILS DE CAMÉRA
    ========================================================== */
 .board__camera-tools {
-  position: absolute;
+  position: fixed;
   z-index: 50;
   right: max(14px, env(safe-area-inset-right));
-  bottom: max(14px, env(safe-area-inset-bottom));
+  bottom: max(8px, calc(env(safe-area-inset-bottom) + 0.35rem));
   display: flex;
   gap: 6px;
   padding: 5px;

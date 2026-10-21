@@ -17,6 +17,7 @@ interface LifeSlot { index: number; active: boolean; }
 })
 export class LifePanel implements DoCheck, OnDestroy {
   @Input() player: Player | null = null;
+  @Input() playerIndex: number | null = null;
   feedback: 'damage' | 'heal' | null = null;
   changedSlots: number[] = [];
   private observedPlayer: Player | null = null;

@@ -21,6 +21,7 @@ interface TreasureGroup {
   styleUrl: './treasure-panel.scss',
 })
 export class TreasurePanel {
+  @Input() playerIndex: number | null = null;
   @Input() player: Player | null = null;
 
   constructor(private readonly playerService: PlayerService) {}

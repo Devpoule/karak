@@ -159,12 +159,14 @@
    ========================================================== */
 
 .player-hud__turn-controls {
-  position: absolute;
+  position: fixed;
 
   left: 50%;
-  bottom: 1.5rem;
+  /* Le compteur existant reste piloté par PlayerHud, mais occupe
+     désormais le centre de la ligne de footer. */
+  bottom: clamp(0.25rem, 0.8vh, 0.5rem);
 
-  z-index: 30;
+  z-index: 50;
 
   display: flex;
   align-items: center;

@@ -1,4 +1,4 @@
-<section class="inventory-panel" [class.inventory-panel--acquired]="highlightedGroups.length > 0">
+<section class="inventory-panel" [class.inventory-panel--acquired]="highlightedGroups.length > 0" data-toast-anchor="inventory-top" [attr.data-player-index]="playerIndex">
   <!-- Le support contient déjà les emplacements : aucune case vide supplémentaire. -->
   <img
     class="inventory-panel__board"
@@ -10,6 +10,8 @@
   <div class="inventory-panel__items" aria-label="Inventaire du joueur">
     <div
       class="inventory-panel__group inventory-panel__group--weapons"
+      data-toast-anchor="inventory-weapons"
+      [attr.data-player-index]="playerIndex"
       [class.inventory-panel__group--highlighted]="isHighlighted('weapons')"
     >
       @for (weapon of weaponSlots; track $index; let slotIndex = $index) {
@@ -28,6 +30,8 @@
 
     <div
       class="inventory-panel__group inventory-panel__group--spells"
+      data-toast-anchor="inventory-spells"
+      [attr.data-player-index]="playerIndex"
       [class.inventory-panel__group--highlighted]="isHighlighted('spells')"
     >
       @for (spell of spellSlots; track $index; let slotIndex = $index) {
@@ -46,6 +50,8 @@
 
     <div
       class="inventory-panel__group inventory-panel__group--key"
+      data-toast-anchor="inventory-key"
+      [attr.data-player-index]="playerIndex"
       [class.inventory-panel__group--highlighted]="isHighlighted('key')"
     >
       <div class="inventory-panel__slot">

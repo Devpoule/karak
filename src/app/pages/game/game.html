@@ -66,8 +66,6 @@
       }
 
       <app-toast-container />
-      <app-event-history />
-
     }
 
     @if (gameService.phase() === 'game-over') {
@@ -125,5 +123,15 @@
     }
 
   </div>
+
+  @if (gameService.phase() === 'playing') {
+    <footer class="game__footer" aria-label="Commandes de partie">
+      <div class="game__footer-zone game__footer-zone--journal">
+        <app-event-history />
+      </div>
+      <div class="game__footer-zone game__footer-zone--movements" aria-hidden="true"></div>
+      <div class="game__footer-zone game__footer-zone--camera" aria-hidden="true"></div>
+    </footer>
+  }
 
 </section>

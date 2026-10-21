@@ -920,7 +920,9 @@ export class CombatOverlay implements OnDestroy {
       : result.outcome === 'defeat'
         ? 'combat'
         : 'warning';
-    queueMicrotask(() => this.toastService.show(combatMessage, combatTone));
+    const playerIndex = this.gameService.players.indexOf(result.player);
+    const target = playerIndex >= 0 ? { playerIndex, anchor: 'inventory-top' as const } : undefined;
+    queueMicrotask(() => this.toastService.show(combatMessage, combatTone, target));
 
     if (endTurn) {
       this.gameService.endTurn();

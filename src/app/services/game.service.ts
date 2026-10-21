@@ -15,7 +15,7 @@ import { TokenBagService } from './token-bag.service';
 import { TurnService } from './turn.service';
 import { CombatService } from './combat.service';
 import type { CombatResult } from './combat.service';
-import { ToastService } from './toast.service';
+import { ToastAnchor, ToastService, ToastTarget } from './toast.service';
 import { getHeroDefinition } from '../data/hero-definitions';
 import { GameSavePayloadV2, SaveEnvelopeV2 } from '../models/save';
 import { SaveService } from './save.service';
@@ -608,6 +608,20 @@ export class GameService {
     return (player.heroId ? getHeroDefinition(player.heroId)?.name : undefined) ?? 'Le héros';
   }
 
+  /** Construit la cible UI sans exposer de référence DOM au domaine. */
+  private toastTarget(player: Player, anchor: Exclude<ToastAnchor, 'global'>): ToastTarget | undefined {
+    const playerIndex = this.playerService.players.indexOf(player);
+    return playerIndex >= 0 ? { playerIndex, anchor } : undefined;
+  }
+
+  /** Sélectionne la ligne d’inventaire qui recevra l’objet. */
+  private inventoryToastTarget(player: Player, equipment: Equipment): ToastTarget | undefined {
+    // Les acquisitions sont annoncées au-dessus de la zone d’inventaire,
+    // quel que soit l’emplacement interne finalement occupé par l’objet.
+    void equipment;
+    return this.toastTarget(player, 'inventory-top');
+  }
+
   /** Annonce une récupération ou une amélioration sans ouvrir une décision. */
   private announceEquipmentObtained(player: Player, equipment: Equipment): void {
     const article = equipment.id === 'daggers'
@@ -618,6 +632,7 @@ export class GameService {
     this.toastService.show(
       `${this.actorLabel(player)} a obtenu ${article} ${equipment.name.toLocaleLowerCase('fr-FR')}.`,
       'success',
+      this.inventoryToastTarget(player, equipment),
     );
   }
 
@@ -630,6 +645,7 @@ export class GameService {
     this.toastService.show(
       `${this.actorLabel(player)} a remplacé ${previousPossessive} par ${replacementArticle} ${replacementName}.`,
       'success',
+      this.inventoryToastTarget(player, replacement),
     );
   }
 
@@ -1240,7 +1256,7 @@ export class GameService {
     this.pendingTreasure.set(null);
     this.optionalXanrosTreasure = false;
     this.endTurn();
-    this.toastService.show(`${this.actorLabel(pending.player)} : coffre ouvert, trésor récupéré.`, 'success');
+    this.toastService.show(`${this.actorLabel(pending.player)} : coffre ouvert, trésor récupéré.`, 'success', this.toastTarget(pending.player, 'treasure'));
     return true;
   }
 
@@ -1550,7 +1566,7 @@ export class GameService {
     if (!player || !tile || !this.playerService.restoreCompletely(player, 5)) return false;
     if (!this.turnService.consumeAllMovements()) return false;
     this.healingFountainUse.set({ player, tileKey: this.groundKey(tile) });
-    this.toastService.show(`${this.actorLabel(player)} récupère tous ses points de vie à la fontaine.`, 'success');
+    this.toastService.show(`${this.actorLabel(player)} récupère tous ses points de vie à la fontaine.`, 'success', this.toastTarget(player, 'inventory-top'));
     this.endTurn();
     return true;
   }
@@ -1634,7 +1650,7 @@ export class GameService {
 
     this.playerService.movePlayerTo(target, destination.x, destination.y, target.facing ?? 'north');
     this.playerService.restoreCompletely(target, 5);
-    this.toastService.show(`Guérison: ${this.actorLabel(target)} récupère tous ses points de vie.`, 'success');
+    this.toastService.show(`Guérison: ${this.actorLabel(target)} récupère tous ses points de vie.`, 'success', this.toastTarget(target, 'inventory-top'));
     const activePortalSelection = this.healingPortalSelection();
     if (activePortalSelection?.user === user) {
       this.healingPortalSelection.set(null);
@@ -1735,7 +1751,7 @@ export class GameService {
     this.horanReincarnationSelection.set(null);
     this.lastHoranReincarnationPlayer.set(selection.player);
     this.horanReincarnationRevision.update(revision => revision + 1);
-    this.toastService.show(`${this.actorLabel(selection.player)} : Horan revient avec tous ses points de vie.`, 'success');
+    this.toastService.show(`${this.actorLabel(selection.player)} : Horan revient avec tous ses points de vie.`, 'success', this.toastTarget(selection.player, 'inventory-top'));
 
     // La Réincarnation est une résolution de fin de combat : elle ne rend
     // pas les mouvements consommés et le tour reprend sa fin normale.
@@ -2017,7 +2033,7 @@ export class GameService {
     }
 
     this.consumePendingReward(pending, rewardIndex);
-    this.toastService.show(`${this.actorLabel(pending.player)} : trésor obtenu.`, 'success');
+    this.toastService.show(`${this.actorLabel(pending.player)} : trésor obtenu.`, 'success', this.toastTarget(pending.player, 'treasure'));
     return true;
   }
 
@@ -2085,7 +2101,8 @@ export class GameService {
       this.playerService.setCursed(target, true);
     }
     this.consumePendingReward(pending, rewardIndex);
-    this.toastService.show(`${this.actorLabel(target ?? pending.player)} est maudit.`, 'warning');
+    const cursedPlayer = target ?? pending.player;
+    this.toastService.show(`${this.actorLabel(cursedPlayer)} est maudit.`, 'warning', this.toastTarget(cursedPlayer, 'curse'));
     return true;
   }
 
