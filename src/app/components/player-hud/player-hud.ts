@@ -1,4 +1,5 @@
-import { Component, effect, HostListener, QueryList, ViewChildren } from '@angular/core';
+import { AfterViewInit, Component, effect, HostListener, QueryList, ViewChildren } from '@angular/core';
+import { ElementRef, OnDestroy } from '@angular/core';
 
 
 
@@ -100,13 +101,14 @@ interface HudPlayerEntry {
 
 })
 
-export class PlayerHud {
+export class PlayerHud implements AfterViewInit, OnDestroy {
   @ViewChildren(PlayerSidebar) private readonly sidebars!: QueryList<PlayerSidebar>;
 
   consultation: { player: Player; powerId: HeroPowerId; trigger: HTMLElement | null; sidebar?: PlayerSidebar } | null = null;
 
   /** Ouvre la consultation globale hors du panneau animé. */
   openPowerConsultation(player: Player, selection: PowerSelection): void {
+    if (this.isCombatActive) return;
     if (!selection.powerId) {
       this.closePowerConsultation();
       return;
@@ -161,6 +163,7 @@ export class PlayerHud {
     return hero;
   }
   private compactViewport = false;
+  private resizeObserver: ResizeObserver | null = null;
 
 
   // ==========================================================
@@ -266,6 +269,7 @@ export class PlayerHud {
 
 
   constructor(
+    private readonly elementRef: ElementRef<HTMLElement>,
 
     private readonly gameService: GameService,
     private readonly combatService: CombatService,
@@ -304,6 +308,44 @@ export class PlayerHud {
     });
   }
 
+  /** Recalcule l'espacement commun lorsque la zone de jeu change de hauteur. */
+  ngAfterViewInit(): void {
+    const host = this.elementRef.nativeElement;
+    this.resizeObserver = new ResizeObserver(() => this.updateVerticalLayout());
+    this.resizeObserver.observe(host);
+    queueMicrotask(() => this.updateVerticalLayout());
+  }
+
+  /** Libère l'observateur associé au calcul de mise en page. */
+  ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
+  }
+
+  /**
+   * Partage un même écart entre header, sélecteur, fiche et bas du plateau.
+   * Les dimensions sont lues après rendu afin de tenir compte du contenu réel.
+   */
+  private updateVerticalLayout(): void {
+    const host = this.elementRef.nativeElement;
+    const hud = host.querySelector<HTMLElement>('.player-hud');
+    const selector = host.querySelector<HTMLElement>('.player-hud__player-control');
+    const sidebar = host.querySelector<HTMLElement>('.player-sidebar');
+    if (!hud || !selector || !sidebar) return;
+
+    const availableHeight = hud.clientHeight;
+    const selectorHeight = selector.getBoundingClientRect().height;
+    const sidebarHeight = sidebar.getBoundingClientRect().height;
+    const gap = Math.max(8, (availableHeight - selectorHeight - sidebarHeight) / 3);
+
+    hud.style.setProperty('--sidebar-vertical-gap', `${gap}px`);
+    hud.style.setProperty('--sidebar-selector-height', `${selectorHeight}px`);
+  }
+
+  /** Indique si une séquence de combat interdit les interactions du HUD. */
+  get isCombatActive(): boolean {
+    return this.combatService.pendingCombat() !== null;
+  }
+
 /** Gere isCompactViewport et applique les gardes necessaires avant mutation. */
   private isCompactViewport(): boolean {
     return typeof window !== 'undefined' && window.innerWidth <= 640;
@@ -312,6 +354,7 @@ export class PlayerHud {
 /** Gere onViewportResize et applique les gardes necessaires avant mutation. */
   @HostListener('window:resize')
   onViewportResize(): void {
+    queueMicrotask(() => this.updateVerticalLayout());
     const compactViewport = this.isCompactViewport();
     if (compactViewport === this.compactViewport) return;
 
@@ -598,6 +641,7 @@ export class PlayerHud {
    */
 
   togglePlayerPanel(playerIndex: number): void {
+    if (this.isCombatActive) return;
     const selectedPlayer = this.players[playerIndex];
     if (this.compactViewport) {
       if (selectedPlayer?.controller === 'human') this.rightPanelOpen = false;

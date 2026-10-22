@@ -11,7 +11,9 @@
 .combat-overlay {
   position: absolute;
   inset: 0;
-  z-index: var(--karak-z-cinematic);
+  /* Le HUD reste lisible au-dessus de la scène ; ses interactions sont
+     désactivées par PlayerHud pendant la séquence de combat. */
+  z-index: var(--karak-z-dialog);
 
   display: flex;
   align-items: center;
@@ -20,7 +22,8 @@
   overflow: hidden;
   isolation: isolate;
 
-  pointer-events: auto;
+  pointer-events: none;
+  --combat-side-space: clamp(180px, 20vw, 250px);
   --combat-gold: #f5d884;
   --combat-cream: #f4ead1;
   --combat-wave-start: -320%;
@@ -45,7 +48,7 @@
 
 .combat-overlay__backdrop {
   position: absolute;
-  inset: 0;
+  inset: 0 var(--combat-side-space);
   z-index: -2;
 
   background:
@@ -58,7 +61,11 @@
 
   backdrop-filter: blur(4px);
 
+  /* Fondre les limites latérales dans le plateau sans flouter la scène. */
+  mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, .72) 9%, #000 18%, #000 82%, rgba(0, 0, 0, .72) 91%, transparent 100%);
+
   animation: combat-backdrop-in 350ms ease-out both;
+  pointer-events: none;
 }
 
 /* ==========================================================
@@ -164,7 +171,8 @@
 
   column-gap: 34px;
 
-  width: min(1080px, 94vw);
+  width: min(760px, calc(100vw - (2 * var(--combat-side-space)) - 1rem));
+  pointer-events: auto;
 
   animation: combat-arena-impact 380ms 1020ms ease-out both;
 }
@@ -173,7 +181,8 @@
   position: relative;
 
   display: grid;
-  grid-template-rows: 360px 44px auto;
+  /* Réserve systématiquement la place de deux lignes pour le nom. */
+  grid-template-rows: 360px 64px auto;
 
   justify-items: center;
   align-items: center;
@@ -698,6 +707,7 @@
 
 /* La décision reste hors du flux pour ne jamais déplacer l'arène. */
 .combat-overlay__decision {
+  pointer-events: auto;
   position: absolute;
   z-index: 30;
 
@@ -718,20 +728,38 @@
 
 .combat-overlay__power-card {
   position: absolute;
-  inset:.75rem;
+  top: clamp(.75rem, 3vh, 2rem);
+  left: 50%;
   z-index:35;
   display: flex;
   align-items: safe center;
   justify-content: center;
-  overflow:auto;
+  width: min(430px, calc(100vw - (2 * var(--combat-side-space)) - 1rem));
+  max-height: calc(100% - 1.5rem);
+  overflow: auto;
+  pointer-events: auto;
+  transform: translateX(-50%);
+}
+
+/* La décision doit rester lisible sans recouvrir les scores de l'arène. */
+.combat-overlay__power-card app-hero-power-card {
+  display: block;
+  width: 100%;
 }
 
 .combat-overlay__power-announcement {
   position: absolute;
   z-index: 40;
-  top: 50%;
+  top: clamp(.75rem, 3vh, 2rem);
   left: 50%;
-  transform: translate(-50%, -50%);
+  width: min(430px, calc(100vw - (2 * var(--combat-side-space)) - 1rem));
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.combat-overlay__power-announcement app-hero-power-card {
+  display: block;
+  width: 100%;
 }
 
 .combat-overlay__decision-actions {
@@ -742,6 +770,7 @@
 }
 
 .combat-overlay__verdict {
+  pointer-events: auto;
   position: absolute;
   z-index: 30;
 
@@ -1408,18 +1437,22 @@
    ========================================================== */
 
 @media (max-width: 900px) {
+  .combat-overlay {
+    --combat-side-space: clamp(120px, 18vw, 180px);
+  }
+
   .combat-overlay__arena {
     grid-template-columns:
       minmax(0, 1fr)
       100px
       minmax(0, 1fr);
 
-    width: 94vw;
+    width: min(680px, calc(100vw - (2 * var(--combat-side-space)) - 1rem));
     column-gap: 14px;
   }
 
   .combat-overlay__fighter {
-    grid-template-rows: 290px 40px auto;
+    grid-template-rows: 290px 56px auto;
   }
 
   .combat-overlay__visual,
@@ -1449,6 +1482,10 @@
 }
 
 @media (max-width: 620px) {
+  .combat-overlay {
+    --combat-side-space: 0px;
+  }
+
   .combat-overlay__arena {
     grid-template-columns:
       minmax(0, 1fr)
@@ -1460,7 +1497,7 @@
   }
 
   .combat-overlay__fighter {
-    grid-template-rows: 220px 36px auto;
+    grid-template-rows: 220px 52px auto;
   }
 
   .combat-overlay__visual,
@@ -1544,15 +1581,17 @@
   width: 100%;
   max-width: 100%;
   padding: 0 6px;
-  overflow: hidden;
+  box-sizing: border-box;
   color: var(--combat-gold);
   font-size: clamp(1.1rem, 2vw, 1.8rem);
   font-weight: 950;
   font-style: italic;
   letter-spacing: 0.025em;
   text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.15;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
   text-shadow: 0 2px 0 #6f2c16, 0 4px 10px rgba(0,0,0,.85);
 }
 

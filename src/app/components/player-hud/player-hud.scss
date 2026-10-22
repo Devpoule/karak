@@ -12,13 +12,23 @@
 .player-hud {
   --sidebar-width: clamp(150px, 18vh, 220px);
   --sidebar-edge: 1.25rem;
-  /* Réserve une bande lisible entre le header et les inventaires. */
-  --sidebar-vertical-offset: clamp(2.5rem, 5vh, 3.75rem);
+  /* Calculé depuis les dimensions réellement rendues du HUD. */
+  --sidebar-vertical-gap: 1rem;
+  --sidebar-selector-height: 52px;
 
   position: relative;
 
   width: 100%;
   height: 100%;
+}
+
+/* Les fiches restent visibles pour montrer les conséquences du combat, mais
+   aucune commande du HUD ne doit concurrencer la décision de combat. */
+.player-hud--combat-active {
+  .player-hud__side,
+  .player-hud__turn-controls {
+    pointer-events: none;
+  }
 }
 
 .player-hud__power-card-host {
@@ -56,13 +66,13 @@
 .player-hud__side {
   position: absolute;
 
-  top: calc(50% + var(--sidebar-vertical-offset));
+  top: calc(var(--sidebar-vertical-gap) * 2 + var(--sidebar-selector-height));
   bottom: auto;
 
   z-index: 5;
 
   width: var(--sidebar-width);
-  max-height: calc(100% - 1rem);
+  max-height: calc(100% - (var(--sidebar-vertical-gap) * 3) - var(--sidebar-selector-height));
   overflow: visible;
   scrollbar-width: thin;
 
@@ -89,7 +99,7 @@
 .player-hud__side--left {
   left: var(--sidebar-edge);
 
-  transform: translateY(-50%) translateX(calc(-100% - var(--sidebar-edge)));
+  transform: translateX(calc(-100% - var(--sidebar-edge)));
 }
 
 /* ==========================================================
@@ -99,7 +109,7 @@
 .player-hud__side--right {
   right: var(--sidebar-edge);
 
-  transform: translateY(-50%) translateX(calc(100% + var(--sidebar-edge)));
+  transform: translateX(calc(100% + var(--sidebar-edge)));
 }
 
 /* ==========================================================
@@ -113,7 +123,7 @@
      Un panneau ouvert doit en revanche rendre ses commandes utilisables. */
   pointer-events: auto;
 
-  transform: translateY(-50%) translateX(0);
+  transform: translateX(0);
 }
 
 .player-hud__hero-palette-button {
@@ -162,7 +172,7 @@
 
 .player-hud__turn-controls {
   position: absolute;
-  inset: 1rem 0 auto;
+  inset: var(--sidebar-vertical-gap) 0 auto;
 
   z-index: 50;
 

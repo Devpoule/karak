@@ -115,6 +115,16 @@
     0 0 8px rgba(255, 35, 20, 0.45);
 }
 
+/* En mode panneau, la position est structurelle : seule la lumière doit
+   s'éteindre, jamais le voyant lui-même. */
+.movement-counter--compact .movement-counter__point--consuming {
+  animation: movement-point-light-off 260ms ease-out both;
+}
+
+.movement-counter--compact .movement-counter__point--consuming .movement-counter__fragments {
+  display: none;
+}
+
 
 /* ==========================================================
    POINTS DE MOUVEMENT
@@ -225,6 +235,18 @@
     opacity: 0;
     filter: brightness(1);
     transform: scale(0.72);
+  }
+}
+
+@keyframes movement-point-light-off {
+  0% {
+    opacity: 1;
+    filter: brightness(1.35);
+  }
+
+  100% {
+    opacity: .28;
+    filter: brightness(.72) saturate(.7);
   }
 }
 

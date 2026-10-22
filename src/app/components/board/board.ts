@@ -12,6 +12,7 @@ import { DungeonService } from '../../services/dungeon.service';
 import { TurnService } from '../../services/turn.service';
 import { ExplorationService, PendingTilePlacement } from '../../services/exploration.service';
 import { GameService, PendingGroundEquipment, PendingReward, PendingTreasure } from '../../services/game.service';
+import { CombatService } from '../../services/combat.service';
 import { TREASURE_POINTS, Treasure } from '../../models/treasure';
 import { CombatOverlay } from '../combat-overlay/combat-overlay';
 import { HeroPowerCard, HeroPowerCardChoice } from '../hero-power-card/hero-power-card';
@@ -90,6 +91,7 @@ export class Board {
     private readonly explorationService: ExplorationService,
     private readonly playerService: PlayerService,
     private readonly turnService: TurnService,
+    readonly combatService: CombatService,
     readonly gameService: GameService,
   ) {
     /*
@@ -378,6 +380,13 @@ export class Board {
 /** Gere handleHealingPortalKeyboard et applique les gardes necessaires avant mutation. */
   @HostListener('window:keydown', ['$event'])
   handleHealingPortalKeyboard(event: KeyboardEvent): void {
+    if (this.combatService.hasPendingCombat) {
+      if (['ArrowLeft', 'ArrowRight', 'Enter', 'Escape'].includes(event.key)) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      return;
+    }
     if (this.horanReincarnationSelection) {
       if (event.key === 'ArrowRight') {
         event.preventDefault();
@@ -467,7 +476,8 @@ export class Board {
    * - si aucun combat obligatoire n'attend sa résolution.
    */
   get movementControlsEnabled(): boolean {
-    return this.gameService.canPerformNormalMovement(this.gameService.activePlayer);
+    return !this.combatService.hasPendingCombat
+      && this.gameService.canPerformNormalMovement(this.gameService.activePlayer);
   }
 
   // ==========================================================
@@ -1010,6 +1020,7 @@ export class Board {
    * le tour.
    */
   centerOnActivePlayer(): void {
+    if (this.combatService.hasPendingCombat) return;
     const position = this.gameService.activePlayer?.position;
 
     if (!position) {
@@ -1026,6 +1037,7 @@ export class Board {
    * logiques (0, 0).
    */
   centerOnStartTile(): void {
+    if (this.combatService.hasPendingCombat) return;
     this.centerOnPosition(0, 0);
   }
 
@@ -1057,6 +1069,7 @@ export class Board {
    * même si le pointeur quitte temporairement la zone du plateau.
    */
   startDragging(event: PointerEvent): void {
+    if (this.combatService.hasPendingCombat) return;
     this.isDragging = true;
 
     this.lastMouseX = event.clientX;
@@ -1075,7 +1088,7 @@ export class Board {
    * Déplace la caméra selon le mouvement du pointeur.
    */
   drag(event: PointerEvent): void {
-    if (!this.isDragging) {
+    if (this.combatService.hasPendingCombat || !this.isDragging) {
       return;
     }
 

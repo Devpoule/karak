@@ -34,6 +34,7 @@
       class="board__camera-tool"
       title="Centrer sur le joueur actif"
       aria-label="Centrer sur le joueur actif"
+      [disabled]="combatService.hasPendingCombat"
       (click)="centerOnActivePlayer()"
     >
       ◎
@@ -43,6 +44,7 @@
       class="board__camera-tool"
       title="Centrer sur la tuile de départ"
       aria-label="Centrer sur la tuile de départ"
+      [disabled]="combatService.hasPendingCombat"
       (click)="centerOnStartTile()"
     >
       ⌂

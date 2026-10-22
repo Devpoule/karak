@@ -2,6 +2,7 @@
   [class]="'hero-power-card hero-power-card--' + hero.id"
   [class.hero-power-card--announcement]="mode === 'announcement'"
   [class.hero-power-card--choice]="mode === 'choice'"
+  [class.hero-power-card--decision]="mode === 'decision'"
   [class.hero-power-card--consultation]="mode === 'consultation'"
   [attr.role]="mode === 'announcement' ? 'status' : 'dialog'"
   [attr.aria-modal]="mode === 'announcement' ? null : 'true'"
@@ -26,7 +27,12 @@
     }
     @if (mode === 'decision') {
       <div class="hero-power-card__actions">
-        <button type="button" class="hero-power-card__activate" autofocus (click)="activated.emit()">
+        <button
+          type="button"
+          class="hero-power-card__activate"
+          autofocus
+          (click)="activated.emit()"
+        >
           {{ activateLabel }}
         </button>
         <button type="button" class="hero-power-card__decline" (click)="declined.emit()">
