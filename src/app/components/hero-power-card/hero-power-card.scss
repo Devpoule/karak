@@ -125,7 +125,19 @@
 .hero-power-card--embedded .hero-power-card__power { margin-bottom: .65rem; }
 .hero-power-card--embedded .hero-power-card__content > p:not(.hero-power-card__power) { line-height: 1.45; }
 .hero-power-card--embedded .hero-power-card__actions { margin-top: auto; padding-top: 1rem; display: flex; gap: .65rem; }
-.hero-power-card--embedded .hero-power-card__actions button { flex: 1 1 0; min-height: 44px; min-width: 0; }
+.hero-power-card--embedded .hero-power-card__actions { justify-content: center; }
+.hero-power-card--embedded .hero-power-card__actions button {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+  font-size: 1.45rem;
+  line-height: 1;
+}
+.hero-power-card--embedded .hero-power-card__activate { color: #d8f1c7; border-color: rgba(150, 205, 118, .8); }
+.hero-power-card--embedded .hero-power-card__decline { color: #ffd0c3; border-color: rgba(214, 116, 91, .8); }
 
 @media (max-height: 700px) {
   .hero-power-card--consultation {

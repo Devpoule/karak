@@ -32,12 +32,20 @@
           type="button"
           class="hero-power-card__activate"
           autofocus
+          [attr.aria-label]="activateLabel"
+          [title]="activateLabel"
           (click)="activated.emit()"
         >
-          {{ activateLabel }}
+          @if (embedded) { <span aria-hidden="true">✓</span> } @else { {{ activateLabel }} }
         </button>
-        <button type="button" class="hero-power-card__decline" (click)="declined.emit()">
-          Continuer sans
+        <button
+          type="button"
+          class="hero-power-card__decline"
+          aria-label="Continuer sans utiliser le pouvoir"
+          title="Continuer sans utiliser le pouvoir"
+          (click)="declined.emit()"
+        >
+          @if (embedded) { <span aria-hidden="true">×</span> } @else { Continuer sans }
         </button>
       </div>
     } @else if (mode === 'choice') {
