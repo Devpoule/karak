@@ -100,6 +100,45 @@ async function prepareCombat(page: import('@playwright/test').Page, strength: nu
   }, { monsterStrength: strength, withMagic });
 }
 
+async function assertCombatLayoutInsideViewport(page: import('@playwright/test').Page): Promise<void> {
+  const viewport = page.viewportSize()!;
+  const selectors = [
+    '.combat-overlay__arena',
+    '.combat-overlay__fighter-image',
+    '.combat-overlay__fighter-name',
+    '.combat-overlay__dice',
+    '.combat-overlay__score',
+    '.combat-overlay__verdict',
+    '.combat-overlay__decision',
+    '.combat-overlay__power-card',
+    '.combat-overlay__power-announcement',
+  ];
+  const geometry = await page.locator(selectors.join(', ')).evaluateAll(elements => elements
+    .filter(element => {
+      const style = getComputedStyle(element);
+      const box = element.getBoundingClientRect();
+      return style.visibility !== 'hidden' && style.display !== 'none' && box.width > 0 && box.height > 0;
+    })
+    .map(element => {
+      const box = element.getBoundingClientRect();
+      return {
+        selector: element.className,
+        left: box.left,
+        top: box.top,
+        right: box.right,
+        bottom: box.bottom,
+      };
+    }));
+
+  expect(geometry.filter(box =>
+    box.left < -1
+    || box.top < -1
+    || box.right > viewport.width + 1
+    || box.bottom > viewport.height + 1,
+  ), 'Les éléments de combat doivent rester dans le viewport').toEqual([]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+}
+
 async function runCombatScenario(
   page: import('@playwright/test').Page,
   strength: number,
@@ -115,6 +154,9 @@ async function runCombatScenario(
   await expect(page.getByRole('button', { name: 'Lancer les dés' })).toBeVisible({ timeout: 5_000 });
   await page.getByRole('button', { name: 'Lancer les dés' }).click({ force: true });
   await expect(page.locator('.combat-overlay__dice')).toBeVisible({ timeout: 10_000 });
+  if (page.viewportSize()!.width <= 900 || page.viewportSize()!.height <= 560) {
+    await assertCombatLayoutInsideViewport(page);
+  }
   await expect(page.locator('.combat-overlay__bonus')).toHaveText('+2 pts');
   if (withMagic) {
     await page.getByRole('button', { name: /Utiliser Tir magique/ }).click({ force: true });
@@ -128,6 +170,9 @@ async function runCombatScenario(
   const monsterScore = page.locator('.combat-overlay__score--monster');
   await expect(heroScore).toBeVisible();
   await expect(monsterScore).toBeVisible();
+  if (page.viewportSize()!.width <= 900 || page.viewportSize()!.height <= 560) {
+    await assertCombatLayoutInsideViewport(page);
+  }
   await expect(heroScore).not.toContainText('Score de combat');
   await expect(monsterScore).not.toContainText('Force');
   const [heroBox, monsterBox] = await Promise.all([
@@ -166,9 +211,11 @@ test('combat fixture reste lisible sur écran étroit', async ({ page }) => {
 test('combat fixture reste lisible en paysage court', async ({ page }) => {
   await page.setViewportSize({ width: 844, height: 390 });
   await runCombatScenario(page, 5, 'gagne', 'combat-roll-landscape.png', 'combat-victory-landscape.png');
-  await expect.poll(async () => page.evaluate(() =>
-    document.documentElement.scrollWidth <= document.documentElement.clientWidth,
-  )).toBe(true);
+});
+
+test('combat fixture reste lisible sur un écran bas en portrait', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 360 });
+  await runCombatScenario(page, 5, 'gagne', 'combat-roll-short.png', 'combat-victory-short.png');
 });
 
 test('combat fixture affiche le bonus vert d’un Tir magique', async ({ page }) => {

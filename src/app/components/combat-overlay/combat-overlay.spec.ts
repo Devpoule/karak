@@ -103,9 +103,7 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
 
   it.each([false, true])('propose de conserver le résultat avec%s Tir magique', (withMagicBolt) => {
     const { fixture, overlay, combatService } = prepareCombat(withMagicBolt);
-    const keepButton = Array.from(
-      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
-    ).find(button => button.textContent?.includes('Conserver ce résultat'));
+    const keepButton = fixture.nativeElement.querySelector('.hero-power-card__decline') as HTMLButtonElement | null;
 
     expect(overlay.canKeepCombatResult).toBe(true);
     expect(keepButton).toBeDefined();
@@ -122,9 +120,7 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
 
   it('propose aussi de conserver le résultat pour Victorius sans Tir magique', () => {
     const { fixture, overlay, combatService } = prepareCombat(false, 'victorius');
-    const keepButton = Array.from(
-      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
-    ).find(button => button.textContent?.includes('Conserver ce résultat'));
+    const keepButton = fixture.nativeElement.querySelector('.hero-power-card__decline') as HTMLButtonElement | null;
 
     expect(overlay.availableHeroRerolls).toEqual(['die1', 'die2']);
     expect(keepButton).toBeDefined();
@@ -201,8 +197,32 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     vi.advanceTimersByTime(4690);
     fixture.detectChanges();
 
+    expect(overlay.presentationState()).toBe('decision');
+    expect(overlay.powerAnnouncement()).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.combat-overlay__hero-card')?.classList.contains('combat-overlay__hero-card--flipped'))
+      .toBe(true);
+
+    vi.advanceTimersByTime(3500);
+    fixture.detectChanges();
+
     expect(overlay.presentationState()).toBe('rolling');
     expect(fixture.nativeElement.querySelectorAll('.combat-overlay__die--rolling')).toHaveLength(2);
+    fixture.destroy();
+  });
+
+  it('retourne la carte du héros quand l IA active un pouvoir', () => {
+    const { fixture, overlay } = prepareCombat(false, 'horan', 'ai');
+    const resolveAiPostRollDecision = (overlay as unknown as {
+      resolveAiPostRollDecision: () => void;
+    }).resolveAiPostRollDecision.bind(overlay);
+
+    resolveAiPostRollDecision();
+    fixture.detectChanges();
+
+    expect(overlay.powerAnnouncement()).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.combat-overlay__hero-card')?.classList.contains('combat-overlay__hero-card--flipped'))
+      .toBe(true);
+    expect(fixture.nativeElement.querySelector('.hero-power-card--announcement')).not.toBeNull();
     fixture.destroy();
   });
 
@@ -261,9 +281,7 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     const { fixture, overlay, gameService, turnService } = prepareIntegratedUnstoppableDecision();
     const endTurn = vi.spyOn(gameService, 'endTurn');
 
-    const continueButton = Array.from(
-      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
-    ).find(button => button.textContent?.includes('Continuer le tour'));
+    const continueButton = fixture.nativeElement.querySelector('.hero-power-card__activate') as HTMLButtonElement | null;
     expect(continueButton).toBeDefined();
 
     continueButton?.click();
@@ -281,9 +299,7 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     const { fixture, overlay, gameService } = prepareIntegratedUnstoppableDecision();
     const endTurn = vi.spyOn(gameService, 'endTurn');
 
-    const finishButton = Array.from(
-      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
-    ).find(button => button.textContent?.includes('Terminer le tour'));
+    const finishButton = fixture.nativeElement.querySelector('.hero-power-card__decline') as HTMLButtonElement | null;
     expect(finishButton).toBeDefined();
 
     finishButton?.click();

@@ -143,6 +143,9 @@ test('Victorius termine normalement après un Inarrêtable au quatrième mouveme
   const rollingDice = page.locator('.combat-overlay__die--rolling');
   await expect(rollingDice).toHaveCount(2, { timeout: 10_000 });
   await expect(rollingDice).toHaveCount(0, { timeout: 10_000 });
+  await expect(page.locator('.combat-overlay__hero-card--flipped')).toHaveCount(1, { timeout: 10_000 });
+  await expect(page.locator('.combat-overlay__hero-card-face--back .hero-power-card--announcement'))
+    .toBeVisible({ timeout: 10_000 });
   await expect(rollingDice).toHaveCount(1, { timeout: 10_000 });
   await expect(page.locator('.combat-overlay__die:nth-child(2).combat-overlay__die--rolling')).toHaveCount(1);
   await expect(page.locator('.combat-overlay__die:nth-child(1).combat-overlay__die--rolling')).toHaveCount(0);

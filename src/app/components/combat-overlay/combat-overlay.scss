@@ -11,9 +11,11 @@
 .combat-overlay {
   position: absolute;
   inset: 0;
-  /* Le HUD reste lisible au-dessus de la scène ; ses interactions sont
-     désactivées par PlayerHud pendant la séquence de combat. */
-  z-index: var(--karak-z-dialog);
+  /* Le HUD reste monté pour conserver l'état de la partie, mais la scène de
+     combat doit visuellement prendre la priorité pendant sa séquence. */
+  /* Le combat doit recouvrir le HUD latéral, tout en restant sous les
+     modales globales comme la consultation d'un pouvoir. */
+  z-index: calc(var(--karak-z-modal) + 5);
 
   display: flex;
   align-items: center;
@@ -48,7 +50,7 @@
 
 .combat-overlay__backdrop {
   position: absolute;
-  inset: 0 var(--combat-side-space);
+  inset: 0;
   z-index: -2;
 
   background:
@@ -292,6 +294,8 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  min-width: 0;
+  max-width: 100%;
   padding: 2px 5px 2px 2px;
   border-radius: 999px;
   color: #ffe9a3;
@@ -305,6 +309,11 @@
 
 .combat-overlay__weapon-entry:nth-child(2) { animation-delay: 100ms; }
 .combat-overlay__weapon-entry img { width: 24px; height: 24px; object-fit: contain; border-radius: 4px; }
+.combat-overlay__weapon-entry span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .combat-overlay__magic-bolt-feedback {
   position: absolute;
@@ -804,23 +813,6 @@
 
 /* La décision doit rester lisible sans recouvrir les scores de l'arène. */
 .combat-overlay__power-card app-hero-power-card {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.combat-overlay__power-announcement {
-  position: absolute;
-  z-index: 40;
-  top: 50%;
-  left: calc(50% - min(380px, 22vw));
-  width: min(340px, calc(50vw - var(--combat-side-space) - 1rem));
-  height: min(360px, calc(100% - 2rem));
-  pointer-events: none;
-  transform: translateY(-50%);
-}
-
-.combat-overlay__power-announcement app-hero-power-card {
   display: block;
   width: 100%;
   height: 100%;
@@ -1502,7 +1494,9 @@
 
 @media (max-width: 900px) {
   .combat-overlay {
-    --combat-side-space: clamp(120px, 18vw, 180px);
+    /* Les fiches HUD passent sous la scène de combat sur les formats
+       compacts afin de réserver toute la largeur à l'arène. */
+    --combat-side-space: 0px;
   }
 
   .combat-overlay__arena {
@@ -1654,7 +1648,7 @@
   text-align: center;
   line-height: 1.15;
   white-space: normal;
-  overflow-wrap: normal;
+  overflow-wrap: anywhere;
   word-break: normal;
   text-shadow: 0 2px 0 #6f2c16, 0 4px 10px rgba(0,0,0,.85);
 }
@@ -1665,8 +1659,7 @@
 @media (max-width: 620px) {
   .combat-overlay__decision { font-size: .8rem; }
   .combat-overlay__decision,
-  .combat-overlay__power-card,
-  .combat-overlay__power-announcement {
+  .combat-overlay__power-card {
     top: 50%;
     right: auto;
     left: 50%;
@@ -1682,18 +1675,95 @@
   .combat-overlay__fighter-name { font-size: .95rem; }
 }
 
-@media (max-height: 560px) and (orientation: landscape) {
+@media (max-height: 560px) {
   .combat-overlay__arena {
-    scale: .78;
-    transform-origin: center 38%;
+    width: min(100%, calc(100vw - 1rem));
+    column-gap: 8px;
+    transform: none;
   }
 
-  .combat-overlay__decision {
-    inset: .5rem;
+  .combat-overlay__fighter {
+    grid-template-rows: 120px 30px auto;
+  }
+
+  .combat-overlay__visual,
+  .combat-overlay__center {
+    height: 120px;
+  }
+
+  .combat-overlay__center,
+  .combat-overlay__versus {
+    width: clamp(56px, 10vw, 84px);
+    height: 120px;
+  }
+
+  .combat-overlay__fighter-image {
+    max-width: min(100%, 150px);
+    max-height: 112px;
   }
 
   .combat-overlay__fighter-footer {
-    transform: translateY(-1.25rem);
+    grid-template-rows: 28px 18px 38px;
+  }
+
+  .combat-overlay__roll-trigger {
+    width: 44px;
+    height: 44px;
+  }
+
+  .combat-overlay__roll-trigger span {
+    font-size: 1.45rem;
+  }
+
+  .combat-overlay__dice {
+    gap: 6px;
+    min-height: 44px;
+  }
+
+  .combat-overlay__die {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+    border-radius: 7px;
+  }
+
+  .combat-overlay__bonus {
+    min-width: 32px;
+    font-size: .9rem;
+  }
+
+  .combat-overlay__score {
+    min-height: 38px;
+    padding: 2px 7px 3px;
+  }
+
+  .combat-overlay__score-value {
+    font-size: clamp(1.15rem, 3.5vw, 1.8rem);
+  }
+
+  .combat-overlay__fighter-name {
+    padding-inline: 2px;
+    font-size: clamp(.8rem, 2.8vw, 1.25rem);
+  }
+
+  .combat-overlay__decision {
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    width: min(340px, calc(100vw - 1rem));
+    height: min(360px, calc(100% - 1rem));
+    transform: translate(-50%, -50%);
+  }
+
+  .combat-overlay__power-card {
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    width: min(340px, calc(100vw - 1rem));
+    height: min(360px, calc(100% - 1rem));
+    transform: translate(-50%, -50%);
   }
 
   .combat-overlay__verdict {
