@@ -4,6 +4,7 @@
   [class.hero-power-card--choice]="mode === 'choice'"
   [class.hero-power-card--decision]="mode === 'decision'"
   [class.hero-power-card--consultation]="mode === 'consultation'"
+  [class.hero-power-card--embedded]="embedded"
   [attr.role]="mode === 'announcement' ? 'status' : 'dialog'"
   [attr.aria-modal]="mode === 'announcement' ? null : 'true'"
   [attr.aria-labelledby]="'hero-power-card-title-' + hero.id"

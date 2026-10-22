@@ -1,4 +1,4 @@
-<article class="decision-card" role="dialog" aria-modal="true" aria-labelledby="decision-card-title" tabindex="-1">
+<article class="decision-card" [class.decision-card--compact]="compact" [class.decision-card--embedded]="embedded" role="dialog" aria-modal="true" aria-labelledby="decision-card-title" tabindex="-1">
   <div class="decision-card__aura" aria-hidden="true"></div>
   @if (image) {
     <img class="decision-card__image" [src]="image" [alt]="imageAlt" draggable="false" />

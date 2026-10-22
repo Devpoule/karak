@@ -18,6 +18,9 @@ export class HeroPowerCard {
   /** Contexte visuel de la carte : choix, annonce métier ou consultation. */
   @Input() mode: 'decision' | 'choice' | 'announcement' | 'consultation' = 'decision';
 
+  /** Rend la carte dans le rectangle d'une carte de combattant existante. */
+  @Input() embedded = false;
+
   /** Héros dont le pouvoir est actuellement proposé. */
   @Input({ required: true }) hero!: HeroDefinition;
 

@@ -22,6 +22,7 @@
       <div class="combat-overlay__power-announcement">
         <app-hero-power-card
           mode="announcement"
+          [embedded]="true"
           [hero]="announcement.hero"
           [power]="announcement.power"
           [message]="announcement.message"
@@ -53,15 +54,42 @@
         #heroFighter
         class="combat-overlay__fighter combat-overlay__fighter--hero"
       >
-        <div class="combat-overlay__visual">
-          @if (getHeroImage(); as heroImage) {
-            <img
-              class="combat-overlay__fighter-image combat-overlay__fighter-image--hero"
-              [src]="heroImage"
-              alt="Héros"
-              draggable="false"
-            />
-          }
+        <div
+          class="combat-overlay__visual combat-overlay__hero-card"
+          [class.combat-overlay__hero-card--flipped]="isDecisionVisible && (optionalPowerPresentation || canUseMagicBolt)"
+        >
+          <div class="combat-overlay__hero-card-face combat-overlay__hero-card-face--front">
+            @if (getHeroImage(); as heroImage) {
+              <img
+                class="combat-overlay__fighter-image combat-overlay__fighter-image--hero"
+                [src]="heroImage"
+                alt="Héros"
+                draggable="false"
+              />
+            }
+          </div>
+          <div class="combat-overlay__hero-card-face combat-overlay__hero-card-face--back">
+            @if (optionalPowerPresentation; as optionalPower) {
+              <app-hero-power-card
+                [embedded]="true"
+                [hero]="optionalPower.hero"
+                [power]="optionalPower.power"
+                [activateLabel]="optionalPower.activateLabel"
+                (activated)="activateOptionalPower()"
+                (declined)="declineOptionalPower()"
+              />
+            } @else if (canUseMagicBolt) {
+              <app-decision-card
+                [compact]="true"
+                [embedded]="true"
+                eyebrow="Sort de combat"
+                title="Tir magique"
+                description="Ajoutez un tir magique à cette attaque avant de confirmer le résultat du combat."
+                [actions]="magicBoltActions"
+                (actionSelected)="resolveMagicBoltAction($event)"
+              />
+            }
+          </div>
           @for (event of magicBoltFeedback(); track event) {
             <div class="combat-overlay__magic-bolt-feedback" aria-live="polite">
               <img src="/assets/tokens/fire-sword.png" alt="" draggable="false" />
@@ -229,17 +257,7 @@
     </div>
 
     @if (isDecisionVisible && currentCombat.player.controller === 'human') {
-      @if (optionalPowerPresentation; as optionalPower) {
-        <div class="combat-overlay__power-card">
-          <app-hero-power-card
-            [hero]="optionalPower.hero"
-            [power]="optionalPower.power"
-            [activateLabel]="optionalPower.activateLabel"
-            (activated)="activateOptionalPower()"
-            (declined)="declineOptionalPower()"
-          />
-        </div>
-      } @else {
+      @if (!optionalPowerPresentation) {
       <div class="combat-overlay__decision">
         @if (canUseHeroReroll) {
           @if (availableHeroRerolls.includes('both')) {
@@ -278,16 +296,7 @@
             Conserver mes PV
           </button>
         }
-        @if (canUseMagicBolt) {
-          <app-decision-card
-            eyebrow="Sort de combat"
-            title="Tir magique"
-            description="Ajoutez un tir magique à cette attaque avant de confirmer le résultat du combat."
-            [actions]="magicBoltActions"
-            (actionSelected)="resolveMagicBoltAction($event)"
-          />
-        }
-        @if (canKeepCombatResult) {
+        @if (canKeepCombatResult && !canUseMagicBolt) {
           <button
             type="button"
             class="combat-overlay__continue"
@@ -329,6 +338,7 @@
     @if (unstoppablePowerPresentation; as unstoppablePower) {
       <div class="combat-overlay__power-card">
         <app-hero-power-card
+          [embedded]="true"
           [hero]="unstoppablePower.hero"
           [power]="unstoppablePower.power"
           activateLabel="Continuer le tour"

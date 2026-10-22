@@ -20,6 +20,9 @@ export class DecisionCard {
   @Input() image = '';
   @Input() imageAlt = '';
   @Input() actions: readonly DecisionCardAction[] = [];
+  @Input() compact = false;
+  /** Rend la décision dans le rectangle de la carte du combattant. */
+  @Input() embedded = false;
   @Output() actionSelected = new EventEmitter<number>();
 
   /** Notifie le parent de l'action choisie sans appliquer de règle métier. */
