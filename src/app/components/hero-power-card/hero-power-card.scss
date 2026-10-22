@@ -74,6 +74,71 @@
 .hero-power-card--consultation .hero-power-card__content > p:not(.hero-power-card__power) { line-height: 1.3; }
 .hero-power-card--consultation .hero-power-card__actions { margin-top: .8rem; }
 
+/* Version compacte utilisée pour une décision intégrée à l'arène de combat. */
+.hero-power-card--decision {
+  grid-template-columns: minmax(76px, 27%) 1fr;
+  min-height: 0;
+  padding: .7rem .85rem .7rem 0;
+  border-radius: 12px;
+}
+
+.hero-power-card--decision .hero-power-card__portrait { max-height: 150px; }
+.hero-power-card--decision .hero-power-card__content { padding: .25rem 0 .25rem .65rem; }
+.hero-power-card--decision h2 { font-size: clamp(1.1rem, 2.4vw, 1.45rem); }
+.hero-power-card--decision .hero-power-card__power { margin-bottom: .35rem; font-size: clamp(.95rem, 2vw, 1.15rem); }
+.hero-power-card--decision .hero-power-card__content > p:not(.hero-power-card__power) { font-size: .82rem; line-height: 1.25; }
+.hero-power-card--decision .hero-power-card__actions { gap: .4rem; margin-top: .6rem; }
+.hero-power-card--decision button { min-height: 38px; padding: .4rem .65rem; font-size: .82rem; }
+
+/* Les annonces de pouvoir utilisent la même fenêtre, sans concurrencer
+   l'arène ni les scores. */
+.hero-power-card--announcement {
+  grid-template-columns: minmax(64px, 24%) 1fr;
+  min-height: 0;
+  padding: .6rem .8rem .6rem 0;
+  border-radius: 12px;
+}
+
+.hero-power-card--announcement .hero-power-card__portrait { max-height: 120px; }
+
+/* Combat decisions inherit the exact rectangle of the hero card host. */
+.hero-power-card--embedded {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  box-sizing: border-box;
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr);
+  padding: 1rem;
+  border-radius: 13% / 10%;
+}
+.hero-power-card--embedded .hero-power-card__portrait { display: none; }
+.hero-power-card--embedded .hero-power-card__content {
+  min-width: 0;
+  min-height: 0;
+  padding: .4rem;
+  overflow: auto;
+}
+.hero-power-card--embedded .hero-power-card__eyebrow { margin-bottom: .55rem; }
+.hero-power-card--embedded h2 { margin: .25rem 0 .75rem; line-height: 1.1; }
+.hero-power-card--embedded .hero-power-card__power { margin-bottom: .65rem; }
+.hero-power-card--embedded .hero-power-card__content > p:not(.hero-power-card__power) { line-height: 1.45; }
+.hero-power-card--embedded .hero-power-card__actions { margin-top: auto; padding-top: 1rem; display: flex; gap: .65rem; }
+.hero-power-card--embedded .hero-power-card__actions { justify-content: center; }
+.hero-power-card--embedded .hero-power-card__actions button {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+  font-size: 1.45rem;
+  line-height: 1;
+}
+.hero-power-card--embedded .hero-power-card__activate { color: #d8f1c7; border-color: rgba(150, 205, 118, .8); }
+.hero-power-card--embedded .hero-power-card__decline { color: #ffd0c3; border-color: rgba(214, 116, 91, .8); }
+
 @media (max-height: 700px) {
   .hero-power-card--consultation {
     grid-template-columns: 70px 1fr;

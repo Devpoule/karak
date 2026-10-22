@@ -1,4 +1,4 @@
-<div class="player-hud">
+<div class="player-hud" [class.player-hud--combat-active]="isCombatActive">
   <!-- =====================================================
        PANNEAU GAUCHE — JOUEURS HUMAINS
        =====================================================
@@ -33,6 +33,7 @@
         [isActive]="isActivePlayer(leftPlayerIndex)"
         [showPlayer]="true"
         [showInventory]="true"
+        [interactionLocked]="isCombatActive"
         (playerTabClicked)="togglePlayerPanel(leftPlayerIndex)"
         (powerSelected)="openPowerConsultation(player, $event)"
       />
@@ -71,6 +72,7 @@
         [isActive]="isActivePlayer(rightPlayerIndex)"
         [showPlayer]="true"
         [showInventory]="true"
+        [interactionLocked]="isCombatActive"
         (playerTabClicked)="togglePlayerPanel(rightPlayerIndex)"
         (powerSelected)="openPowerConsultation(player, $event)"
       />

@@ -2,7 +2,9 @@
   [class]="'hero-power-card hero-power-card--' + hero.id"
   [class.hero-power-card--announcement]="mode === 'announcement'"
   [class.hero-power-card--choice]="mode === 'choice'"
+  [class.hero-power-card--decision]="mode === 'decision'"
   [class.hero-power-card--consultation]="mode === 'consultation'"
+  [class.hero-power-card--embedded]="embedded"
   [attr.role]="mode === 'announcement' ? 'status' : 'dialog'"
   [attr.aria-modal]="mode === 'announcement' ? null : 'true'"
   [attr.aria-labelledby]="'hero-power-card-title-' + hero.id"
@@ -26,11 +28,24 @@
     }
     @if (mode === 'decision') {
       <div class="hero-power-card__actions">
-        <button type="button" class="hero-power-card__activate" autofocus (click)="activated.emit()">
-          {{ activateLabel }}
+        <button
+          type="button"
+          class="hero-power-card__activate"
+          autofocus
+          [attr.aria-label]="activateLabel"
+          [title]="activateLabel"
+          (click)="activated.emit()"
+        >
+          @if (embedded) { <span aria-hidden="true">✓</span> } @else { {{ activateLabel }} }
         </button>
-        <button type="button" class="hero-power-card__decline" (click)="declined.emit()">
-          Continuer sans
+        <button
+          type="button"
+          class="hero-power-card__decline"
+          aria-label="Continuer sans utiliser le pouvoir"
+          title="Continuer sans utiliser le pouvoir"
+          (click)="declined.emit()"
+        >
+          @if (embedded) { <span aria-hidden="true">×</span> } @else { Continuer sans }
         </button>
       </div>
     } @else if (mode === 'choice') {

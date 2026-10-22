@@ -85,6 +85,9 @@ export class PlayerSidebar {
    */
   @Input() isActive = false;
 
+  /** Verrouille les consultations lorsque le combat est en cours. */
+  @Input() interactionLocked = false;
+
   /**
    * Demande au HUD d'appliquer le même comportement que la languette basse.
    */
@@ -116,6 +119,7 @@ export class PlayerSidebar {
 
 /** Gere togglePower et applique les gardes necessaires avant mutation. */
   togglePower(powerId: HeroPowerId, event?: Event): void {
+    if (this.interactionLocked) return;
     this.biographyOpen = false;
     this.selectedPowerId = this.selectedPowerId === powerId ? null : powerId;
     this.powerSelected.emit({
@@ -133,12 +137,14 @@ export class PlayerSidebar {
 
 /** Gere toggleBiography et applique les gardes necessaires avant mutation. */
   toggleBiography(): void {
+    if (this.interactionLocked) return;
     this.selectedPowerId = null;
     this.biographyOpen = !this.biographyOpen;
   }
 
 /** Gere openCurseDialog et applique les gardes necessaires avant mutation. */
   openCurseDialog(): void {
+    if (this.interactionLocked) return;
     this.selectedPowerId = null;
     this.biographyOpen = false;
     this.curseDialogOpen = true;
@@ -150,6 +156,11 @@ export class PlayerSidebar {
     this.biographyOpen = false;
     this.curseDialogOpen = false;
     this.powerSelected.emit({ powerId: null, trigger: null, sidebar: this });
+  }
+
+  /** Transmet le clic de languette uniquement hors combat. */
+  handlePlayerTabClick(): void {
+    if (!this.interactionLocked) this.playerTabClicked.emit();
   }
 
 /** Gere powerImage et applique les gardes necessaires avant mutation. */

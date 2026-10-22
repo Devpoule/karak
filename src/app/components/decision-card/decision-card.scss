@@ -26,6 +26,55 @@
 .decision-card button:focus-visible { outline: 3px solid #fff1bc; outline-offset: 3px; }
 .decision-card__primary { background: linear-gradient(180deg, #a86d24, #633812) !important; box-shadow: 0 0 16px rgba(245, 190, 65, .3); }
 .decision-card button:hover { filter: brightness(1.16); }
+
+.decision-card--compact {
+  grid-template-columns: minmax(76px, 27%) 1fr;
+  min-height: 0;
+  padding: .7rem .85rem .7rem 0;
+  border-radius: 12px;
+}
+.decision-card--compact .decision-card__image { max-height: 150px; }
+.decision-card--compact .decision-card__content { padding-left: .65rem; }
+.decision-card--compact h2 { font-size: clamp(1.1rem, 2.4vw, 1.45rem); }
+.decision-card--compact p { font-size: .82rem; line-height: 1.25; }
+.decision-card--compact .decision-card__actions { gap: .4rem; margin-top: .6rem; }
+.decision-card--compact button { min-height: 38px; padding: .4rem .65rem; font-size: .82rem; }
+
+/* Combat decisions inherit the exact rectangle of the hero card host. */
+.decision-card--embedded {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  box-sizing: border-box;
+  grid-template-columns: 1fr;
+  padding: 1rem;
+  border-radius: 13% / 10%;
+}
+.decision-card--embedded .decision-card__image { display: none; }
+.decision-card--embedded .decision-card__content {
+  min-width: 0;
+  min-height: 0;
+  padding: .4rem;
+  overflow: auto;
+}
+.decision-card--embedded .decision-card__eyebrow { margin-bottom: .55rem; }
+.decision-card--embedded h2 { margin: .25rem 0 .75rem; line-height: 1.1; }
+.decision-card--embedded p { line-height: 1.45; }
+.decision-card--embedded .decision-card__actions { margin-top: auto; padding-top: 1rem; display: flex; gap: .65rem; }
+.decision-card--embedded .decision-card__actions { justify-content: center; }
+.decision-card--embedded .decision-card__actions button {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+  font-size: 1.45rem;
+  line-height: 1;
+}
+.decision-card--embedded .decision-card__primary { color: #d8f1c7; border-color: rgba(150, 205, 118, .8); }
+.decision-card--embedded .decision-card__actions button:not(.decision-card__primary) { color: #ffd0c3; border-color: rgba(214, 116, 91, .8); }
 @keyframes decision-card-in { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @media (max-width: 600px) { .decision-card { grid-template-columns: 74px 1fr; padding-right: .8rem; } .decision-card__image { max-height: 170px; } .decision-card__content { padding-left: .7rem; } .decision-card__actions { margin-top: .9rem; } .decision-card button { flex: 1 1 100%; } }
 @media (prefers-reduced-motion: reduce) { .decision-card { animation: none; } }

@@ -28,7 +28,7 @@
           class="player-sidebar__player-tab"
           [class.player-sidebar__player-tab--active]="isActive"
           [attr.aria-label]="'Masquer la fiche du joueur ' + (playerIndex + 1)"
-          (click)="playerTabClicked.emit()"
+          (click)="handlePlayerTabClick()"
         >
           <span class="player-sidebar__player-chevron" aria-hidden="true">▼</span>
           <span class="player-sidebar__player-label">J{{ playerIndex + 1 }}</span>
@@ -72,7 +72,7 @@
                 [class.player-sidebar__power-badge--selected]="selectedPowerId === power.id"
                 [class.player-sidebar__power-badge--disabled]="player?.isCursed"
                 [attr.aria-pressed]="selectedPowerId === power.id"
-                [attr.aria-disabled]="null"
+                [attr.aria-disabled]="interactionLocked ? 'true' : null"
                 [attr.aria-label]="'Consulter pouvoir ' + (index + 1) + ' : ' + power.name + (player?.isCursed ? ' — pouvoir indisponible' : '')"
                 [attr.title]="power.name"
                 [attr.data-tooltip]="player?.isCursed ? 'Pouvoir indisponible en jeu ; cliquer pour consulter sa description' : power.name + ' — ' + power.description"
