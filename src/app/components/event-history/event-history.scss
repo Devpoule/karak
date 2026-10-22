@@ -24,14 +24,19 @@
   display: flex;
   align-items: center;
   gap: var(--karak-space-2);
-  min-height: 2.25rem;
-  padding: 0.45rem 0.65rem;
-  box-shadow: var(--karak-shadow-sm);
+  width: 100%;
+  min-height: 2.75rem;
+  padding: .55rem .7rem;
+  border: 0;
+  border-radius: var(--karak-radius-sm);
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
 }
 
 .event-history__toggle:hover,
 .event-history__close:hover {
-  background: var(--karak-stone-dark);
+  background: rgba(255, 255, 255, .1);
 }
 
 .event-history__count {
@@ -46,13 +51,12 @@
 .event-history__panel {
   position: absolute;
   z-index: 100;
-  top: auto;
-  bottom: calc(100% + var(--karak-space-2));
-  left: 0;
-  right: auto;
+  top: calc(100% + var(--karak-space-2));
+  left: auto;
+  right: 0;
   display: flex;
   flex-direction: column;
-  width: min(25rem, calc(100vw - 1.5rem));
+  width: min(25rem, calc(100vw - 2rem));
   max-height: min(32rem, calc(100dvh - 9rem));
   overflow: hidden;
   border: var(--karak-border-default);

@@ -18,7 +18,6 @@ import { getHeroDefinition } from '../../data/hero-definitions';
 import { Player } from '../../models/player';
 import { ToastContainer } from '../../components/toast-container/toast-container';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
-import { EventHistory } from '../../components/event-history/event-history';
 
 /**
  * Page principale du jeu.
@@ -29,7 +28,7 @@ import { EventHistory } from '../../components/event-history/event-history';
  */
 @Component({
   selector: 'app-game',
-  imports: [GameHeader, GameSetup, Board, PlayerHud, ToastContainer, EventHistory, QuantityPipe],
+  imports: [GameHeader, GameSetup, Board, PlayerHud, ToastContainer, QuantityPipe],
   templateUrl: './game.html',
   styleUrl: './game.scss',
 })

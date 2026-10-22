@@ -11,8 +11,6 @@ import { CombatService } from '../../services/combat.service';
 
 import { PlayerService } from '../../services/player.service';
 
-import { MovementCounter } from '../movement-counter/movement-counter';
-
 import { PlayerSidebar, PowerSelection } from '../player-sidebar/player-sidebar';
 import { HeroPowerCard } from '../hero-power-card/hero-power-card';
 import { HeroPowerId } from '../../models/hero';
@@ -94,7 +92,7 @@ interface HudPlayerEntry {
 
   selector: 'app-player-hud',
 
-  imports: [PlayerSidebar, MovementCounter, HeroPowerCard],
+  imports: [PlayerSidebar, HeroPowerCard],
 
   templateUrl: './player-hud.html',
 

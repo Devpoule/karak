@@ -1,6 +1,7 @@
 <section
   class="movement-counter"
-  [attr.aria-label]="movementPoints.length | quantity: 'mouvement disponible' : 'mouvements disponibles'"
+  [class.movement-counter--compact]="compact"
+  [attr.aria-label]="movementPoints.length | quantity: 'point disponible' : 'points disponibles'"
 >
   <span class="movement-counter__label">
     Mouvements

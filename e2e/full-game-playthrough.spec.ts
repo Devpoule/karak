@@ -27,7 +27,7 @@ async function openPreparedGame(page: import('@playwright/test').Page): Promise<
   await page.getByRole('button', { name: 'Entrer dans le donjon' }).click();
   await expect(page.locator('app-board')).toBeVisible();
   await expect(page.locator('app-movement-counter')).toHaveCount(1);
-  await expect(page.locator('.game__turn-announcement')).toBeVisible();
+  await expect(page.locator('.game__turn-announcement')).toBeVisible({ timeout: 10_000 });
 
   const initialTurnState = await page.evaluate(() => {
     const root = document.querySelector('app-root');
@@ -47,14 +47,15 @@ async function openPreparedGame(page: import('@playwright/test').Page): Promise<
 test('une partie active reprend après une interruption par le Codex', async ({ page }) => {
   await openPreparedGame(page);
 
-  await page.getByRole('link', { name: 'Codex' }).click();
+  await page.getByRole('button', { name: 'Ouvrir le menu de partie' }).click();
+  await page.getByRole('menuitem', { name: 'Encyclopédie' }).click();
   await expect(page).toHaveURL(/\/codex\?from=game$/);
   await expect(page.getByRole('button', { name: '← Retour à la partie' })).toBeVisible();
 
   await page.getByRole('button', { name: '← Retour à la partie' }).click();
   await expect(page.locator('app-board')).toBeVisible();
   await expect(page.locator('app-movement-counter')).toHaveCount(1);
-  await expect(page.locator('.game__turn-announcement')).toBeVisible();
+  await expect(page.locator('.game__turn-announcement')).toBeVisible({ timeout: 10_000 });
 });
 
 test('partie intégrale déterministe jusqu’au classement du Dragon', async ({ page }) => {

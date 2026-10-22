@@ -6,6 +6,28 @@
 
 .settings-panel:not(.settings-panel--compact) .settings-panel__trigger { width: 100%; }
 
+.settings-panel--compact .settings-panel__trigger {
+  width: 100%;
+  min-height: 2.75rem;
+  justify-content: flex-start;
+  padding: .55rem .7rem;
+  border: 0;
+  border-radius: var(--karak-radius-sm);
+  color: var(--karak-text-light);
+  background: transparent;
+  box-shadow: none;
+  font: 700 var(--karak-font-size-sm)/1.2 var(--karak-font-body);
+  letter-spacing: normal;
+  text-align: left;
+}
+
+.settings-panel--compact .settings-panel__trigger:hover:not([disabled]),
+.settings-panel--compact .settings-panel__trigger:focus-visible {
+  color: var(--karak-text-highlight);
+  background: rgba(255, 255, 255, .1);
+  outline: none;
+}
+
 .settings-panel__icon {
   flex: 0 0 auto;
   width: 1.25rem;

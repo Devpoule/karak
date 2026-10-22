@@ -27,20 +27,92 @@
 }
 
 .player-sidebar::before {
-  content: '';
+  display: none;
+}
+
+/*
+ * Enveloppe décorative indépendante des panneaux internes.
+ * Les tranches fixes conservent les coins et les bandes du cadre source ;
+ * seule sa zone centrale est extensible avec la fiche.
+ */
+.player-sidebar__frame {
   position: absolute;
   z-index: 0;
-  inset: -6.5% -10%;
+  inset: -5.5% -8%;
   transform: translateY(4px);
+  display: block;
   background: url('/assets/board/hero-background-panel.png') center / 100% 100% no-repeat;
   pointer-events: none;
 }
 
-.player-sidebar>*+* {
+/* Panneau graphique dédié, placé dans le flux avant le bandeau du héros. */
+.player-sidebar__movement-panel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 0;
+  padding-bottom: 19.5%;
+  box-sizing: border-box;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.player-sidebar__movement-panel-image {
+  position: absolute;
+  top: -37%;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+/* Les points sont centrés dans les quatre logements du panneau graphique. */
+.player-sidebar__movement-counter {
+  position: absolute;
+  z-index: 3;
+
+  inset: 0;
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  pointer-events: none;
+}
+
+.player-sidebar__movement-counter .movement-counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+
+  padding: 0;
+  margin: 0;
+
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.player-sidebar__movement-counter .movement-counter__label {
+  display: none;
+}
+
+.player-sidebar__movement-counter .movement-counter__points {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.player-sidebar > * + * {
   margin-top: 0;
 }
 
-.player-sidebar>* {
+.player-sidebar > *:not(.player-sidebar__frame) {
   position: relative;
   z-index: 1;
 }
@@ -78,7 +150,7 @@
   position: relative;
   width: 100%;
   height: 0;
-  padding-bottom: 20.1%;
+  padding-bottom: 19.5%;
   box-sizing: border-box;
   overflow: hidden;
   line-height: 0;
@@ -86,7 +158,7 @@
 
 .player-sidebar__name-panel img {
   position: absolute;
-  top: -34.80%;
+  top: -37%;
   left: 0;
   display: block;
   width: 100%;
@@ -95,14 +167,19 @@
 
 .player-sidebar__name-panel h2 {
   position: absolute;
-  inset: 50% .5rem auto;
+  inset: 50% 0.5rem auto;
   margin: 0;
   transform: translateY(-50%);
   color: #fff2b8;
-  font: 700 clamp(.8rem, 2vw, 1.1rem) Georgia, 'Times New Roman', serif;
+  font:
+    700 clamp(0.8rem, 2vw, 1.1rem) Georgia,
+    'Times New Roman',
+    serif;
   line-height: 1;
   text-align: center;
-  text-shadow: 0 2px 3px #1b120c, 0 0 5px rgba(90, 43, 12, .75);
+  text-shadow:
+    0 2px 3px #1b120c,
+    0 0 5px rgba(90, 43, 12, 0.75);
 }
 
 .player-sidebar__player-tab {
@@ -121,10 +198,12 @@
   padding: 3px 0 4px;
   box-sizing: border-box;
   color: var(--karak-text-light);
-  background: linear-gradient(180deg,
-      var(--karak-stone-light),
-      var(--karak-stone),
-      var(--karak-stone-dark));
+  background: linear-gradient(
+    180deg,
+    var(--karak-stone-light),
+    var(--karak-stone),
+    var(--karak-stone-dark)
+  );
   border: 2px solid var(--karak-stone-highlight);
   border-radius: 3px;
   box-shadow:
@@ -186,7 +265,7 @@
   overflow: hidden;
 }
 
-.player-sidebar__technical>img {
+.player-sidebar__technical > img {
   position: absolute;
   top: -7.25%;
   left: 0;
@@ -268,19 +347,23 @@
 .player-sidebar__power-badge--selected {
   color: #24180f;
   background: #f1d27e;
-  box-shadow: 0 0 0 2px rgba(245, 190, 65, .65), 0 0 10px rgba(245, 190, 65, .3);
+  box-shadow:
+    0 0 0 2px rgba(245, 190, 65, 0.65),
+    0 0 10px rgba(245, 190, 65, 0.3);
 }
 
 .player-sidebar__power-badge--disabled {
   opacity: 0.62;
-  box-shadow: 0 0 0 1px rgba(229, 57, 53, .65), 0 0 9px rgba(229, 57, 53, .7);
+  box-shadow:
+    0 0 0 1px rgba(229, 57, 53, 0.65),
+    0 0 9px rgba(229, 57, 53, 0.7);
 }
 
 .player-sidebar__power-badge--disabled::after {
   content: '';
   position: absolute;
   inset: 0;
-  border: clamp(2px, .25vw, 4px) solid #e53935;
+  border: clamp(2px, 0.25vw, 4px) solid #e53935;
   background: linear-gradient(155deg, transparent 47%, #e53935 48% 52%, transparent 53%);
   pointer-events: none;
 }

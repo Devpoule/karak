@@ -40,7 +40,7 @@
    * minmax(0, 1fr) permet à cette zone de réellement se
    * contracter dans la grille sans provoquer de débordement.
    */
-  grid-template-rows: 80px minmax(0, 1fr) clamp(4rem, 7vh, 5.25rem);
+  grid-template-rows: 80px minmax(0, 1fr);
 
   overflow: hidden;
 
@@ -67,25 +67,6 @@
 
   overflow: hidden;
 }
-
-.game__footer {
-  position: relative;
-  z-index: 40;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(14rem, 1.5fr) minmax(0, 1fr);
-  align-items: center;
-  min-width: 0;
-  border-top: var(--karak-border-default);
-  background:
-    linear-gradient(rgba(111, 88, 68, .92), rgba(74, 57, 44, .96)),
-    url('/assets/board/hero-background-panel.png') center / cover;
-  box-shadow: 0 -4px 14px rgba(0, 0, 0, .35);
-}
-
-.game__footer-zone { min-width: 0; height: 100%; }
-.game__footer-zone--journal { display: flex; align-items: center; padding-left: 1rem; }
-.game__footer-zone--movements,
-.game__footer-zone--camera { display: block; }
 
 
 /* ==========================================================
@@ -337,7 +318,7 @@
      * laisse une marge visible sous les boutons afin que la barre les
      * contienne réellement, bordure comprise.
      */
-    grid-template-rows: 64px minmax(0, 1fr) 4rem;
+    grid-template-rows: 64px minmax(0, 1fr);
   }
 
   .game__game-over {

@@ -37,7 +37,8 @@ test('INIT-003 conserve une préparation initialisée lors du retour depuis le C
   await page.getByRole('button', { name: 'Continuer' }).click();
   await expect(page.getByRole('heading', { name: 'Tirage des héros' })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Codex' }).click();
+  await page.getByRole('button', { name: 'Ouvrir le menu de partie' }).click();
+  await page.getByRole('menuitem', { name: 'Encyclopédie' }).click();
   await expect(page).toHaveURL(/\/codex\?from=game$/);
   await page.getByRole('button', { name: '← Retour à la partie' }).click();
   await expect(page).toHaveURL(/\/play$/);

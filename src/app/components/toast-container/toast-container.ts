@@ -17,7 +17,7 @@ export class ToastContainer {
   @HostListener('window:resize')
   onViewportResize(): void { this.layoutRevision++; }
 
-  /** Résout une position à partir de l’ancre DOM du joueur, sans coordonnées métier fixes. */
+  /** Place le toast dans la zone entre le header et le HUD du joueur ciblé. */
   positionFor(toast: ToastMessage): Record<string, string> {
     void this.layoutRevision;
     const target = toast.target;
@@ -29,28 +29,30 @@ export class ToastContainer {
 
     const sideElement = anchor.closest<HTMLElement>('.player-hud__side');
     const sideBounds = sideElement?.getBoundingClientRect();
-    const bounds = target.anchor === 'inventory-top' && sideBounds
-      ? sideBounds
-      : anchor.getBoundingClientRect();
+    if (!sideBounds) return {};
+
+    const headerBounds = document.querySelector<HTMLElement>('.game-header')?.getBoundingClientRect();
+    const topBoundary = (headerBounds?.bottom ?? 0) + 16;
+    const bottomBoundary = sideBounds.top - 16;
+    const availableHeight = Math.max(0, bottomBoundary - topBoundary);
+    const toastCenter = topBoundary + availableHeight / 2;
     const side = sideElement?.classList.contains('player-hud__side--right')
       ? 'right'
       : 'left';
-    const narrow = window.innerWidth <= 600;
-    const gap = 12;
-    const isInventoryHeader = target.anchor === 'inventory-top';
     const style: Record<string, string> = {
-      top: `${Math.max(8, bounds.top)}px`,
-      ...(isInventoryHeader ? { transform: 'translateY(calc(-100% - 8px))' } : {}),
+      top: `${Math.max(topBoundary, toastCenter)}px`,
+      transform: 'translateY(-50%)',
     };
-    if (narrow) {
-      style['left'] = '50%';
-      style['transform'] = isInventoryHeader
-        ? 'translate(-50%, calc(-100% - 8px))'
-        : 'translateX(-50%)';
-    } else if (side === 'right') {
-      style['right'] = `${Math.max(8, window.innerWidth - bounds.right)}px`;
+    if (side === 'right') {
+      style['right'] = `${Math.max(8, window.innerWidth - sideBounds.right)}px`;
     } else {
-      style['left'] = `${Math.max(8, bounds.left)}px`;
+      style['left'] = `${Math.max(8, sideBounds.left)}px`;
+    }
+    if (availableHeight < 96) {
+      style['top'] = `${topBoundary}px`;
+      style['transform'] = 'none';
+      style['max-height'] = `${Math.max(0, availableHeight)}px`;
+      style['overflow'] = 'auto';
     }
     return style;
   }

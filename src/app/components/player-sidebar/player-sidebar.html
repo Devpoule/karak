@@ -1,4 +1,16 @@
 <aside class="player-sidebar" [class.player-sidebar--left]="side === 'left'" [class.player-sidebar--right]="side === 'right'" [class.player-sidebar--active]="isActive">
+  <span class="player-sidebar__frame" aria-hidden="true"></span>
+  <section class="player-sidebar__movement-panel" aria-label="Points de mouvement du joueur">
+    <img
+      class="player-sidebar__movement-panel-image"
+      src="/assets/board/hero-movement-counter-panel.png"
+      alt=""
+      draggable="false"
+    />
+    <div class="player-sidebar__movement-counter">
+      <app-movement-counter [compact]="true" [active]="isActive" />
+    </div>
+  </section>
 
   <!-- =====================================================
        JOUEUR
@@ -62,7 +74,7 @@
                 [attr.aria-pressed]="selectedPowerId === power.id"
                 [attr.aria-disabled]="null"
                 [attr.aria-label]="'Consulter pouvoir ' + (index + 1) + ' : ' + power.name + (player?.isCursed ? ' — pouvoir indisponible' : '')"
-                [attr.title]="player?.isCursed ? 'Pouvoir indisponible en jeu ; cliquer pour consulter sa description' : power.name + ' — ' + power.summary"
+                [attr.title]="power.name"
                 [attr.data-tooltip]="player?.isCursed ? 'Pouvoir indisponible en jeu ; cliquer pour consulter sa description' : power.name + ' — ' + power.description"
                 (click)="togglePower(power.id, $event)"
               >

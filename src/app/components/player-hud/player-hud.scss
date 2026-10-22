@@ -12,6 +12,8 @@
 .player-hud {
   --sidebar-width: clamp(150px, 18vh, 220px);
   --sidebar-edge: 1.25rem;
+  /* Réserve une bande lisible entre le header et les inventaires. */
+  --sidebar-vertical-offset: clamp(2.5rem, 5vh, 3.75rem);
 
   position: relative;
 
@@ -54,7 +56,7 @@
 .player-hud__side {
   position: absolute;
 
-  top: 50%;
+  top: calc(50% + var(--sidebar-vertical-offset));
   bottom: auto;
 
   z-index: 5;
@@ -159,49 +161,32 @@
    ========================================================== */
 
 .player-hud__turn-controls {
-  position: fixed;
-
-  left: 50%;
-  /* Le compteur existant reste piloté par PlayerHud, mais occupe
-     désormais le centre de la ligne de footer. */
-  bottom: clamp(0.25rem, 0.8vh, 0.5rem);
+  position: absolute;
+  inset: 1rem 0 auto;
 
   z-index: 50;
 
   display: flex;
   align-items: center;
+  justify-content: space-between;
 
-  gap: 0.65rem;
+  padding-inline: var(--sidebar-edge);
+  pointer-events: none;
+}
 
-  transform: translateX(-50%);
-
+.player-hud__turn-controls .player-hud__players {
   pointer-events: auto;
 }
 
-/* ==========================================================
-   COMPTEUR DE MOUVEMENTS
-   ========================================================== */
-
-/*
- * Le compteur et la commande de fin de tour constituent
- * le centre fixe du HUD.
- *
- * Les groupes humains et IA restent disposés de part
- * et d'autre de cet ensemble.
- */
-.player-hud__turn-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  flex: 0 0 auto;
-
-  gap: 0.4rem;
+.player-hud__turn-controls .player-hud__players--human {
+  justify-content: flex-start;
 }
 
-.player-hud__movements {
-  flex: 0 0 auto;
+.player-hud__turn-controls .player-hud__players--ai {
+  justify-content: flex-end;
 }
+
+/* Le compteur est désormais incrusté dans le nom du joueur actif. */
 
 /* ==========================================================
    GROUPES DE JOUEURS
@@ -455,7 +440,7 @@
   }
 
   .player-hud__side {
-    top: 50%;
+    top: calc(50% + var(--sidebar-vertical-offset));
     bottom: auto;
     width: var(--sidebar-width);
     max-width: calc(100vw - 1rem);
@@ -465,7 +450,7 @@
 
   .player-hud__side--left,
   .player-hud__side--right {
-    top: 50%;
+    top: calc(50% + var(--sidebar-vertical-offset));
   }
 
   .player-hud__side--left {
@@ -486,13 +471,11 @@
   }
 
   .player-hud__turn-controls {
-    bottom: max(.75rem, env(safe-area-inset-bottom));
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    width: min(34rem, calc(100% - 1rem));
-    max-width: calc(100% - 1rem);
+    inset: .5rem .5rem auto;
+    width: auto;
+    max-width: none;
     gap: .35rem;
-    align-items: end;
+    align-items: start;
   }
 
   .player-hud__players {
@@ -507,33 +490,10 @@
     display: none;
   }
 
-  .player-hud__players--human {
-    justify-content: flex-end;
-  }
-
-  .player-hud__players--ai {
-    justify-content: flex-start;
-  }
-
-  .player-hud__turn-center {
-    min-width: 0;
-  }
-
-  .player-hud__movements {
-    max-width: 100%;
-  }
-
   .player-hud__player-control {
     width: clamp(44px, 12vw, 52px);
     height: 52px;
     flex-basis: clamp(44px, 12vw, 52px);
   }
 
-  .player-hud__turn-center {
-    min-width: 0;
-  }
-
-  .player-hud__movements {
-    max-width: min(45vw, 14rem);
-  }
 }

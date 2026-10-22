@@ -84,19 +84,19 @@
 
 .home__logo {
   display: block;
-  width: clamp(18rem, 42vw, 40rem);
-  max-width: min(100%, 40rem);
+  width: clamp(16rem, 50vh, 30rem);
+  max-width: min(100%, 30rem);
   height: auto;
 
   user-select: none;
   animation: home-logo-in var(--karak-motion-slow) var(--karak-ease-emphasis) both;
 }
 
-/* Sur grand écran, le dragon du logo remonte jusqu'à la limite supérieure. */
+/* Le logo reste entièrement visible dans le bloc central. */
 @media (min-width: 701px) {
   .home__logo {
     position: relative;
-    top: clamp(-5.5rem, -10vh, -3rem);
+    top: -3.3rem;
   }
 }
 
@@ -392,7 +392,7 @@
   }
 
   .home__logo {
-    width: min(92vw, 32rem);
+    width: min(50vh, 26rem);
   }
 
   .home__tagline {

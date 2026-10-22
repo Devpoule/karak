@@ -8,6 +8,7 @@ import { HeroPanel } from '../hero-panel/hero-panel';
 import { InventoryPanel } from '../inventory-panel/inventory-panel';
 import { TreasurePanel } from '../treasure-panel/treasure-panel';
 import { CodexDialog } from '../codex-dialog/codex-dialog';
+import { MovementCounter } from '../movement-counter/movement-counter';
 
 /**
  * Position de la fiche joueur dans l'interface.
@@ -47,6 +48,7 @@ export interface PowerSelection {
     InventoryPanel,
     TreasurePanel,
     CodexDialog,
+    MovementCounter,
   ],
   templateUrl: './player-sidebar.html',
   styleUrl: './player-sidebar.scss',

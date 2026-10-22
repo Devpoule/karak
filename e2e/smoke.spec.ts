@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
 
+async function openHeaderMenu(page: import('@playwright/test').Page): Promise<void> {
+  const trigger = page.getByRole('button', { name: 'Ouvrir le menu de partie' });
+  await trigger.click();
+  await expect(page.getByRole('menu', { name: 'Commandes de partie' })).toBeVisible();
+}
+
 test('Karak se charge et affiche l’entrée de partie', async ({ page }) => {
   await page.goto('/game');
 
@@ -112,7 +118,8 @@ test('le Codex depuis l’accueil revient à l’accueil', async ({ page }) => {
 
 test('le Codex depuis la préparation revient à la préparation', async ({ page }) => {
   await page.goto('/play');
-  await page.getByRole('link', { name: 'Codex' }).click();
+  await openHeaderMenu(page);
+  await page.getByRole('menuitem', { name: 'Encyclopédie' }).click();
 
   await expect(page).toHaveURL(/\/codex\?from=game$/);
   await page.getByRole('button', { name: '← Retour à la partie' }).click();
@@ -154,8 +161,9 @@ test('la préparation reste lisible sur écran étroit', async ({ page }) => {
   await expect.poll(async () => page.evaluate(() =>
     document.documentElement.scrollWidth <= document.documentElement.clientWidth,
   )).toBe(true);
-  await expect(page.getByRole('button', { name: 'Accueil' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Codex' })).toBeVisible();
+  await openHeaderMenu(page);
+  await expect(page.getByRole('button', { name: "Retour à l'accueil" })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'Encyclopédie' })).toBeVisible();
   await expect(page.getByAltText('Karak')).toBeVisible();
   await page.screenshot({
     path: 'playwright-report/karak-setup-narrow.png',
@@ -163,7 +171,7 @@ test('la préparation reste lisible sur écran étroit', async ({ page }) => {
   });
 });
 
-test('le header contient et centre son logo et ses onglets', async ({ page }) => {
+test('le header contient et centre son logo et son menu', async ({ page }) => {
   for (const viewport of [{ width: 1920, height: 1080 }, { width: 390, height: 844 }]) {
     await page.setViewportSize(viewport);
     await page.goto('/play');
@@ -172,70 +180,47 @@ test('le header contient et centre son logo et ses onglets', async ({ page }) =>
     const geometry = await page.locator('.game-header').evaluate(header => {
       const headerBox = header.getBoundingClientRect();
       const logoBox = header.querySelector('.game-header__logo')?.getBoundingClientRect();
-      const homeBox = header.querySelector('.game-header__home')?.getBoundingClientRect();
-      const codexBox = header.querySelector('.game-header__link')?.getBoundingClientRect();
       return {
         header: { top: headerBox.top, bottom: headerBox.bottom, center: headerBox.top + headerBox.height / 2 },
         logo: logoBox && { top: logoBox.top, bottom: logoBox.bottom, center: logoBox.top + logoBox.height / 2 },
-        home: homeBox && { center: homeBox.top + homeBox.height / 2 },
-        codex: codexBox && { center: codexBox.top + codexBox.height / 2 },
       };
     });
 
     expect(geometry.logo).toBeTruthy();
-    expect(geometry.home).toBeTruthy();
-    expect(geometry.codex).toBeTruthy();
     expect(geometry.logo!.top).toBeGreaterThanOrEqual(geometry.header.top);
     expect(geometry.logo!.bottom).toBeLessThanOrEqual(geometry.header.bottom);
     expect(Math.abs(geometry.logo!.center - geometry.header.center)).toBeLessThanOrEqual(2);
-    expect(Math.abs(geometry.home!.center - geometry.header.center)).toBeLessThanOrEqual(2);
-    expect(Math.abs(geometry.codex!.center - geometry.header.center)).toBeLessThanOrEqual(2);
+    await page.getByRole('button', { name: 'Ouvrir le menu de partie' }).click();
+    await expect(page.getByRole('menu', { name: 'Commandes de partie' })).toBeVisible();
+    await expect(page.getByRole('button', { name: "Retour à l'accueil" })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: 'Encyclopédie' })).toBeVisible();
   }
 });
 
-test('la navigation du header reste compacte et sans chevauchement sur toutes les largeurs', async ({ page }) => {
+test('le menu du header reste compact et accessible sur toutes les largeurs', async ({ page }) => {
   const viewports = [200, 320, 375, 607, 640, 667, 768, 1024, 1366];
-  const actions = [
-    ['.game-header__home', 'Accueil'],
-    ['.tutorial-panel__trigger', 'Tutoriel'],
-    ['.settings-panel__trigger', 'Paramètres'],
-    ['.game-header__codex-link', 'Codex'],
-  ] as const;
 
   for (const width of viewports) {
     await page.setViewportSize({ width, height: 871 });
     await page.goto('/play');
     await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
 
-    const headerActions = page.locator('.game-header .karak-header-action');
-    await expect(headerActions).toHaveCount(4);
-
-    for (const [selector, title] of actions) {
-      const action = page.locator(selector);
-      const label = action.locator('.karak-header-action__label');
-      await expect(action).toHaveAttribute('title', title);
-
-      if (width <= 640) {
-        await expect(label).toHaveCSS('position', 'absolute');
-        await expect(label).toHaveCSS('width', '1px');
-        await expect(label).toHaveCSS('height', '1px');
-      } else if (width <= 900) {
-        await expect(label).toHaveCSS('position', 'static');
-        await expect(label).toHaveCSS('white-space', 'nowrap');
-        await expect(label).toBeVisible();
-        await expect(action).toHaveCSS('flex-direction', 'column');
-        await expect(action).toHaveCSS('width', '80px');
-      } else {
-        await expect(label).toBeVisible();
-        await expect(action).toHaveCSS('flex-direction', 'row');
-      }
-    }
+    const menuTrigger = page.getByRole('button', { name: 'Ouvrir le menu de partie' });
+    await expect(menuTrigger).toHaveAttribute('aria-expanded', 'false');
+    await menuTrigger.click();
+    const menu = page.getByRole('menu', { name: 'Commandes de partie' });
+    await expect(menu).toBeVisible();
+    await expect(menu.getByRole('button', { name: 'Tutoriel' })).toBeVisible();
+    await expect(menu.getByRole('button', { name: 'Paramètres' })).toBeVisible();
+    await expect(menu.getByRole('menuitem', { name: 'Encyclopédie' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(menu).toBeHidden();
+    await expect(menuTrigger).toHaveAttribute('aria-expanded', 'false');
 
     const geometry = await page.locator('.game-header').evaluate(header => {
       const headerBox = header.getBoundingClientRect();
       const headerStyle = getComputedStyle(header);
       const logo = header.querySelector('.game-header__logo')?.getBoundingClientRect();
-      const actionsGroup = header.querySelector('.game-header__actions')?.getBoundingClientRect();
       const actionBoxes = Array.from(header.querySelectorAll<HTMLElement>('.karak-header-action'))
         .map(action => action.getBoundingClientRect());
       if (!logo) throw new Error('Logo du header introuvable');
@@ -252,7 +237,6 @@ test('la navigation du header reste compacte et sans chevauchement sur toutes le
       return {
         overlaps,
         contained,
-        logoActionGap: actionsGroup ? actionsGroup.left - logo.right : Number.NEGATIVE_INFINITY,
         headerBackgroundImage: headerStyle.backgroundImage,
         headerBackgroundColor: headerStyle.backgroundColor,
         headerBorderBottomWidth: headerStyle.borderBottomWidth,
@@ -268,24 +252,14 @@ test('la navigation du header reste compacte et sans chevauchement sur toutes le
     expect(geometry.headerBackgroundImage).toBe('none');
     expect(geometry.headerBackgroundColor).toBe('rgb(98, 83, 69)');
     expect(geometry.headerBorderBottomWidth).toBe('0px');
-    if (width > 900) {
-      expect(geometry.logoActionGap).toBeGreaterThanOrEqual(16);
-    } else if (width > 640) {
-      expect(geometry.logoActionGap).toBeGreaterThanOrEqual(32);
-    }
     expect(geometry.actionSizes.every(action => action.width >= 44 && action.height >= 44)).toBe(true);
 
     if (width <= 600) {
       expect(geometry.headerHeight).toBeGreaterThanOrEqual(64);
       expect(geometry.bottomSpace).toBeGreaterThanOrEqual(8);
-      expect(Math.abs(geometry.topSpace - geometry.bottomSpace)).toBeLessThanOrEqual(1);
     }
 
-    if (width > 640 && width <= 900) {
-      await expect(page.locator('.game-header__actions')).toHaveCSS('gap', '8px');
-    }
-
-    const styleSignatures = await headerActions.evaluateAll(elements => elements.map(element => {
+    const styleSignatures = await page.locator('.game-header .karak-header-action').evaluateAll(elements => elements.map(element => {
       const style = getComputedStyle(element);
       return {
         border: style.border,
@@ -440,7 +414,8 @@ test('quitter la préparation réinitialise la partie sans confirmation', async 
   await page.getByRole('button', { name: 'Continuer' }).click();
   await expect(page.getByRole('heading', { name: 'Tirage des héros' })).toBeVisible();
 
-  await page.getByRole('button', { name: /Accueil/ }).click();
+  await openHeaderMenu(page);
+  await page.getByRole('button', { name: "Retour à l'accueil" }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('link', { name: 'Jouer' })).toBeVisible();
 
@@ -464,13 +439,15 @@ test('quitter une partie active demande confirmation et permet l’annulation', 
   await page.getByRole('button', { name: 'Entrer dans le donjon' }).click();
   await expect(page.locator('app-board')).toBeVisible();
 
-  await page.getByRole('button', { name: /Accueil/ }).click();
+  await openHeaderMenu(page);
+  await page.getByRole('button', { name: "Retour à l'accueil" }).click();
   await expect(page.getByRole('heading', { name: 'Quitter la partie ?' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { name: 'Quitter la partie ?' })).toHaveCount(0);
   await expect(page.locator('app-board')).toBeVisible();
 
-  await page.getByRole('button', { name: /Accueil/ }).click();
+  await openHeaderMenu(page);
+  await page.getByRole('button', { name: "Retour à l'accueil" }).click();
   await page.getByRole('button', { name: 'Quitter la partie' }).click();
   await expect(page).toHaveURL(/\/$/);
 });

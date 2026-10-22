@@ -1,4 +1,4 @@
-import { Component, effect, OnDestroy, signal } from '@angular/core';
+import { Component, effect, Input, OnDestroy, signal } from '@angular/core';
 
 import { GAME_CONSTANTS } from '../../constants/game.constants';
 import { TurnService } from '../../services/turn.service';
@@ -23,6 +23,11 @@ import { QuantityPipe } from '../../pipes/quantity.pipe';
 })
 export class MovementCounter implements OnDestroy {
 
+  /** Affiche uniquement les points dans une incrustation d’inventaire. */
+  @Input() compact = false;
+  /** Les inventaires inactifs affichent les points désactivés. */
+  @Input() active = true;
+
   readonly pointIndexes = Array.from({ length: GAME_CONSTANTS.movement.perTurn }, (_, index) => index);
   readonly fragmentIndexes = Array.from({ length: 6 }, (_, index) => index);
   private readonly animatingPointIndexes = new Set<number>();
@@ -34,7 +39,7 @@ export class MovementCounter implements OnDestroy {
   ) {
     effect(() => {
       const consumption = this.turnService.lastMovementConsumption();
-      if (!consumption) {
+      if (!consumption || !this.active) {
         this.clearAnimations();
         return;
       }
@@ -73,13 +78,13 @@ export class MovementCounter implements OnDestroy {
 
 /** Gere isPointConsumed et applique les gardes necessaires avant mutation. */
   isPointConsumed(index: number): boolean {
-    return index >= this.turnService.remainingMovements();
+    return !this.active || index >= this.turnService.remainingMovements();
   }
 
 /** Gere isPointAnimating et applique les gardes necessaires avant mutation. */
   isPointAnimating(index: number): boolean {
     this.animationStateRevision();
-    return this.animatingPointIndexes.has(index);
+    return this.active && this.animatingPointIndexes.has(index);
   }
 
 /** Gere ngOnDestroy et applique les gardes necessaires avant mutation. */

@@ -1,53 +1,56 @@
 <header class="game-header">
-  <button class="karak-header-action game-header__home game-header__home-button" type="button" aria-label="Accueil" title="Accueil" (click)="requestLeave()">
-    <svg class="game-header__home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M3 10.5 12 3l9 7.5" />
-      <path d="M5.5 9.5V21h13V9.5M9 21v-6h6v6" />
-    </svg>
-    <span class="karak-header-action__label">Accueil</span>
+  <button
+    class="game-header__logo-link"
+    type="button"
+    aria-label="Retour à l'accueil"
+    title="Retour à l'accueil"
+    (click)="requestLeave()"
+  >
+    <img
+      class="game-header__logo"
+      ngSrc="/assets/logo-260.png"
+      width="260"
+      height="146"
+      alt="Karak"
+      draggable="false"
+    />
   </button>
 
-  <img
-    class="game-header__logo"
-    ngSrc="/assets/logo-260.png"
-    width="260"
-    height="146"
-    alt="Karak"
-    draggable="false"
-  />
-
-  <div class="game-header__actions">
-    <app-tutorial-panel [compact]="true" [disabled]="navigationLocked" />
-    <app-settings-panel [compact]="true" [disabled]="navigationLocked" />
-    @if (context === 'game') {
-      @if (navigationLocked) {
-        <span class="karak-header-action game-header__link game-header__link--disabled game-header__codex-link" aria-disabled="true" aria-label="Codex" title="Codex">
-          <svg class="game-header__codex-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H20v17H7.5A2.5 2.5 0 0 0 5 21.5z" />
-            <path d="M5 4.5v17M8 5.5h8M8 9h8M8 12.5h5" />
-          </svg>
-          <span class="karak-header-action__label">Codex</span>
-        </span>
-      } @else {
-        <a class="karak-header-action game-header__link game-header__codex-link" routerLink="/codex" [queryParams]="{ from: 'game' }" aria-label="Codex" title="Codex">
-          <svg class="game-header__codex-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H20v17H7.5A2.5 2.5 0 0 0 5 21.5z" />
-            <path d="M5 4.5v17M8 5.5h8M8 9h8M8 12.5h5" />
-          </svg>
-          <span class="karak-header-action__label">Codex</span>
-        </a>
-      }
-    } @else {
-      <a
-        class="game-header__link"
-        routerLink="/play"
-      >
-        Jouer →
-      </a>
-    }
-  </div>
+  <button
+    #menuTrigger
+    class="karak-header-action game-header__menu-trigger"
+    type="button"
+    aria-label="Ouvrir le menu de partie"
+    title="Menu"
+    aria-haspopup="true"
+    [attr.aria-expanded]="isMenuOpen"
+    [attr.aria-disabled]="navigationLocked"
+    [disabled]="navigationLocked"
+    aria-controls="game-header-menu"
+    (click)="toggleMenu(menuTrigger)"
+  >
+    <span class="game-header__menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+    <span class="karak-header-action__label">Menu</span>
+  </button>
 
 </header>
+
+@if (isMenuOpen) {
+  <div id="game-header-menu" class="game-header__menu" role="menu" aria-label="Commandes de partie">
+    <app-tutorial-panel [compact]="true" [disabled]="navigationLocked" (click)="closeMenu()" />
+    <app-settings-panel [compact]="true" [disabled]="navigationLocked" (click)="closeMenu()" />
+    @if (context === 'game') {
+      <a class="game-header__menu-item" role="menuitem" routerLink="/codex" [queryParams]="{ from: 'game' }" (click)="closeMenu()">
+        <span aria-hidden="true">▣</span><span>Encyclopédie</span>
+      </a>
+      @if (gameService.phase() === 'playing') {
+        <app-event-history />
+      }
+    } @else {
+      <a class="game-header__menu-item" role="menuitem" routerLink="/play" (click)="closeMenu()">Jouer →</a>
+    }
+  </div>
+}
 
 @if (showLeaveConfirmation) {
   <div class="game-header__dialog-backdrop" role="presentation" (click)="cancelLeave()">

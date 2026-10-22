@@ -1,9 +1,13 @@
-:host { position: absolute; inset: 0; z-index: var(--karak-z-feedback); pointer-events: none; }
-.toast-container { position: fixed; top: 5.5rem; left: 50%; z-index: var(--karak-z-feedback); display: flex; align-items: center; gap: var(--karak-space-3); width: fit-content; max-width: min(34rem, calc(100vw - 2rem)); padding: .8rem var(--karak-space-4); transform: translateX(-50%); border: var(--karak-border-default); border-radius: var(--karak-radius-md); background: rgba(25, 35, 51, .96); color: var(--karak-text-light); box-shadow: var(--karak-shadow-md); font: 600 1.02rem/1.4 var(--karak-font-body); animation: toast-in var(--karak-motion-fast) var(--karak-ease-standard) both; }
+/*
+ * Le HUD possède une couche globale dédiée aux inventaires (z-index 60).
+ * Les toasts doivent rester au-dessus de cette couche pour être visibles,
+ * tout en restant sous les dialogues et les modales métier.
+ */
+:host { position: absolute; inset: 0; z-index: calc(var(--karak-z-modal) + 1); pointer-events: none; }
+.toast-container { position: fixed; top: 5.5rem; left: 50%; z-index: calc(var(--karak-z-modal) + 1); display: flex; align-items: center; gap: var(--karak-space-3); width: min(20rem, calc(100vw - 2rem)); max-width: min(20rem, calc(100vw - 2rem)); padding: .8rem var(--karak-space-4); transform: translateX(-50%); border: var(--karak-border-default); border-radius: var(--karak-radius-md); background: rgba(25, 35, 51, .96); color: var(--karak-text-light); box-shadow: var(--karak-shadow-md); font: 600 1.02rem/1.4 var(--karak-font-body); animation: toast-in var(--karak-motion-fast) var(--karak-ease-standard) both; }
 .toast-container--contextual {
   top: 0;
-  /* L’animation générique modifie transform et annulerait le placement
-     calculé par rapport à l’ancre d’inventaire. */
+  /* L’animation générique modifierait le transform calculé dans la colonne du joueur. */
   animation: none;
 }
 .toast-container span { color: var(--karak-text-highlight); font-size: 1.4rem; }
@@ -16,4 +20,4 @@
 @keyframes toast-out { from { opacity: 1; filter: blur(0); transform: translate(-50%, 0) scale(1); } to { opacity: 0; filter: blur(3px); transform: translate(-50%, -.2rem) scale(.98); } }
 .toast-container--dismissing { animation: toast-out var(--karak-motion-normal) var(--karak-ease-standard) forwards; }
 @media (prefers-reduced-motion: reduce) { .toast-container { animation: none; } }
-@media (max-width: 600px) { .toast-container { top: 4.5rem; width: max-content; max-width: calc(100vw - 1rem); font-size: .9rem; } }
+@media (max-width: 600px) { .toast-container { top: 4.5rem; width: min(17rem, calc(100vw - 1rem)); max-width: calc(100vw - 1rem); font-size: .9rem; } }

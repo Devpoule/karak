@@ -45,6 +45,76 @@
   text-transform: uppercase;
 }
 
+.movement-counter--compact {
+  gap: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.movement-counter--compact .movement-counter__label { display: none; }
+
+.movement-counter--compact .movement-counter__points {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.movement-counter--compact .movement-counter__point--consumed {
+  visibility: visible;
+  opacity: 1;
+  color: #17120f;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, .35);
+}
+
+.movement-counter--compact .movement-counter__point {
+  position: absolute;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  width: 0.9rem;
+  height: 0.9rem;
+  color: #e83a32;
+  background: radial-gradient(circle at 35% 30%, #ed8072 0 12%, #bf302b 34%, #5d1718 78%, #24100f 100%);
+  border: 2px solid #d6b36a;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 1px 2px rgba(255, 244, 196, 0.75),
+    inset 0 -3px 4px rgba(18, 8, 5, 0.95),
+    0 0 0 1px rgba(71, 44, 20, 0.95),
+    0 2px 2px rgba(0, 0, 0, 0.9);
+  text-shadow: none;
+}
+
+.movement-counter--compact .movement-counter__point:nth-child(1) { left: 20.5%; }
+.movement-counter--compact .movement-counter__point:nth-child(2) { left: 40%; }
+.movement-counter--compact .movement-counter__point:nth-child(3) { left: 60%; }
+.movement-counter--compact .movement-counter__point:nth-child(4) { left: 79.5%; }
+
+.movement-counter--compact .movement-counter__point-core {
+  line-height: 1;
+  filter: drop-shadow(0 0 2px rgba(255, 55, 35, 0.72));
+}
+
+.movement-counter--compact .movement-counter__point--consumed {
+  color: #161616;
+  background: radial-gradient(circle at 35% 30%, #777 0 12%, #303030 38%, #111 82%);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.45),
+    inset 0 -3px 4px rgba(0, 0, 0, 0.95),
+    0 0 0 1px rgba(71, 44, 20, 0.95),
+    0 2px 2px rgba(0, 0, 0, 0.9);
+}
+
+.movement-counter--compact .movement-counter__point:not(.movement-counter__point--consumed) {
+  color: #e83a32;
+  text-shadow:
+    0 0 2px rgba(255, 236, 190, 0.7),
+    0 0 5px rgba(255, 58, 35, 0.68),
+    0 0 8px rgba(255, 35, 20, 0.45);
+}
+
 
 /* ==========================================================
    POINTS DE MOUVEMENT
