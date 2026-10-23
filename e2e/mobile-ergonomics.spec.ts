@@ -41,9 +41,8 @@ test('les contrôles du plateau restent accessibles sur les formats mobiles cibl
     await page.setViewportSize(viewport);
     await expect.poll(async () => page.evaluate(() => {
       const board = document.querySelector('.board')?.getBoundingClientRect();
-      const camera = document.querySelector('.board__camera-tools')?.getBoundingClientRect();
       const hud = document.querySelector('.player-hud__turn-controls')?.getBoundingClientRect();
-      if (!board || !camera || !hud) return null;
+      if (!board || !hud) return null;
 
       const within = (box: DOMRect) => (
         box.left >= board.left - 1
@@ -51,21 +50,15 @@ test('les contrôles du plateau restent accessibles sur les formats mobiles cibl
         && box.top >= board.top - 1
         && box.bottom <= board.bottom + 1
       );
-      const overlaps = (a: DOMRect, b: DOMRect) => (
-        a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
-      );
-
       return {
         horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
-        cameraWithinBoard: within(camera),
         hudWithinBoard: within(hud),
-        cameraHudOverlap: overlaps(camera, hud),
+        cameraControlsPresent: document.querySelectorAll('.board__camera-tools, .board__camera-tool').length > 0,
       };
     })).toEqual({
       horizontalOverflow: false,
-      cameraWithinBoard: true,
       hudWithinBoard: true,
-      cameraHudOverlap: false,
+      cameraControlsPresent: false,
     });
   }
 });

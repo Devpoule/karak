@@ -24,33 +24,6 @@
        La caméra ne déplace pas les tuiles individuellement :
        elle déplace l'ensemble du monde via worldTransform.
        ===================================================== -->
-  <!-- Les outils restent attachés à la fenêtre du plateau, pas au monde déplacé. -->
-  <div
-    class="board__camera-tools"
-    (pointerdown)="$event.stopPropagation()"
-  >
-    <button
-      type="button"
-      class="board__camera-tool"
-      title="Centrer sur le joueur actif"
-      aria-label="Centrer sur le joueur actif"
-      [disabled]="combatService.hasPendingCombat"
-      (click)="centerOnActivePlayer()"
-    >
-      ◎
-    </button>
-    <button
-      type="button"
-      class="board__camera-tool"
-      title="Centrer sur la tuile de départ"
-      aria-label="Centrer sur la tuile de départ"
-      [disabled]="combatService.hasPendingCombat"
-      (click)="centerOnStartTile()"
-    >
-      ⌂
-    </button>
-  </div>
-
   <div
     class="board__world"
     [class.board__world--camera-transition]="cameraTransitionEnabled"

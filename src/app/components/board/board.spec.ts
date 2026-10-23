@@ -115,6 +115,14 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     expect(board.cameraTransitionEnabled).toBe(true);
   });
 
+  it('n’affiche plus les contrôles visuels de recentrage du plateau', () => {
+    const { fixture } = createBoard();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.board__camera-tools')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.board__camera-tool')).toHaveLength(0);
+  });
+
   it('déplace la caméra au pointeur avec capture et sans modifier la carte logique', () => {
     const { fixture } = createBoard();
     const board = fixture.componentInstance;

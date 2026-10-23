@@ -587,43 +587,6 @@
     transform 500ms ease;
 }
 /* ==========================================================
-   OUTILS DE CAMÉRA
-   ========================================================== */
-.board__camera-tools {
-  position: absolute;
-  z-index: 70;
-  top: max(0.75rem, env(safe-area-inset-top));
-  left: 50%;
-  right: auto;
-  bottom: auto;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-  padding: 5px;
-  border: 1px solid rgba(220, 200, 160, 0.45);
-  border-radius: 6px;
-  background: rgba(28, 24, 20, 0.82);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55);
-}
-.board__camera-tool {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 1px solid rgba(220, 200, 160, 0.65);
-  border-radius: 4px;
-  background: rgba(58, 49, 40, 0.95);
-  color: #eee1c5;
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-  &:hover {
-    filter: brightness(1.2);
-  }
-}
-/* ==========================================================
    ANIMATIONS
    ========================================================== */
 /*
@@ -688,20 +651,6 @@
     width: 44px;
     height: 44px;
     font-size: 1.2rem;
-  }
-
-  .board__camera-tools {
-    top: max(0.5rem, env(safe-area-inset-top));
-    left: 50%;
-    right: auto;
-    bottom: auto;
-    transform: translateX(-50%);
-    gap: 0.35rem;
-  }
-
-  .board__camera-tool {
-    width: 44px;
-    height: 44px;
   }
 
   .board__reward-backdrop {

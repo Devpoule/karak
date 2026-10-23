@@ -41,7 +41,6 @@ test('la fontaine est facultative et son activation consomme les mouvements rest
     service.turnTransitionPending.set(false);
   });
 
-  await page.getByRole('button', { name: 'Centrer sur le joueur actif' }).click();
   const fountainButton = page.getByRole('button', { name: 'Utiliser la fontaine de régénération' });
   await expect(fountainButton).toBeVisible();
   await expect(fountainButton).toBeEnabled();
