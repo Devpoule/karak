@@ -3,8 +3,6 @@ import { ElementRef, OnDestroy } from '@angular/core';
 
 
 
-import { getPlayerUiConfig } from '../../constants/player-ui.constants';
-
 import { Player } from '../../models/player';
 
 import { GameService } from '../../services/game.service';
@@ -15,7 +13,7 @@ import { PlayerService } from '../../services/player.service';
 import { PlayerSidebar, PowerSelection } from '../player-sidebar/player-sidebar';
 import { HeroPowerCard } from '../hero-power-card/hero-power-card';
 import { HeroPowerId } from '../../models/hero';
-import { getHeroDefinition } from '../../data/hero-definitions';
+import { getHeroDefinition, getHeroIdentityColor } from '../../data/hero-definitions';
 
 
 
@@ -1021,16 +1019,9 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
 
 
 
-  /**
-
-   * Retourne la couleur UI stable associée à J1...J5.
-
-   */
-
-  getPlayerColor(playerIndex: number): string {
-
-    return getPlayerUiConfig(playerIndex).color;
-
+  /** Retourne la couleur dérivée du héros affiché par ce joueur. */
+  getHeroColor(player: Player | null): string {
+    return getHeroIdentityColor(player?.heroId);
   }
 
 }

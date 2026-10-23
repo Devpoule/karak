@@ -227,14 +227,14 @@
 }
 
 .player-sidebar__player-tab:focus-visible {
-  outline: 2px solid var(--player-color, #f2d177);
+  outline: 2px solid var(--hero-color, #d8c39a);
   outline-offset: 3px;
 }
 
 .player-sidebar__player-tab--active {
   box-shadow:
     inset 0 0 0 2px var(--karak-stone-deep),
-    0 0 10px var(--player-color, #f2d177),
+    0 0 10px var(--hero-color, #d8c39a),
     0 4px 7px rgba(0, 0, 0, 0.62);
 }
 

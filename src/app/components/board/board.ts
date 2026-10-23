@@ -1,6 +1,6 @@
 import { Component, effect, HostListener, signal } from '@angular/core';
 import { getPlayerUiConfig } from '../../constants/player-ui.constants';
-import { getHeroDefinition } from '../../data/hero-definitions';
+import { getHeroDefinition, getHeroIdentityColor } from '../../data/hero-definitions';
 import { getTokenDefinition } from '../../data/token-definitions';
 import { getEquipmentDefinition } from '../../data/equipment-definitions';
 import { HeroDefinition, HeroPowerDefinition } from '../../models/hero';
@@ -26,7 +26,7 @@ interface BoardPlayerView {
   player: Player;
   playerIndex: number;
   label: string;
-  color: string;
+  heroColor: string;
 }
 
 interface PowerAnnouncement {
@@ -821,7 +821,7 @@ export class Board {
         player,
         playerIndex,
         label: playerUi.label,
-        color: playerUi.color,
+        heroColor: getHeroIdentityColor(player.heroId),
       };
 
       const key = this.getTileKey(player.position.x, player.position.y);

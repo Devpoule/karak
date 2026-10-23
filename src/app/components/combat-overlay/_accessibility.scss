@@ -11,7 +11,7 @@
 
   .combat-overlay--victory .combat-overlay__fighter-image--monster {
     animation: none !important;
-    filter: drop-shadow(0 0 7px rgba(117, 225, 255, 0.65));
+    filter: drop-shadow(0 0 7px var(--combat-wave-glow));
   }
 
   .combat-overlay--victory .combat-overlay__fighter--monster .combat-overlay__visual::after {

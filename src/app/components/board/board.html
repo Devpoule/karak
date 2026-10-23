@@ -167,7 +167,7 @@
         [class.board__hero--active]="isActivePlayer(occupancy.primary.playerIndex)"
         [style.left.px]="mapCenterInPixels + occupancy.x * tileSize - tileSize / 2"
         [style.top.px]="mapCenterInPixels + occupancy.y * tileSize - tileSize / 2"
-        [style.--player-color]="occupancy.primary.color"
+        [style.--hero-color]="occupancy.primary.heroColor"
       >
         @for (occupant of occupancy.displayedPlayers; track occupant.playerIndex) {
           @if (getHeroPawnImage(occupant.player); as pawnImage) {
@@ -175,7 +175,7 @@
             <img
               [class]="'board__hero-pawn board__hero-pawn--' + (hero?.id ?? 'default')"
               [class.board__hero-pawn--active]="isActivePlayer(occupant.playerIndex)"
-              [style.--player-color]="occupant.color"
+              [style.--hero-color]="occupant.heroColor"
               [src]="pawnImage"
               [alt]="hero?.name ?? 'Héros'"
               draggable="false"
@@ -186,7 +186,7 @@
           @let markerPosition = getMarkerPosition(markerIndex, occupancy.markers.length);
           <span
             class="board__player-marker"
-            [style.--marker-color]="marker.color"
+            [style.--hero-color]="marker.heroColor"
             [style.left.%]="markerPosition.x"
             [style.top.%]="markerPosition.y"
           >

@@ -12,6 +12,17 @@ import { TileDeckService } from '../../services/tile-deck.service';
 import { ToastService } from '../../services/toast.service';
 import { TurnService } from '../../services/turn.service';
 import { CombatOverlay } from './combat-overlay';
+import { HeroId } from '../../models/hero';
+import { COMBAT_MONSTER_COLOR } from '../../constants/combat.constants';
+
+const HERO_IDENTITY_CASES = [
+  { heroId: 'aderyn', expectedColor: '#43A65C', playerIndex: 0 },
+  { heroId: 'argentus', expectedColor: '#F0F0E8', playerIndex: 1 },
+  { heroId: 'taia', expectedColor: '#F2D34F', playerIndex: 2 },
+  { heroId: 'victorius', expectedColor: '#E98936', playerIndex: 3 },
+  { heroId: 'xanros', expectedColor: '#9860D2', playerIndex: 4 },
+  { heroId: 'horan', expectedColor: '#8197A8', playerIndex: 0 },
+] as const;
 
 describe('CombatOverlay décisions facultatives de Horan', () => {
   afterEach(() => {
@@ -31,9 +42,10 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
 
   function prepareCombat(
     withMagicBolt: boolean,
-    heroId: 'horan' | 'victorius' = 'horan',
+    heroId: HeroId = 'horan',
     controller: 'human' | 'ai' = 'human',
     rollInitial = true,
+    playerIndex = 0,
   ) {
     vi.useFakeTimers();
     vi.spyOn(Math, 'random').mockReturnValue(0);
@@ -46,11 +58,11 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     const dungeonService = TestBed.inject(DungeonService);
     const turnService = TestBed.inject(TurnService);
 
-    playerService.initialize(2);
+    playerService.initialize(Math.max(2, playerIndex + 1));
     gameService.initialize();
     gameService.phase.set('playing');
-    gameService.activePlayerIndex.set(0);
-    const player = playerService.players[0];
+    gameService.activePlayerIndex.set(playerIndex);
+    const player = playerService.players[playerIndex];
     player.heroId = heroId;
     player.controller = controller;
     if (withMagicBolt) {
@@ -226,6 +238,53 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     fixture.destroy();
   });
 
+  it('masque les actions de la carte de pouvoir pour une IA', () => {
+    const { fixture } = prepareCombat(false, 'victorius', 'ai');
+
+    expect(fixture.nativeElement.querySelector('.combat-overlay__hero-card--flipped')).not.toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.hero-power-card__actions button')).toHaveLength(0);
+    expect(fixture.nativeElement.querySelectorAll('.combat-overlay__decision button')).toHaveLength(0);
+    fixture.destroy();
+  });
+
+  it('masque aussi les actions du Tir magique pour une IA', () => {
+    const { fixture, combatService } = prepareCombat(true, 'aderyn', 'ai');
+    const roll = combatService.pendingCombatRoll()!;
+    combatService.pendingCombatRoll.set({
+      ...roll,
+      attackPower: 1,
+      monsterStrength: 20,
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.decision-card')).not.toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.decision-card__actions button')).toHaveLength(0);
+    fixture.destroy();
+  });
+
+  it('conserve les actions de la carte de pouvoir pour un humain', () => {
+    const { fixture } = prepareCombat(false, 'victorius', 'human');
+
+    expect(fixture.nativeElement.querySelectorAll('.hero-power-card__actions button')).toHaveLength(2);
+    fixture.destroy();
+  });
+
+  it.each(HERO_IDENTITY_CASES)('transmet la couleur de $heroId au combat humain en position J$playerIndex', ({ heroId, expectedColor, playerIndex }) => {
+    const { fixture } = prepareCombat(false, heroId, 'human', false, playerIndex);
+
+    expect(fixture.nativeElement.querySelector('.combat-overlay')?.style.getPropertyValue('--hero-color'))
+      .toBe(expectedColor);
+    fixture.destroy();
+  });
+
+  it.each(HERO_IDENTITY_CASES)('transmet la couleur de $heroId au combat IA en position J$playerIndex', ({ heroId, expectedColor, playerIndex }) => {
+    const { fixture } = prepareCombat(false, heroId, 'ai', false, playerIndex);
+
+    expect(fixture.nativeElement.querySelector('.combat-overlay')?.style.getPropertyValue('--hero-color'))
+      .toBe(expectedColor);
+    fixture.destroy();
+  });
+
   it.each([
     { outcome: 'victory' as const, heroClass: 'winner', monsterClass: 'loser' },
     { outcome: 'defeat' as const, heroClass: 'loser', monsterClass: 'winner' },
@@ -250,6 +309,10 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     expect(monsterScore?.classList.contains(`combat-overlay__score--${monsterClass}`)).toBe(true);
     expect(combatOverlay?.classList.contains('combat-overlay--wave-target-hero')).toBe(outcome === 'defeat');
     expect(combatOverlay?.classList.contains('combat-overlay--wave-target-monster')).toBe(outcome === 'victory');
+    expect(combatOverlay?.style.getPropertyValue('--monster-color'))
+      .toBe(COMBAT_MONSTER_COLOR);
+    expect(combatOverlay?.style.getPropertyValue('--combat-wave-color'))
+      .toBe(outcome === 'defeat' ? COMBAT_MONSTER_COLOR : '#8197A8');
     expect(heroScore?.textContent).toContain(`${result.attackPower} pts`);
     expect(monsterScore?.textContent).toContain(`${result.monsterStrength} pts`);
     expect(heroScore?.textContent).not.toContain('Score de combat');

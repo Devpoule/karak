@@ -6,6 +6,7 @@ import {
 
 import {
   getHeroDefinition,
+  getHeroIdentityColor,
   HERO_CARD_BACK,
   HERO_DEFINITIONS,
 } from '../../data/hero-definitions';
@@ -1344,6 +1345,15 @@ export class GameSetup {
         ?.card
       ?? this.heroCardBack
     );
+  }
+
+  /** Couleur du héros affiché ou déjà attribué à la carte de tirage. */
+  getHeroColor(playerIndex: number): string {
+    const displayedCard = this.drawingHeroCards()[playerIndex];
+    const displayedHero = this.heroDrawState() === 'drawing'
+      ? HERO_DEFINITIONS.find(hero => hero.card === displayedCard)
+      : undefined;
+    return getHeroIdentityColor(displayedHero?.id ?? this.gameService.players[playerIndex]?.heroId);
   }
 
   // ==========================================================

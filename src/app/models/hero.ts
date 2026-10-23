@@ -60,6 +60,9 @@ export interface HeroDefinition {
   readonly origin: ContentOrigin;
   name: string;
 
+  /** Couleur d'identité visuelle stable, associée au héros et non au joueur. */
+  readonly identityColor: string;
+
   /** Surnom utilisé dans les fiches de consultation du héros. */
   nickname: string;
 

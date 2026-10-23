@@ -22,7 +22,7 @@
       class="player-hud__side player-hud__side--left"
       [class.player-hud__side--open]="leftPanelOpen"
       [class.player-hud__side--active]="isActivePlayer(leftPlayerIndex)"
-      [style.--player-color]="getPlayerColor(leftPlayerIndex)"
+      [style.--hero-color]="getHeroColor(player)"
       [attr.aria-hidden]="!leftPanelOpen"
       (transitionend)="onLeftPanelTransitionEnd($event)"
     >
@@ -61,7 +61,7 @@
       class="player-hud__side player-hud__side--right"
       [class.player-hud__side--open]="rightPanelOpen"
       [class.player-hud__side--active]="isActivePlayer(rightPlayerIndex)"
-      [style.--player-color]="getPlayerColor(rightPlayerIndex)"
+      [style.--hero-color]="getHeroColor(player)"
       [attr.aria-hidden]="!rightPanelOpen"
       (transitionend)="onRightPanelTransitionEnd($event)"
     >
@@ -120,7 +120,7 @@
           type="button"
           [class.player-hud__player-control--open]="isPlayerPanelOpen(entry.index)"
           [class.player-hud__player-control--active]="isActivePlayer(entry.index)"
-          [style.--player-color]="getPlayerColor(entry.index)"
+          [style.--hero-color]="getHeroColor(entry.player)"
           [attr.aria-label]="
             isPlayerPanelOpen(entry.index)
               ? 'Fermer la fiche du joueur ' + (entry.index + 1)
@@ -165,7 +165,7 @@
           type="button"
           [class.player-hud__player-control--open]="isPlayerPanelOpen(entry.index)"
           [class.player-hud__player-control--active]="isActivePlayer(entry.index)"
-          [style.--player-color]="getPlayerColor(entry.index)"
+          [style.--hero-color]="getHeroColor(entry.player)"
           [attr.aria-label]="
             isPlayerPanelOpen(entry.index)
               ? 'Fermer la fiche du joueur ' + (entry.index + 1)

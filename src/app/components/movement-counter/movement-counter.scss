@@ -107,18 +107,16 @@
     0 2px 2px rgba(0, 0, 0, 0.9);
 }
 
+.movement-counter--compact .movement-counter__point--consumed .movement-counter__point-core {
+  filter: none;
+}
+
 .movement-counter--compact .movement-counter__point:not(.movement-counter__point--consumed) {
   color: #e83a32;
   text-shadow:
     0 0 2px rgba(255, 236, 190, 0.7),
     0 0 5px rgba(255, 58, 35, 0.68),
     0 0 8px rgba(255, 35, 20, 0.45);
-}
-
-/* En mode panneau, la position est structurelle : seule la lumière doit
-   s'éteindre, jamais le voyant lui-même. */
-.movement-counter--compact .movement-counter__point--consuming {
-  animation: movement-point-light-off 260ms ease-out both;
 }
 
 .movement-counter--compact .movement-counter__point--consuming .movement-counter__fragments {
@@ -235,18 +233,6 @@
     opacity: 0;
     filter: brightness(1);
     transform: scale(0.72);
-  }
-}
-
-@keyframes movement-point-light-off {
-  0% {
-    opacity: 1;
-    filter: brightness(1.35);
-  }
-
-  100% {
-    opacity: .28;
-    filter: brightness(.72) saturate(.7);
   }
 }
 

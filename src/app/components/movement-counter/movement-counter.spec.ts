@@ -8,7 +8,7 @@ describe('MovementCounter', () => {
     vi.useRealTimers();
   });
 
-  it('accorde son libellé accessible selon le nombre de mouvements restants', () => {
+  it('accorde son libellé accessible selon le nombre de points restants', () => {
     TestBed.configureTestingModule({
       imports: [MovementCounter],
       providers: [TurnService],
@@ -18,15 +18,15 @@ describe('MovementCounter', () => {
     fixture.detectChanges();
 
     const counter = fixture.nativeElement.querySelector('.movement-counter') as HTMLElement;
-    expect(counter.getAttribute('aria-label')).toBe('4 mouvements disponibles');
+    expect(counter.getAttribute('aria-label')).toBe('4 points disponibles');
 
     turnService.remainingMovements.set(1);
     fixture.detectChanges();
-    expect(counter.getAttribute('aria-label')).toBe('1 mouvement disponible');
+    expect(counter.getAttribute('aria-label')).toBe('1 point disponible');
 
     turnService.remainingMovements.set(0);
     fixture.detectChanges();
-    expect(counter.getAttribute('aria-label')).toBe('0 mouvement disponible');
+    expect(counter.getAttribute('aria-label')).toBe('0 point disponible');
   });
 
   it('anime uniquement le point consommé après une consommation effective', () => {

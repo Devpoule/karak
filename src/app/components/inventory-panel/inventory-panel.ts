@@ -1,4 +1,5 @@
 import { Component, DoCheck, Input, OnDestroy } from '@angular/core';
+import { getHeroIdentityColor } from '../../data/hero-definitions';
 import { GameService, HealingPortalSelection } from '../../services/game.service';
 import { PLAYER_INVENTORY_CAPACITY, PlayerInventory } from '../../models/inventory';
 import { Player, PlayerPosition } from '../../models/player';
@@ -30,6 +31,10 @@ interface DropSelection {
 export class InventoryPanel implements DoCheck, OnDestroy {
   @Input() player: Player | null = null;
   @Input() playerIndex: number | null = null;
+
+  get heroColor(): string {
+    return getHeroIdentityColor(this.player?.heroId);
+  }
 
   constructor(
     private readonly gameService: GameService,

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { GameService } from './game.service';
 import { PlayerService } from './player.service';
 import { SaveEnvelopeV2 } from '../models/save';
+import { getHeroDefinition } from '../data/hero-definitions';
 
 describe('GameService cycle de vie', () => {
   function createService(): GameService {
@@ -100,6 +101,8 @@ describe('GameService cycle de vie', () => {
     expect(service.restoreSavedGame(envelope)).toBe(true);
     expect(service.phase()).toBe('playing');
     expect(service.activePlayer?.heroId).toBe('argentus');
+    expect(service.activePlayer?.heroId ? getHeroDefinition(service.activePlayer.heroId)?.identityColor : null)
+      .toBe('#F0F0E8');
     expect(service.activePlayer?.lives).toBe(3);
   });
 });

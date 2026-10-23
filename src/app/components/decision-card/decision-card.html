@@ -7,17 +7,19 @@
     <span class="decision-card__eyebrow">{{ eyebrow }}</span>
     <h2 id="decision-card-title">{{ title }}</h2>
     <p>{{ description }}</p>
-    <div class="decision-card__actions">
-      @for (action of actions; track action.label; let index = $index) {
-        <button
-          type="button"
-          [class.decision-card__primary]="action.kind === 'primary'"
-          [disabled]="action.disabled ?? false"
-          [attr.aria-label]="action.label"
-          [title]="action.label"
-          (click)="selectAction(index)"
-        >@if (embedded) { <span aria-hidden="true">{{ index === 0 ? '✓' : '×' }}</span> } @else { {{ action.label }} }</button>
-      }
-    </div>
+    @if (showActions) {
+      <div class="decision-card__actions">
+        @for (action of actions; track action.label; let index = $index) {
+          <button
+            type="button"
+            [class.decision-card__primary]="action.kind === 'primary'"
+            [disabled]="action.disabled ?? false"
+            [attr.aria-label]="action.label"
+            [title]="action.label"
+            (click)="selectAction(index)"
+          >@if (embedded) { <span aria-hidden="true">{{ index === 0 ? '✓' : '×' }}</span> } @else { {{ action.label }} }</button>
+        }
+      </div>
+    }
   </div>
 </article>

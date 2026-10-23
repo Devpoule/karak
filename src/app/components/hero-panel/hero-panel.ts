@@ -1,6 +1,6 @@
 import { Component, DoCheck, effect, EventEmitter, inject, Input, OnDestroy, Output, signal } from '@angular/core';
 
-import { getHeroDefinition } from '../../data/hero-definitions';
+import { getHeroDefinition, getHeroIdentityColor } from '../../data/hero-definitions';
 import { HeroDefinition } from '../../models/hero';
 import { Player } from '../../models/player';
 import { PlayerService } from '../../services/player.service';
@@ -123,6 +123,10 @@ export class HeroPanel implements DoCheck, OnDestroy {
       getHeroDefinition(heroId)
       ?? null
     );
+  }
+
+  get heroColor(): string {
+    return getHeroIdentityColor(this.player?.heroId);
   }
 
   get isHealingPortalTarget(): boolean {

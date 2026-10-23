@@ -60,9 +60,13 @@ test('Marche astrale autorise à traverser un mur entre deux tuiles découvertes
   await expect(astralAnnouncement).toBeVisible({ timeout: 5_000 });
   await expect(astralAnnouncement).toContainText('Marche astrale');
 
-  await expect(page.locator('.movement-counter__point')).toHaveCount(4);
-  await expect(page.locator('.movement-counter__point--consuming')).toHaveCount(0);
-  await expect(page.locator('.movement-counter__point--consumed')).toHaveCount(1);
+  const activeCounter = page.locator('.player-sidebar--active .movement-counter--compact');
+  await expect(activeCounter.locator('.movement-counter__point')).toHaveCount(4);
+  await expect(activeCounter.locator('.movement-counter__point--consuming')).toHaveCount(0);
+  await expect(activeCounter.locator('.movement-counter__point--consumed')).toHaveCount(1);
+  await expect.poll(() => activeCounter.locator('.movement-counter__point--consumed .movement-counter__point-core').evaluate(element =>
+    getComputedStyle(element).filter,
+  )).toBe('none');
 
   await expect.poll(async () => page.evaluate(() => {
     const root = document.querySelector('app-root');

@@ -23,6 +23,8 @@ export class DecisionCard {
   @Input() compact = false;
   /** Rend la décision dans le rectangle de la carte du combattant. */
   @Input() embedded = false;
+  /** Masque les actions pour une décision automatiquement pilotée par l’IA. */
+  @Input() showActions = true;
   @Output() actionSelected = new EventEmitter<number>();
 
   /** Notifie le parent de l'action choisie sans appliquer de règle métier. */

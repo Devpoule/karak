@@ -30,6 +30,9 @@ export class HeroPowerCard {
   /** Libellé de l’action principale, conservé personnalisable pour les relances. */
   @Input() activateLabel = 'Utiliser le pouvoir';
 
+  /** Masque les actions lorsque le moteur présente une décision déjà pilotée par l’IA. */
+  @Input() showActions = true;
+
   /** Message contextualisé d’une activation déjà confirmée. */
   @Input() message = '';
 

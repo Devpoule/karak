@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, EventEmitter, HostListener, Input, Optional, Output } from '@angular/core';
 
-import { getHeroDefinition } from '../../data/hero-definitions';
+import { getHeroDefinition, getHeroIdentityColor } from '../../data/hero-definitions';
 import { HeroPowerId } from '../../models/hero';
 import { Player } from '../../models/player';
 import { LifePanel } from '../life-panel/life-panel';
@@ -115,6 +115,10 @@ export class PlayerSidebar {
 
   get heroDefinition() {
     return this.player?.heroId ? getHeroDefinition(this.player.heroId) ?? null : null;
+  }
+
+  get heroColor(): string {
+    return getHeroIdentityColor(this.player?.heroId);
   }
 
 /** Gere togglePower et applique les gardes necessaires avant mutation. */

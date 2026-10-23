@@ -11,6 +11,9 @@
     [class.combat-overlay--wave-target-monster]="waveTarget === 'monster'"
     [class.combat-overlay--wave-reverse]="waveDirection() === 'right-to-left'"
     [class.combat-overlay--high-power]="result && result.attackPower >= result.monsterStrength + 3"
+    [style.--hero-color]="heroColor"
+    [style.--monster-color]="monsterColor"
+    [style.--combat-wave-color]="combatWaveColor"
     (pointerdown)="$event.stopPropagation()"
     (pointermove)="$event.stopPropagation()"
     (pointerup)="$event.stopPropagation()"
@@ -41,67 +44,72 @@
       <section
         #heroFighter
         class="combat-overlay__fighter combat-overlay__fighter--hero"
+        [class.combat-overlay__fighter--decision]="isDecisionVisible && (optionalPowerPresentation || powerAnnouncement() || canUseMagicBolt)"
       >
         <div
           class="combat-overlay__visual combat-overlay__hero-card"
           [class.combat-overlay__hero-card--flipped]="isDecisionVisible && (optionalPowerPresentation || powerAnnouncement() || canUseMagicBolt)"
         >
-          <div class="combat-overlay__hero-card-face combat-overlay__hero-card-face--front">
-            @if (getHeroImage(); as heroImage) {
-              <img
-                class="combat-overlay__fighter-image combat-overlay__fighter-image--hero"
-                [src]="heroImage"
-                alt="Héros"
-                draggable="false"
-              />
-            }
-          </div>
-          <div class="combat-overlay__hero-card-face combat-overlay__hero-card-face--back">
-            @if (optionalPowerPresentation; as optionalPower) {
-              <app-hero-power-card
-                [embedded]="true"
-                [hero]="optionalPower.hero"
-                [power]="optionalPower.power"
-                [activateLabel]="optionalPower.activateLabel"
-                (activated)="activateOptionalPower()"
-                (declined)="declineOptionalPower()"
-              />
-            } @else if (!powerAnnouncement() && canUseMagicBolt) {
-              <app-decision-card
-                [compact]="true"
-                [embedded]="true"
-                eyebrow="Sort de combat"
-                title="Tir magique"
-                description="Ajoutez un tir magique à cette attaque avant de confirmer le résultat du combat."
-                [actions]="magicBoltActions"
-                (actionSelected)="resolveMagicBoltAction($event)"
-              />
-            } @else if (powerAnnouncement(); as announcement) {
-              <app-hero-power-card
-                mode="announcement"
-                [embedded]="true"
-                [hero]="announcement.hero"
-                [power]="announcement.power"
-                [message]="announcement.message"
-              />
-            }
-          </div>
-          @for (event of magicBoltFeedback(); track event) {
-            <div class="combat-overlay__magic-bolt-feedback" aria-live="polite">
-              <img src="/assets/tokens/fire-sword.png" alt="" draggable="false" />
-              <span>Tir magique +1</span>
-            </div>
-          }
-          @if (displayedWeapons.length > 0) {
-            <div class="combat-overlay__weapon-list" aria-label="Armes utilisées pour le combat">
-              @for (weapon of displayedWeapons; track weapon.id + $index) {
-                <div class="combat-overlay__weapon-entry">
-                  <img [src]="weapon.image" [alt]="weapon.name" draggable="false" />
-                  <span>{{ weapon.name }} +{{ weapon.attackBonus }}</span>
+          <div class="combat-overlay__hero-card-stage">
+            <div class="combat-overlay__hero-card-face combat-overlay__hero-card-face--front">
+              @if (getHeroImage(); as heroImage) {
+                <img
+                  class="combat-overlay__fighter-image combat-overlay__fighter-image--hero"
+                  [src]="heroImage"
+                  alt="Héros"
+                  draggable="false"
+                />
+              }
+              @for (event of magicBoltFeedback(); track event) {
+                <div class="combat-overlay__magic-bolt-feedback" aria-live="polite">
+                  <img src="/assets/tokens/fire-sword.png" alt="" draggable="false" />
+                  <span>Tir magique +1</span>
+                </div>
+              }
+              @if (displayedWeapons.length > 0) {
+                <div class="combat-overlay__weapon-list" aria-label="Armes utilisées pour le combat">
+                  @for (weapon of displayedWeapons; track weapon.id + $index) {
+                    <div class="combat-overlay__weapon-entry">
+                      <img [src]="weapon.image" [alt]="weapon.name" draggable="false" />
+                      <span>{{ weapon.name }} +{{ weapon.attackBonus }}</span>
+                    </div>
+                  }
                 </div>
               }
             </div>
-          }
+            <div class="combat-overlay__hero-card-face combat-overlay__hero-card-face--back">
+              @if (optionalPowerPresentation; as optionalPower) {
+                <app-hero-power-card
+                  [embedded]="true"
+                  [hero]="optionalPower.hero"
+                  [power]="optionalPower.power"
+                  [activateLabel]="optionalPower.activateLabel"
+                  [showActions]="currentCombat.player.controller === 'human'"
+                  (activated)="activateOptionalPower()"
+                  (declined)="declineOptionalPower()"
+                />
+              } @else if (!powerAnnouncement() && canUseMagicBolt) {
+                <app-decision-card
+                  [compact]="true"
+                  [embedded]="true"
+                  eyebrow="Sort de combat"
+                  title="Tir magique"
+                  description="Ajoutez un tir magique à cette attaque avant de confirmer le résultat du combat."
+                  [actions]="magicBoltActions"
+                  [showActions]="currentCombat.player.controller === 'human'"
+                  (actionSelected)="resolveMagicBoltAction($event)"
+                />
+              } @else if (powerAnnouncement(); as announcement) {
+                <app-hero-power-card
+                  mode="announcement"
+                  [embedded]="true"
+                  [hero]="announcement.hero"
+                  [power]="announcement.power"
+                  [message]="announcement.message"
+                />
+              }
+            </div>
+          </div>
         </div>
 
         <div class="combat-overlay__fighter-name">{{ getHeroName() }}</div>

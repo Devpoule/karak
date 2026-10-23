@@ -8,8 +8,9 @@ import {
   ViewChild,
 } from '@angular/core';
 
-import { getHeroDefinition } from '../../data/hero-definitions';
+import { getHeroDefinition, getHeroIdentityColor } from '../../data/hero-definitions';
 import { HeroDefinition, HeroPowerDefinition } from '../../models/hero';
+import { COMBAT_MONSTER_COLOR } from '../../constants/combat.constants';
 
 import {
   CombatOutcome,
@@ -464,6 +465,21 @@ export class CombatOverlay implements OnDestroy {
     return heroId
       ? (getHeroDefinition(heroId)?.name ?? 'Héros')
       : 'Héros';
+  }
+
+  /** Couleur transmise à l'overlay, indépendant de son conteneur parent. */
+  get heroColor(): string {
+    const player = this.combat?.player ?? this.result?.player;
+    return getHeroIdentityColor(player?.heroId);
+  }
+
+  get monsterColor(): string {
+    return COMBAT_MONSTER_COLOR;
+  }
+
+  /** Couleur effective de la vague : identité du héros ou rouge fonctionnel. */
+  get combatWaveColor(): string {
+    return this.result?.outcome === 'defeat' ? this.monsterColor : this.heroColor;
   }
 
   /** Nom de l'adversaire. */

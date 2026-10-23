@@ -96,10 +96,16 @@ test('Victorius peut refuser une relance et choisir de poursuivre son tour', asy
 
   await page.getByRole('button', { name: 'Lancer les dés' }).click({ force: true });
   await expect(page.getByRole('button', { name: 'Continuer sans' })).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.combat-overlay__hero-card--flipped')).toHaveCount(1);
+  // La face arrière reste en rotation pendant 460 ms : attendre sa fin avant
+  // le clic évite une course de hit-test 3D sans changer le flux métier.
+  await page.waitForTimeout(600);
   await page.getByRole('button', { name: 'Continuer sans' }).click({ force: true });
   await expect(page.locator('.combat-overlay__verdict-title')).toContainText('gagne', { timeout: 10_000 });
   const combatOverlay = page.locator('.combat-overlay');
   await expect(combatOverlay).toBeVisible({ timeout: 10_000 });
+  await expect.poll(() => combatOverlay.evaluate(element => element.style.getPropertyValue('--hero-color')))
+    .toBe('#E98936');
   await expect(page.locator('.board__reward-backdrop').filter({ hasText: 'Victorius' })).toHaveCount(0);
 
   const unstoppableChoice = page.getByRole('dialog', { name: 'Victorius' });
@@ -140,10 +146,14 @@ test('Victorius termine normalement après un Inarrêtable au quatrième mouveme
   await prepareVictoriusCombat(page, { movementCount: 4, die1: 6, die2: 1, strength: 20, ai: true });
 
   await expect(page.locator('.combat-overlay')).toBeVisible({ timeout: 10_000 });
+  await expect.poll(() => page.locator('.combat-overlay').evaluate(element => element.style.getPropertyValue('--hero-color')))
+    .toBe('#E98936');
   const rollingDice = page.locator('.combat-overlay__die--rolling');
   await expect(rollingDice).toHaveCount(2, { timeout: 10_000 });
   await expect(rollingDice).toHaveCount(0, { timeout: 10_000 });
   await expect(page.locator('.combat-overlay__hero-card--flipped')).toHaveCount(1, { timeout: 10_000 });
+  await expect(page.locator('.combat-overlay__hero-card-face--back .hero-power-card__actions button'))
+    .toHaveCount(0);
   await expect(page.locator('.combat-overlay__hero-card-face--back .hero-power-card--announcement'))
     .toBeVisible({ timeout: 10_000 });
   await expect(rollingDice).toHaveCount(1, { timeout: 10_000 });

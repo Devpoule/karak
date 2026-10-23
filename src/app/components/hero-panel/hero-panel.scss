@@ -172,11 +172,12 @@
 
 /* Le contour reprend exclusivement la couleur du joueur actif. */
 .hero-panel--active .hero-panel__card {
-  border-color: var(--player-color, #f2c94c);
+  border-color: var(--hero-color, #d8c39a);
   box-shadow:
+    0 0 0 2px rgba(18, 12, 10, .92),
     0 0 0 1px rgba(255, 255, 255, .8),
-    0 0 8px var(--player-color, #f2c94c),
-    0 0 16px color-mix(in srgb, var(--player-color, #f2c94c) 65%, transparent);
+    0 0 8px var(--hero-color, #d8c39a),
+    0 0 16px color-mix(in srgb, var(--hero-color, #d8c39a) 65%, transparent);
 }
 
 /*

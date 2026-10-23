@@ -285,7 +285,7 @@
             <div class="game-setup__stage-main">
               <div class="game-setup__player-rolls">
                 @for (player of gameService.players; track $index; let playerIndex = $index) {
-                  <div class="game-setup__player-roll">
+                  <div class="game-setup__player-roll" [style.--hero-color]="getHeroColor(playerIndex)">
                     <strong class="game-setup__player-roll-title">
                       Joueur {{ playerIndex + 1 }}
                     </strong>

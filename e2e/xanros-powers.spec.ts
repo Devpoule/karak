@@ -20,6 +20,48 @@ async function openBoard(page: import('@playwright/test').Page): Promise<void> {
   await expect(page.locator('app-board')).toBeVisible();
 }
 
+async function prepareXanrosCombat(page: import('@playwright/test').Page): Promise<void> {
+  await page.evaluate(() => {
+    const root = document.querySelector('app-root');
+    const ng = (window as Window & { ng?: { getComponent(node: Element): any } }).ng;
+    if (!root || !ng) throw new Error('Angular dev injector unavailable');
+
+    const game = ng.getComponent(root.querySelector('app-game') ?? root);
+    const gameService = game?.gameService;
+    const playerService = gameService?.['playerService'];
+    const combatService = game?.combatService;
+    const dungeonService = gameService?.['dungeonService'];
+    if (!gameService || !playerService || !combatService || !dungeonService) {
+      throw new Error('Game services unavailable');
+    }
+
+    const player = playerService.players.find((candidate: any) => candidate.controller === 'human');
+    if (!player) throw new Error('Human player unavailable');
+    player.heroId = 'xanros';
+    player.isCursed = false;
+    player.lives = 5;
+    player.inventory.weapons = [
+      { id: 'sword', name: 'Épée', attackBonus: 2, image: '/assets/equipment/sword.png' },
+      { id: 'dagger', name: 'Poignards', attackBonus: 1, image: '/assets/equipment/dagger.png' },
+    ];
+    const sourceTile = dungeonService.getTileAt(0, 0) ?? { definitionId: 'start', x: 0, y: 0, rotation: 0 };
+    const monsterTile = {
+      definitionId: 'room-01', x: 1, y: 0, rotation: 0,
+      tokenId: 'skeleton-key-guardian', tokenFace: 'front',
+    };
+    if (!combatService.startCombat(player, sourceTile, monsterTile)) throw new Error('Could not start Xanros combat');
+    combatService.pendingCombat().monster.strength = 8;
+    const originalRoll = combatService.rollPendingCombat.bind(combatService);
+    combatService.rollPendingCombat = () => {
+      const roll = originalRoll();
+      if (!roll) return null;
+      const fixed = { ...roll, die1: 3, die2: 2, diceTotal: 5, attackPower: 8, monsterStrength: 8 };
+      combatService.pendingCombatRoll.set(fixed);
+      return fixed;
+    };
+  });
+}
+
 test('Substitution échange les héros sans résoudre automatiquement la tuile d’arrivée', async ({ page }) => {
   await openBoard(page);
 
@@ -103,46 +145,7 @@ test('Substitution échange les héros sans résoudre automatiquement la tuile d
 
 test('Xanros poursuit la résolution après un lancer à égalité contre une force 8', async ({ page }) => {
   await openBoard(page);
-
-  await page.evaluate(() => {
-    const root = document.querySelector('app-root');
-    const ng = (window as Window & { ng?: { getComponent(node: Element): any } }).ng;
-    if (!root || !ng) throw new Error('Angular dev injector unavailable');
-
-    const game = ng.getComponent(root.querySelector('app-game') ?? root);
-    const gameService = game?.gameService;
-    const playerService = gameService?.['playerService'];
-    const combatService = game?.combatService;
-    const dungeonService = gameService?.['dungeonService'];
-    if (!gameService || !playerService || !combatService || !dungeonService) {
-      throw new Error('Game services unavailable');
-    }
-
-    const player = playerService.players.find((candidate: any) => candidate.controller === 'human');
-    if (!player) throw new Error('Human player unavailable');
-    player.heroId = 'xanros';
-    player.isCursed = false;
-    player.lives = 5;
-    player.inventory.weapons = [
-      { id: 'sword', name: 'Épée', attackBonus: 2, image: '/assets/equipment/sword.png' },
-      { id: 'dagger', name: 'Poignards', attackBonus: 1, image: '/assets/equipment/dagger.png' },
-    ];
-    const sourceTile = dungeonService.getTileAt(0, 0) ?? { definitionId: 'start', x: 0, y: 0, rotation: 0 };
-    const monsterTile = {
-      definitionId: 'room-01', x: 1, y: 0, rotation: 0,
-      tokenId: 'skeleton-key-guardian', tokenFace: 'front',
-    };
-    if (!combatService.startCombat(player, sourceTile, monsterTile)) throw new Error('Could not start Xanros combat');
-    combatService.pendingCombat().monster.strength = 8;
-    const originalRoll = combatService.rollPendingCombat.bind(combatService);
-    combatService.rollPendingCombat = () => {
-      const roll = originalRoll();
-      if (!roll) return null;
-      const fixed = { ...roll, die1: 3, die2: 2, diceTotal: 5, attackPower: 8, monsterStrength: 8 };
-      combatService.pendingCombatRoll.set(fixed);
-      return fixed;
-    };
-  });
+  await prepareXanrosCombat(page);
 
   await page.getByRole('button', { name: 'Lancer les dés' }).click({ force: true });
   const combat = page.locator('.combat-overlay');
@@ -163,3 +166,85 @@ test('Xanros poursuit la résolution après un lancer à égalité contre une fo
   await combat.locator('.hero-power-card__decline').click();
   await expect(combat.locator('.combat-overlay__verdict-title')).toBeVisible({ timeout: 5_000 });
 });
+
+const COMBAT_DECISION_VIEWPORTS = [
+  { width: 320, height: 844 },
+  { width: 375, height: 844 },
+  { width: 768, height: 900 },
+  { width: 949, height: 900 },
+  { width: 1253, height: 900 },
+  { width: 1440, height: 900 },
+] as const;
+
+for (const viewport of COMBAT_DECISION_VIEWPORTS) {
+  test(`la carte de décision combat reste contenue à ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await openBoard(page);
+    await prepareXanrosCombat(page);
+    await page.getByRole('button', { name: 'Lancer les dés' }).click({ force: true });
+
+    const combat = page.locator('.combat-overlay');
+    const card = combat.locator('.hero-power-card');
+    await expect(card).toBeVisible({ timeout: 10_000 });
+    await expect(combat.locator('.combat-overlay__hero-card--flipped')).toHaveCount(1);
+    await page.waitForTimeout(500);
+
+    const layout = await card.evaluate(element => {
+      const host = element.closest<HTMLElement>('.combat-overlay__hero-card');
+      const front = host?.querySelector<HTMLElement>('.combat-overlay__hero-card-face--front');
+      const back = host?.querySelector<HTMLElement>('.combat-overlay__hero-card-face--back');
+      const content = element.querySelector<HTMLElement>('.hero-power-card__content');
+      const actions = element.querySelector<HTMLElement>('.hero-power-card__actions');
+      const cardBox = element.getBoundingClientRect();
+      const actionButtons = Array.from(element.querySelectorAll<HTMLButtonElement>('.hero-power-card__actions button'));
+      const buttonBoxes = actionButtons.map(button => {
+        const box = button.getBoundingClientRect();
+        return { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height };
+      });
+      const equipment = Array.from(host?.querySelectorAll<HTMLElement>('.combat-overlay__weapon-entry span') ?? []);
+
+      return {
+        card: { left: cardBox.left, right: cardBox.right, top: cardBox.top, bottom: cardBox.bottom, width: cardBox.width, height: cardBox.height },
+        front: front ? { width: getComputedStyle(front).width, height: getComputedStyle(front).height, radius: getComputedStyle(front).borderRadius } : null,
+        back: back ? { width: getComputedStyle(back).width, height: getComputedStyle(back).height, radius: getComputedStyle(back).borderRadius } : null,
+        contentOverflow: content ? content.scrollWidth > content.clientWidth + 1 : true,
+        contentMetrics: content ? { scrollWidth: content.scrollWidth, clientWidth: content.clientWidth, scrollHeight: content.scrollHeight, clientHeight: content.clientHeight } : null,
+        actionOverflow: actions ? actions.scrollWidth > actions.clientWidth + 1 : true,
+        actionBoxes: buttonBoxes,
+        actionCentered: actions ? Math.abs((actions.getBoundingClientRect().left + actions.getBoundingClientRect().right) / 2 - (cardBox.left + cardBox.right) / 2) < 2 : false,
+        equipmentText: equipment.map(entry => entry.textContent?.trim() ?? ''),
+        equipmentTextOverflow: equipment.map(entry => getComputedStyle(entry).textOverflow),
+        equipmentWhiteSpace: equipment.map(entry => getComputedStyle(entry).whiteSpace),
+      };
+    });
+
+    expect(layout.front).not.toBeNull();
+    expect(layout.back).toEqual(layout.front);
+    expect(layout.card.width).toBeGreaterThan(0);
+    expect(layout.card.height).toBeGreaterThan(0);
+    expect(layout.card.left).toBeGreaterThanOrEqual(-1);
+    expect(layout.card.right).toBeLessThanOrEqual(viewport.width + 1);
+    expect(layout.card.top).toBeGreaterThanOrEqual(-1);
+    expect(layout.card.bottom).toBeLessThanOrEqual(viewport.height + 1);
+    expect(layout.contentOverflow, JSON.stringify(layout)).toBe(false);
+    expect(layout.actionOverflow).toBe(false);
+    expect(layout.actionCentered, JSON.stringify(layout)).toBe(true);
+    expect(layout.equipmentText).toContain('Poignards +1');
+    expect(layout.equipmentTextOverflow).not.toContain('ellipsis');
+    expect(layout.equipmentWhiteSpace).toEqual(['normal', 'normal']);
+    await page.screenshot({ path: `playwright-report/combat-decision-after-${viewport.width}.png`, fullPage: true });
+
+    for (const button of layout.actionBoxes) {
+      expect(button.width, JSON.stringify(layout)).toBeGreaterThanOrEqual(40);
+      expect(button.height, JSON.stringify(layout)).toBeGreaterThanOrEqual(40);
+      expect(button.left).toBeGreaterThanOrEqual(layout.card.left - 1);
+      expect(button.right).toBeLessThanOrEqual(layout.card.right + 1);
+      expect(button.top).toBeGreaterThanOrEqual(layout.card.top - 1);
+      expect(button.bottom).toBeLessThanOrEqual(layout.card.bottom + 1);
+    }
+
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+    await combat.locator('.hero-power-card__decline').click();
+    await expect(combat.locator('.combat-overlay__verdict-title')).toBeVisible({ timeout: 5_000 });
+  });
+}

@@ -102,7 +102,7 @@
 .hero-power-card--announcement .hero-power-card__portrait { max-height: 120px; }
 
 /* Combat decisions inherit the exact rectangle of the hero card host. */
-.hero-power-card--embedded {
+.hero-power-card.hero-power-card--embedded {
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -115,17 +115,37 @@
 }
 .hero-power-card--embedded .hero-power-card__portrait { display: none; }
 .hero-power-card--embedded .hero-power-card__content {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  gap: .35rem;
   min-width: 0;
   min-height: 0;
   padding: .4rem;
-  overflow: auto;
+  overflow: hidden;
 }
+.hero-power-card--embedded .hero-power-card__content > * { min-width: 0; }
 .hero-power-card--embedded .hero-power-card__eyebrow { margin-bottom: .55rem; }
 .hero-power-card--embedded h2 { margin: .25rem 0 .75rem; line-height: 1.1; }
 .hero-power-card--embedded .hero-power-card__power { margin-bottom: .65rem; }
-.hero-power-card--embedded .hero-power-card__content > p:not(.hero-power-card__power) { line-height: 1.45; }
-.hero-power-card--embedded .hero-power-card__actions { margin-top: auto; padding-top: 1rem; display: flex; gap: .65rem; }
-.hero-power-card--embedded .hero-power-card__actions { justify-content: center; }
+.hero-power-card--embedded .hero-power-card__content > p:not(.hero-power-card__power) {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  line-height: 1.45;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.hero-power-card--embedded .hero-power-card__actions,
+.hero-power-card--embedded .hero-power-card__choices {
+  min-width: 0;
+  min-height: 0;
+  margin-top: 0;
+  padding-top: .75rem;
+  justify-content: center;
+}
+.hero-power-card--embedded .hero-power-card__actions { display: flex; gap: .65rem; }
+.hero-power-card--embedded .hero-power-card__choices { overflow: auto; }
 .hero-power-card--embedded .hero-power-card__actions button {
   flex: 0 0 44px;
   width: 44px;

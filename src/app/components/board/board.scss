@@ -260,9 +260,9 @@
   filter: drop-shadow(1px 0 1px rgba(0, 0, 0, 0.95)) drop-shadow(-1px 0 1px rgba(0, 0, 0, 0.95))
     drop-shadow(0 2px 1px rgba(0, 0, 0, 0.75))
     /* Contour net suivant l'alpha du pion, puis halo diffus. */ drop-shadow(0 0 0.25px #fff)
-    drop-shadow(0 0 0.25px var(--player-color, #f5d58a))
-    drop-shadow(0 0 2px var(--player-color, #f5d58a))
-    drop-shadow(0 0 3px color-mix(in srgb, var(--player-color, #f5d58a) 70%, transparent)) !important;
+    drop-shadow(0 0 0.25px var(--hero-color, #d8c39a))
+    drop-shadow(0 0 2px var(--hero-color, #d8c39a))
+    drop-shadow(0 0 3px color-mix(in srgb, var(--hero-color, #d8c39a) 70%, transparent)) !important;
   animation: active-hero-arrival 700ms ease-out;
 }
 
@@ -311,7 +311,7 @@
   min-width: 22px;
   height: 18px;
   padding: 0 4px;
-  border: 1px solid var(--marker-color);
+  border: 1px solid var(--hero-color, #d8c39a);
   border-radius: 999px;
   background: rgba(20, 17, 15, 0.78);
   color: #fff8e8;
@@ -320,7 +320,7 @@
   line-height: 1;
   box-shadow:
     0 1px 4px rgba(0, 0, 0, 0.85),
-    0 0 5px color-mix(in srgb, var(--marker-color) 50%, transparent);
+    0 0 5px color-mix(in srgb, var(--hero-color, #d8c39a) 50%, transparent);
 }
 /* ==========================================================
    CONTRÔLES DE DÉPLACEMENT

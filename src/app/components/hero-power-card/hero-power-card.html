@@ -26,7 +26,7 @@
     @if (mode === 'consultation' && conditions) {
       <p class="hero-power-card__conditions"><strong>Conditions :</strong> {{ conditions }}</p>
     }
-    @if (mode === 'decision') {
+    @if (mode === 'decision' && showActions) {
       <div class="hero-power-card__actions">
         <button
           type="button"

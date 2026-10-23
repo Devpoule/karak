@@ -45,6 +45,17 @@ Responsabilités principales :
 - `Board` : rendu du plateau et contrôles d'action ;
 - `PlayerHud`, `PlayerSidebar`, `HeroPanel`, `LifePanel`, `InventoryPanel`, `TreasurePanel` : présentation des joueurs.
 
+## Identité chromatique des héros
+
+La couleur d'identité est définie une seule fois par `HeroDefinition.identityColor`.
+Les composants dérivent la variable CSS personnalisée `--hero-color` depuis le
+`heroId` stable du joueur ; le numéro J1 à J5 reste réservé à l'identification
+textuelle et à l'ordre d'affichage. Les couleurs fonctionnelles (danger,
+désactivation, mouvements consommés et résultats négatifs) ne sont pas remplacées.
+
+La vague de victoire du héros utilise cette identité chromatique dans
+`CombatOverlay`. La vague d'une défaite conserve sa couleur rouge fonctionnelle.
+
 La réactivité repose sur les signaux Angular et des révisions explicites (`inventoryRevision`, `livesRevision`, `treasuresRevision`, `groundEquipmentRevision`, etc.). Toute nouvelle dépendance doit être consommée de manière réactive plutôt que recalculée par effet secondaire.
 
 ## Travail et validation

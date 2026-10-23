@@ -2,6 +2,7 @@ import { PlayerService } from './player.service';
 import { calculateTreasurePoints } from '../models/treasure';
 import { getEquipmentDefinition } from '../data/equipment-definitions';
 import { PlayerSaveV2 } from '../models/save';
+import { getHeroIdentityColor } from '../data/hero-definitions';
 
 describe('PlayerService treasures', () => {
   it('initialise les trésors vides pour la création et la réinitialisation', () => {
@@ -55,6 +56,29 @@ describe('PlayerService récupération', () => {
 
     expect(service.completeRecoveryTurn(player)).toBe(true);
     expect(player.recoveryState).toBe('none');
+  });
+});
+
+describe('PlayerService tirage des héros', () => {
+  it('attribue une identité chromatique dérivée du héros aux humains comme aux IA', () => {
+    const service = new PlayerService();
+    service.initialize(2);
+    service.players[0].controller = 'human';
+    service.players[1].controller = 'ai';
+
+    service.drawHeroes();
+
+    service.players.forEach(player => {
+      expect(player.heroId).toBeDefined();
+      expect(getHeroIdentityColor(player.heroId)).toMatch(/^#[0-9A-F]{6}$/i);
+    });
+    expect(new Set(service.players.map(player => player.heroId)).size).toBe(2);
+
+    service.players[0].controller = 'ai';
+    service.players[1].controller = 'human';
+    service.drawHeroes();
+
+    expect(service.players.map(player => getHeroIdentityColor(player.heroId))).toHaveLength(2);
   });
 });
 
