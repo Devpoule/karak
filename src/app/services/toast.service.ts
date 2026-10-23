@@ -1,11 +1,28 @@
 import { Injectable, Optional, signal } from '@angular/core';
+import { HeroId } from '../models/hero';
 import { AudioService } from './audio.service';
 
 export type ToastTone = 'info' | 'success' | 'warning' | 'combat';
+export type ToastEventType = 'info' | 'turn' | 'combat' | 'life-loss' | 'healing' | 'equipment' | 'treasure' | 'curse' | 'power';
 export type ToastAnchor = 'global' | 'life' | 'inventory-top' | 'inventory-weapons' | 'inventory-spells' | 'inventory-key' | 'treasure' | 'power' | 'curse';
 export interface ToastTarget { readonly playerIndex: number; readonly anchor: Exclude<ToastAnchor, 'global'>; }
+export interface ToastOptions {
+  readonly eventType?: ToastEventType;
+  readonly heroId?: HeroId | null;
+  readonly icon?: string;
+  readonly duration?: number;
+}
 /** Contrat de donnees ToastMessage utilise par le domaine ou l interface. */
-export interface ToastMessage { readonly id: number; readonly text: string; readonly tone: ToastTone; readonly target?: ToastTarget; }
+export interface ToastMessage {
+  readonly id: number;
+  readonly text: string;
+  readonly tone: ToastTone;
+  readonly eventType: ToastEventType;
+  readonly heroId: HeroId | null;
+  readonly icon?: string;
+  readonly duration: number;
+  readonly target?: ToastTarget;
+}
 
 /** File unique de notifications informatives, non bloquantes. */
 @Injectable({ providedIn: 'root' })
@@ -28,8 +45,17 @@ export class ToastService {
   constructor(@Optional() private readonly audioService?: AudioService) {}
 
 /** Gere show et applique les gardes necessaires avant mutation. */
-  show(text: string, tone: ToastTone = 'info', target?: ToastTarget): void {
-    const message = { id: ++this.nextId, text, tone, target };
+  show(text: string, tone: ToastTone = 'info', target?: ToastTarget, options: ToastOptions = {}): void {
+    const message: ToastMessage = {
+      id: ++this.nextId,
+      text,
+      tone,
+      eventType: options.eventType ?? 'info',
+      heroId: options.heroId ?? null,
+      icon: options.icon,
+      duration: options.duration ?? this.durationFor(text),
+      target,
+    };
     if (this.current()) {
       if (this.queue.some(item => item.text === text) || this.current()?.text === text) return;
       this.addToHistory(message);
@@ -70,13 +96,17 @@ export class ToastService {
   private schedule(message: ToastMessage): void {
     this.timer = setTimeout(() => {
       if (this.current()?.id === message.id) this.dismiss();
-    }, Math.round(this.toastDurationScale * Math.min(
+    }, message.duration);
+  }
+
+  private durationFor(text: string): number {
+    return Math.round(this.toastDurationScale * Math.min(
       this.toastDurationMaximum,
       Math.max(
         this.toastDurationMinimum,
-        message.text.length * this.toastCharactersPerSecond * 2,
+        text.length * this.toastCharactersPerSecond * 2,
       ),
-    )));
+    ));
   }
 
 /** Gere finishDismissal et applique les gardes necessaires avant mutation. */

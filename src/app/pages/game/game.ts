@@ -2,8 +2,8 @@ import {
   Component,
   OnDestroy,
   OnInit,
+  Optional,
   effect,
-  signal,
 } from '@angular/core';
 
 import { GameHeader } from '../../components/game-header/game-header';
@@ -18,6 +18,7 @@ import { getHeroDefinition } from '../../data/hero-definitions';
 import { Player } from '../../models/player';
 import { ToastContainer } from '../../components/toast-container/toast-container';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
+import { ToastService } from '../../services/toast.service';
 
 /**
  * Page principale du jeu.
@@ -33,7 +34,6 @@ import { QuantityPipe } from '../../pipes/quantity.pipe';
   styleUrl: './game.scss',
 })
 export class Game implements OnInit, OnDestroy {
-  readonly turnAnnouncement = signal<{ player: Player; index: number; recovery: boolean } | null>(null);
   /** Pause entre deux actions du même joueur IA. */
   private readonly aiActionDelay = 1800;
 
@@ -43,20 +43,17 @@ export class Game implements OnInit, OnDestroy {
   /** Fréquence de vérification des résolutions obligatoires. */
   private readonly aiBlockedCheckDelay = 200;
 
-  /** Durée d'affichage de l'annonce du joueur actif. */
-  private readonly turnAnnouncementDuration = 2800;
-
   private aiTurnRunning = false;
   private aiRunId = 0;
   private destroyed = false;
   private unsupportedAiResolution: object | null = null;
-  private announcementTimer: ReturnType<typeof setTimeout> | null = null;
   private announcedTurnKey: string | null = null;
 
   constructor(
     readonly gameService: GameService,
     private readonly aiService: AiService,
     private readonly combatService: CombatService,
+    @Optional() private readonly toastService?: ToastService,
   ) {
     effect(() => {
       const phase = this.gameService.phase();
@@ -65,7 +62,6 @@ export class Game implements OnInit, OnDestroy {
 
       if (phase !== 'playing') {
         this.announcedTurnKey = null;
-        this.turnAnnouncement.set(null);
         return;
       }
       if (activePlayerIndex === null || this.destroyed) {
@@ -76,7 +72,7 @@ export class Game implements OnInit, OnDestroy {
       if (key !== this.announcedTurnKey) {
         this.announcedTurnKey = key;
         const player = this.gameService.activePlayer;
-        if (player) this.showTurnAnnouncement(player, activePlayerIndex);
+        if (player) this.announceTurn(player, activePlayerIndex);
       }
 
       if (this.gameService.activePlayer?.controller !== 'ai') {
@@ -102,7 +98,6 @@ export class Game implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroyed = true;
     this.aiRunId++;
-    this.clearAnnouncementTimer();
   }
 
 /** Gere getHeroName et applique les gardes necessaires avant mutation. */
@@ -116,29 +111,24 @@ export class Game implements OnInit, OnDestroy {
   }
 
 /** Gere showTurnAnnouncement et applique les gardes necessaires avant mutation. */
-  private showTurnAnnouncement(player: Player, index: number): void {
-    this.clearAnnouncementTimer();
+  private announceTurn(player: Player, index: number): void {
     queueMicrotask(() => {
       if (this.destroyed || this.gameService.activePlayerIndex() !== index) return;
-      this.turnAnnouncement.set({
-        player,
-        index,
-        recovery: player.recoveryState === 'resting',
-      });
-      this.announcementTimer = setTimeout(() => {
-        this.turnAnnouncement.set(null);
-        this.announcementTimer = null;
-      }, this.turnAnnouncementDuration);
+      const recovery = player.recoveryState === 'resting';
+      this.toastService?.show(
+        recovery
+          ? `Récupération — ${this.getHeroName(player)} 1 PV`
+          : `Au tour de ${this.getHeroName(player)}`,
+        recovery ? 'success' : 'info',
+        { playerIndex: index, anchor: 'inventory-top' },
+        {
+          eventType: recovery ? 'healing' : 'turn',
+          heroId: player.heroId,
+          icon: recovery ? '♥' : '✦',
+          duration: 2800,
+        },
+      );
     });
-  }
-
-/** Gere clearAnnouncementTimer et applique les gardes necessaires avant mutation. */
-  private clearAnnouncementTimer(): void {
-    if (this.announcementTimer !== null) {
-      clearTimeout(this.announcementTimer);
-      this.announcementTimer = null;
-    }
-    this.turnAnnouncement.set(null);
   }
 
   /** Le combat bloque l'IA jusqu'à la fermeture du résultat. */

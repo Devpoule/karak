@@ -1,23 +1,85 @@
 /*
- * Le HUD possède une couche globale dédiée aux inventaires (z-index 60).
- * Les toasts doivent rester au-dessus de cette couche pour être visibles,
- * tout en restant sous les dialogues et les modales métier.
+ * Les notifications restent dans la couche feedback, au-dessus du HUD,
+ * sans participer au flux : leur apparition ne deplace donc ni le plateau
+ * ni les inventaires.
  */
-:host { position: absolute; inset: 0; z-index: calc(var(--karak-z-modal) + 1); pointer-events: none; }
-.toast-container { position: fixed; top: 5.5rem; left: 50%; z-index: calc(var(--karak-z-modal) + 1); display: flex; align-items: center; gap: var(--karak-space-3); width: min(20rem, calc(100vw - 2rem)); max-width: min(20rem, calc(100vw - 2rem)); padding: .8rem var(--karak-space-4); transform: translateX(-50%); border: var(--karak-border-default); border-radius: var(--karak-radius-md); background: rgba(25, 35, 51, .96); color: var(--karak-text-light); box-shadow: var(--karak-shadow-md); font: 600 1.02rem/1.4 var(--karak-font-body); animation: toast-in var(--karak-motion-fast) var(--karak-ease-standard) both; }
-.toast-container--contextual {
+:host {
+  position: absolute;
+  inset: 0;
+  z-index: calc(var(--karak-z-modal) + 1);
+  pointer-events: none;
+}
+
+.toast-container {
+  position: fixed;
   top: 0;
-  /* L’animation générique modifierait le transform calculé dans la colonne du joueur. */
+  z-index: calc(var(--karak-z-modal) + 1);
+
+  display: flex;
+  align-items: center;
+  gap: var(--karak-space-3);
+
+  width: 33.333333vw;
+  height: var(--toast-height, 52px);
+  box-sizing: border-box;
+  padding: 0 var(--karak-space-4);
+  overflow: hidden;
+
+  border: 2px solid var(--toast-hero-color, var(--karak-parchment-dark));
+  border-radius: var(--karak-radius-md);
+  background: color-mix(in srgb, var(--toast-hero-color, #d8c39a) 16%, #192333);
+  color: var(--karak-text-light);
+  box-shadow:
+    0 0 14px color-mix(in srgb, var(--toast-hero-color, #d8c39a) 28%, transparent),
+    var(--karak-shadow-md);
+  font: 600 1.02rem/1.4 var(--karak-font-body);
+  animation: toast-in var(--karak-motion-fast) var(--karak-ease-standard) both;
+}
+
+.toast-container--contextual {
+  /* La position verticale est calculee dans la zone libre du HUD cible. */
   animation: none;
 }
-.toast-container span { color: var(--karak-text-highlight); font-size: 1.4rem; }
-.toast-container p { margin: 0; }
-.toast-container--info { border-color: var(--karak-parchment-dark); }
-.toast-container--success { border-color: var(--karak-success); background: rgba(20, 55, 44, .96); }
-.toast-container--warning { border-color: var(--karak-warning); background: rgba(75, 39, 24, .96); }
-.toast-container--combat { border-color: var(--karak-danger-bright); background: rgba(67, 25, 25, .97); }
-@keyframes toast-in { from { opacity: 0; transform: translate(-50%, -.6rem); } to { opacity: 1; transform: translate(-50%, 0); } }
-@keyframes toast-out { from { opacity: 1; filter: blur(0); transform: translate(-50%, 0) scale(1); } to { opacity: 0; filter: blur(3px); transform: translate(-50%, -.2rem) scale(.98); } }
-.toast-container--dismissing { animation: toast-out var(--karak-motion-normal) var(--karak-ease-standard) forwards; }
-@media (prefers-reduced-motion: reduce) { .toast-container { animation: none; } }
-@media (max-width: 600px) { .toast-container { top: 4.5rem; width: min(17rem, calc(100vw - 1rem)); max-width: calc(100vw - 1rem); font-size: .9rem; } }
+
+.toast-container span {
+  flex: 0 0 auto;
+  color: var(--toast-hero-color, var(--karak-text-highlight));
+  font-size: 1.4rem;
+}
+
+.toast-container p {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; filter: brightness(.8); }
+  to { opacity: 1; filter: brightness(1); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; filter: blur(0); }
+  to { opacity: 0; filter: blur(3px); }
+}
+
+.toast-container--dismissing {
+  animation: toast-out var(--karak-motion-normal) var(--karak-ease-standard) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-container { animation: none; }
+}
+
+@media (max-width: 640px) {
+  /* Exception responsive documentee : sous 640 px, la largeur devient
+     lisible et fluide au lieu de rester strictement egale au tiers du viewport. */
+  .toast-container {
+    width: min(18rem, calc(100vw - 1rem));
+    max-width: calc(100vw - 1rem);
+    padding-inline: .75rem;
+    font-size: .9rem;
+  }
+}

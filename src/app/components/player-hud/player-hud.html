@@ -121,6 +121,7 @@
           [class.player-hud__player-control--open]="isPlayerPanelOpen(entry.index)"
           [class.player-hud__player-control--active]="isActivePlayer(entry.index)"
           [style.--hero-color]="getHeroColor(entry.player)"
+          [attr.data-player-index]="entry.index"
           [attr.aria-label]="
             isPlayerPanelOpen(entry.index)
               ? 'Fermer la fiche du joueur ' + (entry.index + 1)
@@ -166,6 +167,7 @@
           [class.player-hud__player-control--open]="isPlayerPanelOpen(entry.index)"
           [class.player-hud__player-control--active]="isActivePlayer(entry.index)"
           [style.--hero-color]="getHeroColor(entry.player)"
+          [attr.data-player-index]="entry.index"
           [attr.aria-label]="
             isPlayerPanelOpen(entry.index)
               ? 'Fermer la fiche du joueur ' + (entry.index + 1)

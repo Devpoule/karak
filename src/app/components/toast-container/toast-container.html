@@ -1,6 +1,6 @@
 @if (toastService.current(); as toast) {
-  <div class="toast-container" [class]="'toast-container toast-container--' + toast.tone" [class.toast-container--dismissing]="toastService.isDismissing()" [class.toast-container--contextual]="!!toast.target" [style]="positionFor(toast)" role="status" aria-live="polite" aria-atomic="true">
-    <span aria-hidden="true">{{ toast.tone === 'combat' ? '⚔' : '✦' }}</span>
+  <div class="toast-container" [class]="'toast-container toast-container--' + toast.tone" [class.toast-container--dismissing]="toastService.isDismissing()" [class.toast-container--contextual]="!!toast.target" [style]="styleFor(toast)" role="status" aria-live="polite" aria-atomic="true">
+    <span aria-hidden="true">{{ toast.icon ?? iconFor(toast.eventType) }}</span>
     <p>{{ toast.text }}</p>
   </div>
 }

@@ -41,6 +41,25 @@ describe('ToastService', () => {
     expect(service.history()[1]?.tone).toBe('success');
   });
 
+  it('conserve les metadonnees visuelles du heros et du type d evenement', () => {
+    const service = new ToastService();
+
+    service.show(
+      'Aderyn perd 1 point de vie.',
+      'combat',
+      { playerIndex: 0, anchor: 'inventory-top' },
+      { eventType: 'life-loss', heroId: 'aderyn', icon: '♥', duration: 1200 },
+    );
+
+    expect(service.current()).toMatchObject({
+      heroId: 'aderyn',
+      eventType: 'life-loss',
+      icon: '♥',
+      duration: 1200,
+      target: { playerIndex: 0, anchor: 'inventory-top' },
+    });
+  });
+
   it('ignore les doublons comme la file de notifications et ne les historise pas', () => {
     const service = new ToastService();
 
