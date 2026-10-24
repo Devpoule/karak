@@ -335,11 +335,21 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
 
     const availableHeight = hud.clientHeight;
     const selectorHeight = selector.getBoundingClientRect().height;
-    const sidebarHeight = sidebar.getBoundingClientRect().height;
-    const gap = Math.max(8, (availableHeight - selectorHeight - sidebarHeight) / 3);
+    const sidebarRect = sidebar.getBoundingClientRect();
+    const frameRect = sidebar.querySelector<HTMLElement>('.player-sidebar__frame')?.getBoundingClientRect();
+    const frameTopOverflow = frameRect
+      ? Math.max(0, sidebarRect.top - frameRect.top)
+      : 0;
+    const frameBottomOverflow = frameRect
+      ? Math.max(0, frameRect.bottom - sidebarRect.bottom)
+      : 0;
+    const sidebarVisualHeight = sidebarRect.height + frameTopOverflow + frameBottomOverflow;
+    const gap = Math.max(8, (availableHeight - selectorHeight - sidebarVisualHeight) / 3);
 
     hud.style.setProperty('--sidebar-vertical-gap', `${gap}px`);
     hud.style.setProperty('--sidebar-selector-height', `${selectorHeight}px`);
+    hud.style.setProperty('--sidebar-frame-top-overflow', `${frameTopOverflow}px`);
+    hud.style.setProperty('--sidebar-frame-bottom-overflow', `${frameBottomOverflow}px`);
   }
 
   /** Indique si une séquence de combat interdit les interactions du HUD. */

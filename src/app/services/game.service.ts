@@ -603,11 +603,6 @@ export class GameService {
     if (!savedGame || !this.restoreSavedGame(savedGame)) this.initialize();
   }
 
-/** Gere actorLabel et applique les gardes necessaires avant mutation. */
-  private actorLabel(player: Player): string {
-    return (player.heroId ? getHeroDefinition(player.heroId)?.name : undefined) ?? 'Le héros';
-  }
-
   /** Construit la cible UI sans exposer de référence DOM au domaine. */
   private toastTarget(player: Player, anchor: Exclude<ToastAnchor, 'global'>): ToastTarget | undefined {
     const playerIndex = this.playerService.players.indexOf(player);
@@ -1270,7 +1265,7 @@ export class GameService {
     this.pendingTreasure.set(null);
     this.optionalXanrosTreasure = false;
     this.endTurn();
-    this.showPlayerToast(pending.player, `${this.actorLabel(pending.player)} : coffre ouvert, trésor récupéré.`, 'success', 'treasure', 'treasure', '◆');
+    this.showPlayerToast(pending.player, TOAST_LABELS.treasure(), 'success', 'treasure', 'treasure', '◆');
     return true;
   }
 

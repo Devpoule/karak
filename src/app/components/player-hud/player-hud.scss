@@ -11,11 +11,14 @@
 
 .player-hud {
   --hero-color: #d8c39a;
-  --sidebar-width: clamp(150px, 18vh, 220px);
+  --sidebar-width: clamp(120px, 17vh, 220px);
   --sidebar-edge: 1.25rem;
   /* Calculé depuis les dimensions réellement rendues du HUD. */
   --sidebar-vertical-gap: 1rem;
   --sidebar-selector-height: 52px;
+  /* Le cadre décoratif déborde du contenu de la fiche. */
+  --sidebar-frame-top-overflow: 0px;
+  --sidebar-frame-bottom-overflow: 0px;
 
   position: relative;
 
@@ -67,13 +70,23 @@
 .player-hud__side {
   position: absolute;
 
-  top: calc(var(--sidebar-vertical-gap) * 2 + var(--sidebar-selector-height));
+  top: calc(
+    var(--sidebar-vertical-gap) * 2
+    + var(--sidebar-selector-height)
+    + var(--sidebar-frame-top-overflow)
+  );
   bottom: auto;
 
   z-index: 5;
 
   width: var(--sidebar-width);
-  max-height: calc(100% - (var(--sidebar-vertical-gap) * 3) - var(--sidebar-selector-height));
+  max-height: calc(
+    100%
+    - (var(--sidebar-vertical-gap) * 3)
+    - var(--sidebar-selector-height)
+    - var(--sidebar-frame-top-overflow)
+    - var(--sidebar-frame-bottom-overflow)
+  );
   overflow: visible;
   scrollbar-width: thin;
 
@@ -457,44 +470,37 @@
 @media (max-width: 640px) {
   .player-hud {
     /* La fiche s’adapte à la largeur disponible, pas à la hauteur du mobile. */
-    --sidebar-width: min(220px, calc(50vw - 1rem));
+    --sidebar-width: min(150px, calc(50vw - 1rem));
     --sidebar-edge: .5rem;
   }
 
   .player-hud__side {
-    top: calc(50% + var(--sidebar-vertical-offset));
     bottom: auto;
     width: var(--sidebar-width);
     max-width: calc(100vw - 1rem);
-    max-height: calc(100dvh - 1rem);
     overflow-y: auto;
     overflow-x: visible;
-  }
-
-  .player-hud__side--left,
-  .player-hud__side--right {
-    top: calc(50% + var(--sidebar-vertical-offset));
   }
 
   .player-hud__side--left {
     left: var(--sidebar-edge);
     right: auto;
-    transform: translateY(-50%) translateX(calc(-100% - var(--sidebar-edge)));
+    transform: translateX(calc(-100% - var(--sidebar-edge)));
   }
 
   .player-hud__side--right {
     right: var(--sidebar-edge);
     left: auto;
-    transform: translateY(-50%) translateX(calc(100% + var(--sidebar-edge)));
+    transform: translateX(calc(100% + var(--sidebar-edge)));
   }
 
   .player-hud__side--left.player-hud__side--open,
   .player-hud__side--right.player-hud__side--open {
-    transform: translateY(-50%) translateX(0);
+    transform: translateX(0);
   }
 
   .player-hud__turn-controls {
-    inset: .5rem .5rem auto;
+    inset: var(--sidebar-vertical-gap) .5rem auto;
     width: auto;
     max-width: none;
     gap: .35rem;
