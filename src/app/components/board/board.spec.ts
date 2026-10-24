@@ -100,6 +100,34 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     expect(fixture.nativeElement.querySelectorAll('.board__reward-backdrop')).toHaveLength(0);
   });
 
+  it('affiche le choix de remplacement pour un sort lorsque l’inventaire est plein', () => {
+    const { fixture, gameService, playerService, dungeonService } = createBoard();
+    const player = playerService.players[0];
+    const tile = dungeonService.getTileAt(0, 0)!;
+    tile.tokenId = 'fallen';
+    tile.tokenFace = 'back';
+    playerService.addEquipment(player, { ...getEquipmentDefinition('heart')! });
+    playerService.addEquipment(player, { ...getEquipmentDefinition('heart')! });
+    playerService.addEquipment(player, { ...getEquipmentDefinition('heart')! });
+    gameService.pendingReward.set({
+      player,
+      monster: getTokenDefinition('fallen') as any,
+      rewardTile: tile,
+      sourceTile: { x: -1, y: 0 } as PlacedTile,
+      remainingRewards: [{ kind: 'equipment', equipmentId: 'fire-sword' }],
+    });
+
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('.board__reward-backdrop')).toHaveLength(1);
+    expect(fixture.componentInstance.pendingRewardActions.map(action => action.label)).toEqual([
+      'Remplacer l’emplacement 1',
+      'Remplacer l’emplacement 2',
+      'Remplacer l’emplacement 3',
+      'Laisser l’équipement sur la tuile',
+    ]);
+  });
+
   it('recentre la caméra et conserve les coordonnées logiques du donjon', () => {
     const { fixture } = createBoard();
     const board = fixture.componentInstance;

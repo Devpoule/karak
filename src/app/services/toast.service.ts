@@ -24,6 +24,8 @@ export interface ToastMessage {
   readonly target?: ToastTarget;
 }
 
+export type EquipmentAgreement = 'masculine-singular' | 'feminine-singular' | 'masculine-plural';
+
 /** Libellés courts et stables utilisés par les notifications de partie. */
 export const TOAST_LABELS = {
   damage: (amount = 1): string => `−${amount} PV`,
@@ -34,7 +36,14 @@ export const TOAST_LABELS = {
   draw: (): string => 'Égalité',
   cursed: (): string => 'Maudit !',
   treasure: (): string => 'Trésor obtenu',
-  equipment: (name: string): string => `${name} obtenu`,
+  equipment: (name: string, agreement: EquipmentAgreement = 'masculine-singular'): string => {
+    const participle = agreement === 'masculine-plural'
+      ? 'obtenus'
+      : agreement === 'feminine-singular'
+        ? 'obtenue'
+        : 'obtenu';
+    return `${name} ${participle}`;
+  },
 } as const;
 
 /** File unique de notifications informatives, non bloquantes. */

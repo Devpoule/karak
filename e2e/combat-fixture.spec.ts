@@ -182,12 +182,14 @@ async function assertCombatPortraitLayout(page: import('@playwright/test').Page)
       monsterName: rect('.combat-overlay__fighter--monster .combat-overlay__fighter-name'),
       roll: rect('.combat-overlay__roll-trigger'),
       heroFooter: rect('.combat-overlay__fighter--hero .combat-overlay__fighter-footer'),
+      heroImageSource: document.querySelector<HTMLImageElement>('.combat-overlay__fighter-image--hero')?.getAttribute('src'),
     };
   });
 
   expect(layout.arena).not.toBeNull();
   expect(layout.center).not.toBeNull();
   expect(layout.heroImage).not.toBeNull();
+  expect(layout.heroImageSource).toContain('/character-token.png');
   expect(layout.monsterImage).not.toBeNull();
   expect(layout.heroToken).not.toBeNull();
   expect(layout.monsterToken).not.toBeNull();

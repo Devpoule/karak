@@ -443,14 +443,14 @@
   }
 
   <!-- Résolution d'une récompense : interface fixe, indépendante de la caméra. -->
-  @if (humanPendingReward && (pendingTreasureReward || hasPendingCurse)) {
+  @if (humanPendingReward && (pendingTreasureReward || pendingEquipmentReward || hasPendingCurse)) {
     <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
       <app-decision-card
         eyebrow="Résolution de partie"
-        title="Récompense du combat"
+        [title]="pendingEquipmentReward ? 'Équipement à remplacer' : 'Récompense du combat'"
         [description]="pendingRewardDescription"
-        [image]="pendingTreasureReward ? (getTokenDefinition(pendingTreasureReward.tokenId)?.image ?? '') : ''"
-        imageAlt="Récompense"
+        [image]="pendingEquipmentReward?.image ?? (pendingTreasureReward ? (getTokenDefinition(pendingTreasureReward.tokenId)?.image ?? '') : '')"
+        [imageAlt]="pendingEquipmentReward?.name ?? 'Récompense'"
         [actions]="pendingRewardActions"
         (actionSelected)="resolvePendingRewardAction($event)"
       />

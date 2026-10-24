@@ -156,6 +156,8 @@ function createHeroDefinition(
 
     character: `${path}/character.png`,
 
+    characterToken: `${path}/character-token.png`,
+
     characterTransparent: `${path}/character-transparent.png`,
 
     characterStats: `${path}/character-stats.png`,

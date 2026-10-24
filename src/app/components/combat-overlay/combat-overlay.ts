@@ -498,7 +498,7 @@ export class CombatOverlay implements OnDestroy {
       return undefined;
     }
 
-    return getHeroDefinition(player.heroId)?.character;
+    return getHeroDefinition(player.heroId)?.characterToken;
   }
 
   /** Nom du héros affiché sur la carte de combat. */

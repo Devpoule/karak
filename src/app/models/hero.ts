@@ -80,6 +80,11 @@ export interface HeroDefinition {
   character: string;
 
   /**
+   * Illustration carrée utilisée comme token pendant les combats.
+   */
+  characterToken: string;
+
+  /**
    * Illustration détourée, sans arrière-plan.
    */
   characterTransparent: string;

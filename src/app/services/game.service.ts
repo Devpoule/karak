@@ -4,6 +4,7 @@ import { calculateTreasurePoints } from '../models/treasure';
 import { getTokenDefinition } from '../data/token-definitions';
 import { getEquipmentDefinition } from '../data/equipment-definitions';
 import { Equipment } from '../models/equipment';
+import { PLAYER_INVENTORY_CAPACITY } from '../models/inventory';
 import { DIRECTIONS, PlacedTile } from '../models/tile';
 import { Player } from '../models/player';
 import { MonsterReward, MonsterTokenDefinition, TreasureTokenDefinition, TokenDefinition } from '../models/token';
@@ -15,7 +16,7 @@ import { TokenBagService } from './token-bag.service';
 import { TurnService } from './turn.service';
 import { CombatService } from './combat.service';
 import type { CombatResult } from './combat.service';
-import { TOAST_LABELS, ToastAnchor, ToastEventType, ToastService, ToastTarget, ToastTone } from './toast.service';
+import { EquipmentAgreement, TOAST_LABELS, ToastAnchor, ToastEventType, ToastService, ToastTarget, ToastTone } from './toast.service';
 import { getHeroDefinition } from '../data/hero-definitions';
 import { GameSavePayloadV2, SaveEnvelopeV2 } from '../models/save';
 import { SaveService } from './save.service';
@@ -627,14 +628,9 @@ export class GameService {
 
   /** Annonce une récupération ou une amélioration sans ouvrir une décision. */
   private announceEquipmentObtained(player: Player, equipment: Equipment): void {
-    const article = equipment.id === 'daggers'
-      ? 'des'
-      : ['sword', 'axe', 'key'].includes(equipment.id)
-        ? 'une'
-        : 'un';
     this.showPlayerToast(
       player,
-      equipment.id === 'key' ? TOAST_LABELS.key() : TOAST_LABELS.equipment(equipment.name.toLocaleLowerCase('fr-FR')),
+      this.getEquipmentObtainedLabel(equipment),
       'success',
       'equipment',
       equipment.kind === 'weapon' ? 'inventory-weapons' : equipment.kind === 'spell' ? 'inventory-spells' : 'inventory-key',
@@ -643,14 +639,10 @@ export class GameService {
   }
 
   /** Annonce un remplacement d'arme après la validation complète de l'échange. */
-  private announceWeaponReplacement(player: Player, previous: Equipment, replacement: Equipment): void {
-    const previousName = previous.name.toLocaleLowerCase('fr-FR');
-    const replacementName = replacement.name.toLocaleLowerCase('fr-FR');
-    const previousPossessive = this.getEquipmentPossessive(previous, previousName);
-    const replacementArticle = this.getEquipmentIndefiniteArticle(replacement);
+  private announceWeaponReplacement(player: Player, replacement: Equipment): void {
     this.showPlayerToast(
       player,
-      TOAST_LABELS.equipment(replacementName),
+      this.getEquipmentObtainedLabel(replacement),
       'success',
       'equipment',
       'inventory-top',
@@ -658,19 +650,21 @@ export class GameService {
     );
   }
 
-  /** Forme le possessif des armes du catalogue de base pour le toast. */
-  private getEquipmentPossessive(equipment: Equipment, name: string): string {
-    if (equipment.id === 'daggers') return `ses ${name}`;
-    if (equipment.id === 'sword') return `son ${name}`;
-    if (equipment.id === 'axe') return `sa ${name}`;
-    return `son ${name}`;
+  /** Accorde le libellé d'obtention avec le nom de l'équipement affiché. */
+  private getEquipmentObtainedLabel(equipment: Equipment): string {
+    if (equipment.id === 'key') return TOAST_LABELS.key();
+
+    return TOAST_LABELS.equipment(
+      equipment.name.toLocaleLowerCase('fr-FR'),
+      this.getEquipmentAgreement(equipment),
+    );
   }
 
-  /** Forme l'article de l'arme reçue dans le toast de remplacement. */
-  private getEquipmentIndefiniteArticle(equipment: Equipment): string {
-    if (equipment.id === 'daggers') return 'des';
-    if (equipment.id === 'sword' || equipment.id === 'axe') return 'une';
-    return 'un';
+  /** Décrit l'accord grammatical des équipements du catalogue de base. */
+  private getEquipmentAgreement(equipment: Equipment): EquipmentAgreement {
+    if (equipment.name.trim().toLocaleLowerCase('fr-FR').endsWith('s')) return 'masculine-plural';
+    if (equipment.id === 'sword' || equipment.id === 'axe') return 'feminine-singular';
+    return 'masculine-singular';
   }
 
   /**
@@ -1840,7 +1834,17 @@ export class GameService {
       return this.replacePendingEquipment(slotIndex);
     }
 
-    return this.leavePendingRewardEquipment(pending, rewardIndex, equipment);
+    // Un humain doit encore pouvoir choisir un emplacement compatible
+    // lorsque l'inventaire est plein. L'IA, elle, conserve sa stratégie
+    // déterministe et abandonne l'équipement inutilisable.
+    if (
+      pending.player.controller === 'human'
+      && this.getReplaceableEquipmentSlots(pending.player, equipment).length > 0
+    ) {
+      return true;
+    }
+
+    return this.deferPendingRewardEquipment(pending, rewardIndex, equipment);
   }
 
   /** Résout automatiquement un équipement posé au sol. */
@@ -1857,7 +1861,25 @@ export class GameService {
       return this.replaceGroundEquipment(slotIndex);
     }
 
+    if (
+      pending.player.controller === 'human'
+      && this.getReplaceableEquipmentSlots(pending.player, pending.equipment).length > 0
+    ) {
+      return true;
+    }
+
     return this.leaveGroundEquipment();
+  }
+
+  /** Retourne les emplacements qu'un joueur peut choisir pour un remplacement. */
+  getReplaceableEquipmentSlots(player: Player, equipment: Equipment): number[] {
+    const slotCount = equipment.kind === 'weapon'
+      ? PLAYER_INVENTORY_CAPACITY.weapons
+      : equipment.kind === 'spell'
+        ? PLAYER_INVENTORY_CAPACITY.spells
+        : PLAYER_INVENTORY_CAPACITY.key;
+    return Array.from({ length: slotCount }, (_, index) => index)
+      .filter(index => this.playerService.canReplaceEquipment(player, equipment, index));
   }
 
   /** Ramasse l'objet proposé si une place est disponible. */
@@ -1886,7 +1908,7 @@ export class GameService {
     this.pendingGroundEquipment.set(null);
     this.finishMandatoryResolution();
     if (pending.equipment.kind === 'weapon' && previous.kind === 'weapon') {
-      this.announceWeaponReplacement(pending.player, previous, pending.equipment);
+      this.announceWeaponReplacement(pending.player, pending.equipment);
     } else {
       this.announceEquipmentObtained(pending.player, pending.equipment);
     }
@@ -1988,11 +2010,24 @@ export class GameService {
   }
 
   /**
-   * Laisse automatiquement un équipement inutile sans interrompre le tour.
+   * Laisse un équipement inutile sans interrompre le tour.
    * L'objet devient un équipement au sol afin de rester disponible sans être
    * reproposé comme une récompense obligatoire.
    */
-  private leavePendingRewardEquipment(
+  leavePendingRewardEquipment(): boolean {
+    const pending = this.getActivePendingReward();
+    if (!pending) return false;
+    const rewardIndex = pending.remainingRewards.findIndex(reward => reward.kind === 'equipment');
+    if (rewardIndex < 0) return false;
+    const reward = pending.remainingRewards[rewardIndex];
+    if (reward.kind !== 'equipment') return false;
+    const equipment = getEquipmentDefinition(reward.equipmentId);
+    if (!equipment) return false;
+    return this.deferPendingRewardEquipment(pending, rewardIndex, equipment);
+  }
+
+  /** Dépose uniquement l'équipement choisi et conserve les autres récompenses. */
+  private deferPendingRewardEquipment(
     pending: PendingReward,
     rewardIndex: number,
     equipment: Equipment,
@@ -2065,7 +2100,7 @@ export class GameService {
     }
     this.consumePendingReward(pending, rewardIndex);
     if (equipment.kind === 'weapon' && previous.kind === 'weapon') {
-      this.announceWeaponReplacement(pending.player, previous, equipment);
+      this.announceWeaponReplacement(pending.player, equipment);
     } else {
       this.announceEquipmentObtained(pending.player, equipment);
     }

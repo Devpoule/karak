@@ -598,12 +598,8 @@ export class Board {
     if (this.playerService.canAddEquipment(pending.player, pending.equipment)) {
       actions.push({ label: 'Récupérer', kind: 'primary' });
     } else {
-      const slots = pending.equipment.kind === 'weapon' ? 2 : pending.equipment.kind === 'spell' ? 3 : 1;
-      for (let index = 0; index < slots; index++) {
-        if (this.playerService.canReplaceEquipment(pending.player, pending.equipment, index)) {
-          actions.push({ label: `Remplacer l’emplacement ${index + 1}`, kind: 'primary' });
-        }
-      }
+      this.gameService.getReplaceableEquipmentSlots(pending.player, pending.equipment)
+        .forEach(index => actions.push({ label: `Remplacer l’emplacement ${index + 1}`, kind: 'primary' }));
     }
     actions.push({ label: 'Laisser sur la tuile' });
     return actions;
@@ -618,9 +614,7 @@ export class Board {
       else this.gameService.leaveGroundEquipment();
       return;
     }
-    const slots = pending.equipment.kind === 'weapon' ? 2 : pending.equipment.kind === 'spell' ? 3 : 1;
-    const validSlots = Array.from({ length: slots }, (_, slot) => slot)
-      .filter(slot => this.playerService.canReplaceEquipment(pending.player, pending.equipment, slot));
+    const validSlots = this.gameService.getReplaceableEquipmentSlots(pending.player, pending.equipment);
     if (index < validSlots.length) this.gameService.replaceGroundEquipment(validSlots[index]);
     else this.gameService.leaveGroundEquipment();
   }
@@ -665,6 +659,22 @@ export class Board {
     return reward?.kind === 'treasure' ? reward : undefined;
   }
 
+  /** Équipement de récompense qui attend un choix de remplacement humain. */
+  get pendingEquipmentReward(): Equipment | undefined {
+    const pending = this.humanPendingReward;
+    const reward = pending?.remainingRewards.find(item => item.kind === 'equipment');
+    return reward?.kind === 'equipment' ? getEquipmentDefinition(reward.equipmentId) : undefined;
+  }
+
+  /** Emplacements compatibles pour l'équipement de récompense courant. */
+  get pendingEquipmentReplacementSlots(): readonly number[] {
+    const equipment = this.pendingEquipmentReward;
+    const player = this.humanPendingReward?.player;
+    return equipment && player
+      ? this.gameService.getReplaceableEquipmentSlots(player, equipment)
+      : [];
+  }
+
   get pendingTreasureRewardPoints(): number {
     const reward = this.pendingTreasureReward;
     if (!reward) return 0;
@@ -676,6 +686,9 @@ export class Board {
 
   /** Décrit la résolution de récompense visible dans la carte unifiée. */
   get pendingRewardDescription(): string {
+    if (this.pendingEquipmentReward) {
+      return 'Choisissez un emplacement à remplacer ou laissez cet équipement sur la tuile.';
+    }
     if (this.hasPendingCurse) return 'Choisissez le héros qui recevra la malédiction.';
     return `Récompense de combat : ${this.pendingTreasureRewardPoints} point${this.pendingTreasureRewardPoints > 1 ? 's' : ''}.`;
   }
@@ -683,13 +696,22 @@ export class Board {
   /** Construit les actions à partir des choix déjà exposés par le domaine. */
   get pendingRewardActions(): readonly DecisionCardAction[] {
     const actions: DecisionCardAction[] = [];
+    const equipment = this.pendingEquipmentReward;
+    const replacementSlots = this.pendingEquipmentReplacementSlots;
+    if (equipment) {
+      replacementSlots.forEach(slot => actions.push({
+        label: `Remplacer l’emplacement ${slot + 1}`,
+        kind: 'primary',
+      }));
+      actions.push({ label: 'Laisser l’équipement sur la tuile' });
+    }
     if (this.pendingTreasureReward) actions.push({ label: 'Récupérer le trésor', kind: 'primary' });
     if (this.hasPendingCurse) {
       this.curseTargets.forEach(target => actions.push({
         label: `J${target.index + 1} — ${this.getHeroDefinition(target.player)?.name ?? 'Héros'}`,
       }));
       if (this.gameService.cursedPlayer) actions.push({ label: 'Laisser la malédiction à son détenteur actuel' });
-    } else {
+    } else if (!equipment && !this.pendingTreasureReward) {
       actions.push({ label: 'Laisser sur la tuile' });
     }
     return actions;
@@ -697,6 +719,20 @@ export class Board {
 
   /** Traduit l'action visuelle en appel métier unique. */
   resolvePendingRewardAction(index: number): void {
+    const equipment = this.pendingEquipmentReward;
+    if (equipment) {
+      const replacementSlots = this.pendingEquipmentReplacementSlots;
+      if (index < replacementSlots.length) {
+        this.gameService.replacePendingEquipment(replacementSlots[index]);
+        return;
+      }
+      index -= replacementSlots.length;
+      if (index === 0) {
+        this.gameService.leavePendingRewardEquipment();
+        return;
+      }
+      index -= 1;
+    }
     if (this.pendingTreasureReward) {
       if (index === 0) { this.collectPendingTreasure(); return; }
       index -= 1;

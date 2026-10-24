@@ -1,9 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ToastService } from './toast.service';
+import { TOAST_LABELS, ToastService } from './toast.service';
 
 describe('ToastService', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
+
+  it('accorde les libellés d équipements au genre et au nombre', () => {
+    expect(TOAST_LABELS.equipment('poignards', 'masculine-plural')).toBe('poignards obtenus');
+    expect(TOAST_LABELS.equipment('épée', 'feminine-singular')).toBe('épée obtenue');
+    expect(TOAST_LABELS.equipment('hache', 'feminine-singular')).toBe('hache obtenue');
+    expect(TOAST_LABELS.equipment('tir magique')).toBe('tir magique obtenu');
+    expect(TOAST_LABELS.equipment('portail de guérison')).toBe('portail de guérison obtenu');
+    expect(TOAST_LABELS.key()).toBe('Clé obtenue');
+  });
 
   it('prolonge la durée d’affichage de moitié avant le fondu de sortie', () => {
     const service = new ToastService();

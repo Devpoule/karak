@@ -1310,6 +1310,7 @@ describe('GameService récupération automatique des équipements humains', () =
   it('récupère automatiquement une récompense lorsqu’un emplacement est libre', () => {
     const gameService = TestBed.inject(GameService);
     const playerService = TestBed.inject(PlayerService);
+    const toastService = TestBed.inject(ToastService);
     playerService.initialize(2);
     gameService.initialize();
     gameService.phase.set('playing');
@@ -1327,6 +1328,7 @@ describe('GameService récupération automatique des équipements humains', () =
 
     expect(player.inventory.weapons[0]?.id).toBe('daggers');
     expect(gameService.pendingReward()).toBeNull();
+    expect(toastService.current()?.text).toBe('poignards obtenus');
   });
 
   it('stocke un exemplaire de puissance équivalente lorsqu’une case reste libre', () => {
@@ -1379,6 +1381,37 @@ describe('GameService récupération automatique des équipements humains', () =
     expect(tile.tokenId).toBe('giant-rat');
   });
 
+  it('conserve la décision humaine lorsqu’un sort plein peut être remplacé', () => {
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const player = playerService.players[0];
+    const otherPlayer = playerService.players[1];
+    const tile = { x: 1, y: 0, definitionId: 'room-1' } as PlacedTile;
+    TestBed.inject(DungeonService).tiles.push(tile);
+    player.position = { x: tile.x, y: tile.y };
+    otherPlayer.position = { x: tile.x, y: tile.y };
+    otherPlayer.controller = 'human';
+    playerService.addEquipment(otherPlayer, getEquipmentDefinition('fire-sword')!);
+    gameService.activePlayerIndex.set(1);
+    expect(gameService.dropInventoryEquipment(otherPlayer, 'spell', 0)).toBe(true);
+    gameService.activePlayerIndex.set(0);
+    playerService.addEquipment(player, getEquipmentDefinition('heart')!);
+    playerService.addEquipment(player, { ...getEquipmentDefinition('heart')! });
+    playerService.addEquipment(player, { ...getEquipmentDefinition('heart')! });
+
+    expect(gameService.offerGroundEquipmentAt(tile, 0)).toBe(true);
+    expect(gameService.pendingGroundEquipment()?.equipment.id).toBe('fire-sword');
+    expect(player.inventory.spells.every(spell => spell?.id === 'heart')).toBe(true);
+
+    expect(gameService.replaceGroundEquipment(1)).toBe(true);
+    expect(player.inventory.spells[1]?.id).toBe('fire-sword');
+    expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['heart']);
+  });
+
   it('remplace automatiquement l’arme la plus faible par une amélioration stricte', () => {
     const gameService = TestBed.inject(GameService);
     const playerService = TestBed.inject(PlayerService);
@@ -1404,7 +1437,7 @@ describe('GameService récupération automatique des équipements humains', () =
     expect(gameService.pendingReward()).toBeNull();
     expect(tile.tokenId).toBeUndefined();
     expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['daggers']);
-    expect(toastService.current()?.text).toBe('épée obtenu');
+    expect(toastService.current()?.text).toBe('épée obtenue');
   });
   it('permet de remplacer un sort lorsque les trois emplacements sont occupés', () => {
     vi.useFakeTimers();
@@ -1442,6 +1475,44 @@ describe('GameService récupération automatique des équipements humains', () =
 
     vi.runAllTimers();
     vi.useRealTimers();
+  });
+
+  it('conserve une récompense de sort en attente au lieu de la déposer automatiquement', () => {
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    const player = playerService.players[0];
+    const rewardTile = {
+      x: 1,
+      y: 0,
+      definitionId: 'room-1',
+      tokenId: 'fallen',
+      tokenFace: 'back',
+    } as PlacedTile;
+    playerService.addEquipment(player, { ...getEquipmentDefinition('heart')! });
+    playerService.addEquipment(player, { ...getEquipmentDefinition('heart')! });
+    playerService.addEquipment(player, { ...getEquipmentDefinition('heart')! });
+    gameService.pendingReward.set({
+      player,
+      monster: getTokenDefinition('fallen') as MonsterTokenDefinition,
+      rewardTile,
+      sourceTile: { x: 0, y: 0 } as PlacedTile,
+      remainingRewards: [{ kind: 'equipment', equipmentId: 'fire-sword' }],
+    });
+
+    expect(gameService.resolvePendingRewardEquipment()).toBe(true);
+    expect(gameService.pendingReward()?.remainingRewards).toEqual([
+      { kind: 'equipment', equipmentId: 'fire-sword' },
+    ]);
+    expect(gameService.getGroundEquipment(rewardTile)).toEqual([]);
+
+    expect(gameService.replacePendingEquipment(1)).toBe(true);
+    expect(player.inventory.spells[1]?.id).toBe('fire-sword');
+    expect(gameService.pendingReward()).toBeNull();
+    expect(gameService.getGroundEquipment(rewardTile).map(item => item.id)).toEqual(['heart']);
   });
 });
 
