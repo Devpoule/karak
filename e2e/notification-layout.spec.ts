@@ -190,6 +190,7 @@ test('les notifications sont alignees sur les deux cotes du HUD sans debordement
   const viewports: Viewport[] = [
     { width: 1366, height: 768 },
     { width: 768, height: 1024 },
+    { width: 709, height: 926 },
     { width: 390, height: 844 },
   ];
   const measurements: Array<Record<string, unknown>> = [];
@@ -204,7 +205,7 @@ test('les notifications sont alignees sur les deux cotes du HUD sans debordement
       assertAligned(geometry);
       measurements.push({ viewport, ...geometry });
 
-      if (side === 'human') {
+      if (side === 'human' && viewport.width !== 709) {
         await page.waitForTimeout(1_000);
         await page.screenshot({
           path: `playwright-report/notification-layout-${viewport.width <= 640 ? 'mobile' : viewport.width === 768 ? 'tablet' : 'desktop'}.png`,
@@ -223,4 +224,55 @@ test('les notifications sont alignees sur les deux cotes du HUD sans debordement
   }
 
   console.log(`Notification DOM measurements: ${JSON.stringify(measurements)}`);
+});
+
+test('sous 900 px, seul l inventaire du joueur actif est visible', async ({ page }) => {
+  const viewports: Viewport[] = [
+    { width: 548, height: 1161 },
+    { width: 844, height: 1161 },
+    { width: 899, height: 900 },
+  ];
+
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    await enterDungeon(page);
+    await expect(page.locator('.player-hud__side')).toHaveCount(2);
+    await expect.poll(() => page.locator('.player-hud__side--open').count()).toBe(1);
+    await expect.poll(async () => Number(await page.locator('.player-hud__side--active').evaluate(
+      element => getComputedStyle(element).opacity,
+    ))).toBeGreaterThan(0);
+
+    const state = await page.locator('.player-hud__side').evaluateAll((sides) => sides.map((side) => {
+      const element = side as HTMLElement;
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return {
+        active: element.classList.contains('player-hud__side--active'),
+        open: element.classList.contains('player-hud__side--open'),
+        ariaHidden: element.getAttribute('aria-hidden'),
+        visibility: style.visibility,
+        opacity: style.opacity,
+        width: rect.width,
+        height: rect.height,
+      };
+    }));
+
+    const active = state.filter(side => side.active);
+    const inactive = state.filter(side => !side.active);
+    expect(active, JSON.stringify({ viewport, state })).toHaveLength(1);
+    expect(inactive, JSON.stringify({ viewport, state })).toHaveLength(1);
+    expect(active[0], JSON.stringify({ viewport, state })).toMatchObject({
+      open: true,
+      ariaHidden: 'false',
+      visibility: 'visible',
+    });
+    expect(Number(active[0].opacity), JSON.stringify({ viewport, state })).toBeGreaterThan(0);
+    expect(active[0].width, JSON.stringify({ viewport, state })).toBeGreaterThan(0);
+    expect(active[0].height, JSON.stringify({ viewport, state })).toBeGreaterThan(0);
+    expect(inactive[0], JSON.stringify({ viewport, state })).toMatchObject({
+      open: false,
+      ariaHidden: 'true',
+      visibility: 'hidden',
+    });
+  }
 });

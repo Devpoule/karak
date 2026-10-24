@@ -181,7 +181,8 @@
 
   column-gap: var(--combat-column-gap);
 
-  width: min(var(--combat-arena-max-width), calc(100vw - (2 * var(--combat-side-space)) - 1rem));
+  width: min(var(--combat-arena-max-width), calc(100% - (2 * var(--combat-side-space)) - 1rem));
+  max-width: calc(100% - 1rem);
   pointer-events: auto;
 
   animation: combat-arena-impact 380ms 1020ms ease-out both;
@@ -833,6 +834,8 @@
   top: 50%;
   left: calc(50% - min(380px, 22vw));
   width: min(340px, calc(50vw - var(--combat-side-space) - 1rem));
+  max-width: calc(100% - 1rem);
+  max-height: calc(100% - 1rem);
   height: min(360px, calc(100% - 2rem));
 
   display: flex;
@@ -864,8 +867,9 @@
   align-items: safe center;
   justify-content: center;
   width: min(340px, calc(50vw - var(--combat-side-space) - 1rem));
+  max-width: calc(100% - 1rem);
+  max-height: calc(100% - 1rem);
   height: min(360px, calc(100% - 2rem));
-  max-height: none;
   overflow: auto;
   pointer-events: auto;
   transform: translateY(-50%);
@@ -1582,7 +1586,7 @@
   }
 
   .combat-overlay__arena {
-    width: min(var(--combat-arena-max-width), calc(100vw - 1rem));
+    width: min(var(--combat-arena-max-width), calc(100% - 1rem));
   }
 
   .combat-overlay__fighter-image {
@@ -1613,7 +1617,7 @@
       var(--combat-center-width)
       minmax(0, 1fr);
 
-    width: min(var(--combat-arena-max-width), calc(100vw - (2 * var(--combat-side-space)) - 1rem));
+    width: min(var(--combat-arena-max-width), calc(100% - 1rem));
     column-gap: var(--combat-column-gap);
   }
 
@@ -1675,7 +1679,7 @@
       var(--combat-center-width)
       minmax(0, 1fr);
 
-    width: var(--combat-arena-max-width);
+    width: min(var(--combat-arena-max-width), calc(100% - 1rem));
     column-gap: var(--combat-column-gap);
   }
 
@@ -1808,7 +1812,7 @@
     top: 50%;
     right: auto;
     left: 50%;
-    width: min(340px, calc(100vw - 1rem));
+    width: min(340px, calc(100% - 1rem));
     height: min(360px, calc(100% - 1rem));
     transform: translate(-50%, -50%);
   }
@@ -1829,7 +1833,7 @@
   }
 
   .combat-overlay__arena {
-    width: min(100%, calc(100vw - 1rem));
+    width: min(100%, calc(100% - 1rem));
     column-gap: var(--combat-column-gap);
     transform: none;
   }
@@ -1903,7 +1907,7 @@
     right: auto;
     bottom: auto;
     left: 50%;
-    width: min(340px, calc(100vw - 1rem));
+    width: min(340px, calc(100% - 1rem));
     height: min(360px, calc(100% - 1rem));
     transform: translate(-50%, -50%);
   }
@@ -1913,7 +1917,7 @@
     right: auto;
     bottom: auto;
     left: 50%;
-    width: min(340px, calc(100vw - 1rem));
+    width: min(340px, calc(100% - 1rem));
     height: min(360px, calc(100% - 1rem));
     transform: translate(-50%, -50%);
   }

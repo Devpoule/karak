@@ -1,6 +1,8 @@
 :host {
   display: block;
   width: min(560px, calc(100vw - 2rem));
+  max-width: 100%;
+  min-width: 0;
 }
 
 .hero-power-card {
@@ -11,6 +13,8 @@
   align-items: center;
   isolation: isolate;
   overflow: hidden;
+  max-width: 100%;
+  min-width: 0;
   min-height: 250px;
   max-height: calc(100dvh - 2rem);
   padding: 1.25rem 1.5rem 1.25rem 0;
@@ -39,7 +43,7 @@
   filter: drop-shadow(0 8px 8px rgba(0, 0, 0, .65));
 }
 
-.hero-power-card__content { padding: .5rem 0 .5rem 1rem; text-align: left; }
+.hero-power-card__content { min-width: 0; padding: .5rem 0 .5rem 1rem; text-align: left; overflow-wrap: anywhere; }
 .hero-power-card__eyebrow { color: #d9b974; font-size: .72rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
 .hero-power-card h2 { margin: .25rem 0 .1rem; color: #fff1bc; font: 800 clamp(1.35rem, 4vw, 2rem)/1.05 var(--karak-font-display); }
 .hero-power-card__power { margin: 0 0 .65rem; color: #f5be41; font: 800 clamp(1.05rem, 3vw, 1.35rem)/1.2 var(--karak-font-display); }

@@ -321,6 +321,7 @@ test('combat fixture reste lisible sur écran étroit', async ({ page }) => {
 
 for (const viewport of [
   { width: 375, height: 844 },
+  { width: 709, height: 926 },
   { width: 768, height: 900 },
   { width: 985, height: 870 },
   { width: 1253, height: 870 },

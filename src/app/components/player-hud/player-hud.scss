@@ -461,12 +461,18 @@
 }
 
 /*
- * Mode compact : une seule fiche devient un tiroir bas afin de
- * préserver la zone centrale du plateau. PlayerHud ferme le panneau
- * opposé quand le viewport est compact.
+ * Sous 900 px, une seule fiche reste visible : PlayerHud ferme le panneau
+ * opposé au joueur actif. Le tiroir bas reste réservé aux écrans <= 640 px.
  */
 /* Le tiroir inférieur est réservé aux vrais écrans étroits. À 759 px,
  * deux panneaux latéraux compacts restent encore exploitables. */
+@media (max-width: 899px) {
+  .player-hud__side:not(.player-hud__side--active) {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
 @media (max-width: 640px) {
   .player-hud {
     /* La fiche s’adapte à la largeur disponible, pas à la hauteur du mobile. */

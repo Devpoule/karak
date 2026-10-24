@@ -17,6 +17,7 @@
 
   width: clamp(180px, 24vw, 360px);
   max-width: calc(100vw - 1rem);
+  min-width: 0;
   height: 52px;
   box-sizing: border-box;
   padding: 0 var(--karak-space-4);
@@ -147,7 +148,7 @@
 
 @media (max-width: 360px) {
   .toast-container {
-    width: min(220px, calc(100vw - 3.5rem));
+    width: min(220px, calc(100vw - 4.25rem));
     padding-inline: .55rem;
     font-size: .78rem;
   }
