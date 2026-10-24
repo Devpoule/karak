@@ -22,7 +22,7 @@ import {
 
 import { GameService } from '../../services/game.service';
 import { AiService } from '../../services/ai.service';
-import { ToastService } from '../../services/toast.service';
+import { TOAST_LABELS, ToastService } from '../../services/toast.service';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
 import { DecisionCard, DecisionCardAction } from '../decision-card/decision-card';
 import { HeroPowerCard } from '../hero-power-card/hero-power-card';
@@ -187,6 +187,49 @@ export class CombatOverlay implements OnDestroy {
           }
         });
       }
+    });
+
+    /**
+     * Reprend la présentation lorsque la récompense obligatoire déclenchée
+     * par Victorius est enfin résolue.
+     *
+     * Le timer du verdict peut arriver à échéance pendant cette résolution.
+     * Dans ce cas, dismissResult() doit légitimement attendre ; cet effet
+     * garantit qu'aucun état de combat ne reste ensuite affiché sans suite.
+     */
+    effect(() => {
+      const hasPendingResolution = this.gameService.hasPendingTileResolution;
+      const combat = this.presentedCombat();
+      const result = this.presentedResult();
+
+      if (
+        hasPendingResolution
+        || !combat
+        || !result?.unstoppableEligible
+        || this.presentationState() !== 'result'
+        || this.integratedUnstoppableDecision
+      ) {
+        return;
+      }
+
+      queueMicrotask(() => {
+        if (
+          this.presentationState() !== 'result'
+          || this.presentedCombat() !== combat
+          || this.presentedResult() !== result
+          || this.gameService.hasPendingTileResolution
+        ) {
+          return;
+        }
+
+        this.gameService.finalizeUnstoppableContinuation();
+        if (!this.gameService.pendingUnstoppableDecision()) {
+          // Une IA ne peut pas attendre une décision humaine. Si aucune
+          // continuation n'a pu être proposée, le tour doit donc reprendre
+          // le même chemin que la fermeture temporisée du verdict.
+          this.completeCombatPresentation(result, combat, true);
+        }
+      });
     });
   }
 
@@ -923,14 +966,11 @@ export class CombatOverlay implements OnDestroy {
 
     // Une récompense obligatoire possède déjà son propre dialogue : le toast
     // de victoire serait redondant et resterait visible derrière celui-ci.
-    const heroName = result.player.heroId
-      ? getHeroDefinition(result.player.heroId)?.name ?? 'Le héros'
-      : 'Le héros';
     const combatMessage = result.outcome === 'victory'
-      ? `${heroName} vainc ${result.monster.name}.`
+      ? TOAST_LABELS.victory()
       : result.outcome === 'defeat'
-        ? `${heroName} perd 1 point de vie.`
-        : `${heroName} est à égalité avec ${result.monster.name}.`;
+        ? TOAST_LABELS.defeat()
+        : TOAST_LABELS.draw();
     const combatTone = result.outcome === 'victory'
       ? 'success'
       : result.outcome === 'defeat'

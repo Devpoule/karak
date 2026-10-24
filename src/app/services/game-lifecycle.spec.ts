@@ -102,7 +102,7 @@ describe('GameService cycle de vie', () => {
     expect(service.phase()).toBe('playing');
     expect(service.activePlayer?.heroId).toBe('argentus');
     expect(service.activePlayer?.heroId ? getHeroDefinition(service.activePlayer.heroId)?.identityColor : null)
-      .toBe('#F0F0E8');
+      .toBe('#E2F1FF');
     expect(service.activePlayer?.lives).toBe(3);
   });
 });

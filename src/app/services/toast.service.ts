@@ -24,6 +24,19 @@ export interface ToastMessage {
   readonly target?: ToastTarget;
 }
 
+/** Libellés courts et stables utilisés par les notifications de partie. */
+export const TOAST_LABELS = {
+  damage: (amount = 1): string => `−${amount} PV`,
+  healing: (amount = 1): string => `+${amount} PV`,
+  key: (): string => 'Clé obtenue',
+  victory: (): string => 'Victoire !',
+  defeat: (): string => '−1 PV',
+  draw: (): string => 'Égalité',
+  cursed: (): string => 'Maudit !',
+  treasure: (): string => 'Trésor obtenu',
+  equipment: (name: string): string => `${name} obtenu`,
+} as const;
+
 /** File unique de notifications informatives, non bloquantes. */
 @Injectable({ providedIn: 'root' })
 export class ToastService {
@@ -31,7 +44,8 @@ export class ToastService {
   private readonly toastDurationMinimum = 4400;
   private readonly toastDurationMaximum = 10400;
   private readonly toastCharactersPerSecond = 42;
-  private readonly toastDurationScale = 2 / 3;
+  /** Les notifications restent lisibles 50 % plus longtemps que la base historique. */
+  private readonly toastDurationScale = 1.5;
   private readonly toastFadeDuration = 300;
 
   readonly current = signal<ToastMessage | null>(null);

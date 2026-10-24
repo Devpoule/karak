@@ -62,8 +62,7 @@ describe('GameService Portail de guérison', () => {
     expect(target.lives).toBe(5);
     expect(target.isCursed).toBe(false);
     expect(user.inventory.spells.some(spell => spell?.effect === 'healing-portal')).toBe(false);
-    expect(toastService.current()?.text).toContain(target.heroId ? getHeroDefinition(target.heroId)?.name : 'Le héros');
-    expect(toastService.current()?.text).not.toContain('Vous');
+    expect(toastService.current()?.text).toBe('+1 PV');
     expect(gameService.turnTransitionPending()).toBe(false);
     expect(turnService.remainingMovements()).toBe(2);
   });
@@ -1405,7 +1404,7 @@ describe('GameService récupération automatique des équipements humains', () =
     expect(gameService.pendingReward()).toBeNull();
     expect(tile.tokenId).toBeUndefined();
     expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['daggers']);
-    expect(toastService.current()?.text).toBe('Argentus a remplacé ses poignards par une épée.');
+    expect(toastService.current()?.text).toBe('épée obtenu');
   });
   it('permet de remplacer un sort lorsque les trois emplacements sont occupés', () => {
     vi.useFakeTimers();

@@ -105,7 +105,7 @@ test('Victorius peut refuser une relance et choisir de poursuivre son tour', asy
   const combatOverlay = page.locator('.combat-overlay');
   await expect(combatOverlay).toBeVisible({ timeout: 10_000 });
   await expect.poll(() => combatOverlay.evaluate(element => element.style.getPropertyValue('--hero-color')))
-    .toBe('#E98936');
+    .toBe('#FF792E');
   await expect(page.locator('.board__reward-backdrop').filter({ hasText: 'Victorius' })).toHaveCount(0);
 
   const unstoppableChoice = page.getByRole('dialog', { name: 'Victorius' });
@@ -147,7 +147,7 @@ test('Victorius termine normalement après un Inarrêtable au quatrième mouveme
 
   await expect(page.locator('.combat-overlay')).toBeVisible({ timeout: 10_000 });
   await expect.poll(() => page.locator('.combat-overlay').evaluate(element => element.style.getPropertyValue('--hero-color')))
-    .toBe('#E98936');
+    .toBe('#FF792E');
   const rollingDice = page.locator('.combat-overlay__die--rolling');
   await expect(rollingDice).toHaveCount(2, { timeout: 10_000 });
   await expect(rollingDice).toHaveCount(0, { timeout: 10_000 });

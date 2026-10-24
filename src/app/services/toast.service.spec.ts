@@ -5,11 +5,11 @@ describe('ToastService', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it('réduit la durée d’affichage d’un tiers avant le fondu de sortie', () => {
+  it('prolonge la durée d’affichage de moitié avant le fondu de sortie', () => {
     const service = new ToastService();
     service.show('Notification courte');
 
-    vi.advanceTimersByTime(2934);
+    vi.advanceTimersByTime(6600);
     expect(service.current()).not.toBeNull();
     expect(service.isDismissing()).toBe(true);
 
@@ -22,7 +22,7 @@ describe('ToastService', () => {
     service.show('Premier message');
     service.show('Second message');
 
-    vi.advanceTimersByTime(2934 + 300);
+    vi.advanceTimersByTime(6600 + 300);
 
     expect(service.current()?.text).toBe('Second message');
     expect(service.isDismissing()).toBe(false);

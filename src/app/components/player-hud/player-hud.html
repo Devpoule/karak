@@ -113,7 +113,7 @@
          JOUEURS HUMAINS
          =================================================== -->
 
-    <div class="player-hud__players player-hud__players--human">
+    <div class="player-hud__hud-group player-hud__hud-group--left player-hud__players player-hud__players--human">
       @for (entry of humanPlayers; track entry.index) {
         <button
           class="player-hud__player-control"
@@ -149,6 +149,11 @@
           <span class="player-hud__player-label"> J{{ entry.index + 1 }} </span>
         </button>
       }
+      @if (toastService.current(); as toast) {
+        @if (!toast.target || !isAiPlayer(toast.target.playerIndex)) {
+          <app-toast-container />
+        }
+      }
     </div>
 
     <!-- ===================================================
@@ -159,7 +164,12 @@
          JOUEURS IA
          =================================================== -->
 
-    <div class="player-hud__players player-hud__players--ai">
+    <div class="player-hud__hud-group player-hud__hud-group--right player-hud__players player-hud__players--ai">
+      @if (toastService.current()?.target; as target) {
+        @if (isAiPlayer(target.playerIndex)) {
+          <app-toast-container />
+        }
+      }
       @for (entry of aiPlayers; track entry.index) {
         <button
           class="player-hud__player-control"

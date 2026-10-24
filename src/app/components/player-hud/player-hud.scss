@@ -197,6 +197,17 @@
   justify-content: flex-end;
 }
 
+.player-hud__hud-group {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  min-width: 0;
+  pointer-events: auto;
+}
+
+.player-hud__hud-group--left { justify-content: flex-start; }
+.player-hud__hud-group--right { justify-content: flex-end; }
+
 /* Le compteur est désormais incrusté dans le nom du joueur actif. */
 
 /* ==========================================================
@@ -445,8 +456,8 @@
  * deux panneaux latéraux compacts restent encore exploitables. */
 @media (max-width: 640px) {
   .player-hud {
-    /* Conserver le dimensionnement historique piloté par la hauteur. */
-    --sidebar-width: clamp(150px, 18vh, 220px);
+    /* La fiche s’adapte à la largeur disponible, pas à la hauteur du mobile. */
+    --sidebar-width: min(220px, calc(50vw - 1rem));
     --sidebar-edge: .5rem;
   }
 
@@ -455,8 +466,9 @@
     bottom: auto;
     width: var(--sidebar-width);
     max-width: calc(100vw - 1rem);
-    max-height: calc(100% - 1rem);
-    overflow: visible;
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+    overflow-x: visible;
   }
 
   .player-hud__side--left,

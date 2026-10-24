@@ -286,6 +286,13 @@
   transform: rotateY(0deg);
 }
 
+/* L’overlay ambiant reste transparent aux interactions, mais la face de
+ * décision doit explicitement redevenir interactive après le retournement. */
+.combat-overlay__hero-card--flipped,
+.combat-overlay__hero-card--flipped .combat-overlay__hero-card-face--back {
+  pointer-events: auto;
+}
+
 /* À largeur intermédiaire, le verso devient une carte de décision centrée.
    Les deux faces restent dans le même hôte 3D et conservent donc exactement
    la même géométrie pendant le retournement. */

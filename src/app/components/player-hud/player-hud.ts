@@ -14,6 +14,8 @@ import { PlayerSidebar, PowerSelection } from '../player-sidebar/player-sidebar'
 import { HeroPowerCard } from '../hero-power-card/hero-power-card';
 import { HeroPowerId } from '../../models/hero';
 import { getHeroDefinition, getHeroIdentityColor } from '../../data/hero-definitions';
+import { ToastContainer } from '../toast-container/toast-container';
+import { ToastService } from '../../services/toast.service';
 
 
 
@@ -91,7 +93,7 @@ interface HudPlayerEntry {
 
   selector: 'app-player-hud',
 
-  imports: [PlayerSidebar, HeroPowerCard],
+  imports: [PlayerSidebar, HeroPowerCard, ToastContainer],
 
   templateUrl: './player-hud.html',
 
@@ -273,6 +275,7 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
     private readonly combatService: CombatService,
 
     private readonly playerService: PlayerService,
+    readonly toastService: ToastService,
 
   ) {
     this.compactViewport = this.isCompactViewport();
@@ -981,7 +984,7 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
 
    */
 
-  private isAiPlayer(playerIndex: number): boolean {
+  isAiPlayer(playerIndex: number): boolean {
 
     return this.players[playerIndex]?.controller === 'ai';
 

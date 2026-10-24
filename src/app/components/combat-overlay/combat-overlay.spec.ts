@@ -16,12 +16,12 @@ import { HeroId } from '../../models/hero';
 import { COMBAT_MONSTER_COLOR } from '../../constants/combat.constants';
 
 const HERO_IDENTITY_CASES = [
-  { heroId: 'aderyn', expectedColor: '#43A65C', playerIndex: 0 },
-  { heroId: 'argentus', expectedColor: '#F0F0E8', playerIndex: 1 },
-  { heroId: 'taia', expectedColor: '#F2D34F', playerIndex: 2 },
-  { heroId: 'victorius', expectedColor: '#E98936', playerIndex: 3 },
-  { heroId: 'xanros', expectedColor: '#9860D2', playerIndex: 4 },
-  { heroId: 'horan', expectedColor: '#8197A8', playerIndex: 0 },
+  { heroId: 'aderyn', expectedColor: '#19D978', playerIndex: 0 },
+  { heroId: 'argentus', expectedColor: '#E2F1FF', playerIndex: 1 },
+  { heroId: 'taia', expectedColor: '#FFD43B', playerIndex: 2 },
+  { heroId: 'victorius', expectedColor: '#FF792E', playerIndex: 3 },
+  { heroId: 'xanros', expectedColor: '#B45CFF', playerIndex: 4 },
+  { heroId: 'horan', expectedColor: '#789FC4', playerIndex: 0 },
 ] as const;
 
 describe('CombatOverlay décisions facultatives de Horan', () => {
@@ -312,7 +312,7 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     expect(combatOverlay?.style.getPropertyValue('--monster-color'))
       .toBe(COMBAT_MONSTER_COLOR);
     expect(combatOverlay?.style.getPropertyValue('--combat-wave-color'))
-      .toBe(outcome === 'defeat' ? COMBAT_MONSTER_COLOR : '#8197A8');
+      .toBe(outcome === 'defeat' ? COMBAT_MONSTER_COLOR : '#789FC4');
     expect(heroScore?.textContent).toContain(`${result.attackPower} pts`);
     expect(monsterScore?.textContent).toContain(`${result.monsterStrength} pts`);
     expect(heroScore?.textContent).not.toContain('Score de combat');

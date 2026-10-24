@@ -269,9 +269,9 @@ async function runCombatScenario(
       monsterScoreBackground: getComputedStyle(monsterScore).backgroundImage,
     };
   });
-  expect(combatColors.hero).toBe('#F0F0E8');
+  expect(combatColors.hero).toBe('#E2F1FF');
   expect(combatColors.monster).toBe('#ff5646');
-  expect(combatColors.heroScore).toBe('#F0F0E8');
+  expect(combatColors.heroScore).toBe('#E2F1FF');
   expect(combatColors.monsterScore).toBe('#ff5646');
   expect(combatColors.heroScoreText).toBe('rgb(255, 255, 255)');
   expect(combatColors.monsterScoreText).toBe('rgb(255, 255, 255)');
@@ -279,7 +279,7 @@ async function runCombatScenario(
   expect(combatColors.heroScoreBackground).not.toBe('none');
   expect(combatColors.monsterScoreBackground).not.toBe('none');
   if (strength !== 6) {
-    expect(combatColors.wave).toBe(strength > 6 ? '#ff5646' : '#F0F0E8');
+      expect(combatColors.wave).toBe(strength > 6 ? '#ff5646' : '#E2F1FF');
   }
   if (page.viewportSize()!.width <= 900 || page.viewportSize()!.height <= 560) {
     await assertCombatLayoutInsideViewport(page);

@@ -33,7 +33,7 @@ describe('identité chromatique des pions', () => {
     const pawns = Array.from(fixture.nativeElement.querySelectorAll('.board__hero-pawn')) as HTMLElement[];
     expect(pawns).toHaveLength(2);
     expect(pawns.map(pawn => pawn.style.getPropertyValue('--hero-color')))
-      .toEqual(['#F2D34F', '#8197A8']);
+      .toEqual(['#FFD43B', '#789FC4']);
     fixture.destroy();
   });
 });

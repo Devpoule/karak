@@ -15,7 +15,7 @@ import { TokenBagService } from './token-bag.service';
 import { TurnService } from './turn.service';
 import { CombatService } from './combat.service';
 import type { CombatResult } from './combat.service';
-import { ToastAnchor, ToastEventType, ToastService, ToastTarget, ToastTone } from './toast.service';
+import { TOAST_LABELS, ToastAnchor, ToastEventType, ToastService, ToastTarget, ToastTone } from './toast.service';
 import { getHeroDefinition } from '../data/hero-definitions';
 import { GameSavePayloadV2, SaveEnvelopeV2 } from '../models/save';
 import { SaveService } from './save.service';
@@ -639,10 +639,10 @@ export class GameService {
         : 'un';
     this.showPlayerToast(
       player,
-      `${this.actorLabel(player)} a obtenu ${article} ${equipment.name.toLocaleLowerCase('fr-FR')}.`,
+      equipment.id === 'key' ? TOAST_LABELS.key() : TOAST_LABELS.equipment(equipment.name.toLocaleLowerCase('fr-FR')),
       'success',
       'equipment',
-      'inventory-top',
+      equipment.kind === 'weapon' ? 'inventory-weapons' : equipment.kind === 'spell' ? 'inventory-spells' : 'inventory-key',
       '✧',
     );
   }
@@ -655,7 +655,7 @@ export class GameService {
     const replacementArticle = this.getEquipmentIndefiniteArticle(replacement);
     this.showPlayerToast(
       player,
-      `${this.actorLabel(player)} a remplacé ${previousPossessive} par ${replacementArticle} ${replacementName}.`,
+      TOAST_LABELS.equipment(replacementName),
       'success',
       'equipment',
       'inventory-top',
@@ -1580,7 +1580,7 @@ export class GameService {
     if (!player || !tile || !this.playerService.restoreCompletely(player, 5)) return false;
     if (!this.turnService.consumeAllMovements()) return false;
     this.healingFountainUse.set({ player, tileKey: this.groundKey(tile) });
-    this.showPlayerToast(player, `${this.actorLabel(player)} récupère tous ses points de vie à la fontaine.`, 'success', 'healing', 'inventory-top', '♥');
+    this.showPlayerToast(player, TOAST_LABELS.healing(), 'success', 'healing', 'inventory-top', '♥');
     this.endTurn();
     return true;
   }
@@ -1664,7 +1664,7 @@ export class GameService {
 
     this.playerService.movePlayerTo(target, destination.x, destination.y, target.facing ?? 'north');
     this.playerService.restoreCompletely(target, 5);
-    this.showPlayerToast(target, `Guérison: ${this.actorLabel(target)} récupère tous ses points de vie.`, 'success', 'healing', 'inventory-top', '♥');
+    this.showPlayerToast(target, TOAST_LABELS.healing(), 'success', 'healing', 'inventory-top', '♥');
     const activePortalSelection = this.healingPortalSelection();
     if (activePortalSelection?.user === user) {
       this.healingPortalSelection.set(null);
@@ -1765,7 +1765,7 @@ export class GameService {
     this.horanReincarnationSelection.set(null);
     this.lastHoranReincarnationPlayer.set(selection.player);
     this.horanReincarnationRevision.update(revision => revision + 1);
-    this.showPlayerToast(selection.player, `${this.actorLabel(selection.player)} : Horan revient avec tous ses points de vie.`, 'success', 'healing', 'inventory-top', '♥');
+    this.showPlayerToast(selection.player, TOAST_LABELS.healing(), 'success', 'healing', 'inventory-top', '♥');
 
     // La Réincarnation est une résolution de fin de combat : elle ne rend
     // pas les mouvements consommés et le tour reprend sa fin normale.
@@ -2047,7 +2047,7 @@ export class GameService {
     }
 
     this.consumePendingReward(pending, rewardIndex);
-    this.showPlayerToast(pending.player, `${this.actorLabel(pending.player)} : trésor obtenu.`, 'success', 'treasure', 'treasure', '◆');
+    this.showPlayerToast(pending.player, TOAST_LABELS.treasure(), 'success', 'treasure', 'treasure', '◆');
     return true;
   }
 
@@ -2115,8 +2115,9 @@ export class GameService {
       this.playerService.setCursed(target, true);
     }
     this.consumePendingReward(pending, rewardIndex);
-    const cursedPlayer = target ?? pending.player;
-    this.showPlayerToast(cursedPlayer, `${this.actorLabel(cursedPlayer)} est maudit.`, 'warning', 'curse', 'curse', '☠');
+    const cursedPlayer = target ?? currentHolder;
+    if (!cursedPlayer) return false;
+    this.showPlayerToast(cursedPlayer, TOAST_LABELS.cursed(), 'warning', 'curse', 'curse', '☠');
     return true;
   }
 

@@ -187,10 +187,11 @@
 .hero-panel__curse {
   position: absolute;
   z-index: 10;
-  /* Remonte au niveau du cartouche du nom, hors de la zone du portrait. */
-  top: -28%;
-  width: 42%;
-  max-height: 38%;
+  /* Reste dans les limites du panneau pour rester visible quelle que soit
+   * la hauteur de la fiche latérale voisine. */
+  top: 3%;
+  width: 32%;
+  max-height: 32%;
   height: auto;
   object-fit: contain;
   filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7));
@@ -205,7 +206,7 @@
 }
 
 .hero-panel--left .hero-panel__curse {
-  right: -20%;
+  right: 4%;
 }
 
 /* Le médaillon déborde volontairement du panneau : il doit rester au-dessus
@@ -216,7 +217,7 @@
 }
 
 .hero-panel--right .hero-panel__curse {
-  left: -20%;
+  left: 4%;
 }
 
 .hero-panel--curse-applying::before {

@@ -54,7 +54,7 @@ test('V2.1-05 : reprend une partie sauvegardée après rechargement', async ({ p
 
   await expect(page.locator('app-board')).toBeVisible();
   await expect.poll(() => page.locator('.player-hud__side--left').evaluate(element => element.style.getPropertyValue('--hero-color')))
-    .toBe('#F0F0E8');
+    .toBe('#E2F1FF');
   await expect(page.locator('.player-hud__side--left .movement-counter')).toHaveAttribute('aria-label', '2 points disponibles');
   await expect(page.locator('.game__turn-announcement')).toContainText('Argentus');
   await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toHaveCount(0);

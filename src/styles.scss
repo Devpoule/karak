@@ -305,6 +305,17 @@ html[data-karak-contrast='high'] {
     clip: rect(0 0 0 0);
     white-space: nowrap;
   }
+
+  /* Dans le menu ouvert, les onglets restent textuels : les icônes seules
+   * rendaient Tutoriel et Paramètres incomplets sur mobile. */
+  .game-header__menu .karak-header-action__label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
 }
 
 html[data-karak-contrast='high'] :where(button, a, input, select, textarea):focus-visible {

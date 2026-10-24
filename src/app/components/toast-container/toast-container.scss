@@ -4,23 +4,20 @@
  * ni les inventaires.
  */
 :host {
-  position: absolute;
-  inset: 0;
-  z-index: calc(var(--karak-z-modal) + 1);
-  pointer-events: none;
+  display: contents;
 }
 
 .toast-container {
-  position: fixed;
-  top: 0;
-  z-index: calc(var(--karak-z-modal) + 1);
+  position: relative;
+  z-index: 1;
 
   display: flex;
   align-items: center;
   gap: var(--karak-space-3);
 
-  width: 33.333333vw;
-  height: var(--toast-height, 52px);
+  width: clamp(180px, 24vw, 360px);
+  max-width: calc(100vw - 1rem);
+  height: 52px;
   box-sizing: border-box;
   padding: 0 var(--karak-space-4);
   overflow: hidden;
@@ -37,9 +34,20 @@
 }
 
 .toast-container--contextual {
-  /* La position verticale est calculee dans la zone libre du HUD cible. */
-  animation: none;
+  /* Le groupe HUD fournit maintenant le référentiel vertical et horizontal. */
 }
+
+/* Chaque famille de domaine garde une signature visuelle distincte,
+ * déclenchée au même rendu que l'animation de son composant cible. */
+.toast-container--event-equipment { animation-name: toast-in, toast-equipment; }
+.toast-container--event-treasure { animation-name: toast-in, toast-treasure; }
+.toast-container--event-life-loss { animation-name: toast-in, toast-life-loss; }
+.toast-container--event-healing { animation-name: toast-in, toast-healing; }
+.toast-container--event-curse { animation-name: toast-in, toast-curse; }
+.toast-container--event-combat { animation-name: toast-in, toast-combat; }
+.toast-container--event-info,
+.toast-container--event-turn,
+.toast-container--event-power { animation-name: toast-in, toast-info; }
 
 .toast-container span {
   flex: 0 0 auto;
@@ -48,11 +56,12 @@
 }
 
 .toast-container p {
+  flex: 1 1 auto;
   min-width: 0;
   margin: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 @keyframes toast-in {
@@ -64,6 +73,55 @@
   from { opacity: 1; filter: blur(0); }
   to { opacity: 0; filter: blur(3px); }
 }
+
+@keyframes toast-equipment {
+  0%, 100% { transform: scale(1); }
+  35% { transform: scale(1.03); filter: brightness(1.25); }
+}
+
+@keyframes toast-treasure {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-2px); }
+}
+
+@keyframes toast-healing {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-2px); }
+}
+
+@keyframes toast-life-loss {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+}
+
+@keyframes toast-combat {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+}
+
+@keyframes toast-curse {
+  0%, 100% { filter: saturate(1); }
+  50% { filter: saturate(1.8) brightness(1.2); }
+}
+
+@keyframes toast-info {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .84; }
+}
+
+/* Les durées reprennent celles des panneaux ciblés pour que le toast reste
+ * le retour visuel du même évènement, plutôt qu'une animation indépendante. */
+.toast-container--event-equipment { animation-duration: var(--toast-enter-duration, 1100ms); }
+.toast-container--event-treasure,
+.toast-container--event-healing { animation-duration: var(--toast-enter-duration, 1100ms); }
+.toast-container--event-life-loss { animation-duration: var(--toast-enter-duration, 2800ms); }
+.toast-container--event-curse { animation-duration: var(--toast-enter-duration, 700ms); }
+.toast-container--event-combat { animation-duration: var(--toast-enter-duration, 900ms); }
+.toast-container--event-info,
+.toast-container--event-turn,
+.toast-container--event-power { animation-duration: var(--toast-enter-duration, 300ms); }
 
 .toast-container--dismissing {
   animation: toast-out var(--karak-motion-normal) var(--karak-ease-standard) forwards;
@@ -77,9 +135,20 @@
   /* Exception responsive documentee : sous 640 px, la largeur devient
      lisible et fluide au lieu de rester strictement egale au tiers du viewport. */
   .toast-container {
-    width: min(18rem, calc(100vw - 1rem));
+    width: min(260px, calc(100vw - 4rem));
+    min-width: 0;
     max-width: calc(100vw - 1rem);
+    height: 52px;
+    min-height: 52px;
     padding-inline: .75rem;
     font-size: .9rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .toast-container {
+    width: min(220px, calc(100vw - 3.5rem));
+    padding-inline: .55rem;
+    font-size: .78rem;
   }
 }

@@ -16,7 +16,6 @@ import { CombatService } from '../../services/combat.service';
 import { GameService } from '../../services/game.service';
 import { getHeroDefinition } from '../../data/hero-definitions';
 import { Player } from '../../models/player';
-import { ToastContainer } from '../../components/toast-container/toast-container';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
 import { ToastService } from '../../services/toast.service';
 
@@ -29,7 +28,7 @@ import { ToastService } from '../../services/toast.service';
  */
 @Component({
   selector: 'app-game',
-  imports: [GameHeader, GameSetup, Board, PlayerHud, ToastContainer, QuantityPipe],
+  imports: [GameHeader, GameSetup, Board, PlayerHud, QuantityPipe],
   templateUrl: './game.html',
   styleUrl: './game.scss',
 })
@@ -115,19 +114,9 @@ export class Game implements OnInit, OnDestroy {
     queueMicrotask(() => {
       if (this.destroyed || this.gameService.activePlayerIndex() !== index) return;
       const recovery = player.recoveryState === 'resting';
-      this.toastService?.show(
-        recovery
-          ? `Récupération — ${this.getHeroName(player)} 1 PV`
-          : `Au tour de ${this.getHeroName(player)}`,
-        recovery ? 'success' : 'info',
-        { playerIndex: index, anchor: 'inventory-top' },
-        {
-          eventType: recovery ? 'healing' : 'turn',
-          heroId: player.heroId,
-          icon: recovery ? '♥' : '✦',
-          duration: 2800,
-        },
-      );
+      if (recovery) this.toastService?.show('+1 PV', 'success', { playerIndex: index, anchor: 'life' }, {
+        eventType: 'healing', heroId: player.heroId, icon: '♥', duration: 2800,
+      });
     });
   }
 

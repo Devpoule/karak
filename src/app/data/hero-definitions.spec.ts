@@ -7,12 +7,12 @@ import {
 import { HeroId } from '../models/hero';
 
 const EXPECTED_COLORS: Record<HeroId, string> = {
-  aderyn: '#43A65C',
-  argentus: '#F0F0E8',
-  taia: '#F2D34F',
-  victorius: '#E98936',
-  xanros: '#9860D2',
-  horan: '#8197A8',
+  aderyn: '#19D978',
+  argentus: '#E2F1FF',
+  taia: '#FFD43B',
+  victorius: '#FF792E',
+  xanros: '#B45CFF',
+  horan: '#789FC4',
 };
 
 function relativeLuminance(hex: string): number {
@@ -43,7 +43,7 @@ describe('identité chromatique des héros', () => {
 
   it('dérive la couleur du héros et non de la position du joueur', () => {
     expect(getHeroIdentityColor('taia')).toBe(getHeroDefinition('taia')?.identityColor);
-    expect(getHeroIdentityColor('taia')).toBe('#F2D34F');
+    expect(getHeroIdentityColor('taia')).toBe('#FFD43B');
     expect(getHeroIdentityColor('horan')).not.toBe(getHeroIdentityColor('taia'));
   });
 
