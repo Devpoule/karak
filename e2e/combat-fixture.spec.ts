@@ -148,14 +148,40 @@ async function assertCombatPortraitLayout(page: import('@playwright/test').Page)
       const box = element.getBoundingClientRect();
       return { left: box.left, top: box.top, right: box.right, bottom: box.bottom, width: box.width, height: box.height };
     };
+    const tokenGeometry = (side: 'hero' | 'monster') => {
+      const frame = document.querySelector<HTMLElement>(`.combat-overlay__token-frame--${side}`);
+      const image = document.querySelector<HTMLElement>(`.combat-overlay__fighter-image--${side}`);
+      if (!frame || !image) return null;
+      const frameBox = frame.getBoundingClientRect();
+      const imageBox = image.getBoundingClientRect();
+      const frameStyle = getComputedStyle(frame);
+      const imageStyle = getComputedStyle(image);
+      return {
+        frame: { left: frameBox.left, top: frameBox.top, right: frameBox.right, bottom: frameBox.bottom, width: frameBox.width, height: frameBox.height },
+        image: { left: imageBox.left, top: imageBox.top, right: imageBox.right, bottom: imageBox.bottom, width: imageBox.width, height: imageBox.height },
+        frameStyle: {
+          margin: frameStyle.margin,
+          padding: frameStyle.padding,
+          borderRadius: frameStyle.borderRadius,
+        },
+        imageStyle: {
+          margin: imageStyle.margin,
+          padding: imageStyle.padding,
+          borderRadius: imageStyle.borderRadius,
+        },
+      };
+    };
     return {
       arena: rect('.combat-overlay__arena'),
       center: rect('.combat-overlay__center'),
       heroImage: rect('.combat-overlay__fighter-image--hero'),
       monsterImage: rect('.combat-overlay__fighter-image--monster'),
+      heroToken: tokenGeometry('hero'),
+      monsterToken: tokenGeometry('monster'),
       heroName: rect('.combat-overlay__fighter--hero .combat-overlay__fighter-name'),
       monsterName: rect('.combat-overlay__fighter--monster .combat-overlay__fighter-name'),
       roll: rect('.combat-overlay__roll-trigger'),
+      heroFooter: rect('.combat-overlay__fighter--hero .combat-overlay__fighter-footer'),
     };
   });
 
@@ -163,12 +189,37 @@ async function assertCombatPortraitLayout(page: import('@playwright/test').Page)
   expect(layout.center).not.toBeNull();
   expect(layout.heroImage).not.toBeNull();
   expect(layout.monsterImage).not.toBeNull();
+  expect(layout.heroToken).not.toBeNull();
+  expect(layout.monsterToken).not.toBeNull();
   expect(layout.heroName).not.toBeNull();
   expect(layout.monsterName).not.toBeNull();
   expect(layout.roll).not.toBeNull();
+  expect(layout.heroFooter).not.toBeNull();
+  const rollButton = page.locator('.combat-overlay__roll-trigger');
+  await expect(rollButton).toHaveClass(/combat-overlay__roll-trigger--active/);
+  await expect.poll(() => rollButton.evaluate(element => getComputedStyle(element).animationName))
+    .toContain('combat-roll-invitation');
 
   const heroImage = layout.heroImage!;
   const monsterImage = layout.monsterImage!;
+  const tokenTolerance = 1;
+  for (const token of [layout.heroToken!, layout.monsterToken!]) {
+    expect(Math.abs(token.frame.left - token.image.left)).toBeLessThanOrEqual(tokenTolerance);
+    expect(Math.abs(token.frame.top - token.image.top)).toBeLessThanOrEqual(tokenTolerance);
+    expect(Math.abs(token.frame.right - token.image.right)).toBeLessThanOrEqual(tokenTolerance);
+    expect(Math.abs(token.frame.bottom - token.image.bottom)).toBeLessThanOrEqual(tokenTolerance);
+    expect(Math.abs(token.frame.width - token.image.width)).toBeLessThanOrEqual(tokenTolerance);
+    expect(Math.abs(token.frame.height - token.image.height)).toBeLessThanOrEqual(tokenTolerance);
+    for (const style of [token.frameStyle, token.imageStyle]) {
+      expect(style.margin).toBe('0px');
+      expect(style.padding).toBe('0px');
+    }
+    expect(token.frameStyle.borderRadius).toBe(token.imageStyle.borderRadius);
+  }
+  console.info(`[combat token geometry ${viewport.width}px]`, JSON.stringify({
+    hero: layout.heroToken,
+    monster: layout.monsterToken,
+  }));
   const heroName = layout.heroName!;
   const monsterName = layout.monsterName!;
   const center = layout.center!;
@@ -180,6 +231,21 @@ async function assertCombatPortraitLayout(page: import('@playwright/test').Page)
   expect(monsterName.top - monsterImage.bottom).toBeGreaterThanOrEqual(-2);
   expect(heroName.top - heroImage.bottom).toBeLessThan(28);
   expect(monsterName.top - monsterImage.bottom).toBeLessThan(28);
+  expect(layout.roll!.top).toBeGreaterThanOrEqual(heroName.bottom - 1);
+  expect(layout.roll!.bottom).toBeLessThanOrEqual(layout.heroFooter!.bottom + 1);
+  console.info(`[combat vertical geometry ${viewport.width}x${viewport.height}]`, JSON.stringify({
+    heroImageBottom: heroImage.bottom,
+    heroNameTop: heroName.top,
+    rollTop: layout.roll!.top,
+    rollBottom: layout.roll!.bottom,
+    heroFooterBottom: layout.heroFooter!.bottom,
+    imageToName: heroName.top - heroImage.bottom,
+    nameToRoll: layout.roll!.top - heroName.bottom,
+  }));
+  for (const [name, image] of [[heroName, heroImage], [monsterName, monsterImage]] as const) {
+    expect(name.left).toBeGreaterThanOrEqual(image.left - 1);
+    expect(name.right).toBeLessThanOrEqual(image.right + 1);
+  }
   expect(Math.abs(heroImage.height / heroImage.width - monsterImage.height / monsterImage.width)).toBeLessThan(1.2);
 
   const heroCenter = (heroImage.left + heroImage.right) / 2;

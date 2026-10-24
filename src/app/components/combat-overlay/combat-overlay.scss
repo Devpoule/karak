@@ -200,6 +200,7 @@
 
   width: 100%;
   min-width: 0;
+  row-gap: clamp(4px, 1.2vh, 12px);
 
   opacity: 0;
 }
@@ -240,6 +241,28 @@
   height: var(--combat-visual-size);
 
   min-width: 0;
+}
+
+/* Les deux combattants partagent un cadre carré de type token. Le portrait
+ * du héros est recadré à l'intérieur de ce cadre sans modifier son asset. */
+.combat-overlay__token-frame {
+  --combat-token-color: var(--hero-color, #d8c39a);
+
+  position: relative;
+  display: block;
+  width: min(100%, 300px, var(--combat-visual-size));
+  aspect-ratio: 1;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: 20%;
+  box-shadow:
+    inset 0 0 0 4px color-mix(in srgb, var(--combat-token-color) 92%, white),
+    0 0 18px color-mix(in srgb, var(--combat-token-color) 88%, transparent),
+    0 0 42px color-mix(in srgb, var(--combat-token-color) 68%, transparent);
+}
+
+.combat-overlay__token-frame--monster {
+  --combat-token-color: var(--monster-color, #ff3a2d);
 }
 
 /* The hero card keeps one rectangle and swaps only its visible face. */
@@ -392,38 +415,21 @@
 .combat-overlay__fighter-image {
   display: block;
 
-  width: auto;
-  height: auto;
+  width: 100%;
+  height: 100%;
 
-  max-width: min(100%, 300px);
-  max-height: 330px;
-
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center 45%;
 
   /*
    * Coins arrondis sur les deux cartes.
    *
-   * Le ratio naturel des images est préservé.
-   * Le border-radius n'influence pas la grille.
+   * Les images remplissent le cadre carré commun par recadrage.
+   * L'image et le cadre partagent exactement le même arrondi.
    */
-  border-radius: 13% / 10%;
-
-  box-shadow:
-    0 7px 17px rgba(0, 0, 0, 0.38),
-    0 2px 5px rgba(0, 0, 0, 0.2);
+  border-radius: 20%;
 
   transform-origin: center center;
-}
-
-/*
- * Le héros et le monstre utilisent les mêmes contraintes.
- * Aucun décalage ni dimension spécifique par combattant.
- */
-
-.combat-overlay__fighter-image--hero,
-.combat-overlay__fighter-image--monster {
-  max-width: min(100%, 300px);
-  max-height: 330px;
 }
 
 /* ==========================================================
@@ -432,7 +438,7 @@
 
 .combat-overlay__fighter-footer {
   display: grid;
-  grid-template-rows: 64px 34px 84px;
+  grid-template-rows: 76px 38px 84px;
   align-items: center;
   justify-items: center;
 
@@ -559,45 +565,6 @@
     0 0 22px rgba(255, 202, 70, 0.48);
 }
 
-.combat-overlay__bolt {
-  position: absolute;
-  top: 50%;
-
-  color: #fff0a5;
-
-  font-size: 3rem;
-  line-height: 1;
-
-  opacity: 0;
-
-  text-shadow:
-    0 0 5px #fff,
-    0 0 12px #ffd55c,
-    0 0 24px #ff8a00;
-}
-
-.combat-overlay__bolt--left {
-  left: -12px;
-
-  animation:
-    combat-bolt-left
-    550ms
-    1120ms
-    ease-out
-    both;
-}
-
-.combat-overlay__bolt--right {
-  right: -12px;
-
-  animation:
-    combat-bolt-right
-    550ms
-    1180ms
-    ease-out
-    both;
-}
-
 /* ==========================================================
    LANCER DES DÉS
    ========================================================== */
@@ -653,6 +620,10 @@
 
 .combat-overlay__roll-trigger:active {
   transform: scale(0.95);
+}
+
+.combat-overlay__roll-trigger--active {
+  animation: combat-roll-invitation 1.25s ease-in-out infinite;
 }
 
 /* ==========================================================
@@ -1322,38 +1293,6 @@
   }
 }
 
-@keyframes combat-bolt-left {
-  0% {
-    opacity: 0;
-    transform: translate(-20px, -50%) rotate(-30deg) scale(0.5);
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0.8;
-    transform: translate(0, -50%) rotate(-18deg) scale(1);
-  }
-}
-
-@keyframes combat-bolt-right {
-  0% {
-    opacity: 0;
-    transform: translate(20px, -50%) rotate(30deg) scale(0.5);
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0.8;
-    transform: translate(0, -50%) rotate(18deg) scale(1);
-  }
-}
-
 /* ==========================================================
    ANIMATIONS — INTERACTIONS
    ========================================================== */
@@ -1367,6 +1306,28 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes combat-roll-invitation {
+  0%,
+  100% {
+    transform: scale(1);
+
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.65),
+      0 0 7px rgba(240, 207, 138, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+
+  50% {
+    transform: scale(1.12);
+
+    box-shadow:
+      0 5px 16px rgba(0, 0, 0, 0.72),
+      0 0 10px rgba(255, 224, 157, 0.95),
+      0 0 24px rgba(224, 177, 93, 0.72),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
   }
 }
 
@@ -1589,11 +1550,6 @@
     width: min(var(--combat-arena-max-width), calc(100% - 1rem));
   }
 
-  .combat-overlay__fighter-image {
-    max-width: min(100%, 300px);
-    max-height: calc(var(--combat-visual-size) - 12px);
-  }
-
   .combat-overlay__weapon-list {
     transform: none;
   }
@@ -1635,11 +1591,6 @@
     width: var(--combat-center-width);
   }
 
-  .combat-overlay__fighter-image {
-    max-width: min(100%, 230px);
-    max-height: 265px;
-  }
-
   .combat-overlay__weapon-list {
     top: -2.25rem;
     right: auto;
@@ -1658,9 +1609,6 @@
     flex-basis: 48px;
   }
 
-  .combat-overlay__bolt {
-    font-size: 2.25rem;
-  }
 }
 
 @media (max-width: 620px) {
@@ -1717,17 +1665,8 @@
     width: var(--combat-center-width);
   }
 
-  .combat-overlay__fighter-image {
-    max-width: min(100%, 165px);
-    max-height: 200px;
-  }
-
   .combat-overlay__versus strong {
     font-size: 2.6rem;
-  }
-
-  .combat-overlay__bolt {
-    display: none;
   }
 
   .combat-overlay__die {
@@ -1785,12 +1724,12 @@
    NOMS DES COMBATTANTS — TYPOGRAPHIE ARCADE
    ========================================================== */
 .combat-overlay__fighter-name {
-  width: 100%;
-  max-width: 100%;
-  padding: 0 6px;
+  width: min(100%,300px,var(--combat-visual-size));
+  align-self: start;
+  padding: min(12px,1.5vh) 6px 0;
   box-sizing: border-box;
   color: var(--combat-gold);
-  font-size: clamp(1.1rem, 2vw, 1.8rem);
+  font-size: clamp(1.25rem, 2.2vw, 2rem);
   font-weight: 950;
   font-style: italic;
   letter-spacing: 0.025em;
@@ -1799,7 +1738,11 @@
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: normal;
-  text-shadow: 0 2px 0 #6f2c16, 0 4px 10px rgba(0,0,0,.85);
+  text-shadow: 0 0 8px var(--fighter-name-color, var(--hero-color));
+}
+
+.combat-overlay__fighter--monster .combat-overlay__fighter-name {
+  --fighter-name-color: var(--monster-color, #ff3a2d);
 }
 
 @media (max-width: 900px) {
@@ -1821,7 +1764,7 @@
     top: auto;
     bottom: clamp(1rem, 8vh, 3.5rem);
   }
-  .combat-overlay__fighter-name { font-size: .95rem; }
+  .combat-overlay__fighter-name { font-size: 1rem; }
 }
 
 @media (max-height: 560px) {
@@ -1853,13 +1796,8 @@
     height: var(--combat-visual-size);
   }
 
-  .combat-overlay__fighter-image {
-    max-width: min(100%, 150px);
-    max-height: 112px;
-  }
-
   .combat-overlay__fighter-footer {
-    grid-template-rows: 28px 18px 38px;
+    grid-template-rows: 50px 20px 38px;
   }
 
   .combat-overlay__roll-trigger {
@@ -1899,7 +1837,7 @@
 
   .combat-overlay__fighter-name {
     padding-inline: 2px;
-    font-size: clamp(.8rem, 2.8vw, 1.25rem);
+    font-size: clamp(.9rem, 3vw, 1.35rem);
   }
 
   .combat-overlay__decision {

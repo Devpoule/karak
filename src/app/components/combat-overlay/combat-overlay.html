@@ -53,12 +53,14 @@
           <div class="combat-overlay__hero-card-stage">
             <div class="combat-overlay__hero-card-face combat-overlay__hero-card-face--front">
               @if (getHeroImage(); as heroImage) {
-                <img
-                  class="combat-overlay__fighter-image combat-overlay__fighter-image--hero"
-                  [src]="heroImage"
-                  alt="Héros"
-                  draggable="false"
-                />
+                <div class="combat-overlay__token-frame combat-overlay__token-frame--hero">
+                  <img
+                    class="combat-overlay__fighter-image combat-overlay__fighter-image--hero"
+                    [src]="heroImage"
+                    alt="Héros"
+                    draggable="false"
+                  />
+                </div>
               }
               @for (event of magicBoltFeedback(); track event) {
                 <div class="combat-overlay__magic-bolt-feedback" aria-live="polite">
@@ -118,7 +120,7 @@
           @if (presentationState() === 'ready' && canRoll) {
             <button
               type="button"
-              class="combat-overlay__roll-trigger"
+              class="combat-overlay__roll-trigger combat-overlay__roll-trigger--active"
               aria-label="Lancer les dés"
               (click)="resolveCombat()"
             >
@@ -208,15 +210,7 @@
       <!-- VS -->
       <div class="combat-overlay__center" aria-hidden="true">
         <div class="combat-overlay__versus">
-          <span class="combat-overlay__bolt combat-overlay__bolt--left">
-            ϟ
-          </span>
-
           <strong>VS</strong>
-
-          <span class="combat-overlay__bolt combat-overlay__bolt--right">
-            ϟ
-          </span>
         </div>
       </div>
 
@@ -226,12 +220,14 @@
         class="combat-overlay__fighter combat-overlay__fighter--monster"
       >
         <div class="combat-overlay__visual">
-          <img
-            class="combat-overlay__fighter-image combat-overlay__fighter-image--monster"
-            [src]="currentCombat.monster.image"
-            alt="Adversaire"
-            draggable="false"
+          <div class="combat-overlay__token-frame combat-overlay__token-frame--monster">
+            <img
+              class="combat-overlay__fighter-image combat-overlay__fighter-image--monster"
+              [src]="currentCombat.monster.image"
+              alt="Adversaire"
+              draggable="false"
             />
+          </div>
         </div>
 
         <div class="combat-overlay__fighter-name">{{ getMonsterName() }}</div>
