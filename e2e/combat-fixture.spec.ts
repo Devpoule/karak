@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+const FIXTURE_MONSTER_COLOR = '#B9DC74';
+
 // La présentation finale dure désormais six secondes ; le setup du jeu
 // reste inclus dans le délai global du scénario de fixture.
 test.setTimeout(60_000);
@@ -304,7 +306,15 @@ async function runCombatScenario(
   }
   await expect(page.locator('.combat-overlay__bonus')).toHaveText('+2 PTS');
   if (withMagic) {
-    await page.getByRole('button', { name: /Utiliser Tir magique/ }).click({ force: true });
+    const magicAction = page.getByRole('button', { name: /Utiliser Tir magique/ });
+    await expect(magicAction).toBeVisible();
+    await expect(page.locator('.combat-overlay__dice')).not.toHaveClass(/combat-overlay__dice--rolling/);
+    await expect(page.locator('.combat-overlay__hero-card--flipped')).toHaveCount(1);
+    await expect.poll(() => page.locator('.combat-overlay__hero-card-face--back').evaluate(element => {
+      const matrix = new DOMMatrixReadOnly(getComputedStyle(element).transform);
+      return Math.abs(matrix.m11 - 1) < .02 && Math.abs(matrix.m33 - 1) < .02;
+    })).toBe(true);
+    await magicAction.click({ force: true });
     await expect(page.locator('.combat-overlay__bonus--magic')).toHaveText('+1PT');
   }
   await page.screenshot({ path: `playwright-report/${rollFile}`, fullPage: true });
@@ -338,16 +348,16 @@ async function runCombatScenario(
     };
   });
   expect(combatColors.hero).toBe('#E2F1FF');
-  expect(combatColors.monster).toBe('#ff5646');
+  expect(combatColors.monster).toBe(FIXTURE_MONSTER_COLOR);
   expect(combatColors.heroScore).toBe('#E2F1FF');
-  expect(combatColors.monsterScore).toBe('#ff5646');
+  expect(combatColors.monsterScore).toBe(FIXTURE_MONSTER_COLOR);
   expect(combatColors.heroScoreText).toBe('rgb(255, 255, 255)');
   expect(combatColors.monsterScoreText).toBe('rgb(255, 255, 255)');
   expect(combatColors.verdictText).toBe('rgb(255, 255, 255)');
   expect(combatColors.heroScoreBackground).not.toBe('none');
   expect(combatColors.monsterScoreBackground).not.toBe('none');
   if (strength !== 6) {
-      expect(combatColors.wave).toBe(strength > 6 ? '#ff5646' : '#E2F1FF');
+      expect(combatColors.wave).toBe(strength > 6 ? FIXTURE_MONSTER_COLOR : '#E2F1FF');
   }
   if (page.viewportSize()!.width <= 900 || page.viewportSize()!.height <= 560) {
     await assertCombatLayoutInsideViewport(page);

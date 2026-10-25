@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, effect, HostListener, QueryList, ViewChildren } from '@angular/core';
+import { AfterViewInit, Component, effect, HostBinding, HostListener, QueryList, ViewChildren } from '@angular/core';
 import { ElementRef, OnDestroy } from '@angular/core';
 
 
@@ -103,6 +103,11 @@ interface HudPlayerEntry {
 
 export class PlayerHud implements AfterViewInit, OnDestroy {
   @ViewChildren(PlayerSidebar) private readonly sidebars!: QueryList<PlayerSidebar>;
+
+  @HostBinding('class.player-hud--power-consultation')
+  get hasPowerConsultation(): boolean {
+    return this.consultation !== null;
+  }
 
   consultation: { player: Player; powerId: HeroPowerId; trigger: HTMLElement | null; sidebar?: PlayerSidebar } | null = null;
 

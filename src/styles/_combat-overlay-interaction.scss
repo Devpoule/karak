@@ -1,0 +1,31 @@
+/* Interaction des cartes 3D et des décisions superposées du combat. */
+
+.combat-overlay__hero-card {
+  pointer-events: none;
+}
+
+.combat-overlay__hero-card .combat-overlay__token-frame,
+.combat-overlay__hero-card-stage {
+  pointer-events: none;
+}
+
+.combat-overlay__hero-card-face {
+  pointer-events: auto;
+}
+
+.combat-overlay__hero-card--flipped .combat-overlay__hero-card-face--front {
+  pointer-events: none;
+}
+
+.combat-overlay__hero-card--flipped .combat-overlay__hero-card-face--back {
+  z-index: 4;
+  pointer-events: auto;
+}
+
+.combat-overlay__decision {
+  pointer-events: none;
+}
+
+.combat-overlay__decision button {
+  pointer-events: auto;
+}
