@@ -140,7 +140,9 @@ export class Board {
         const player = this.gameService.lastXanrosSubstitutionPlayer();
         const hero = player?.heroId ? getHeroDefinition(player.heroId) : undefined;
         const power = hero?.powers.find(candidate => candidate.id === 'substitution');
-        if (hero && power) this.showPowerAnnouncement(hero, power, `${hero.name} utilise Substitution.`);
+        if (hero && power && player?.controller !== 'human') {
+          this.showPowerAnnouncement(hero, power, `${hero.name} utilise Substitution.`);
+        }
       }
       this.observedSubstitutionRevision = revision;
     });

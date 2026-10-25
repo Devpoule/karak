@@ -4,6 +4,10 @@
   display: inline-block;
 }
 
+:host:has(.tutorial-panel__backdrop) {
+  z-index: calc(var(--karak-z-modal) + 1);
+}
+
 .tutorial-panel:not(.tutorial-panel--compact) .tutorial-panel__trigger { width: 100%; }
 
 .tutorial-panel--compact .tutorial-panel__trigger {

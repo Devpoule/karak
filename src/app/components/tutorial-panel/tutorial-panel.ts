@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, Output, ViewChild } from '@angular/core';
 import { TUTORIAL_STEPS } from '../../data/tutorial-steps';
 
 /** Parcours guidé consultatif, réutilisable depuis l'accueil et la partie. */
@@ -10,6 +10,7 @@ import { TUTORIAL_STEPS } from '../../data/tutorial-steps';
 export class TutorialPanel {
   @Input() compact = false;
   @Input() disabled = false;
+  @Output() readonly closed = new EventEmitter<void>();
   @ViewChild('dialogElement') private dialogElement?: ElementRef<HTMLElement>;
 
   readonly steps = TUTORIAL_STEPS;
@@ -40,6 +41,7 @@ export class TutorialPanel {
     const focusTarget = this.previouslyFocusedElement;
     this.previouslyFocusedElement = null;
     queueMicrotask(() => focusTarget?.focus());
+    this.closed.emit();
   }
 
   next(): void {

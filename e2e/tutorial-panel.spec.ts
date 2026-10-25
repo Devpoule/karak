@@ -16,6 +16,7 @@ test('le tutoriel parcourt les cinq étapes depuis l’accueil', async ({ page }
 test('le tutoriel reste utilisable au clavier et sur mobile dans la partie', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/play');
+  await page.getByRole('button', { name: 'Ouvrir le menu de partie' }).click();
   await page.getByRole('button', { name: 'Tutoriel' }).click();
 
   await expect(page.getByRole('dialog', { name: 'Préparez votre aventure' })).toBeVisible();

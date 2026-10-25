@@ -1,21 +1,43 @@
 <main id="main-content" class="codex-page" tabindex="-1">
+  <div class="codex-page__atmosphere" aria-hidden="true"></div>
+
   <header class="codex-page__header">
     <button type="button" class="codex-page__back" (click)="goBack()">
-      ← {{ returnContext === 'game' ? 'Retour à la partie' : 'Accueil' }}
+      <span class="codex-page__back-icon" aria-hidden="true">←</span>
+      <span>
+          {{ returnContext === 'game' ? 'Retour à la partie' : 'Retour à l’accueil' }}
+      </span>
     </button>
-    <div>
-      <p class="codex-page__eyebrow">Encyclopédie de</p>
-      <h1>Karak</h1>
-      <p>Les héros et les créatures qui peuplent les catacombes.</p>
+
+    <div class="codex-page__brand">
+      <img src="/assets/logo-260.png" alt="Karak" width="130" height="73" draggable="false" />
+      <div>
+        <p class="codex-page__eyebrow">Archives des catacombes</p>
+        <h1>Karak</h1>
+        <p>Héros, créatures et secrets enfouis sous le château.</p>
+      </div>
+    </div>
+
+    <div class="codex-page__seal" aria-label="Encyclopédie de Karak">
+      <span aria-hidden="true">✦</span>
+      <small></small>
     </div>
   </header>
 
   <div class="codex-page__sections-shell">
     <nav class="codex-page__sections" aria-label="Rubriques du Codex">
-      <button type="button" [class.codex-page__section--selected]="section === 'universe'" [attr.aria-pressed]="section === 'universe'" (click)="selectSection('universe')">L'univers de Karak</button>
-      <button type="button" [class.codex-page__section--selected]="section === 'heroes'" [attr.aria-pressed]="section === 'heroes'" (click)="selectSection('heroes')">Héros</button>
-      <button type="button" [class.codex-page__section--selected]="section === 'bestiary'" [attr.aria-pressed]="section === 'bestiary'" (click)="selectSection('bestiary')">Bestiaire</button>
-      <button type="button" [class.codex-page__section--selected]="section === 'rules'" [attr.aria-pressed]="section === 'rules'" (click)="selectSection('rules')">Règles et mécaniques</button>
+      <button type="button" [class.codex-page__section--selected]="section === 'universe'" [attr.aria-pressed]="section === 'universe'" (click)="selectSection('universe')">
+        <span class="codex-page__section-icon" aria-hidden="true">✦</span><span>L'univers</span>
+      </button>
+      <button type="button" [class.codex-page__section--selected]="section === 'heroes'" [attr.aria-pressed]="section === 'heroes'" (click)="selectSection('heroes')">
+        <span class="codex-page__section-icon" aria-hidden="true">♞</span><span>Héros</span>
+      </button>
+      <button type="button" [class.codex-page__section--selected]="section === 'bestiary'" [attr.aria-pressed]="section === 'bestiary'" (click)="selectSection('bestiary')">
+        <span class="codex-page__section-icon" aria-hidden="true">☠</span><span>Bestiaire</span>
+      </button>
+      <button type="button" [class.codex-page__section--selected]="section === 'rules'" [attr.aria-pressed]="section === 'rules'" (click)="selectSection('rules')">
+        <span class="codex-page__section-icon" aria-hidden="true">▤</span><span>Règles</span>
+      </button>
     </nav>
     <span class="codex-page__sections-hint" aria-hidden="true">›</span>
   </div>
@@ -23,102 +45,121 @@
   @if (section === 'universe') {
     <article class="codex-page__universe">
       <header class="codex-page__universe-hero">
-        <img src="/assets/home-page.png" alt="Les héros face aux créatures de Karak" draggable="false" />
-        <div>
-          <p class="codex-page__eyebrow">Le lore de Karak</p>
+        <div class="codex-page__universe-art">
+          <img src="/assets/home-page.png" alt="Les héros face aux créatures de Karak" draggable="false" />
+          <span>Chroniques du royaume</span>
+        </div>
+        <div class="codex-page__universe-copy">
+          <p class="codex-page__eyebrow"> de Karak</p>
           <h2>Bienvenue sous le château</h2>
           <p>Un château en ruines, un labyrinthe oublié et des trésors qui attirent autant les héros que les dangers.</p>
+          <div class="codex-page__universe-meta"><span>03 récits</span><span>·</span><span>Archives interdites</span></div>
         </div>
       </header>
-      @for (entry of lore; track entry.id) {
-        <section class="codex-page__lore-section" [attr.id]="entry.id">
-          <h2>{{ entry.title }}</h2>
-          @for (paragraph of entry.paragraphs; track paragraph) { <p>{{ paragraph }}</p> }
-        </section>
-      }
-    </article>
-  } @else if (section === 'heroes') {
-  <div class="codex-page__layout">
-    <nav class="codex-page__gallery" aria-label="Choisir un héros">
-      @for (hero of heroes; track hero.id) {
-        <button
-          type="button"
-          class="codex-page__hero-card"
-          [class.codex-page__hero-card--selected]="selectedHero.id === hero.id"
-          [attr.aria-pressed]="selectedHero.id === hero.id"
-          (click)="selectHero(hero)"
-        >
-          <img [src]="hero.characterTransparent" [alt]="hero.name" draggable="false" />
-          <span>{{ hero.name }}</span><small>{{ originLabel(hero.origin) }}</small>
-        </button>
-      }
-    </nav>
-
-    <article class="codex-page__entry" aria-live="polite">
-      <header class="codex-page__entry-header">
-        <img [src]="selectedHero.characterTransparent" [alt]="selectedHero.name" draggable="false" />
-        <div>
-          <p>{{ selectedHero.nickname }} · {{ originLabel(selectedHero.origin) }}</p>
-          <h2>{{ selectedHero.name }}</h2>
-        </div>
-      </header>
-
-      <div class="codex-page__entry-body">
-        <section>
-          <h3>Histoire</h3>
-          <p>{{ selectedHero.description }}</p>
-        </section>
-
-        <section>
-          <h3>Pouvoirs</h3>
-          <div class="codex-page__powers">
-            @for (power of selectedHero.powers; track power.id; let index = $index) {
-              <article>
-                <h4>Pouvoir {{ index + 1 }} — {{ power.name }}</h4>
-                <p>{{ power.description }}</p>
-              </article>
-            }
-          </div>
-        </section>
+      <div class="codex-page__lore-grid">
+        @for (entry of lore; track entry.id; let index = $index) {
+          <section class="codex-page__lore-section" [attr.id]="entry.id">
+            <span class="codex-page__chapter-number">{{ (index + 1).toString().padStart(2, '0') }}</span>
+            <div>
+              <p class="codex-page__chapter-label">Chapitre {{ index + 1 }}</p>
+              <h2>{{ entry.title }}</h2>
+              @for (paragraph of entry.paragraphs; track paragraph) { <p>{{ paragraph }}</p> }
+            </div>
+          </section>
+        }
       </div>
     </article>
-  </div>
-  } @else if (section === 'bestiary') {
-  <div class="codex-page__layout">
-    <nav class="codex-page__gallery" aria-label="Choisir une créature">
-      @for (monster of bestiary; track monster.tokenId) {
-        @if (monsterDefinition(monster); as definition) {
-          <button type="button" class="codex-page__hero-card" [class.codex-page__hero-card--selected]="selectedMonster.tokenId === monster.tokenId" [attr.aria-pressed]="selectedMonster.tokenId === monster.tokenId" (click)="selectMonster(monster)">
-            <img [src]="definition.image" [alt]="definition.name" draggable="false" />
-            <span>{{ definition.name }}</span><small>{{ originLabel(definition.origin) }}</small>
-          </button>
-        }
-      }
-    </nav>
-    @if (monsterDefinition(selectedMonster); as monster) {
+  } @else if (section === 'heroes') {
+    <div class="codex-page__layout">
+      <aside class="codex-page__gallery-panel">
+        <header class="codex-page__gallery-heading">
+          <div><p class="codex-page__chapter-label">Registre des</p><h2>Héros</h2></div>
+          <span>{{ heroes.length }}</span>
+        </header>
+        <nav class="codex-page__gallery" aria-label="Choisir un héros">
+          @for (hero of heroes; track hero.id) {
+            <button type="button" class="codex-page__hero-card" [class.codex-page__hero-card--selected]="selectedHero.id === hero.id" [attr.aria-pressed]="selectedHero.id === hero.id" (click)="selectHero(hero)">
+              <span class="codex-page__hero-card-portrait"><img [src]="hero.characterTransparent" [alt]="hero.name" draggable="false" /></span>
+              <span class="codex-page__hero-card-info"><strong>{{ hero.name }}</strong><small>{{ originLabel(hero.origin) }}</small></span>
+            </button>
+          }
+        </nav>
+      </aside>
+
       <article class="codex-page__entry" aria-live="polite">
         <header class="codex-page__entry-header">
-          <img [src]="monster.image" [alt]="monster.name" draggable="false" />
-          <div><p>{{ originLabel(monster.origin) }}</p><h2>{{ monster.name }}</h2></div>
+          <div class="codex-page__entry-portrait"><img [src]="selectedHero.characterTransparent" [alt]="selectedHero.name" draggable="false" /></div>
+          <div>
+            <p class="codex-page__chapter-label">{{ selectedHero.nickname }} · {{ originLabel(selectedHero.origin) }}</p>
+            <h2>{{ selectedHero.name }}</h2>
+            <span class="codex-page__entry-rule" aria-hidden="true"></span>
+          </div>
         </header>
         <div class="codex-page__entry-body">
-          <section><h3>Description officielle</h3><p>{{ selectedMonster.description }}</p></section>
-          <section class="codex-page__stats"><h3>Caractéristique du jeu</h3><p><strong>Force :</strong> {{ monster.strength }}</p></section>
+          <section><h3>Histoire</h3><p>{{ selectedHero.description }}</p></section>
+          <section>
+            <h3>Pouvoirs</h3>
+            <div class="codex-page__powers">
+              @for (power of selectedHero.powers; track power.id; let index = $index) {
+                <article>
+                  <span class="codex-page__power-index">0{{ index + 1 }}</span>
+                  <div><p class="codex-page__chapter-label">Pouvoir {{ index + 1 }}</p><h4>{{ power.name }}</h4></div>
+                  <p>{{ power.description }}</p>
+                </article>
+              }
+            </div>
+          </section>
         </div>
       </article>
-    }
-  </div>
-  }
-  @else {
-    <div class="codex-page__rules" aria-label="Règles et mécaniques">
-      @for (rule of rules; track rule.title) {
-        <article class="codex-page__rule" [attr.id]="rule.id">
-          <p class="codex-page__official-label">Règle officielle</p>
-          <h2>{{ rule.title }}</h2>
-          <p>{{ rule.official }}</p>
-          @if (rule.complement) { <p class="codex-page__complement"><strong>Complément :</strong> {{ rule.complement }}</p> }
+    </div>
+  } @else if (section === 'bestiary') {
+    <div class="codex-page__layout">
+      <aside class="codex-page__gallery-panel">
+        <header class="codex-page__gallery-heading">
+          <div><p class="codex-page__chapter-label">Registre du</p><h2>Bestiaire</h2></div>
+          <span>{{ bestiary.length }}</span>
+        </header>
+        <nav class="codex-page__gallery" aria-label="Choisir une créature">
+          @for (monster of bestiary; track monster.tokenId) {
+            @if (monsterDefinition(monster); as definition) {
+              <button type="button" class="codex-page__hero-card" [class.codex-page__hero-card--selected]="selectedMonster.tokenId === monster.tokenId" [attr.aria-pressed]="selectedMonster.tokenId === monster.tokenId" (click)="selectMonster(monster)">
+                <span class="codex-page__hero-card-portrait"><img [src]="definition.image" [alt]="definition.name" draggable="false" /></span>
+                <span class="codex-page__hero-card-info"><strong>{{ definition.name }}</strong><small>{{ originLabel(definition.origin) }}</small></span>
+              </button>
+            }
+          }
+        </nav>
+      </aside>
+      @if (monsterDefinition(selectedMonster); as monster) {
+        <article class="codex-page__entry" aria-live="polite">
+          <header class="codex-page__entry-header">
+            <div class="codex-page__entry-portrait codex-page__entry-portrait--monster"><img [src]="monster.image" [alt]="monster.name" draggable="false" /></div>
+            <div><p class="codex-page__chapter-label">{{ originLabel(monster.origin) }}</p><h2>{{ monster.name }}</h2><span class="codex-page__entry-rule" aria-hidden="true"></span></div>
+          </header>
+          <div class="codex-page__entry-body">
+            <section><h3>Description officielle</h3><p>{{ selectedMonster.description }}</p></section>
+            <section class="codex-page__stats"><h3>Caractéristique du jeu</h3><div class="codex-page__strength"><span>Force</span><strong>{{ monster.strength }}</strong></div></section>
+          </div>
         </article>
       }
+    </div>
+  } @else {
+    <div class="codex-page__rules" aria-label="Règles et mécaniques">
+      <header class="codex-page__rules-header">
+        <p class="codex-page__eyebrow">Le manuel de l’aventurier</p>
+        <h2>Règles et mécaniques</h2>
+        <p>Les principes essentiels pour explorer Karak, survivre aux catacombes et repartir avec les trésors.</p>
+      </header>
+      <div class="codex-page__rules-grid">
+        @for (rule of rules; track rule.title; let index = $index) {
+          <article class="codex-page__rule" [attr.id]="rule.id">
+            <div class="codex-page__rule-heading"><span>{{ (index + 1).toString().padStart(2, '0') }}</span><p class="codex-page__official-label">Règle officielle</p></div>
+            <h2>{{ rule.title }}</h2>
+            <p>{{ rule.official }}</p>
+            @if (rule.complement) { <p class="codex-page__complement"><strong>Complément :</strong> {{ rule.complement }}</p> }
+          </article>
+        }
+      </div>
     </div>
   }
 

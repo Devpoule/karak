@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-// La présentation finale dure désormais quatre secondes ; le setup du jeu
+// La présentation finale dure désormais six secondes ; le setup du jeu
 // reste inclus dans le délai global du scénario de fixture.
 test.setTimeout(60_000);
 
@@ -302,10 +302,10 @@ async function runCombatScenario(
   if (page.viewportSize()!.width <= 900 || page.viewportSize()!.height <= 560) {
     await assertCombatLayoutInsideViewport(page);
   }
-  await expect(page.locator('.combat-overlay__bonus')).toHaveText('+2 pts');
+  await expect(page.locator('.combat-overlay__bonus')).toHaveText('+2 PTS');
   if (withMagic) {
     await page.getByRole('button', { name: /Utiliser Tir magique/ }).click({ force: true });
-    await expect(page.locator('.combat-overlay__bonus--magic')).toHaveText('+1pt');
+    await expect(page.locator('.combat-overlay__bonus--magic')).toHaveText('+1PT');
   }
   await page.screenshot({ path: `playwright-report/${rollFile}`, fullPage: true });
 

@@ -23,7 +23,7 @@ describe('QuantityPipe', () => {
   });
 
   it('permet de conserver un séparateur compact pour les bonus existants', () => {
-    expect(pipe.transform(1, 'pt', 'pts', '')).toBe('1pt');
-    expect(pipe.transform(2, 'pt', 'pts', '')).toBe('2pts');
+    expect(pipe.transform(1, 'PT', 'PTS', '')).toBe('1PT');
+    expect(pipe.transform(2, 'PT', 'PTS', '')).toBe('2PTS');
   });
 });

@@ -1,4 +1,6 @@
 @use './accessibility';
+@use '../../../styles/hero-identity-highlight' as hero-highlight;
+@use '../../../styles/hero-card-flip' as hero-card-flip;
 
 :host {
   display: contents;
@@ -214,9 +216,7 @@
     forwards;
 }
 
-.combat-overlay__fighter--decision {
-  z-index: 40;
-}
+.combat-overlay__fighter--decision { z-index: 40; }
 
 .combat-overlay__fighter--monster {
   animation:
@@ -258,9 +258,7 @@
   overflow: hidden;
   box-sizing: border-box;
   border-radius: 20%;
-  box-shadow:
-    0 0 22px color-mix(in srgb, var(--combat-token-color) 96%, transparent),
-    0 0 52px color-mix(in srgb, var(--combat-token-color) 82%, transparent);
+  @include hero-highlight.token-halo(var(--combat-token-color));
 }
 
 /* Le contour reste visible même lorsque le PNG contient des pixels
@@ -270,14 +268,13 @@
   content: '';
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 3;
 
-  box-sizing: border-box;
-  border: var(--combat-token-border-width) solid color-mix(in srgb, var(--combat-token-color) 94%, white);
-  border-radius: 20%;
-  box-shadow:
-    inset 0 0 12px color-mix(in srgb, var(--combat-token-color) 90%, white),
-    0 0 12px color-mix(in srgb, var(--combat-token-color) 94%, transparent);
+  @include hero-highlight.token-edge(
+    var(--combat-token-color),
+    var(--combat-token-border-width),
+    20%
+  );
 
   pointer-events: none;
 }
@@ -292,43 +289,29 @@
 }
 
 .combat-overlay__hero-card-stage {
-  position: absolute;
-  inset: 0;
-  perspective: 900px;
-  transform-style: preserve-3d;
+  @include hero-card-flip.stage;
 }
 
 .combat-overlay__hero-card-face {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border-radius: 13% / 10%;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transition: transform 460ms ease, opacity 180ms ease;
+  @include hero-card-flip.face;
 }
 
 .combat-overlay__hero-card-face--front {
-  transform: rotateY(0deg);
+  @include hero-card-flip.front;
   overflow: visible;
   align-items: flex-end;
 }
 
 .combat-overlay__hero-card-face--back {
-  transform: rotateY(180deg);
-  background: rgba(30, 23, 19, .98);
-  z-index: 2;
+  @include hero-card-flip.back;
 }
 
 .combat-overlay__hero-card--flipped .combat-overlay__hero-card-face--front {
-  transform: rotateY(-180deg);
+  @include hero-card-flip.flipped-front;
 }
 
 .combat-overlay__hero-card--flipped .combat-overlay__hero-card-face--back {
-  transform: rotateY(0deg);
+  @include hero-card-flip.flipped-back;
 }
 
 /* L’overlay ambiant reste transparent aux interactions, mais la face de
@@ -336,23 +319,6 @@
 .combat-overlay__hero-card--flipped,
 .combat-overlay__hero-card--flipped .combat-overlay__hero-card-face--back {
   pointer-events: auto;
-}
-
-/* À largeur intermédiaire, le verso devient une carte de décision centrée.
-   Les deux faces restent dans le même hôte 3D et conservent donc exactement
-   la même géométrie pendant le retournement. */
-@media (max-width: 1100px) {
-  .combat-overlay__visual.combat-overlay__hero-card--flipped {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    z-index: 35;
-    box-sizing: border-box;
-    width: min(340px, calc(100vw - 1rem));
-    height: min(360px, calc(100dvh - 1rem));
-    transform: translate(-50%, -50%);
-    transition: width 180ms ease, height 180ms ease, transform 180ms ease;
-  }
 }
 
 .combat-overlay__hero-card-face app-hero-power-card,
@@ -364,7 +330,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .combat-overlay__hero-card-face {
-    transition: none;
+    @include hero-card-flip.reduced-motion;
   }
 }
 
@@ -374,7 +340,6 @@
   left: -8px;
   z-index: 5;
   display: flex;
-  flex-wrap: wrap;
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
@@ -408,7 +373,6 @@
   min-width: 0;
   white-space: normal;
   overflow-wrap: normal;
-  word-break: normal;
 }
 
 .combat-overlay__magic-bolt-feedback {
@@ -1572,7 +1536,13 @@
   }
 
   .combat-overlay__weapon-list {
+    right: calc(100% + 6px);
+    left: auto;
     transform: none;
+  }
+
+  .combat-overlay__weapon-entry span {
+    display: none;
   }
 }
 

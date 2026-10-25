@@ -35,6 +35,7 @@ test('le panneau de paramètres applique et conserve les préférences', async (
 test('le panneau reste accessible depuis la partie sur mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/play');
+  await page.getByRole('button', { name: 'Ouvrir le menu de partie' }).click();
   await page.getByRole('button', { name: 'Paramètres' }).click();
 
   await expect(page.getByRole('dialog', { name: 'Paramètres' })).toBeVisible();

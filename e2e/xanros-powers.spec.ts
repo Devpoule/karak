@@ -115,6 +115,11 @@ test('Substitution échange les héros sans résoudre automatiquement la tuile d
   await expect(card.locator('.hero-power-card__choice')).toHaveCount(1);
   await card.locator('.hero-power-card__choice').click();
 
+  await expect(page.locator('.board__power-announcement')).toHaveCount(0);
+  await expect(page.locator('.hero-panel__card-stage--flipped')).toHaveCount(1);
+  await expect(page.locator('.hero-panel__card-stage--flipped .hero-power-card--announcement'))
+    .toHaveCount(1);
+
   await expect.poll(async () => page.evaluate(() => {
     const root = document.querySelector('app-root');
     const ng = (window as Window & { ng?: { getComponent(node: Element): any } }).ng;

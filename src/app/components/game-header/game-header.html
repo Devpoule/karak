@@ -36,9 +36,22 @@
 </header>
 
 @if (isMenuOpen) {
-  <div id="game-header-menu" class="game-header__menu" role="menu" aria-label="Commandes de partie">
-    <app-tutorial-panel [compact]="true" [disabled]="navigationLocked" (click)="closeMenu()" />
-    <app-settings-panel [compact]="true" [disabled]="navigationLocked" (click)="closeMenu()" />
+  <div
+    id="game-header-menu"
+    class="game-header__menu"
+    role="menu"
+    aria-label="Commandes de partie"
+  >
+    <app-tutorial-panel
+      [compact]="true"
+      [disabled]="navigationLocked"
+      (closed)="closeMenu()"
+    />
+    <app-settings-panel
+      [compact]="true"
+      [disabled]="navigationLocked"
+      (closed)="closeMenu()"
+    />
     @if (context === 'game') {
       <a class="game-header__menu-item" role="menuitem" routerLink="/codex" [queryParams]="{ from: 'game' }" (click)="closeMenu()">
         <span aria-hidden="true">▣</span><span>Encyclopédie</span>

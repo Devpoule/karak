@@ -33,12 +33,34 @@
       [attr.aria-label]="gameService.healingPortalSelection() ? 'Sélectionner ' + hero.name + ' comme cible du portail' : 'Afficher les informations de ' + hero.name"
       (click)="openBiography()"
     >
-      <img
-        class="hero-panel__card"
-        [src]="hero.characterStats"
-        [alt]="hero.name"
-        draggable="false"
-      />
+      <div
+        class="hero-panel__card-stage"
+        [class.hero-panel__card-stage--flipped]="substitutionFlipped()"
+      >
+        <div class="hero-panel__card-face hero-panel__card-face--front">
+          <img
+            class="hero-panel__card"
+            [src]="hero.characterStats"
+            [alt]="hero.name"
+            draggable="false"
+          />
+        </div>
+        <div
+          class="hero-panel__card-face hero-panel__card-face--back"
+          [attr.aria-hidden]="substitutionFlipped() ? null : 'true'"
+          aria-live="polite"
+        >
+          @if (substitutionPower; as power) {
+            <app-hero-power-card
+              class="hero-panel__power-card"
+              mode="announcement"
+              [hero]="hero"
+              [power]="power"
+              [message]="substitutionMessage"
+            />
+          }
+        </div>
+      </div>
     </button>
       <!--
         isCursed lit curseRevision et maintient le lien réactif avec

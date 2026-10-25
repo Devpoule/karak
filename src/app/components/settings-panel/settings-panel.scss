@@ -4,6 +4,10 @@
   display: inline-block;
 }
 
+:host:has(.settings-panel__backdrop) {
+  z-index: calc(var(--karak-z-modal) + 1);
+}
+
 .settings-panel:not(.settings-panel--compact) .settings-panel__trigger { width: 100%; }
 
 .settings-panel--compact .settings-panel__trigger {

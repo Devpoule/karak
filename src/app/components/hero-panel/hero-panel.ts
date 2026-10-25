@@ -5,6 +5,7 @@ import { HeroDefinition } from '../../models/hero';
 import { Player } from '../../models/player';
 import { PlayerService } from '../../services/player.service';
 import { GameService } from '../../services/game.service';
+import { HeroPowerCard } from '../hero-power-card/hero-power-card';
 
 type CurseAnimation = '' | 'hero-panel__curse--appearing' | 'hero-panel__curse--disappearing';
 
@@ -23,7 +24,7 @@ type CurseAnimation = '' | 'hero-panel__curse--appearing' | 'hero-panel__curse--
  * et l'état des joueurs seront implémentés.
  */
 @Component({
-  imports: [],
+  imports: [HeroPowerCard],
   selector: 'app-hero-panel',
   styleUrl: './hero-panel.scss',
   templateUrl: './hero-panel.html',
@@ -50,9 +51,14 @@ export class HeroPanel implements DoCheck, OnDestroy {
   @Input() curseImagePath = '/assets/tokens/curse.png';
   readonly curseVisible = signal(false);
   readonly curseAnimation = signal<CurseAnimation>('');
+  readonly substitutionFlipped = signal(false);
   private previousPlayer: Player | null = null;
   private previousCurseState = false;
   private dismissalTimer: ReturnType<typeof setTimeout> | null = null;
+  private substitutionTimer: ReturnType<typeof setTimeout> | null = null;
+  private substitutionPlayer: Player | null = null;
+  private substitutionWaitingForAction = false;
+  private observedSubstitutionRevision = 0;
 
   /** Synchronise l'animation avec les notifications de l'état métier. */
   private readonly curseStateEffect = effect(() => {
@@ -60,9 +66,54 @@ export class HeroPanel implements DoCheck, OnDestroy {
     this.syncCurseState(this.player?.isCursed === true);
   });
 
+  /** Retourne le portrait sur une substitution terminée ou maintient le verso pendant l'action facultative. */
+  private readonly substitutionEffect = effect(() => {
+    const revision = this.gameService.xanrosSubstitutionRevision();
+    const pendingAction = this.gameService.pendingXanrosSubstitutionAction();
+    const followupResolutionPending = pendingAction !== null
+      || this.gameService.pendingTreasure() !== null
+      || this.gameService.pendingGroundEquipment() !== null
+      || this.gameService.healingPortalSelection() !== null;
+    const phase = this.gameService.phase();
+    const activePlayerIndex = this.gameService.activePlayerIndex();
+
+    if (phase !== 'playing' || (
+      this.substitutionPlayer !== null
+      && this.playerIndex !== activePlayerIndex
+    )) {
+      this.resetSubstitutionCard();
+    }
+
+    if (revision > this.observedSubstitutionRevision) {
+      const player = this.gameService.lastXanrosSubstitutionPlayer();
+      if (
+        player === this.player
+        && player?.heroId === 'xanros'
+        && this.playerIndex === activePlayerIndex
+      ) {
+        this.showSubstitutionCard(pendingAction?.player === player);
+      }
+      this.observedSubstitutionRevision = revision;
+    }
+
+    if (
+      this.substitutionPlayer === this.player
+      && this.substitutionWaitingForAction
+      && pendingAction === null
+      && !followupResolutionPending
+      && !this.gameService.turnTransitionPending()
+    ) {
+      this.substitutionWaitingForAction = false;
+      this.scheduleSubstitutionReturn(0);
+    }
+  });
+
 /** Gere ngDoCheck et applique les gardes necessaires avant mutation. */
   ngDoCheck(): void {
     this.syncCurseState(this.player?.isCursed === true);
+    if (this.substitutionPlayer !== null && this.substitutionPlayer !== this.player) {
+      this.resetSubstitutionCard();
+    }
   }
 
 /** Gere syncCurseState et applique les gardes necessaires avant mutation. */
@@ -91,9 +142,14 @@ export class HeroPanel implements DoCheck, OnDestroy {
   /** Évite qu'une minuterie de dissipation survive à la destruction de la fiche. */
   ngOnDestroy(): void {
     this.curseStateEffect.destroy();
+    this.substitutionEffect.destroy();
     if (this.dismissalTimer) {
       clearTimeout(this.dismissalTimer);
       this.dismissalTimer = null;
+    }
+    if (this.substitutionTimer) {
+      clearTimeout(this.substitutionTimer);
+      this.substitutionTimer = null;
     }
   }
 
@@ -129,8 +185,45 @@ export class HeroPanel implements DoCheck, OnDestroy {
     return getHeroIdentityColor(this.player?.heroId);
   }
 
+  get substitutionPower() {
+    return this.heroDefinition?.powers.find(power => power.id === 'substitution') ?? null;
+  }
+
+  get substitutionMessage(): string {
+    return this.substitutionWaitingForAction
+      ? 'Position échangée. Choisissez une action.'
+      : 'Xanros a changé de position.';
+  }
+
   get isHealingPortalTarget(): boolean {
     return this.gameService.healingPortalSelection()?.target === this.player;
+  }
+
+  private showSubstitutionCard(waitingForAction: boolean): void {
+    if (this.substitutionTimer) clearTimeout(this.substitutionTimer);
+    this.substitutionTimer = null;
+    this.substitutionPlayer = this.player;
+    this.substitutionWaitingForAction = waitingForAction;
+    this.substitutionFlipped.set(true);
+    if (!waitingForAction) this.scheduleSubstitutionReturn(2500);
+  }
+
+  private scheduleSubstitutionReturn(delay: number): void {
+    if (this.substitutionTimer) clearTimeout(this.substitutionTimer);
+    this.substitutionTimer = setTimeout(() => {
+      this.substitutionFlipped.set(false);
+      this.substitutionPlayer = null;
+      this.substitutionWaitingForAction = false;
+      this.substitutionTimer = null;
+    }, delay);
+  }
+
+  private resetSubstitutionCard(): void {
+    if (this.substitutionTimer) clearTimeout(this.substitutionTimer);
+    this.substitutionTimer = null;
+    this.substitutionFlipped.set(false);
+    this.substitutionPlayer = null;
+    this.substitutionWaitingForAction = false;
   }
 
 /** Gere openBiography et applique les gardes necessaires avant mutation. */

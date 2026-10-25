@@ -1,0 +1,33 @@
+/*
+ * Rendu partagé de la surbrillance liée à l'identité d'un héros.
+ *
+ * Les composants gardent leur propre géométrie : le cadre de combat
+ * utilise le liseré sur un pseudo-élément, tandis que le portrait de la
+ * fiche applique la même lumière sur l'image elle-même.
+ */
+
+@mixin token-halo($color) {
+  box-shadow:
+    0 0 22px color-mix(in srgb, $color 96%, transparent),
+    0 0 52px color-mix(in srgb, $color 82%, transparent);
+}
+
+@mixin token-edge($color, $border-width, $radius) {
+  box-sizing: border-box;
+  border: $border-width solid color-mix(in srgb, $color 94%, white);
+  border-radius: $radius;
+  box-shadow:
+    inset 0 0 12px color-mix(in srgb, $color 90%, white),
+    0 0 12px color-mix(in srgb, $color 94%, transparent);
+}
+
+@mixin image-highlight($color, $border-width, $radius) {
+  border-color: color-mix(in srgb, $color 94%, white);
+  border-radius: $radius;
+  box-shadow:
+    0 0 22px color-mix(in srgb, $color 96%, transparent),
+    0 0 52px color-mix(in srgb, $color 82%, transparent),
+    inset 0 0 0 $border-width color-mix(in srgb, $color 94%, white),
+    inset 0 0 12px color-mix(in srgb, $color 90%, white),
+    0 0 12px color-mix(in srgb, $color 94%, transparent);
+}

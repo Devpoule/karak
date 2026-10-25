@@ -50,80 +50,88 @@
           class="combat-overlay__visual combat-overlay__hero-card"
           [class.combat-overlay__hero-card--flipped]="isHeroCardFlipped"
         >
-          <div class="combat-overlay__hero-card-stage">
-            <div class="combat-overlay__hero-card-face combat-overlay__hero-card-face--front">
-              @if (getHeroImage(); as heroImage) {
-                <div class="combat-overlay__token-frame combat-overlay__token-frame--hero">
+          <div
+            class="combat-overlay__token-frame combat-overlay__token-frame--hero"
+            [style.width]="isHeroCardFlipped ? '100%' : null"
+            [style.height]="isHeroCardFlipped ? '100%' : null"
+            [style.aspect-ratio]="isHeroCardFlipped ? 'auto' : null"
+          >
+            <div class="combat-overlay__hero-card-stage">
+              <div class="combat-overlay__hero-card-face combat-overlay__hero-card-face--front">
+                @if (getHeroImage(); as heroImage) {
                   <img
                     class="combat-overlay__fighter-image combat-overlay__fighter-image--hero"
                     [src]="heroImage"
                     alt="Héros"
                     draggable="false"
                   />
-                </div>
-              }
-              @for (event of magicBoltFeedback(); track event) {
-                <div class="combat-overlay__magic-bolt-feedback" aria-live="polite">
-                  <img src="/assets/tokens/fire-sword.png" alt="" draggable="false" />
-                  <span>Tir magique +1</span>
-                </div>
-              }
-              @if (displayedWeapons.length > 0) {
-                <div class="combat-overlay__weapon-list" aria-label="Armes utilisées pour le combat">
-                  @for (weapon of displayedWeapons; track weapon.id + $index) {
-                    <div class="combat-overlay__weapon-entry">
-                      <img [src]="weapon.image" [alt]="weapon.name" draggable="false" />
-                      <span>{{ weapon.name }} +{{ weapon.attackBonus }}</span>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-            <div class="combat-overlay__hero-card-face combat-overlay__hero-card-face--back">
-              @if (optionalPowerPresentation; as optionalPower) {
-                <app-hero-power-card
-                  [embedded]="true"
-                  [hero]="optionalPower.hero"
-                  [power]="optionalPower.power"
-                  [activateLabel]="optionalPower.activateLabel"
-                  [showActions]="currentCombat.player.controller === 'human'"
-                  (activated)="activateOptionalPower()"
-                  (declined)="declineOptionalPower()"
-                />
-              } @else if (!powerAnnouncement() && canUseMagicBolt) {
-                <app-decision-card
-                  [compact]="true"
-                  [embedded]="true"
-                  eyebrow="Sort de combat"
-                  title="Tir magique"
-                  description="Ajoutez un tir magique à cette attaque avant de confirmer le résultat du combat."
-                  [actions]="magicBoltActions"
-                  [showActions]="currentCombat.player.controller === 'human'"
-                  (actionSelected)="resolveMagicBoltAction($event)"
-                />
-              } @else if (powerAnnouncement(); as announcement) {
-                <app-hero-power-card
-                  mode="announcement"
-                  [embedded]="true"
-                  [hero]="announcement.hero"
-                  [power]="announcement.power"
-                  [message]="announcement.message"
-                />
-              } @else if (unstoppablePowerPresentation; as unstoppablePower) {
-                <app-hero-power-card
-                  [embedded]="true"
-                  [hero]="unstoppablePower.hero"
-                  [power]="unstoppablePower.power"
-                  activateLabel="Continuer le tour"
-                  (activated)="continueUnstoppable()"
-                  (declined)="finishUnstoppable()"
-                />
-              }
+                }
+                @for (event of magicBoltFeedback(); track event) {
+                  <div class="combat-overlay__magic-bolt-feedback" aria-live="polite">
+                    <img src="/assets/tokens/fire-sword.png" alt="" draggable="false" />
+                    <span>Tir magique +1</span>
+                  </div>
+                }
+              </div>
+              <div class="combat-overlay__hero-card-face combat-overlay__hero-card-face--back">
+                @if (optionalPowerPresentation; as optionalPower) {
+                  <app-hero-power-card
+                    [embedded]="true"
+                    [hero]="optionalPower.hero"
+                    [power]="optionalPower.power"
+                    [activateLabel]="optionalPower.activateLabel"
+                    [showActions]="currentCombat.player.controller === 'human'"
+                    (activated)="activateOptionalPower()"
+                    (declined)="declineOptionalPower()"
+                  />
+                } @else if (!powerAnnouncement() && canUseMagicBolt) {
+                  <app-decision-card
+                    [compact]="true"
+                    [embedded]="true"
+                    eyebrow="Sort de combat"
+                    title="Tir magique"
+                    description="Ajoutez un tir magique à cette attaque avant de confirmer le résultat du combat."
+                    [actions]="magicBoltActions"
+                    [showActions]="currentCombat.player.controller === 'human'"
+                    (actionSelected)="resolveMagicBoltAction($event)"
+                  />
+                } @else if (powerAnnouncement(); as announcement) {
+                  <app-hero-power-card
+                    mode="announcement"
+                    [embedded]="true"
+                    [hero]="announcement.hero"
+                    [power]="announcement.power"
+                    [message]="announcement.message"
+                  />
+                } @else if (unstoppablePowerPresentation; as unstoppablePower) {
+                  <app-hero-power-card
+                    [embedded]="true"
+                    [hero]="unstoppablePower.hero"
+                    [power]="unstoppablePower.power"
+                    activateLabel="Continuer le tour"
+                    (activated)="continueUnstoppable()"
+                    (declined)="finishUnstoppable()"
+                  />
+                }
+              </div>
             </div>
           </div>
+          @if (displayedWeapons.length > 0) {
+            <div class="combat-overlay__weapon-list" aria-label="Armes utilisées pour le combat">
+              @for (weapon of displayedWeapons; track weapon.id + $index) {
+                <div class="combat-overlay__weapon-entry">
+                  <img [src]="weapon.image" [alt]="weapon.name" draggable="false" />
+                  <span>{{ weapon.name }} +{{ weapon.attackBonus }}</span>
+                </div>
+              }
+            </div>
+          }
         </div>
 
-        <div class="combat-overlay__fighter-name">{{ getHeroName() }}</div>
+        <div
+          class="combat-overlay__fighter-name"
+          [style.visibility]="isHeroCardFlipped ? 'hidden' : null"
+        >{{ getHeroName() }}</div>
 
         <div class="combat-overlay__fighter-footer">
           @if (presentationState() === 'ready' && canRoll) {
@@ -174,7 +182,7 @@
                     class="combat-overlay__bonus combat-overlay__bonus--weapon"
                     [attr.aria-label]="'Bonus d’équipement : +' + (weapon.attackBonus | quantity: 'point' : 'points')"
                   >
-                    +{{ weapon.attackBonus | quantity: 'pt' : 'pts' }}
+                    +{{ weapon.attackBonus | quantity: 'pt' : 'PTS' }}
                   </span>
                 }
                 @for (bolt of displayedMagicBonusEntries; track bolt) {
@@ -182,12 +190,12 @@
                     class="combat-overlay__bonus combat-overlay__bonus--magic"
                     aria-label="Bonus magique : +1 point"
                   >
-                    +1pt
+                    +1PT
                   </span>
                 }
                 @if (displayedSacrificeBonus > 0) {
                   <span class="combat-overlay__bonus combat-overlay__bonus--hero" aria-label="Bonus de sacrifice : +1 point">
-                    +1pt
+                    +1PT
                   </span>
                 }
                 @if (displayedHeroBonus > 0) {
@@ -195,11 +203,25 @@
                     class="combat-overlay__bonus combat-overlay__bonus--hero"
                     [attr.aria-label]="'Bonus du pouvoir : +' + (displayedHeroBonus | quantity: 'point' : 'points')"
                   >
-                    +{{ displayedHeroBonus | quantity: 'pt' : 'pts' : '' }}
+                    +{{ displayedHeroBonus | quantity: 'PT' : 'PTS' : '' }}
                   </span>
                 }
               </div>
             }
+          }
+
+          @if (decisionRoll; as decision) {
+            <div
+              class="combat-overlay__score combat-overlay__score--hero combat-overlay__score--preview"
+              aria-label="Score actuel du héros"
+            >
+              <strong class="combat-overlay__score-value">{{ decision.attackPower | quantity: 'PT' : 'PTS' }}</strong>
+              @if (canUseXanrosSacrifice) {
+                <span class="combat-overlay__bonus combat-overlay__bonus--hero" aria-label="Bonus du sacrifice : +1 point">
+                  +1 PT
+                </span>
+              }
+            </div>
           }
 
           @if (isResultVisible && result; as combatResult) {
@@ -210,7 +232,7 @@
               [class.combat-overlay__score--tie]="combatResult.outcome === 'tie'"
               aria-label="Score final du héros"
             >
-              <strong class="combat-overlay__score-value">{{ combatResult.attackPower | quantity: 'pt' : 'pts' }}</strong>
+              <strong class="combat-overlay__score-value">{{ combatResult.attackPower | quantity: 'PT' : 'PTS' }}</strong>
             </div>
           }
         </div>
@@ -258,7 +280,15 @@
               [class.combat-overlay__score--tie]="combatResult.outcome === 'tie'"
               aria-label="Score final du monstre"
             >
-              <strong class="combat-overlay__score-value">{{ combatResult.monsterStrength | quantity: 'pt' : 'pts' }}</strong>
+              <strong class="combat-overlay__score-value">{{ combatResult.monsterStrength | quantity: 'PT' : 'PTS' }}</strong>
+            </div>
+          }
+          @if (decisionRoll; as decision) {
+            <div
+              class="combat-overlay__score combat-overlay__score--monster combat-overlay__score--preview"
+              aria-label="Score actuel du monstre"
+            >
+              <strong class="combat-overlay__score-value">{{ decision.monsterStrength | quantity: 'PT' : 'PTS' }}</strong>
             </div>
           }
         </div>

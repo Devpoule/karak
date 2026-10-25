@@ -16,6 +16,7 @@
         class="movement-counter__point"
         [class.movement-counter__point--consumed]="isPointConsumed(pointIndex)"
         [class.movement-counter__point--consuming]="isPointAnimating(pointIndex)"
+        [class.movement-counter__point--resetting]="isPointResetting()"
       >
         <span class="movement-counter__point-core">●</span>
         <span class="movement-counter__fragments" aria-hidden="true">

@@ -1,3 +1,6 @@
+@use '../../../styles/hero-card-flip' as hero-card-flip;
+@use '../../../styles/hero-identity-highlight' as hero-highlight;
+
 :host {
   display: block;
 
@@ -86,6 +89,8 @@
    * malédiction doit pouvoir franchir son bord supérieur vers le nom. */
   overflow: visible;
 
+  container-type: inline-size;
+
   padding: 0;
   border: 0;
   background: transparent;
@@ -145,14 +150,59 @@
  * La carte utilise ensuite toute la largeur disponible et
  * conserve automatiquement son ratio naturel.
  */
+.hero-panel__card-stage {
+  @include hero-card-flip.stage;
+
+  position: relative;
+  box-sizing: border-box;
+  width: 90%;
+  height: 105%;
+}
+
+.hero-panel__card-face {
+  @include hero-card-flip.face(6px, 6px);
+}
+
+.hero-panel__card-face--front {
+  @include hero-card-flip.front;
+  overflow: visible;
+  align-items: center;
+}
+
+.hero-panel__card-face--back {
+  @include hero-card-flip.back(rgba(30, 23, 19, .98));
+  display: block;
+  padding: 0;
+  box-sizing: border-box;
+  color: #f4ead1;
+  text-align: left;
+}
+
+/* Le verso réutilise exactement la carte d'annonce du plateau, sans créer
+ * une seconde composition visuelle pour le même pouvoir. */
+.hero-panel__card-face--back app-hero-power-card {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+}
+
+.hero-panel__card-stage--flipped .hero-panel__card-face--front {
+  @include hero-card-flip.flipped-front;
+}
+
+.hero-panel__card-stage--flipped .hero-panel__card-face--back {
+  @include hero-card-flip.flipped-back;
+}
+
 .hero-panel__card {
   display: block;
 
   position: relative;
   z-index: 1;
 
-  width: 90%;
-  height: 105%;
+  width: 100%;
+  height: 100%;
 
   max-width: none;
   max-height: none;
@@ -170,14 +220,13 @@
   pointer-events: none;
 }
 
-/* Le contour reprend exclusivement la couleur du joueur actif. */
-.hero-panel--active .hero-panel__card {
-  border-color: var(--hero-color, #d8c39a);
-  box-shadow:
-    0 0 0 2px rgba(18, 12, 10, .92),
-    0 0 0 1px rgba(255, 255, 255, .8),
-    0 0 8px var(--hero-color, #d8c39a),
-    0 0 16px color-mix(in srgb, var(--hero-color, #d8c39a) 65%, transparent);
+/* Les faces de la carte portent le halo ; le panneau de pierre reste neutre. */
+.hero-panel--active .hero-panel__card-face {
+  @include hero-highlight.image-highlight(
+    var(--hero-color, #d8c39a),
+    clamp(6px, 3.2cqw, 12px),
+    6px
+  );
 }
 
 /*
@@ -296,5 +345,9 @@
   .hero-panel--curse-applying::before {
     animation: none;
     opacity: 0;
+  }
+
+  .hero-panel__card-face {
+    @include hero-card-flip.reduced-motion;
   }
 }

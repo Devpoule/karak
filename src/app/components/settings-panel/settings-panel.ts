@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, Output, ViewChild } from '@angular/core';
 import { AudioPreference, ContrastPreference, MotionPreference, SettingsService, TextScale } from '../../services/settings.service';
 
 /** Panneau de préférences de confort partagé par l'accueil et la partie. */
@@ -10,6 +10,7 @@ import { AudioPreference, ContrastPreference, MotionPreference, SettingsService,
 export class SettingsPanel {
   @Input() compact = false;
   @Input() disabled = false;
+  @Output() readonly closed = new EventEmitter<void>();
   @ViewChild('dialogElement') private dialogElement?: ElementRef<HTMLElement>;
 
   isOpen = false;
@@ -31,6 +32,7 @@ export class SettingsPanel {
     const focusTarget = this.previouslyFocusedElement;
     this.previouslyFocusedElement = null;
     queueMicrotask(() => focusTarget?.focus());
+    this.closed.emit();
   }
 
   setMotionPreference(preference: MotionPreference): void {

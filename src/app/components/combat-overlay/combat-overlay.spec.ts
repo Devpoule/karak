@@ -61,6 +61,7 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     rollInitial = true,
     playerIndex = 0,
     monsterId = 'giant-rat',
+    withWeapon = false,
   ) {
     vi.useFakeTimers();
     vi.spyOn(Math, 'random').mockReturnValue(0);
@@ -82,6 +83,9 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     player.controller = controller;
     if (withMagicBolt) {
       playerService.addEquipment(player, getEquipmentDefinition('fire-sword')!);
+    }
+    if (withWeapon) {
+      playerService.addEquipment(player, getEquipmentDefinition('daggers')!);
     }
 
     combatService.startCombat(player, dungeonService.tiles[0], createMonster(monsterId));
@@ -278,6 +282,18 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     fixture.destroy();
   });
 
+  it('conserve les scores et le bonus pendant la décision de Xanros', () => {
+    const { fixture, combatService } = prepareCombat(false, 'xanros', 'human');
+    const roll = combatService.pendingCombatRoll()!;
+    const heroScore = fixture.nativeElement.querySelector('.combat-overlay__score--hero.combat-overlay__score--preview') as HTMLElement | null;
+    const monsterScore = fixture.nativeElement.querySelector('.combat-overlay__score--monster.combat-overlay__score--preview') as HTMLElement | null;
+
+    expect(heroScore?.textContent).toContain(`${roll.attackPower}`);
+    expect(heroScore?.textContent).toContain('+1 PT');
+    expect(monsterScore?.textContent).toContain(`${roll.monsterStrength}`);
+    fixture.destroy();
+  });
+
   it('conserve les actions de la carte de pouvoir pour un humain', () => {
     const { fixture } = prepareCombat(false, 'victorius', 'human');
 
@@ -298,6 +314,27 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
 
     expect(fixture.nativeElement.querySelector('.combat-overlay')?.style.getPropertyValue('--hero-color'))
       .toBe(expectedColor);
+    fixture.destroy();
+  });
+
+  it('expose les armes de l inventaire avant le lancer', () => {
+    const { fixture, overlay } = prepareCombat(false, 'horan', 'human', false, 0, 'giant-rat', true);
+
+    expect(overlay.displayedWeapons).toHaveLength(1);
+    expect(overlay.displayedWeapons[0].name).toBe('Poignards');
+    fixture.destroy();
+  });
+
+  it('maintient les armes hors de la face retournable après le lancer', () => {
+    const { fixture, overlay } = prepareCombat(false, 'horan', 'human', true, 0, 'giant-rat', true);
+    fixture.detectChanges();
+
+    const weaponList = fixture.nativeElement.querySelector('.combat-overlay__weapon-list') as HTMLElement | null;
+
+    expect(weaponList).not.toBeNull();
+    expect(weaponList?.textContent).toContain('Poignards');
+    expect(weaponList?.closest('.combat-overlay__hero-card-face')).toBeNull();
+    expect(weaponList?.closest('.combat-overlay__hero-card-stage')).toBeNull();
     fixture.destroy();
   });
 
@@ -329,8 +366,8 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
       .toBe(getCombatMonsterColor(result.monster.id));
     expect(combatOverlay?.style.getPropertyValue('--combat-wave-color'))
       .toBe(outcome === 'defeat' ? getCombatMonsterColor(result.monster.id) : getHeroIdentityColor(result.player.heroId));
-    expect(heroScore?.textContent).toContain(`${result.attackPower} pts`);
-    expect(monsterScore?.textContent).toContain(`${result.monsterStrength} pts`);
+    expect(heroScore?.textContent).toContain(`${result.attackPower} PTS`);
+    expect(monsterScore?.textContent).toContain(`${result.monsterStrength} PTS`);
     expect(heroScore?.textContent).not.toContain('Score de combat');
     expect(monsterScore?.textContent).not.toContain('Force');
     const verdict = fixture.nativeElement.querySelector('.combat-overlay__verdict') as HTMLElement | null;
@@ -385,7 +422,7 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     fixture.destroy();
   });
 
-  it('conserve le résultat pendant quatre secondes avant sa fermeture automatique', () => {
+  it('conserve le résultat pendant six secondes avant sa fermeture automatique', () => {
     const { fixture, overlay } = prepareCombat(false);
     const clearTimers = (overlay as unknown as { clearTimers: () => void }).clearTimers.bind(overlay);
     const resolveAfterRoll = (overlay as unknown as { resolveCombatAfterRoll: () => void }).resolveCombatAfterRoll.bind(overlay);
@@ -394,11 +431,44 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     resolveAfterRoll();
     expect(overlay.presentationState()).toBe('result');
 
-    vi.advanceTimersByTime(3999);
+    vi.advanceTimersByTime(5999);
     expect(overlay.presentationState()).toBe('result');
 
     vi.advanceTimersByTime(1);
     expect(overlay.presentationState()).toBe('intro');
+    fixture.destroy();
+  });
+
+  it('résout la récompense d’une victoire avant de fermer la présentation', () => {
+    const { fixture, overlay, combatService, gameService } = prepareCombat(
+      false,
+      'horan',
+      'human',
+      false,
+    );
+    const combat = combatService.pendingCombat()!;
+    const roll = combatService.rollPendingCombat()!;
+    const winningRoll = {
+      ...roll,
+      die1: 6,
+      die2: 6,
+      diceTotal: 12,
+      attackPower: 12,
+      monsterStrength: 1,
+    };
+    combatService.pendingCombatRoll.set(winningRoll);
+    const result = combatService.resolvePendingCombat()!;
+
+    expect(result.outcome).toBe('victory');
+    overlay.presentedResult.set(result);
+    overlay.presentationState.set('result');
+    fixture.detectChanges();
+
+    overlay.dismissResult();
+
+    expect(combat.player.inventory.weapons.some(weapon => weapon?.id === 'daggers')).toBe(true);
+    expect(gameService.pendingReward()).toBeNull();
+    expect(overlay.presentedResult()).toBeNull();
     fixture.destroy();
   });
 

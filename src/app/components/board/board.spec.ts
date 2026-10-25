@@ -28,6 +28,20 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     return { fixture, gameService, playerService, dungeonService };
   }
 
+  it('ne duplique pas l’annonce de Substitution pour un joueur humain', () => {
+    const { fixture, gameService, playerService } = createBoard();
+    const player = playerService.players[0];
+    player.heroId = 'xanros';
+    player.controller = 'human';
+
+    gameService.lastXanrosSubstitutionPlayer.set(player);
+    gameService.xanrosSubstitutionRevision.update(revision => revision + 1);
+    TestBed.flushEffects();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.powerAnnouncement()).toBeNull();
+  });
+
   it('conserve le verso tant qu’une récompense du jeton est en attente', () => {
     const { fixture, gameService, playerService, dungeonService } = createBoard();
     const player = playerService.players[0];

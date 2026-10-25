@@ -1,7 +1,7 @@
 import { Component, effect, Input, OnDestroy, signal } from '@angular/core';
 
 import { GAME_CONSTANTS } from '../../constants/game.constants';
-import { TurnService } from '../../services/turn.service';
+import { MovementConsumptionAnimation, TurnService } from '../../services/turn.service';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
 
 
@@ -33,16 +33,32 @@ export class MovementCounter implements OnDestroy {
   private readonly animatingPointIndexes = new Set<number>();
   private readonly animationStateRevision = signal(0);
   private readonly animationTimers = new Map<number, ReturnType<typeof setTimeout>>();
+  private readonly resetting = signal(false);
+  private resetAnimationTimer: ReturnType<typeof setTimeout> | undefined;
+  private observedResetRevision = 0;
+  private animatedConsumption: MovementConsumptionAnimation | null = null;
 
   constructor(
     private readonly turnService: TurnService,
   ) {
     effect(() => {
+      const resetRevision = this.turnService.movementResetRevision();
       const consumption = this.turnService.lastMovementConsumption();
       if (!consumption || !this.active) {
-        this.clearAnimations();
+        this.animatedConsumption = null;
+        if (resetRevision !== this.observedResetRevision && this.active) {
+          this.startResetAnimation();
+        } else {
+          this.clearAnimations();
+        }
+        this.observedResetRevision = resetRevision;
         return;
       }
+
+      if (consumption === this.animatedConsumption) return;
+      this.animatedConsumption = consumption;
+      this.stopResetAnimation();
+      this.observedResetRevision = resetRevision;
 
       for (let offset = 0; offset < consumption.count; offset++) {
         const pointIndex = consumption.firstPointIndex + offset;
@@ -53,7 +69,7 @@ export class MovementCounter implements OnDestroy {
           this.animatingPointIndexes.delete(pointIndex);
           this.animationTimers.delete(pointIndex);
           this.animationStateRevision.update(revision => revision + 1);
-        }, 480));
+        }, 350));
       }
       this.animationStateRevision.update(revision => revision + 1);
     });
@@ -87,9 +103,15 @@ export class MovementCounter implements OnDestroy {
     return this.active && this.animatingPointIndexes.has(index);
   }
 
+  /** Indique qu'un nouveau tour réactive simultanément les quatre points. */
+  isPointResetting(): boolean {
+    return this.active && this.resetting();
+  }
+
 /** Gere ngOnDestroy et applique les gardes necessaires avant mutation. */
   ngOnDestroy(): void {
     this.clearAnimations();
+    if (this.resetAnimationTimer !== undefined) clearTimeout(this.resetAnimationTimer);
   }
 
 /** Gere clearAnimations et applique les gardes necessaires avant mutation. */
@@ -99,5 +121,21 @@ export class MovementCounter implements OnDestroy {
     if (this.animatingPointIndexes.size === 0) return;
     this.animatingPointIndexes.clear();
     this.animationStateRevision.update(revision => revision + 1);
+  }
+
+  private startResetAnimation(): void {
+    this.clearAnimations();
+    this.stopResetAnimation();
+    this.resetting.set(true);
+    this.resetAnimationTimer = setTimeout(() => {
+      this.resetting.set(false);
+      this.resetAnimationTimer = undefined;
+    }, 300);
+  }
+
+  private stopResetAnimation(): void {
+    if (this.resetAnimationTimer !== undefined) clearTimeout(this.resetAnimationTimer);
+    this.resetAnimationTimer = undefined;
+    this.resetting.set(false);
   }
 }

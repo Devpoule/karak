@@ -40,8 +40,8 @@
 - Fixture E2E déterministe ajoutée dans `e2e/combat-fixture.spec.ts` ; elle utilise
   uniquement l'API Angular de développement exposée par Chromium et n'ajoute aucun
   accès de test au build de production.
-- Cinq scénarios Chromium validés : bonus d'épée `+2pts`, victoire, égalité,
-  défaite, écran étroit et Tir magique `+1pt`.
+- Cinq scénarios Chromium validés : bonus d'épée `+2PTS`, victoire, égalité,
+  défaite, écran étroit et Tir magique `+1PT`.
 - Captures inspectées dans `playwright-report/` : `combat-roll-victory.png`,
   `combat-victory.png`, `combat-tie.png`, `combat-defeat.png`,
   `combat-roll-magic.png`, `combat-magic.png` et `combat-roll-narrow.png`.

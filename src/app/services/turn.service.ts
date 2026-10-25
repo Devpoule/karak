@@ -61,6 +61,15 @@ export class TurnService {
   /** Événement émis uniquement après une consommation effective. */
   readonly lastMovementConsumption = signal<MovementConsumptionAnimation | null>(null);
 
+  /**
+   * Révision dédiée au début d'un nouveau tour.
+   *
+   * Ce signal sert uniquement à synchroniser les animations d'interface.
+   * Il n'est pas modifié lors d'une restauration afin de ne pas rejouer
+   * une animation historique au chargement d'une partie.
+   */
+  readonly movementResetRevision = signal(0);
+
 
   // ==========================================================
   // ÉTAT DÉRIVÉ
@@ -171,6 +180,7 @@ export class TurnService {
     );
     this.movementsMadeThisTurn.set(0);
     this.lastMovementConsumption.set(null);
+    this.movementResetRevision.update(revision => revision + 1);
   }
 
   /** Restaure les compteurs d'un tour sans rejouer une animation passée. */

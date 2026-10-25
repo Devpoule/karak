@@ -105,16 +105,59 @@
 
 .hero-power-card--announcement .hero-power-card__portrait { max-height: 120px; }
 
+/* Même carte que l'annonce du plateau, adaptée au rectangle du portrait
+ * retourné dans la fiche sans changer ses dimensions extérieures. */
+:host(.hero-panel__power-card) {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+}
+
+:host(.hero-panel__power-card) .hero-power-card {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  grid-template-columns: minmax(30%, 34%) 1fr;
+  padding: .35rem .4rem .35rem 0;
+  border-radius: 6px;
+  box-shadow: none;
+  animation: none;
+}
+
+:host(.hero-panel__power-card) .hero-power-card__portrait {
+  max-height: 100%;
+}
+
+:host(.hero-panel__power-card) .hero-power-card__content {
+  padding: .25rem 0 .25rem .35rem;
+}
+
+:host(.hero-panel__power-card) .hero-power-card h2 {
+  font-size: clamp(.78rem, 2.1vw, 1.2rem);
+}
+
+:host(.hero-panel__power-card) .hero-power-card__power {
+  margin-bottom: .3rem;
+  font-size: clamp(.68rem, 1.8vw, 1rem);
+}
+
+:host(.hero-panel__power-card) .hero-power-card__content > p:not(.hero-power-card__power) {
+  font-size: clamp(.5rem, 1.25vw, .72rem);
+  line-height: 1.2;
+}
+
 /* Combat decisions inherit the exact rectangle of the hero card host. */
 .hero-power-card.hero-power-card--embedded {
   width: 100%;
   height: 100%;
   min-height: 0;
   max-height: none;
+  animation: none;
   box-sizing: border-box;
   grid-template-columns: 1fr;
   grid-template-rows: minmax(0, 1fr);
-  padding: 1rem;
+  padding: 1.1rem;
   border-radius: 13% / 10%;
 }
 .hero-power-card--embedded .hero-power-card__portrait { display: none; }
@@ -124,7 +167,8 @@
   gap: .35rem;
   min-width: 0;
   min-height: 0;
-  padding: .4rem;
+  align-content: center;
+  padding: .55rem;
   overflow: hidden;
 }
 .hero-power-card--embedded .hero-power-card__content > * { min-width: 0; }

@@ -122,8 +122,13 @@ export class CombatOverlay implements OnDestroy {
    */
   private readonly introDuration = 1900;
 
-  /** Durée commune de présentation du résultat final pour humain et IA. */
-  private readonly resultPresentationDuration = 4000;
+  /**
+   * Durée commune de présentation du résultat final pour humain et IA.
+   *
+   * Le verdict doit rester lisible après la vague de victoire/défaite et
+   * jusqu'à la résolution de la récompense déclenchée à la fermeture.
+   */
+  private readonly resultPresentationDuration = 6000;
   /** Délai de décision de l'IA après l'animation des dés. */
   private readonly aiDecisionDelay = 1800;
 
@@ -294,6 +299,11 @@ export class CombatOverlay implements OnDestroy {
     return this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() !== null;
   }
 
+  /** Score du lancer courant, affiché pendant toute décision facultative. */
+  get decisionRoll(): CombatRoll | null {
+    return this.isDecisionVisible ? this.combatService.pendingCombatRoll() : null;
+  }
+
   /** La carte du héros se retourne pour toute présentation de pouvoir. */
   get isHeroCardFlipped(): boolean {
     return this.isUnstoppableDecisionVisible
@@ -303,10 +313,17 @@ export class CombatOverlay implements OnDestroy {
       );
   }
 
-  /** Armes capturées au lancer, indépendamment de l'inventaire courant. */
+  /**
+   * Armes visibles pendant toute la scène, puis capturées au lancer pour
+   * rester stables même si l'inventaire évolue pendant la résolution.
+   */
   get displayedWeapons() {
+    const combat = this.combatService.pendingCombat() ?? this.combat;
     return this.combatService.pendingCombatRoll()?.weapons
       ?? this.result?.weapons
+      ?? combat?.player.inventory.weapons.filter(
+        (weapon): weapon is NonNullable<typeof weapon> => weapon !== null,
+      )
       ?? [];
   }
 

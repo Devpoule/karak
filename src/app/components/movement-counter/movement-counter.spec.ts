@@ -49,7 +49,7 @@ describe('MovementCounter', () => {
     expect(points[0].classList.contains('movement-counter__point--consuming')).toBe(false);
     expect(points[0].classList.contains('movement-counter__point--consumed')).toBe(false);
 
-    vi.advanceTimersByTime(480);
+    vi.advanceTimersByTime(350);
     fixture.detectChanges();
     expect(points[3].classList.contains('movement-counter__point--consuming')).toBe(false);
     expect(points[3].classList.contains('movement-counter__point--consumed')).toBe(true);
@@ -79,7 +79,7 @@ describe('MovementCounter', () => {
     fixture.detectChanges();
     expect(points[0].classList.contains('movement-counter__point--consuming')).toBe(false);
 
-    vi.advanceTimersByTime(480);
+    vi.advanceTimersByTime(350);
     fixture.detectChanges();
     expect(points[2].classList.contains('movement-counter__point--consuming')).toBe(false);
     expect(points[3].classList.contains('movement-counter__point--consuming')).toBe(false);
@@ -100,8 +100,34 @@ describe('MovementCounter', () => {
     expect(fixture.nativeElement.querySelectorAll('.movement-counter__point--consuming')).toHaveLength(4);
 
     turnService.resetMovements();
+    TestBed.flushEffects();
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelectorAll('.movement-counter__point--consumed')).toHaveLength(0);
     expect(fixture.nativeElement.querySelectorAll('.movement-counter__point--consuming')).toHaveLength(0);
+    expect(fixture.nativeElement.querySelectorAll('.movement-counter__point--resetting')).toHaveLength(4);
+
+    vi.advanceTimersByTime(300);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.movement-counter__point--resetting')).toHaveLength(0);
+  });
+
+  it('ne rejoue pas une animation lors de la restauration d’une partie', () => {
+    vi.useFakeTimers();
+    TestBed.configureTestingModule({
+      imports: [MovementCounter],
+      providers: [TurnService],
+    });
+    const fixture = TestBed.createComponent(MovementCounter);
+    const turnService = TestBed.inject(TurnService);
+    fixture.detectChanges();
+
+    turnService.consumeAllMovements();
+    fixture.detectChanges();
+    vi.advanceTimersByTime(350);
+    fixture.detectChanges();
+
+    turnService.restore(4, 0, null);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.movement-counter__point--resetting')).toHaveLength(0);
   });
 });

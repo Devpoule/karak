@@ -168,7 +168,7 @@
 
 .movement-counter__point--consuming {
   visibility: visible;
-  animation: movement-point-consume 480ms ease-out both;
+  animation: movement-point-consume 350ms ease-out both;
 }
 
 .movement-counter__fragments {
@@ -182,7 +182,7 @@
 
 .movement-counter__point--consuming .movement-counter__fragments {
   opacity: 1;
-  animation: movement-fragments-burst 480ms ease-out both;
+  animation: movement-fragments-burst 350ms ease-out both;
 }
 
 .movement-counter__fragment {
@@ -196,7 +196,7 @@
   border-radius: 50%;
   background: #ffe08a;
   box-shadow: 0 0 4px 1px rgba(255, 132, 34, 0.95);
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) translate(var(--fragment-x), var(--fragment-y));
 }
 
 .movement-counter__fragment--0 { --fragment-x: -0.55rem; --fragment-y: -0.45rem; }
@@ -209,68 +209,78 @@
 @keyframes movement-point-consume {
   0% {
     opacity: 1;
-    filter: brightness(1);
-    transform: scale(1);
+    filter: brightness(1) drop-shadow(0 0 0 transparent);
   }
 
   22% {
     opacity: 1;
-    filter: brightness(2.4) saturate(1.35);
-    text-shadow:
-      0 0 3px #fff4bd,
-      0 0 9px #ff8b37,
-      0 0 16px rgba(255, 65, 25, 0.95);
-    transform: scale(1.45);
+    filter: brightness(2.15) saturate(1.25) drop-shadow(0 0 5px rgba(255, 112, 45, 0.95));
   }
 
   58% {
     opacity: 0.82;
-    filter: brightness(1.4);
-    transform: scale(1.08);
+    filter: brightness(1.35) saturate(1.05) drop-shadow(0 0 3px rgba(255, 112, 45, 0.55));
   }
 
   100% {
     opacity: 0;
-    filter: brightness(1);
-    transform: scale(0.72);
+    filter: brightness(0.95) drop-shadow(0 0 0 transparent);
   }
 }
 
 @keyframes movement-fragments-burst {
   0% {
     opacity: 0;
+    filter: brightness(1.2);
   }
 
   18% {
     opacity: 1;
+    filter: brightness(1.8);
   }
 
   100% {
     opacity: 0;
+    filter: brightness(1);
   }
 }
 
 .movement-counter__point--consuming .movement-counter__fragment {
-  animation: movement-fragment 480ms ease-out both;
+  animation: movement-fragment 350ms ease-out both;
 }
 
 @keyframes movement-fragment {
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.4);
   }
 
   20% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.15);
   }
 
   100% {
     opacity: 0;
-    transform: translate(
-      calc(-50% + var(--fragment-x)),
-      calc(-50% + var(--fragment-y))
-    ) scale(0.2);
+  }
+}
+
+.movement-counter__point--resetting {
+  animation: movement-point-reset 300ms ease-out both;
+}
+
+@keyframes movement-point-reset {
+  0% {
+    opacity: 0.45;
+    filter: brightness(1) drop-shadow(0 0 0 transparent);
+  }
+
+  30% {
+    opacity: 1;
+    filter: brightness(1.65) drop-shadow(0 0 5px rgba(255, 112, 45, 0.7));
+  }
+
+  100% {
+    opacity: 1;
+    filter: brightness(1) drop-shadow(0 0 0 transparent);
   }
 }
 
@@ -299,7 +309,8 @@
 @media (prefers-reduced-motion: reduce) {
   .movement-counter__point--consuming,
   .movement-counter__point--consuming .movement-counter__fragments,
-  .movement-counter__point--consuming .movement-counter__fragment {
+  .movement-counter__point--consuming .movement-counter__fragment,
+  .movement-counter__point--resetting {
     animation: none;
   }
 

@@ -1,0 +1,43 @@
+/* Géométrie commune des retournements 3D de cartes de héros. */
+
+@mixin stage {
+  position: absolute;
+  inset: 0;
+  perspective: 900px;
+  transform-style: preserve-3d;
+}
+
+@mixin face($radius-x: 13%, $radius-y: 10%) {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: #{$radius-x} / #{$radius-y};
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: transform 460ms ease, opacity 180ms ease;
+}
+
+@mixin front {
+  transform: rotateY(0deg);
+}
+
+@mixin back($background: rgba(30, 23, 19, .98)) {
+  transform: rotateY(180deg);
+  background: $background;
+  z-index: 2;
+}
+
+@mixin flipped-front {
+  transform: rotateY(-180deg);
+}
+
+@mixin flipped-back {
+  transform: rotateY(0deg);
+}
+
+@mixin reduced-motion {
+  transition: none;
+}
