@@ -59,6 +59,19 @@ interface PlayerMarkerPosition {
   y: number;
 }
 
+interface ExplorationTargetView {
+  direction: Direction;
+  x: number;
+  y: number;
+}
+
+const DIRECTION_LABELS: Record<Direction, string> = {
+  north: 'nord',
+  east: 'est',
+  south: 'sud',
+  west: 'ouest',
+};
+
 /**
  * Plateau principal du jeu.
  *
@@ -343,7 +356,26 @@ export class Board {
 
     if (this.gameService.canResolveXanrosSubstitutionAction) {
       this.gameService.openXanrosSubstitutionChest(tile);
+      return;
     }
+
+    if (this.pendingTile) {
+      return;
+    }
+
+    const source = this.playerTile;
+    const direction = source ? this.getDirectionToTile(source, tile) : null;
+    if (direction && this.canMoveToTile(tile)) {
+      this.movePlayer(direction);
+    }
+  }
+
+  /** Permet aux utilisateurs clavier d'activer une tuile accessible. */
+  handleTileKeydown(event: KeyboardEvent, tile: PlacedTile): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+
+    event.preventDefault();
+    this.handleTileClick(tile);
   }
 
 /** Gere confirmXanrosSubstitution et applique les gardes necessaires avant mutation. */
@@ -477,7 +509,19 @@ export class Board {
    */
   get movementControlsEnabled(): boolean {
     return !this.combatService.hasPendingCombat
-      && this.gameService.canPerformNormalMovement(this.gameService.activePlayer);
+      && (
+        this.gameService.canPerformNormalMovement(this.gameService.activePlayer)
+        || this.gameService.canSelectPendingExplorationDirection(this.gameService.activePlayer)
+      );
+  }
+
+  /** Indique si une tuile existante est une destination de déplacement directe. */
+  canMoveToTile(tile: PlacedTile): boolean {
+    if (this.pendingTile || !this.canControlActivePlayer) return false;
+
+    const source = this.playerTile;
+    const direction = source ? this.getDirectionToTile(source, tile) : null;
+    return !!source && !!direction && this.canMoveTo(source, direction);
   }
 
   // ==========================================================
@@ -492,6 +536,26 @@ export class Board {
    */
   get tiles(): PlacedTile[] {
     return this.dungeonService.tiles;
+  }
+
+  /** Retourne les emplacements d'exploration autorisés dans le contexte courant. */
+  get explorationTargets(): ExplorationTargetView[] {
+    if (!this.movementControlsEnabled || !this.canControlActivePlayer) return [];
+
+    const sourceTile = this.pendingTile?.sourceTile ?? this.playerTile;
+    if (!sourceTile) return [];
+
+    return DIRECTIONS
+      .filter(direction => this.canExplore(sourceTile, direction))
+      .map(direction => {
+        const position = this.getNeighborPosition(sourceTile, direction);
+        return { direction, x: position.x, y: position.y };
+      });
+  }
+
+  /** Alias conservé pour les consommateurs de l'état pending. */
+  get pendingExplorationTargets(): ExplorationTargetView[] {
+    return this.pendingTile ? this.explorationTargets : [];
   }
 
   /**
@@ -1246,7 +1310,7 @@ export class Board {
    * Exécute l'action disponible dans une direction depuis
    * la tuile actuellement occupée par le joueur.
    *
-   * Trois situations sont possibles :
+   * Deux situations sont possibles :
    *
    * 1. une exploration est déjà en cours :
    *    la même tuile piochée change simplement d'emplacement ;
@@ -1254,8 +1318,9 @@ export class Board {
    * 2. une tuile connectée existe :
    *    le héros s'y déplace ;
    *
-   * 3. une sortie inexplorée existe :
-   *    une nouvelle exploration commence.
+   * L'exploration est déclenchée par le clic sur une sortie
+   * ambre, qui fixe immédiatement le premier emplacement de
+   * la tuile tirée.
    */
   handlePlayerDirection(direction: Direction): void {
     if (!this.movementControlsEnabled) {
@@ -1312,12 +1377,6 @@ export class Board {
       return;
     }
 
-    /*
-     * Exploration d'un nouveau secteur.
-     */
-    if (this.explorationService.canExplore(currentTile, direction)) {
-      this.explorationService.start(currentTile, direction);
-    }
   }
 
   /**
@@ -1357,6 +1416,7 @@ export class Board {
    * ExplorationService reste la source de vérité de cet état.
    */
   get pendingTile(): PendingTilePlacement | null {
+    this.explorationService.pendingTileRevision();
     return this.explorationService.pendingTile;
   }
 
@@ -1382,8 +1442,24 @@ export class Board {
    * La pioche et les règles de placement sont gérées
    * par ExplorationService.
    */
-  explore(tile: PlacedTile, direction: Direction): void {
-    this.explorationService.start(tile, direction);
+  explore(tile: PlacedTile): void {
+    this.explorationService.start(tile);
+  }
+
+  /** Pioche immédiatement ou repositionne la tuile déjà révélée. */
+  selectExplorationTarget(direction: Direction): void {
+    if (!this.movementControlsEnabled || !this.canControlActivePlayer) return;
+
+    if (this.pendingTile) {
+      this.explorationService.changePendingDirection(direction);
+      return;
+    }
+
+    const tile = this.playerTile;
+    if (!tile || !this.canExplore(tile, direction)) return;
+
+    this.explore(tile);
+    this.explorationService.changePendingDirection(direction);
   }
 
   /**
@@ -1397,10 +1473,23 @@ export class Board {
    */
   canUseDirection(tile: PlacedTile, direction: Direction): boolean {
     if (this.pendingTile) {
-      return this.canExplore(tile, direction);
+      return this.canExplore(this.pendingTile.sourceTile, direction);
     }
 
-    return this.canMoveTo(tile, direction) || this.canExplore(tile, direction);
+    return this.canMoveTo(tile, direction);
+  }
+
+  /** Traduit la position d'une tuile voisine en direction métier. */
+  private getDirectionToTile(source: PlacedTile, destination: PlacedTile): Direction | null {
+    return DIRECTIONS.find(direction => {
+      const position = this.getNeighborPosition(source, direction);
+      return position.x === destination.x && position.y === destination.y;
+    }) ?? null;
+  }
+
+  /** Retourne le libellé français d'une direction métier. */
+  getDirectionLabel(direction: Direction): string {
+    return DIRECTION_LABELS[direction];
   }
 
 /** Gere openPortalTravel et applique les gardes necessaires avant mutation. */
@@ -1450,7 +1539,7 @@ export class Board {
   confirmPendingTile(): void {
     const pending = this.explorationService.pendingTile;
 
-    if (!pending) {
+    if (!pending || !pending.direction) {
       return;
     }
 

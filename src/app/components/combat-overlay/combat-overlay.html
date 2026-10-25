@@ -44,11 +44,11 @@
       <section
         #heroFighter
         class="combat-overlay__fighter combat-overlay__fighter--hero"
-        [class.combat-overlay__fighter--decision]="isDecisionVisible && (optionalPowerPresentation || powerAnnouncement() || canUseMagicBolt)"
+        [class.combat-overlay__fighter--decision]="isHeroCardFlipped"
       >
         <div
           class="combat-overlay__visual combat-overlay__hero-card"
-          [class.combat-overlay__hero-card--flipped]="isDecisionVisible && (optionalPowerPresentation || powerAnnouncement() || canUseMagicBolt)"
+          [class.combat-overlay__hero-card--flipped]="isHeroCardFlipped"
         >
           <div class="combat-overlay__hero-card-stage">
             <div class="combat-overlay__hero-card-face combat-overlay__hero-card-face--front">
@@ -108,6 +108,15 @@
                   [hero]="announcement.hero"
                   [power]="announcement.power"
                   [message]="announcement.message"
+                />
+              } @else if (unstoppablePowerPresentation; as unstoppablePower) {
+                <app-hero-power-card
+                  [embedded]="true"
+                  [hero]="unstoppablePower.hero"
+                  [power]="unstoppablePower.power"
+                  activateLabel="Continuer le tour"
+                  (activated)="continueUnstoppable()"
+                  (declined)="finishUnstoppable()"
                 />
               }
             </div>
@@ -335,17 +344,5 @@
       </div>
     }
 
-    @if (unstoppablePowerPresentation; as unstoppablePower) {
-      <div class="combat-overlay__power-card">
-        <app-hero-power-card
-          [embedded]="true"
-          [hero]="unstoppablePower.hero"
-          [power]="unstoppablePower.power"
-          activateLabel="Continuer le tour"
-          (activated)="continueUnstoppable()"
-          (declined)="finishUnstoppable()"
-        />
-      </div>
-    }
   </div>
 }

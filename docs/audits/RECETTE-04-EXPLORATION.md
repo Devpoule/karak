@@ -9,7 +9,7 @@ Le manuel `public/assets/rules/karak-base.pdf` est la référence normative. La 
 
 Les règles internes des événements de pièce ne sont pas réévaluées ici ; leur déclenchement après l’entrée est seulement contrôlé comme transition vers la phase D.
 
-Aucun code de production n’a été modifié. Le test ajouté est `src/app/services/exploration-recipe.spec.ts`.
+Le flux numérique est désormais documenté comme : tirage, révélation, choix de direction, rotation, placement puis résolution. Le raccordement reste limité au passage source selon le contrat métier actuel ; aucune nouvelle contrainte latérale n’est introduite.
 
 ## Résultats détaillés
 
@@ -18,10 +18,10 @@ Aucun code de production n’a été modifié. Le test ajouté est `src/app/serv
 | `TILE-001` | `ExplorationService.canExplore` testé sur une ouverture libre ; quatre directions et source de départ couvertes par `exploration.service.spec.ts`. | Une ouverture libre déclenche une exploration. | **Conforme vérifié** |
 | `TILE-002` | Direction occupée, direction fermée et directions incompatibles vérifiées ; le plateau ne propose que `canMoveTo`/`canExplore`. | Les directions invalides sont refusées. | **Conforme vérifié** |
 | `TILE-003` | `start` refuse une seconde exploration et `pendingTile` reste la même référence ; tests service. | Une seule tuile pending peut exister. | **Conforme vérifié** |
-| `TILE-004` | `start` retire exactement une tuile via `TileDeckService.draw`, sans ajouter la tuile au donjon avant confirmation. | Pioche et état provisoire synchronisés. | **Conforme vérifié** |
+| `TILE-004` | `start` retire exactement une tuile via `TileDeckService.draw` et la révèle avant toute sélection de direction, sans l’ajouter au donjon avant confirmation. | Pioche, révélation et état provisoire synchronisés. | **Conforme vérifié** |
 | `TILE-005` | Pioche vide testée dans `exploration-recipe.spec.ts` ; aucune tuile pending ni modification du donjon. | L’exploration est refusée proprement lorsque la pioche est vide. | **Conforme vérifié** |
-| `TILE-006` | `getPendingTilePosition` vérifie le voisin logique de la source dans la direction sélectionnée. | Position proposée correcte, sans déplacement prématuré. | **Conforme vérifié** |
-| `TILE-007` | `changePendingDirection` change la sortie depuis la même source sans nouveau tirage et conserve la rotation. | La tuile tirée reste identique et la pioche ne bouge pas. | **Conforme vérifié** |
+| `TILE-006` | `getPendingTilePosition` ne calcule la position qu’après sélection de la direction ; la tuile reste visible en prévisualisation avant ce choix. | Révélation immédiate puis position proposée correcte. | **Conforme vérifié** |
+| `TILE-007` | `changePendingDirection` sélectionne ou change la sortie depuis la même source sans nouveau tirage et conserve la rotation. | La tuile tirée reste identique et la pioche ne bouge pas. | **Conforme vérifié** |
 | `TILE-008` | Cycle complet `0° → 90° → 180° → 270° → 0°` vérifié dans `exploration-recipe.spec.ts`. | Rotation cyclique conforme. | **Conforme vérifié** |
 | `TILE-009` | `isPendingTilePlacementValid` exige l’ouverture opposée au passage source ; tests d’orientation valide/invalide. | Le raccordement d’entrée est contrôlé. | **Conforme vérifié** |
 | `TILE-010` | Confirmation d’une orientation non raccordée refusée ; aucune tuile n’est ajoutée. | Les placements invalides ne mutent pas le donjon. | **Conforme vérifié** |

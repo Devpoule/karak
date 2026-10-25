@@ -16,6 +16,33 @@ export const HERO_CARD_BACK = `${HERO_ASSETS_PATH}/card-back.png`;
 export const HERO_CARD_BACK_TRANSPARENT = `${HERO_ASSETS_PATH}/card-back-transparent.png`;
 
 /**
+ * Palette d'identité utilisée par les effets visuels propres aux héros.
+ *
+ * Les six héros jouables actuellement exposés par le catalogue sont déjà
+ * consommés par le jeu. Les autres entrées correspondent aux identifiants
+ * d'assets présents dans le projet et permettent de conserver une palette
+ * stable si leur catalogue fonctionnel est activé ultérieurement.
+ */
+export const HERO_EFFECT_COLORS = {
+  aderyn: '#19D978',
+  argentus: '#E2F1FF',
+  elspeth: '#E879C4',
+  hannah: '#F2B72E',
+  horan: '#789FC4',
+  king: '#D6A329',
+  kirima: '#76D9F5',
+  lorraine: '#C46AD8',
+  markul: '#D63838',
+  sidhar: '#80E344',
+  taia: '#FFD43B',
+  valduk: '#C87938',
+  victorius: '#FF792E',
+  xanros: '#B45CFF',
+} as const;
+
+export type HeroEffectColorId = keyof typeof HERO_EFFECT_COLORS;
+
+/**
  * Catalogue des pouvoirs spéciaux du jeu de base.
  *
  * Les descriptions reprennent les règles du livret.
@@ -185,42 +212,42 @@ export const HERO_DEFINITIONS: readonly HeroDefinition[] = [
   createHeroDefinition(
     'aderyn',
     'Aderyn',
-    '#19D978',
+    HERO_EFFECT_COLORS.aderyn,
     'la voleuse',
     'Avant qu’Aderyn ait appris l’art répréhensible du vol, elle avait profité de tous les avantages de sa noble origine. Mais son père, gouverneur juste et sage du Royaume insulaire, est tombé dans une des dernières batailles avec les hordes barbares venues de l’Est. Aderyn a pu fuir du château de son père grâce au sacrifice de son garde fidèle, mais est peu après devenue captive d’une bande de voleurs qui se cachaient dans les forêts. Leur chef a toutefois eu pitié de la princesse rousse et a refusé de la remettre aux Gens de l’Est. Il lui a plutôt appris comment survivre dans ce monde violent. Avec ses dons nouvellement acquis, Aderyn sent une opportunité de venger son père, mais elle a besoin pour son plan d’une goutte de sang de dragon et de beaucoup d’or. Quel hasard, les deux l’attendent dans les sombres souterrains du château de Karak.',
   ),
   createHeroDefinition(
     'argentus',
     'Argentus',
-    '#E2F1FF',
+    HERO_EFFECT_COLORS.argentus,
     'le magicien blanc',
     'La ville de lumière – demeure antique des magiciens. Cette jadis éblouissante métropole regorgeant de merveilles et de connaissances est devenue le champ de bataille de deux fractions rivales. Tandis que les premiers croient que les magiciens devraient utiliser leurs pouvoirs pour sauver le monde contre le cataclysme à venir, les autres sont d’avis qu’il est temps que les magiciens s’isolent des problèmes du monde et laissent les gens se débrouiller seuls. Le magicien blanc Argentus a découvert que le pouvoir qui menace d’entraîner le cataclysme se trouve dans les profondeurs sous le château de Karak. Trouvera-t-il en lui-même assez de force pour apporter à ses frères une preuve convaincante de la gravité de la menace à venir ? Ou bien ça serait plutôt l’éclat des nombreux trésors du labyrinthe de Karak qui l’impressionnera davantage ?',
   ),
   createHeroDefinition(
     'horan',
     'Horan',
-    '#789FC4',
+    HERO_EFFECT_COLORS.horan,
     'le guerrier',
     'Lord Horan est un guerrier redouté dont le nom est devenu depuis longtemps une légende dans l’ensemble du monde connu. C’est un chef né et aucune forteresse ni château ne résiste à ses troupes et machines de guerre. Mais, pendant ses incursions, il a entendu parler d’un endroit que même la plus grande armée ne serait pas en mesure de conquérir. Karak – jadis demeure puissante de chevaliers vertueux, désormais ruine entourée de légendes parlant des monstres rampants dans un labyrinthe de couloirs sous le château. Même le célèbre Horan est guetté par la vieillesse et il sent que c’est sa dernière chance d’entrer dans l’histoire en tant que combattant le plus puissant de tous les temps. Il suffirait pourtant très peu – terrasser l’horrifique Dragon qui garde les immenses richesses de Karak.',
   ),
   createHeroDefinition(
     'taia',
     'Taia',
-    '#FFD43B',
+    HERO_EFFECT_COLORS.taia,
     'la prophétesse',
     'Taia a grandi dans l’ombre du château de Karak. Elle a observé les conséquences de l’intoxication qui s’est peu à peu répandue du château dans le foyer de ses ancêtres – des maladies, des puits empoisonnés et des cultures des végétaux mourants. Tout cela à cause du dragon séjournant dans les profondeurs sous le château de Karak. Taia voyait des images de l’avenir dès sa plus tendre enfance. D’abord ces visions la déconcertaient et l’effrayaient, mais, au fil du temps, elle a transformé sa malédiction en avantage. Désormais, elle a plus que jamais besoin de clairvoyance. Elle se rend en effet dans le labyrinthe de Karak pour mettre fin à la souffrance de son peuple. Et même sans son pouvoir, elle sait bien qu’autrement un avenir vraiment sombre attend son peuple.',
   ),
   createHeroDefinition(
     'victorius',
     'Victorius',
-    '#FF792E',
+    HERO_EFFECT_COLORS.victorius,
     'le spadassin',
     'Victorius est un soldat d’élite du Royaume méditerranéen, dont personne dans l’ensemble du monde connu ne peut égaler l’habileté dans le maniement de l’épée. Mais même l’escrimeur le plus habile a une faiblesse – et c’est le cœur. Son amour envers la jeune reine qu’il a promis de protéger est profond et brûlant. Mais pour elle, il n’est rien de plus que la meilleure épée de son armée. Son amour a amené Victorius à un acte désespéré, qui doit montrer à la belle reine la profondeur de ses sentiments. Il est décidé à apporter à sa bien-aimée le célèbre rubis du dragon des profondeurs sous le château de Karak – et ce coûte que coûte !',
   ),
   createHeroDefinition(
     'xanros',
     'Xanros',
-    '#B45CFF',
+    HERO_EFFECT_COLORS.xanros,
     'le prince noir',
     'Lord Xanros a étudié pendant des décennies les secrets les plus mystérieux de la magie. Il a une soif ardente de pouvoir et d’immortalité. Il a découvert dans un grimoire poussiéreux un écrit partiel sur un jadis célèbre château où demeurait un ordre puissant de chevaliers – ce château s’appelait Karak. Mais Xanros a aussi découvert le fait que sous Karak se cachent des couloirs souterrains qui fourmilleraient de monstres épouvantables et dans lesquels les gens habitant près du château n’ont jamais osé rentrer. Il croit que le pouvoir caché dans les profondeurs sous les ruines de Karak pourra lui donner l’immortalité. Lord Xanros fera tout ce qui est possible pour obtenir ce pouvoir – même si cela devait signifier affronter le dragon.',
   ),
@@ -237,8 +264,8 @@ export function getHeroDefinition(heroId: HeroId): HeroDefinition | undefined {
 export const DEFAULT_HERO_IDENTITY_COLOR = '#d8c39a';
 
 /** Retourne la couleur d'identité du héros sans exposer la structure du catalogue. */
-export function getHeroIdentityColor(heroId: HeroId | null | undefined): string {
-  return heroId ? getHeroDefinition(heroId)?.identityColor ?? DEFAULT_HERO_IDENTITY_COLOR : DEFAULT_HERO_IDENTITY_COLOR;
+export function getHeroIdentityColor(heroId: HeroEffectColorId | null | undefined): string {
+  return heroId ? HERO_EFFECT_COLORS[heroId] ?? DEFAULT_HERO_IDENTITY_COLOR : DEFAULT_HERO_IDENTITY_COLOR;
 }
 
 /**

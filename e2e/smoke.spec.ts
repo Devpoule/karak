@@ -364,9 +364,12 @@ test('une partie atteint le plateau après les lancers de préparation', async (
     await expect(combatOverlay).toBeHidden({ timeout: 10_000 });
   }
 
-  const explorationControl = page.locator('button.board__movement-control--explore').first();
-  if (await explorationControl.isVisible().catch(() => false)) {
-    await explorationControl.click({ force: true });
+  const explorationTarget = page.locator('button.board__exploration-target').first();
+  if (await explorationTarget.isVisible().catch(() => false)) {
+    await explorationTarget.click({ force: true });
+    await expect(page.locator('.board__tile--pending')).toBeVisible();
+    await expect(page.locator('.board__exploration-reveal')).toHaveCount(0);
+    await page.locator('button.board__exploration-target').first().click({ force: true });
     await expect(page.locator('.board__tile--pending')).toBeVisible();
     await expect(page.locator('button.board__confirm')).toBeVisible();
     await page.locator('button.board__confirm').click({ force: true });

@@ -42,12 +42,18 @@
       <div
         class="board__tile"
         [class.board__tile--active-player]="isActivePlayerOnTile(tile)"
+        [class.board__tile--reachable]="canMoveToTile(tile)"
         [class.board__tile--healing-selected]="healingPortalSelection?.destination === tile || horanReincarnationSelection?.destination === tile"
         [class.board__tile--portal-selected]="portalTravelSelection?.destination === tile"
         [class.board__tile--portal-destination]="portalTravelSelection?.destinations?.includes(tile)"
+        [attr.role]="canMoveToTile(tile) ? 'button' : null"
+        [attr.tabindex]="canMoveToTile(tile) ? 0 : -1"
+        [attr.aria-label]="canMoveToTile(tile) ? 'Déplacer le héros vers cette tuile' : null"
         [style.left.px]="mapCenterInPixels + tile.x * tileSize - tileSize / 2"
         [style.top.px]="mapCenterInPixels + tile.y * tileSize - tileSize / 2"
+        (pointerdown)="canMoveToTile(tile) ? $event.stopPropagation() : null"
         (click)="handleTileClick(tile)"
+        (keydown)="handleTileKeydown($event, tile)"
       >
         <!-- Image de la tuile -->
         <img
@@ -57,6 +63,9 @@
           alt=""
           draggable="false"
         />
+        @if (canMoveToTile(tile)) {
+          <span class="board__move-icon" aria-hidden="true"></span>
+        }
         @if (getTileDefinition(tile)?.feature === 'portal' && isActivePlayerOnTile(tile)) {
           <button
             type="button"
@@ -125,6 +134,26 @@
         }
       </div>
     }
+    @for (target of explorationTargets; track target.direction) {
+      <div
+        class="board__exploration-target-anchor"
+        [class.board__exploration-target-anchor--selected]="pendingTile?.direction === target.direction"
+        [style.left.px]="mapCenterInPixels + target.x * tileSize"
+        [style.top.px]="mapCenterInPixels + target.y * tileSize"
+      >
+        <button
+          type="button"
+          class="board__exploration-target"
+          [class.board__exploration-target--selected]="pendingTile?.direction === target.direction"
+          [attr.aria-pressed]="pendingTile?.direction === target.direction"
+          [attr.aria-label]="pendingTile ? 'Déplacer la tuile vers le ' + getDirectionLabel(target.direction) : 'Explorer vers le ' + getDirectionLabel(target.direction)"
+          (pointerdown)="$event.stopPropagation()"
+          (click)="selectExplorationTarget(target.direction)"
+        >
+          <span aria-hidden="true">▧</span>
+        </button>
+      </div>
+    }
     <!-- ===================================================
      HÉROS
      ===================================================
@@ -174,13 +203,14 @@
          Une tuile piochée n'est pas immédiatement ajoutée
          au donjon.
          Elle reste temporairement en attente afin que le
-         joueur puisse choisir son orientation puis confirmer
-         son placement.
+         joueur puisse choisir une sortie, orienter la tuile puis
+         confirmer son placement.
          =================================================== -->
-    @if (pendingTile; as pending) {
+    @if (pendingTile?.direction) {
       @if (getPendingTilePosition(); as position) {
+        @if (pendingTile; as pending) {
         <div
-          class="board__tile board__tile--pending board__tile-image"
+          class="board__tile board__tile--pending"
           [class.board__tile--invalid]="!isPendingTilePlacementValid()"
           [style.left.px]="mapCenterInPixels + position.x * tileSize - tileSize / 2"
           [style.top.px]="mapCenterInPixels + position.y * tileSize - tileSize / 2"
@@ -196,8 +226,12 @@
           <button
             type="button"
             class="board__rotate"
+            aria-label="Tourner la tuile révélée"
+            title="Tourner la tuile"
             (pointerdown)="$event.stopPropagation()"
             (click)="rotatePendingTile()"
+            (keydown.enter)="rotatePendingTile(); $event.preventDefault(); $event.stopPropagation()"
+            (keydown.space)="rotatePendingTile(); $event.preventDefault(); $event.stopPropagation()"
           >
             ↻
           </button>
@@ -205,16 +239,21 @@
           <button
             type="button"
             class="board__confirm"
-            [disabled]="!isPendingTilePlacementValid()"
+            [disabled]="!pending.direction || !isPendingTilePlacementValid()"
+            aria-label="Valider le placement de la tuile"
+            title="Placer la tuile"
             (pointerdown)="$event.stopPropagation()"
             (click)="confirmPendingTile()"
+            (keydown.enter)="confirmPendingTile(); $event.preventDefault(); $event.stopPropagation()"
+            (keydown.space)="confirmPendingTile(); $event.preventDefault(); $event.stopPropagation()"
           >
             ✓
           </button>
         </div>
+        }
       }
     }
-    @if (movementControlsEnabled && canControlActivePlayer) {
+    @if (!pendingTile && movementControlsEnabled && canControlActivePlayer) {
       @if (gameService.activePlayer?.position; as position) {
         @if (playerTile; as tile) {
           <div
@@ -225,8 +264,9 @@
             @if (canUseDirection(tile, 'north')) {
               <button
                 class="board__movement-control board__movement-control--north"
-                [class.board__movement-control--explore]="canExplore(tile, 'north')"
+                [class.board__movement-control--explore]="!!pendingTile && canExplore(tile, 'north')"
                 type="button"
+                [attr.aria-label]="pendingTile ? 'Choisir le nord pour l’exploration' : 'Se déplacer vers le nord'"
                 (pointerdown)="$event.stopPropagation()"
                 (click)="handlePlayerDirection('north')"
               >
@@ -236,9 +276,9 @@
             @if (canUseDirection(tile, 'east')) {
               <button
                 class="board__movement-control board__movement-control--east"
-                [class.board__movement-control--explore]="canExplore(tile, 'east')"
+                [class.board__movement-control--explore]="!!pendingTile && canExplore(tile, 'east')"
                 type="button"
-                aria-label="Se déplacer vers l'est"
+                [attr.aria-label]="pendingTile ? 'Choisir l’est pour l’exploration' : 'Se déplacer vers l’est'"
                 (pointerdown)="$event.stopPropagation()"
                 (click)="handlePlayerDirection('east')"
               >
@@ -248,9 +288,9 @@
             @if (canUseDirection(tile, 'south')) {
               <button
                 class="board__movement-control board__movement-control--south"
-                [class.board__movement-control--explore]="canExplore(tile, 'south')"
+                [class.board__movement-control--explore]="!!pendingTile && canExplore(tile, 'south')"
                 type="button"
-                aria-label="Se déplacer vers le sud"
+                [attr.aria-label]="pendingTile ? 'Choisir le sud pour l’exploration' : 'Se déplacer vers le sud'"
                 (pointerdown)="$event.stopPropagation()"
                 (click)="handlePlayerDirection('south')"
               >
@@ -260,9 +300,9 @@
             @if (canUseDirection(tile, 'west')) {
               <button
                 class="board__movement-control board__movement-control--west"
-                [class.board__movement-control--explore]="canExplore(tile, 'west')"
+                [class.board__movement-control--explore]="!!pendingTile && canExplore(tile, 'west')"
                 type="button"
-                aria-label="Se déplacer vers l'ouest"
+                [attr.aria-label]="pendingTile ? 'Choisir l’ouest pour l’exploration' : 'Se déplacer vers l’ouest'"
                 (pointerdown)="$event.stopPropagation()"
                 (click)="handlePlayerDirection('west')"
               >

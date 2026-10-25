@@ -121,10 +121,10 @@ Le total correspond aux contrôles élémentaires ci-dessous ; un contrôle peut
 | TILE-001 | Détecter une ouverture libre | `ExplorationService.canExplore` | Conforme vérifié |
 | TILE-002 | Refuser direction occupée/fermée | même méthode + `BoardComponent` | Conforme vérifié |
 | TILE-003 | Empêcher deux explorations simultanées | `pendingTile` | Conforme vérifié |
-| TILE-004 | Piocher une tuile | `TileDeckService.draw`, `ExplorationService.start` | Conforme vérifié |
+| TILE-004 | Piocher et révéler une tuile avant le choix de direction | `TileDeckService.draw`, `ExplorationService.start` | Conforme vérifié |
 | TILE-005 | Gérer une pioche vide | `draw` retourne `undefined` | Conforme vérifié |
 | TILE-006 | Calculer la position proposée | `getPendingTilePosition` | Conforme vérifié |
-| TILE-007 | Changer la sortie sans repiocher | `changePendingDirection` | Conforme vérifié |
+| TILE-007 | Choisir ou changer la sortie après révélation sans repiocher | `changePendingDirection` | Conforme vérifié |
 | TILE-008 | Faire tourner la tuile | `rotatePendingTile` | Conforme vérifié |
 | TILE-009 | Vérifier les connexions | `isPendingTilePlacementValid` | Conforme vérifié |
 | TILE-010 | Refuser le placement non raccordé | `confirmPlacement` retourne null | Conforme vérifié |

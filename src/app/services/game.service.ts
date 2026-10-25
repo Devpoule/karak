@@ -575,6 +575,9 @@ export class GameService {
   /** Restaure une sauvegarde stable avant l'affichage de la partie. */
   restoreSavedGame(envelope: SaveEnvelopeV2): boolean {
     this.toastService.clearHistory();
+    // Les sauvegardes V2 décrivent des états stables : une tuile révélée
+    // mais non placée ne doit pas survivre à une restauration partielle.
+    this.explorationService.initialize();
     const payload: GameSavePayloadV2 = envelope.payload;
     if (!this.playerService.restore(payload.players)) return false;
     if (!this.dungeonService.restore(payload.dungeon)) return false;
@@ -1447,6 +1450,25 @@ export class GameService {
       && !this.turnTransitionPending()
       && !this.hasPendingTileResolution
       && !this.explorationService.pendingTile
+      && this.healingPortalSelection() === null
+      && this.turnService.canMove;
+  }
+
+  /**
+   * Autorise uniquement la sélection d'une sortie pour une tuile déjà
+   * révélée. Cette étape n'est pas un déplacement et ne consomme aucun
+   * mouvement ; elle doit néanmoins rester bloquée par les mêmes états
+   * obligatoires que les actions normales.
+   */
+  canSelectPendingExplorationDirection(player: Player | null): boolean {
+    return this.phase() === 'playing'
+      && !!player
+      && player === this.activePlayer
+      && player.lives > 0
+      && player.recoveryState === 'none'
+      && !this.turnTransitionPending()
+      && !this.hasPendingTileResolution
+      && !!this.explorationService.pendingTile
       && this.healingPortalSelection() === null
       && this.turnService.canMove;
   }

@@ -800,12 +800,15 @@ describe('AiService déplacements et exploration', () => {
   it('explore une ouverture libre avec une pioche déterministe', () => {
     (tileDeckService as unknown as { deck: string[] }).deck = ['straight-01'];
     vi.spyOn(Math, 'random').mockReturnValue(0);
+    const explorationService = TestBed.inject(ExplorationService);
 
     expect(aiService.playAction()).toBe(true);
 
     expect(dungeonService.tiles).toHaveLength(2);
     expect(playerService.players[1].position).not.toEqual({ x: 0, y: 0 });
     expect(turnService.remainingMovements()).toBe(3);
+    expect(tileDeckService.remainingTiles).toBe(0);
+    expect(explorationService.pendingTile).toBeNull();
     vi.restoreAllMocks();
   });
 

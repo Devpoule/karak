@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 
 import {
   Direction,
@@ -17,12 +17,10 @@ import { TileDeckService } from './tile-deck.service';
  *
  * RÈGLE OFFICIELLE KARAK :
  *
- * le joueur choisit d'abord le passage qu'il souhaite emprunter.
- * Une tuile est ensuite piochée et placée de manière à permettre
- * au héros d'y entrer depuis la tuile qu'il quitte.
- *
- * La direction choisie appartient donc à l'exploration dès
- * son déclenchement.
+ * une tuile est d'abord piochée et révélée. Le joueur choisit
+ * ensuite le passage depuis lequel il souhaite poursuivre son
+ * exploration, puis oriente la tuile pour permettre l'entrée
+ * du héros depuis la tuile qu'il quitte.
  */
 export interface PendingTilePlacement {
   /**
@@ -31,13 +29,13 @@ export interface PendingTilePlacement {
   sourceTile: PlacedTile;
 
   /**
-   * Direction choisie avant le tirage de la nouvelle tuile.
+   * Direction choisie après le tirage de la nouvelle tuile.
    *
    * Elle représente :
    *
    * sourceTile → nouvelle tuile
    */
-  direction: Direction;
+  direction: Direction | null;
 
   /**
    * Définition de la tuile retirée de la pioche.
@@ -62,10 +60,13 @@ export interface PendingTilePlacement {
  *
  * RÈGLE OFFICIELLE KARAK :
  *
- *   choix du passage
+ *   tirage d'une tuile
  *          │
  *          ▼
- *   tirage d'une tuile
+ *   révélation
+ *          │
+ *          ▼
+ *   choix du passage
  *          │
  *          ▼
  *   orientation
@@ -85,9 +86,9 @@ export interface PendingTilePlacement {
  * RESPONSABILITÉS :
  *
  * - déterminer si une direction peut être explorée ;
- * - déclencher l'exploration dans cette direction ;
+ * - déclencher l'exploration depuis une tuile source ;
  * - demander une tuile à la pioche ;
- * - conserver la tuile et la direction choisie ;
+ * - conserver la tuile tirée et la direction choisie ensuite ;
  * - gérer l'orientation de la tuile ;
  * - vérifier son raccordement à la tuile source ;
  * - confirmer son placement ;
@@ -121,6 +122,9 @@ export class ExplorationService {
    */
   pendingTile: PendingTilePlacement | null = null;
 
+  /** Révision UI des mutations de la tuile révélée en attente. */
+  readonly pendingTileRevision = signal(0);
+
   /**
    * Réinitialise l'état d'exploration.
    *
@@ -129,6 +133,7 @@ export class ExplorationService {
    */
   initialize(): void {
     this.pendingTile = null;
+    this.pendingTileRevision.update(revision => revision + 1);
   }
 
   // ==========================================================
@@ -155,25 +160,23 @@ export class ExplorationService {
   // ==========================================================
 
   /**
-   * Commence l'exploration d'un secteur encore inexploré.
+   * Pioche et révèle une tuile pour une exploration encore inexplorée.
    *
    * RÈGLE OFFICIELLE KARAK :
    *
-   * le passage est choisi avant que la nouvelle tuile soit
-   * révélée.
+   * la tuile est révélée avant que le passage de sortie soit choisi.
    *
    * Cette méthode :
    *
-   * 1. vérifie que la direction peut être explorée ;
-   * 2. vérifie qu'aucune exploration n'est déjà en cours ;
-   * 3. retire une tuile de la pioche ;
-   * 4. mémorise la tuile source et la direction choisie.
+   * 1. vérifie qu'aucune exploration n'est déjà en cours ;
+   * 2. retire une tuile de la pioche ;
+   * 3. mémorise la tuile source sans imposer de direction.
    *
    * La tuile ne rejoint le donjon qu'après confirmation
    * de son orientation.
    */
-  start(tile: PlacedTile, direction: Direction): void {
-    if (!this.canExplore(tile, direction) || this.pendingTile) {
+  start(tile: PlacedTile): void {
+    if (this.pendingTile) {
       return;
     }
 
@@ -185,36 +188,31 @@ export class ExplorationService {
 
     this.pendingTile = {
       sourceTile: tile,
-      direction,
+      direction: null,
       definition,
       rotation: 0,
     };
+    this.pendingTileRevision.update(revision => revision + 1);
   }
 
   /**
-   * Change l'emplacement envisagé d'une tuile déjà piochée.
+   * Sélectionne ou change l'emplacement envisagé d'une tuile déjà piochée.
    *
    * Tant que la tuile n'a pas été confirmée, le joueur peut
-   * changer d'avis et sélectionner une autre sortie inexplorée
-   * depuis la même tuile source.
+   * sélectionner une sortie inexplorée depuis la même tuile source.
    *
    * IMPORTANT :
    * - aucune nouvelle tuile n'est piochée ;
    * - la rotation actuelle est conservée ;
-   * - seule la direction de placement change.
+   * - aucune nouvelle tuile n'est tirée.
    */
   changePendingDirection(direction: Direction): void {
-    if (!this.pendingTile) {
-      return;
-    }
-
-    const sourceTile = this.pendingTile.sourceTile;
-
-    if (!this.canExplore(sourceTile, direction)) {
+    if (!this.pendingTile || !this.canExplore(this.pendingTile.sourceTile, direction)) {
       return;
     }
 
     this.pendingTile.direction = direction;
+    this.pendingTileRevision.update(revision => revision + 1);
   }
 
   // ==========================================================
@@ -225,11 +223,10 @@ export class ExplorationService {
    * Retourne la position logique destinée à recevoir
    * la nouvelle tuile.
    *
-   * La position est déterminée par le passage choisi avant
-   * le tirage et ne peut donc pas être changée après celui-ci.
+   * La position n'est calculable qu'après la sélection du passage.
    */
   getPendingTilePosition(): { x: number; y: number } | null {
-    if (!this.pendingTile) {
+    if (!this.pendingTile || !this.pendingTile.direction) {
       return null;
     }
 
@@ -251,11 +248,12 @@ export class ExplorationService {
    * 0° → 90° → 180° → 270° → 0°
    */
   rotatePendingTile(): void {
-    if (!this.pendingTile) {
+    if (!this.pendingTile || !this.pendingTile.direction) {
       return;
     }
 
     this.pendingTile.rotation = (this.pendingTile.rotation + 90) % 360;
+    this.pendingTileRevision.update(revision => revision + 1);
   }
 
   // ==========================================================
@@ -275,7 +273,7 @@ export class ExplorationService {
    * contrainte supplémentaire pour ce placement.
    */
   isPendingTilePlacementValid(): boolean {
-    if (!this.pendingTile) {
+    if (!this.pendingTile || !this.pendingTile.direction) {
       return false;
     }
 
@@ -315,13 +313,17 @@ export class ExplorationService {
    * ou null lorsque la confirmation est refusée.
    */
   confirmPlacement(): PlacedTile | null {
-    if (!this.pendingTile || !this.isPendingTilePlacementValid()) {
+    if (!this.pendingTile || !this.pendingTile.direction || !this.isPendingTilePlacementValid()) {
       return null;
     }
 
     const position = this.getPendingTilePosition();
 
     if (!position) {
+      return null;
+    }
+
+    if (this.dungeonService.getTileAt(position.x, position.y)) {
       return null;
     }
 
@@ -335,6 +337,7 @@ export class ExplorationService {
     this.dungeonService.placeTile(placedTile);
 
     this.pendingTile = null;
+    this.pendingTileRevision.update(revision => revision + 1);
 
     return placedTile;
   }

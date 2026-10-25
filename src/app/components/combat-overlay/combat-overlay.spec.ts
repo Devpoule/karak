@@ -13,7 +13,8 @@ import { ToastService } from '../../services/toast.service';
 import { TurnService } from '../../services/turn.service';
 import { CombatOverlay } from './combat-overlay';
 import { HeroId } from '../../models/hero';
-import { COMBAT_MONSTER_COLOR } from '../../constants/combat.constants';
+import { COMBAT_MONSTER_COLOR, getCombatMonsterColor } from '../../constants/combat.constants';
+import { getHeroIdentityColor } from '../../data/hero-definitions';
 
 const HERO_IDENTITY_CASES = [
   { heroId: 'aderyn', expectedColor: '#19D978', playerIndex: 0 },
@@ -24,18 +25,31 @@ const HERO_IDENTITY_CASES = [
   { heroId: 'horan', expectedColor: '#789FC4', playerIndex: 0 },
 ] as const;
 
+const MONSTER_COLOR_CASES = [
+  { monsterId: 'giant-bat', expectedColor: '#76B0DA' },
+  { monsterId: 'giant-rat', expectedColor: '#B9DC74' },
+  { monsterId: 'giant-spider', expectedColor: '#8EBACD' },
+  { monsterId: 'skeleton-ice-magician', expectedColor: '#AC79A2' },
+  { monsterId: 'skeleton-key-guardian', expectedColor: '#906397' },
+  { monsterId: 'skeleton-king', expectedColor: '#EC9B98' },
+  { monsterId: 'skeleton-mummy', expectedColor: '#5280B1' },
+  { monsterId: 'skeleton-swordsman', expectedColor: '#CA7377' },
+  { monsterId: 'dragon', expectedColor: '#FAD386' },
+  { monsterId: 'fallen', expectedColor: '#FBA47E' },
+] as const;
+
 describe('CombatOverlay décisions facultatives de Horan', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
-  function createMonster(): PlacedTile {
+  function createMonster(tokenId = 'giant-rat'): PlacedTile {
     return {
       x: 1,
       y: 0,
       definitionId: 'room-1',
-      tokenId: 'giant-rat',
+      tokenId,
       tokenFace: 'front',
     } as PlacedTile;
   }
@@ -46,6 +60,7 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     controller: 'human' | 'ai' = 'human',
     rollInitial = true,
     playerIndex = 0,
+    monsterId = 'giant-rat',
   ) {
     vi.useFakeTimers();
     vi.spyOn(Math, 'random').mockReturnValue(0);
@@ -69,7 +84,7 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
       playerService.addEquipment(player, getEquipmentDefinition('fire-sword')!);
     }
 
-    combatService.startCombat(player, dungeonService.tiles[0], createMonster());
+    combatService.startCombat(player, dungeonService.tiles[0], createMonster(monsterId));
     fixture.detectChanges();
 
     if (rollInitial) {
@@ -110,6 +125,7 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     setup.fixture.detectChanges();
 
     expect(overlay.isUnstoppableDecisionVisible).toBe(true);
+    expect(setup.fixture.nativeElement.querySelector('.combat-overlay__hero-card--flipped')).not.toBeNull();
     return { ...setup, result };
   }
 
@@ -310,9 +326,9 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     expect(combatOverlay?.classList.contains('combat-overlay--wave-target-hero')).toBe(outcome === 'defeat');
     expect(combatOverlay?.classList.contains('combat-overlay--wave-target-monster')).toBe(outcome === 'victory');
     expect(combatOverlay?.style.getPropertyValue('--monster-color'))
-      .toBe(COMBAT_MONSTER_COLOR);
+      .toBe(getCombatMonsterColor(result.monster.id));
     expect(combatOverlay?.style.getPropertyValue('--combat-wave-color'))
-      .toBe(outcome === 'defeat' ? COMBAT_MONSTER_COLOR : '#789FC4');
+      .toBe(outcome === 'defeat' ? getCombatMonsterColor(result.monster.id) : getHeroIdentityColor(result.player.heroId));
     expect(heroScore?.textContent).toContain(`${result.attackPower} pts`);
     expect(monsterScore?.textContent).toContain(`${result.monsterStrength} pts`);
     expect(heroScore?.textContent).not.toContain('Score de combat');
@@ -320,6 +336,52 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     const verdict = fixture.nativeElement.querySelector('.combat-overlay__verdict') as HTMLElement | null;
     expect(verdict?.getAttribute('role')).toBe('status');
     expect(verdict?.getAttribute('aria-live')).toBe('assertive');
+    fixture.destroy();
+  });
+
+  it.each(MONSTER_COLOR_CASES)('associe $monsterId à la couleur de référence attendue', ({ monsterId, expectedColor }) => {
+    expect(getCombatMonsterColor(monsterId)).toBe(expectedColor);
+  });
+
+  it('conserve le rouge de secours pour un monstre non catalogué', () => {
+    expect(getCombatMonsterColor('unknown-monster')).toBe(COMBAT_MONSTER_COLOR);
+  });
+
+  it('utilise la couleur visuelle du monstre pour son halo et sa vague', () => {
+    const { fixture, overlay, combatService } = prepareCombat(false, 'horan', 'human', true, 0, 'skeleton-king');
+    const roll = combatService.pendingCombatRoll()!;
+    const result = { ...roll, outcome: 'defeat' as const };
+
+    overlay.presentedResult.set(result);
+    overlay.presentationState.set('result');
+    fixture.detectChanges();
+
+    expect(overlay.monsterColor).toBe('#EC9B98');
+    expect(overlay.combatWaveColor).toBe('#EC9B98');
+    expect(fixture.nativeElement.querySelector('.combat-overlay')?.style.getPropertyValue('--monster-color'))
+      .toBe('#EC9B98');
+    expect(fixture.nativeElement.querySelector('.combat-overlay')?.style.getPropertyValue('--combat-wave-color'))
+      .toBe('#EC9B98');
+    fixture.destroy();
+  });
+
+  it('réutilise la couleur du héros pour son halo et sa vague de victoire', () => {
+    const { fixture, overlay, combatService } = prepareCombat(false, 'taia', 'human', true, 0, 'skeleton-king');
+    const roll = combatService.pendingCombatRoll()!;
+    const result = { ...roll, outcome: 'victory' as const };
+
+    overlay.presentedResult.set(result);
+    overlay.presentationState.set('result');
+    fixture.detectChanges();
+
+    const heroColor = getHeroIdentityColor(result.player.heroId);
+    expect(overlay.heroColor).toBe(heroColor);
+    expect(overlay.combatWaveColor).toBe(heroColor);
+    expect(fixture.nativeElement.querySelector('.combat-overlay')?.style.getPropertyValue('--hero-color'))
+      .toBe(heroColor);
+    expect(fixture.nativeElement.querySelector('.combat-overlay')?.style.getPropertyValue('--combat-wave-color'))
+      .toBe(heroColor);
+    expect(heroColor).not.toBe(getCombatMonsterColor(result.monster.id));
     fixture.destroy();
   });
 
@@ -354,6 +416,7 @@ describe('CombatOverlay décisions facultatives de Horan', () => {
     expect(turnService.remainingMovements()).toBe(3);
     expect(gameService.pendingUnstoppableDecision()).toBeNull();
     expect(fixture.nativeElement.querySelector('[aria-label="Choix Inarrêtable"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.combat-overlay__hero-card--flipped')).toBeNull();
     expect(overlay.presentedResult()).toBeNull();
     fixture.destroy();
   });

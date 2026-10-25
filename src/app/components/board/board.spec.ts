@@ -7,6 +7,9 @@ import { Board } from './board';
 import { GameService } from '../../services/game.service';
 import { PlayerService } from '../../services/player.service';
 import { DungeonService } from '../../services/dungeon.service';
+import { ExplorationService } from '../../services/exploration.service';
+import { TileDeckService } from '../../services/tile-deck.service';
+import { TurnService } from '../../services/turn.service';
 
 describe('Board affichage des récompenses et équipements au sol', () => {
   function createBoard() {
@@ -259,6 +262,118 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     expect(controls).not.toBeNull();
     expect(Number(getComputedStyle(hero!).zIndex)).toBeGreaterThan(Number(getComputedStyle(tile!).zIndex));
     expect(Number(getComputedStyle(hero!).zIndex)).toBeLessThan(Number(getComputedStyle(controls!).zIndex));
+  });
+
+  it('révèle la tuile avant le choix de direction et conserve les contrôles pending', () => {
+    const { fixture, playerService } = createBoard();
+    const explorationService = TestBed.inject(ExplorationService);
+    const tileDeckService = TestBed.inject(TileDeckService);
+    const turnService = TestBed.inject(TurnService);
+    const player = playerService.players[0];
+    player.position = { x: 0, y: 0 };
+
+    (tileDeckService as unknown as { deck: string[] }).deck = ['straight-01'];
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.board__explore-action')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.board__tile--pending')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.board__exploration-target').length).toBeGreaterThan(0);
+
+    (fixture.nativeElement.querySelector('.board__exploration-target') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(explorationService.pendingTile?.direction).not.toBeNull();
+    expect(tileDeckService.remainingTiles).toBe(0);
+    expect(turnService.remainingMovements()).toBe(4);
+    expect(fixture.nativeElement.querySelector('.board__exploration-reveal')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.board__tile--pending')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.board__movement-controls')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.board__exploration-target').length).toBeGreaterThan(0);
+    expect(fixture.nativeElement.querySelector('.board__exploration-target--selected')).not.toBeNull();
+    expect((fixture.nativeElement.querySelector('.board__rotate') as HTMLButtonElement).disabled).toBe(false);
+
+    fixture.componentInstance.rotatePendingTile();
+    fixture.componentInstance.confirmPendingTile();
+    fixture.detectChanges();
+
+    expect(explorationService.pendingTile).toBeNull();
+    expect(player.position).toEqual({ x: 0, y: -1 });
+    expect(turnService.remainingMovements()).toBe(3);
+  });
+
+  it('conserve le déplacement direct sans tirer de tuile', () => {
+    const { fixture, playerService, dungeonService } = createBoard();
+    const explorationService = TestBed.inject(ExplorationService);
+    const tileDeckService = TestBed.inject(TileDeckService);
+    const turnService = TestBed.inject(TurnService);
+    const player = playerService.players[0];
+    player.position = { x: 0, y: 0 };
+    dungeonService.placeTile({ definitionId: 'straight-01', x: 0, y: -1, rotation: 90 });
+    (tileDeckService as unknown as { deck: string[] }).deck = ['straight-02'];
+    fixture.detectChanges();
+
+    const destination = dungeonService.getTileAt(0, -1)!;
+    const destinationElement = fixture.nativeElement.querySelector('.board__tile[role="button"]') as HTMLElement | null;
+    expect(destinationElement).not.toBeNull();
+    expect(destinationElement?.classList.contains('board__tile--reachable')).toBe(true);
+    expect(destinationElement?.querySelector('.board__move-icon')).not.toBeNull();
+    fixture.componentInstance.handleTileClick(destination);
+
+    expect(explorationService.pendingTile).toBeNull();
+    expect(tileDeckService.remainingTiles).toBe(1);
+    expect(player.position).toEqual({ x: 0, y: -1 });
+    expect(turnService.remainingMovements()).toBe(3);
+  });
+
+  it('permet de comparer plusieurs emplacements avec la même tuile révélée', () => {
+    const { fixture, playerService } = createBoard();
+    const explorationService = TestBed.inject(ExplorationService);
+    const tileDeckService = TestBed.inject(TileDeckService);
+    const turnService = TestBed.inject(TurnService);
+    const player = playerService.players[0];
+    player.position = { x: 0, y: 0 };
+    (tileDeckService as unknown as { deck: string[] }).deck = ['straight-01'];
+
+    fixture.detectChanges();
+    const initialTargetButtons = fixture.nativeElement.querySelectorAll('.board__exploration-target') as NodeListOf<HTMLButtonElement>;
+    initialTargetButtons[0].click();
+    fixture.detectChanges();
+
+    const [firstTarget, secondTarget] = fixture.componentInstance.pendingExplorationTargets;
+    expect(firstTarget).toBeDefined();
+    expect(secondTarget).toBeDefined();
+    const drawnTileId = explorationService.pendingTile?.definition.id;
+    expect(drawnTileId).toBeDefined();
+    expect(tileDeckService.remainingTiles).toBe(0);
+    expect(turnService.remainingMovements()).toBe(4);
+
+    const targetButtons = fixture.nativeElement.querySelectorAll('.board__exploration-target') as NodeListOf<HTMLButtonElement>;
+    targetButtons[1].click();
+    fixture.detectChanges();
+    expect(explorationService.pendingTile?.direction).toBe(secondTarget.direction);
+    expect(explorationService.pendingTile?.definition.id).toBe(drawnTileId);
+    expect(tileDeckService.remainingTiles).toBe(0);
+    expect(turnService.remainingMovements()).toBe(4);
+  });
+
+  it('pioche immédiatement depuis une sortie unique', () => {
+    const { fixture, playerService } = createBoard();
+    const explorationService = TestBed.inject(ExplorationService);
+    const tileDeckService = TestBed.inject(TileDeckService);
+    const turnService = TestBed.inject(TurnService);
+    playerService.players[0].position = { x: 0, y: 0 };
+    (tileDeckService as unknown as { deck: string[] }).deck = ['straight-01'];
+    vi.spyOn(explorationService, 'canExplore').mockImplementation((_tile, direction) => direction === 'north');
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.board__exploration-target') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(explorationService.pendingTile?.direction).toBe('north');
+    expect(fixture.nativeElement.querySelector('.board__exploration-reveal')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.board__tile--pending')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.board__rotate')).not.toBeNull();
+    expect(turnService.remainingMovements()).toBe(4);
   });
 
   it('affiche une action portail désactivée sans destination', () => {

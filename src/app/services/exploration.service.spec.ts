@@ -14,16 +14,22 @@ describe('ExplorationService invariants', () => {
     return { dungeon, deck, exploration };
   }
 
-  it('déclenche une exploration uniquement par une ouverture libre', () => {
+  it('pioche et révèle une tuile avant le choix de direction', () => {
     const { dungeon, exploration } = createServices();
     const source = dungeon.getTileAt(0, 0)!;
 
-    exploration.start(source, 'east');
+    exploration.start(source);
 
     expect(exploration.pendingTile?.sourceTile).toBe(source);
+    expect(exploration.pendingTile?.direction).toBeNull();
+    expect(exploration.getPendingTilePosition()).toBeNull();
+    expect(exploration.isPendingTilePlacementValid()).toBe(false);
+    expect(dungeon.tiles).toHaveLength(1);
+
+    exploration.changePendingDirection('east');
+
     expect(exploration.pendingTile?.direction).toBe('east');
     expect(exploration.getPendingTilePosition()).toEqual({ x: 1, y: 0 });
-    expect(dungeon.tiles).toHaveLength(1);
   });
 
   it('refuse une direction occupée, fermée ou une seconde exploration', () => {
@@ -33,9 +39,10 @@ describe('ExplorationService invariants', () => {
 
     expect(exploration.canExplore(source, 'east')).toBe(false);
     expect(exploration.canExplore(source, 'north')).toBe(true);
-    exploration.start(source, 'north');
+    exploration.start(source);
+    exploration.changePendingDirection('north');
     const pending = exploration.pendingTile;
-    exploration.start(source, 'south');
+    exploration.start(source);
 
     expect(exploration.pendingTile).toBe(pending);
     expect(exploration.pendingTile?.direction).toBe('north');
@@ -44,7 +51,8 @@ describe('ExplorationService invariants', () => {
   it('permet de changer de sortie sans repiocher ni perdre la rotation', () => {
     const { dungeon, deck, exploration } = createServices();
     const source = dungeon.getTileAt(0, 0)!;
-    exploration.start(source, 'north');
+    exploration.start(source);
+    exploration.changePendingDirection('north');
     const remainingAfterDraw = deck.remainingTiles;
     exploration.rotatePendingTile();
 
@@ -58,7 +66,8 @@ describe('ExplorationService invariants', () => {
   it('refuse une orientation non raccordée puis confirme une orientation valide', () => {
     const { dungeon, exploration } = createServices();
     const source = dungeon.getTileAt(0, 0)!;
-    exploration.start(source, 'north');
+    exploration.start(source);
+    exploration.changePendingDirection('north');
 
     expect(exploration.isPendingTilePlacementValid()).toBe(false);
     exploration.rotatePendingTile();
@@ -73,11 +82,24 @@ describe('ExplorationService invariants', () => {
 
   it('réinitialise une exploration non confirmée sans modifier le donjon', () => {
     const { dungeon, exploration } = createServices();
-    exploration.start(dungeon.getTileAt(0, 0)!, 'east');
+    exploration.start(dungeon.getTileAt(0, 0)!);
 
     exploration.initialize();
 
     expect(exploration.pendingTile).toBeNull();
     expect(dungeon.tiles).toHaveLength(1);
+  });
+
+  it('refuse une position devenue occupée avant la confirmation', () => {
+    const { dungeon, exploration } = createServices();
+    const source = dungeon.getTileAt(0, 0)!;
+
+    exploration.start(source);
+    exploration.changePendingDirection('north');
+    exploration.rotatePendingTile();
+    dungeon.placeTile({ definitionId: 'straight-02', x: 0, y: -1, rotation: 0 });
+
+    expect(exploration.confirmPlacement()).toBeNull();
+    expect(exploration.pendingTile).not.toBeNull();
   });
 });

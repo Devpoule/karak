@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { TILE_DEFINITIONS } from '../data/tile-definitions';
 import { DungeonService } from './dungeon.service';
 import { ExplorationService } from './exploration.service';
 import { TileDeckService } from './tile-deck.service';
@@ -18,7 +19,7 @@ describe('Recette 04 - exploration du donjon', () => {
     const { dungeon, deck, exploration } = createServices([]);
     const source = dungeon.getTileAt(0, 0)!;
 
-    exploration.start(source, 'east');
+    exploration.start(source);
 
     expect(deck.remainingTiles).toBe(0);
     expect(exploration.pendingTile).toBeNull();
@@ -30,7 +31,8 @@ describe('Recette 04 - exploration du donjon', () => {
     const source = dungeon.getTileAt(0, 0)!;
     const remainingBefore = deck.remainingTiles;
 
-    exploration.start(source, 'north');
+    exploration.start(source);
+    exploration.changePendingDirection('north');
     exploration.rotatePendingTile();
     expect(exploration.pendingTile?.rotation).toBe(90);
     exploration.rotatePendingTile();
@@ -47,7 +49,8 @@ describe('Recette 04 - exploration du donjon', () => {
     const { dungeon, deck, exploration } = createServices();
     const source = dungeon.getTileAt(0, 0)!;
 
-    exploration.start(source, 'north');
+    exploration.start(source);
+    exploration.changePendingDirection('north');
     exploration.rotatePendingTile();
     const pending = exploration.pendingTile;
     exploration.changePendingDirection('west');
@@ -56,5 +59,26 @@ describe('Recette 04 - exploration du donjon', () => {
     expect(exploration.pendingTile?.direction).toBe('west');
     expect(exploration.pendingTile?.rotation).toBe(90);
     expect(deck.remainingTiles).toBe(0);
+  });
+
+  it('garantit une rotation raccordable pour chaque tuile explorée du catalogue', () => {
+    for (const definition of TILE_DEFINITIONS.filter(tile => tile.id !== 'start')) {
+      const { dungeon, exploration } = createServices([definition.id]);
+      const source = dungeon.getTileAt(0, 0)!;
+
+      exploration.start(source);
+      exploration.changePendingDirection('north');
+
+      let validRotationFound = false;
+      for (let attempt = 0; attempt < 4; attempt++) {
+        if (exploration.isPendingTilePlacementValid()) {
+          validRotationFound = true;
+          break;
+        }
+        exploration.rotatePendingTile();
+      }
+
+      expect(validRotationFound, definition.id).toBe(true);
+    }
   });
 });

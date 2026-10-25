@@ -534,9 +534,15 @@ export class AiService {
       return false;
     }
 
-    this.explorationService.start(currentTile, direction);
+    this.explorationService.start(currentTile);
 
     if (!this.explorationService.pendingTile) {
+      return false;
+    }
+
+    this.explorationService.changePendingDirection(direction);
+
+    if (this.explorationService.pendingTile.direction !== direction) {
       return false;
     }
 

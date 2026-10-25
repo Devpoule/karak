@@ -10,7 +10,7 @@ import {
 
 import { getHeroDefinition, getHeroIdentityColor } from '../../data/hero-definitions';
 import { HeroDefinition, HeroPowerDefinition } from '../../models/hero';
-import { COMBAT_MONSTER_COLOR } from '../../constants/combat.constants';
+import { getCombatMonsterColor } from '../../constants/combat.constants';
 
 import {
   CombatOutcome,
@@ -294,6 +294,15 @@ export class CombatOverlay implements OnDestroy {
     return this.presentationState() === 'decision' && this.combatService.pendingCombatRoll() !== null;
   }
 
+  /** La carte du héros se retourne pour toute présentation de pouvoir. */
+  get isHeroCardFlipped(): boolean {
+    return this.isUnstoppableDecisionVisible
+      || (
+        this.isDecisionVisible
+        && (this.optionalPowerPresentation !== null || this.powerAnnouncement() !== null || this.canUseMagicBolt)
+      );
+  }
+
   /** Armes capturées au lancer, indépendamment de l'inventaire courant. */
   get displayedWeapons() {
     return this.combatService.pendingCombatRoll()?.weapons
@@ -517,7 +526,7 @@ export class CombatOverlay implements OnDestroy {
   }
 
   get monsterColor(): string {
-    return COMBAT_MONSTER_COLOR;
+    return getCombatMonsterColor(this.combat?.monster.id ?? this.result?.monster.id);
   }
 
   /** Couleur effective de la vague : identité du héros ou rouge fonctionnel. */
