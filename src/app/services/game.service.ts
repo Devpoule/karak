@@ -275,20 +275,25 @@ export class GameService {
   }
 
   get canUseXanrosSubstitution(): boolean {
+    return this.xanrosSubstitutionUnavailableReason === null;
+  }
+
+  /** Motif métier affichable par la fiche descriptive du pouvoir. */
+  get xanrosSubstitutionUnavailableReason(): string | null {
     const player = this.activePlayer;
-    return this.phase() === 'playing'
-      && !this.turnTransitionPending()
-      && !this.hasPendingTileResolution
-      && !this.explorationService.pendingTile
-      && this.healingPortalSelection() === null
-      && this.turnService.remainingMovements() === 4
-      && this.turnService.movementsMadeThisTurn() === 0
-      && this.turnService.suspendedMovementCount === null
-      && player?.heroId === 'xanros'
-      && player.lives > 0
-      && player.recoveryState === 'none'
-      && !player.isCursed
-      && this.xanrosSubstitutionTargets.length > 0;
+    if (!player || player.heroId !== 'xanros') return 'Ce pouvoir appartient à Xanros.';
+    if (player.isCursed) return 'Une malédiction empêche l’utilisation de ce pouvoir.';
+    if (this.phase() !== 'playing' || this.turnTransitionPending()) return 'Le pouvoir n’est pas disponible maintenant.';
+    if (this.hasPendingTileResolution || this.explorationService.pendingTile || this.healingPortalSelection() !== null) {
+      return 'Une autre résolution doit être terminée auparavant.';
+    }
+    if (this.turnService.remainingMovements() !== 4 || this.turnService.movementsMadeThisTurn() !== 0) {
+      return 'Substitution doit être utilisée au début du tour.';
+    }
+    if (this.turnService.suspendedMovementCount !== null) return 'Le tour est déjà suspendu par une autre décision.';
+    if (player.lives <= 0 || player.recoveryState !== 'none') return 'Xanros ne peut pas utiliser ce pouvoir actuellement.';
+    if (this.xanrosSubstitutionTargets.length === 0) return 'Aucun autre héros disponible pour la substitution.';
+    return null;
   }
 
 /** Gere openXanrosSubstitution et applique les gardes necessaires avant mutation. */

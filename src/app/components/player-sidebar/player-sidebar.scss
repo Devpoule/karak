@@ -352,6 +352,23 @@
     0 0 10px rgba(245, 190, 65, 0.3);
 }
 
+.player-sidebar__power-badge--usable {
+  box-shadow:
+    0 0 0 2px var(--hero-color, #d8c39a),
+    0 0 16px color-mix(in srgb, var(--hero-color, #d8c39a) 62%, transparent);
+  animation: player-sidebar-power-ready 720ms ease-out 1;
+}
+
+@keyframes player-sidebar-power-ready {
+  0% { filter: brightness(1); }
+  35% { filter: brightness(1.55); }
+  100% { filter: brightness(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-sidebar__power-badge--usable { animation: none; }
+}
+
 .player-sidebar__power-badge--disabled {
   opacity: 0.62;
   box-shadow:

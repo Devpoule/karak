@@ -70,11 +70,12 @@
                 type="button"
                 class="player-sidebar__power-badge"
                 [class.player-sidebar__power-badge--selected]="selectedPowerId === power.id"
+                [class.player-sidebar__power-badge--usable]="isPowerUsable(power.id)"
                 [class.player-sidebar__power-badge--disabled]="player?.isCursed"
                 [attr.aria-pressed]="selectedPowerId === power.id"
                 [attr.aria-disabled]="interactionLocked ? 'true' : null"
                 [attr.aria-label]="'Consulter pouvoir ' + (index + 1) + ' : ' + power.name + (player?.isCursed ? ' — pouvoir indisponible' : '')"
-                [attr.title]="power.name"
+                [attr.title]="isPowerUsable(power.id) ? power.name + ' — disponible' : power.name"
                 [attr.data-tooltip]="player?.isCursed ? 'Pouvoir indisponible en jeu ; cliquer pour consulter sa description' : power.name + ' — ' + power.description"
                 (click)="togglePower(power.id, $event)"
               >

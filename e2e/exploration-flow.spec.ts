@@ -62,6 +62,8 @@ test('révèle une tuile avant la direction et conserve le coût d’un mouvemen
 
   const explorationTarget = page.locator('.board__exploration-target').first();
   await expect(explorationTarget).toBeVisible();
+  await expect(explorationTarget).toHaveAttribute('title', 'Explorer — tirer une tuile');
+  await expect(explorationTarget).toHaveAttribute('data-tooltip', 'Explorer — tirer une tuile');
   await explorationTarget.focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.board__tile--pending')).toBeVisible();
@@ -74,7 +76,8 @@ test('révèle une tuile avant la direction et conserve le coût d’un mouvemen
   await expect(target).toBeVisible();
   await expect.poll(() => target.evaluate((element) =>
     getComputedStyle(element).borderTopColor,
-  )).toBe('rgb(215, 163, 91)');
+  )).toBe('rgb(230, 183, 90)');
+  await expect(target).toHaveAttribute('title', 'Déplacer la tuile ici');
   await target.focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.board__exploration-reveal')).toHaveCount(0);
@@ -99,7 +102,8 @@ test('révèle une tuile avant la direction et conserve le coût d’un mouvemen
   await expect(page.locator('.board__tile--reachable')).toHaveCount(1);
   await expect.poll(() => page.locator('.board__tile--reachable').evaluate((element) =>
     getComputedStyle(element, '::after').borderTopColor,
-  )).toBe('rgb(125, 255, 149)');
+  )).toBe('rgb(192, 200, 208)');
+  await expect(page.locator('.board__tile--reachable')).toHaveAttribute('title', 'Se déplacer');
   await page.locator('.board__tile--reachable').click();
   await expect(page.locator('.player-hud__side--left .movement-counter')).toHaveAttribute('aria-label', '2 points disponibles');
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);

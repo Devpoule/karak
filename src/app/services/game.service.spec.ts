@@ -224,6 +224,37 @@ describe('GameService substitution de Xanros', () => {
     vi.useRealTimers();
   });
 
+  function prepareXanros(): { gameService: GameService; playerService: PlayerService; turnService: TurnService } {
+    const gameService = TestBed.inject(GameService);
+    const playerService = TestBed.inject(PlayerService);
+    const turnService = TestBed.inject(TurnService);
+    playerService.initialize(2);
+    gameService.initialize();
+    gameService.phase.set('playing');
+    gameService.activePlayerIndex.set(0);
+    playerService.players[0].heroId = 'xanros';
+    playerService.players[0].position = { x: 0, y: 0 };
+    playerService.players[1].position = { x: 1, y: 0 };
+    return { gameService, playerService, turnService };
+  }
+
+  it('expose le motif métier pour une malédiction et refuse l’activation', () => {
+    const { gameService, playerService } = prepareXanros();
+    playerService.players[0].isCursed = true;
+
+    expect(gameService.canUseXanrosSubstitution).toBe(false);
+    expect(gameService.xanrosSubstitutionUnavailableReason).toContain('malédiction');
+    expect(gameService.openXanrosSubstitution()).toBe(false);
+  });
+
+  it('refuse Substitution après le premier mouvement', () => {
+    const { gameService, turnService } = prepareXanros();
+    turnService.remainingMovements.set(3);
+
+    expect(gameService.canUseXanrosSubstitution).toBe(false);
+    expect(gameService.xanrosSubstitutionUnavailableReason).toContain('début du tour');
+  });
+
   it('échange les positions au début du tour et consomme les quatre mouvements', () => {
     vi.useFakeTimers();
     const gameService = TestBed.inject(GameService);

@@ -292,8 +292,11 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     expect(fixture.nativeElement.querySelector('.board__explore-action')).toBeNull();
     expect(fixture.nativeElement.querySelector('.board__tile--pending')).toBeNull();
     expect(fixture.nativeElement.querySelectorAll('.board__exploration-target').length).toBeGreaterThan(0);
+    const explorationTarget = fixture.nativeElement.querySelector('.board__exploration-target') as HTMLButtonElement;
+    expect(explorationTarget.title).toBe('Explorer — tirer une tuile');
+    expect(explorationTarget.dataset['tooltip']).toBe('Explorer — tirer une tuile');
 
-    (fixture.nativeElement.querySelector('.board__exploration-target') as HTMLButtonElement).click();
+    explorationTarget.click();
     fixture.detectChanges();
 
     expect(explorationService.pendingTile?.direction).not.toBeNull();
@@ -304,6 +307,7 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     expect(fixture.nativeElement.querySelector('.board__movement-controls')).toBeNull();
     expect(fixture.nativeElement.querySelectorAll('.board__exploration-target').length).toBeGreaterThan(0);
     expect(fixture.nativeElement.querySelector('.board__exploration-target--selected')).not.toBeNull();
+    expect((fixture.nativeElement.querySelector('.board__exploration-target--selected') as HTMLButtonElement).title).toBe('Déplacer la tuile ici');
     expect((fixture.nativeElement.querySelector('.board__rotate') as HTMLButtonElement).disabled).toBe(false);
 
     fixture.componentInstance.rotatePendingTile();
@@ -331,6 +335,8 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     expect(destinationElement).not.toBeNull();
     expect(destinationElement?.classList.contains('board__tile--reachable')).toBe(true);
     expect(destinationElement?.querySelector('.board__move-icon')).not.toBeNull();
+    expect(destinationElement?.getAttribute('title')).toBe('Se déplacer');
+    expect(destinationElement?.getAttribute('data-tooltip')).toBe('Se déplacer');
     fixture.componentInstance.handleTileClick(destination);
 
     expect(explorationService.pendingTile).toBeNull();

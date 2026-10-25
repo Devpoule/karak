@@ -80,6 +80,28 @@ describe('HeroPowerCard', () => {
     expect(element.querySelector('.hero-power-card__close')).toBeNull();
   });
 
+  it('affiche Utiliser uniquement pour une action volontaire et respecte son indisponibilité', () => {
+    const cardFixture = TestBed.createComponent(HeroPowerCard);
+    cardFixture.componentRef.setInput('hero', fixture.componentInstance.hero);
+    cardFixture.componentRef.setInput('power', fixture.componentInstance.power);
+    cardFixture.componentRef.setInput('mode', 'consultation');
+    cardFixture.componentRef.setInput('showConsultationAction', true);
+    cardFixture.componentRef.setInput('activationUnavailableReason', 'Le joueur actif doit avoir la main.');
+    cardFixture.detectChanges();
+
+    const element = cardFixture.nativeElement as HTMLElement;
+    const button = element.querySelector('.hero-power-card__activate') as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    expect(element.textContent).toContain('Le joueur actif doit avoir la main.');
+
+    let activationCount = 0;
+    cardFixture.componentInstance.activationRequested.subscribe(() => activationCount++);
+    cardFixture.componentRef.setInput('canActivate', true);
+    cardFixture.detectChanges();
+    (element.querySelector('.hero-power-card__activate') as HTMLButtonElement).click();
+    expect(activationCount).toBe(1);
+  });
+
   it('présente deux choix directs sans ajouter de confirmation', () => {
     const cardFixture = TestBed.createComponent(HeroPowerCard);
     cardFixture.componentRef.setInput('hero', fixture.componentInstance.hero);

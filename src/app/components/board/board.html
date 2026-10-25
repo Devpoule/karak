@@ -49,6 +49,8 @@
         [attr.role]="canMoveToTile(tile) ? 'button' : null"
         [attr.tabindex]="canMoveToTile(tile) ? 0 : -1"
         [attr.aria-label]="canMoveToTile(tile) ? 'Déplacer le héros vers cette tuile' : null"
+        [attr.title]="canMoveToTile(tile) ? 'Se déplacer' : null"
+        [attr.data-tooltip]="canMoveToTile(tile) ? 'Se déplacer' : null"
         [style.left.px]="mapCenterInPixels + tile.x * tileSize - tileSize / 2"
         [style.top.px]="mapCenterInPixels + tile.y * tileSize - tileSize / 2"
         (pointerdown)="canMoveToTile(tile) ? $event.stopPropagation() : null"
@@ -65,6 +67,7 @@
         />
         @if (canMoveToTile(tile)) {
           <span class="board__move-icon" aria-hidden="true"></span>
+          <span class="board__interaction-tooltip" role="tooltip">Se déplacer</span>
         }
         @if (getTileDefinition(tile)?.feature === 'portal' && isActivePlayerOnTile(tile)) {
           <button
@@ -147,10 +150,13 @@
           [class.board__exploration-target--selected]="pendingTile?.direction === target.direction"
           [attr.aria-pressed]="pendingTile?.direction === target.direction"
           [attr.aria-label]="pendingTile ? 'Déplacer la tuile vers le ' + getDirectionLabel(target.direction) : 'Explorer vers le ' + getDirectionLabel(target.direction)"
+          [attr.title]="pendingTile ? 'Déplacer la tuile ici' : 'Explorer — tirer une tuile'"
+          [attr.data-tooltip]="pendingTile ? 'Déplacer la tuile ici' : 'Explorer — tirer une tuile'"
           (pointerdown)="$event.stopPropagation()"
           (click)="selectExplorationTarget(target.direction)"
         >
           <span aria-hidden="true">▧</span>
+          <span class="board__interaction-tooltip" role="tooltip">{{ pendingTile ? 'Déplacer ici' : 'Explorer — tirer une tuile' }}</span>
         </button>
       </div>
     }

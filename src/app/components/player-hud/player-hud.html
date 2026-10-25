@@ -34,6 +34,7 @@
         [showPlayer]="true"
         [showInventory]="true"
         [interactionLocked]="isCombatActive"
+        [usablePowerIds]="usablePowerIds(player)"
         (playerTabClicked)="togglePlayerPanel(leftPlayerIndex)"
         (powerSelected)="openPowerConsultation(player, $event)"
       />
@@ -73,6 +74,7 @@
         [showPlayer]="true"
         [showInventory]="true"
         [interactionLocked]="isCombatActive"
+        [usablePowerIds]="usablePowerIds(player)"
         (playerTabClicked)="togglePlayerPanel(rightPlayerIndex)"
         (powerSelected)="openPowerConsultation(player, $event)"
       />
@@ -212,7 +214,12 @@
         [hero]="hero"
         [power]="power"
         [conditions]="consultation?.player?.isCursed ? 'Pouvoir indisponible sous malédiction.' : ''"
+        [showConsultationAction]="consultationPowerIsVoluntary"
+        [canActivate]="consultationPowerCanActivate"
+        [activationUnavailableReason]="consultationPowerUnavailableReason"
+        activateLabel="Utiliser"
         (click)="$event.stopPropagation()"
+        (activationRequested)="activateConsultationPower()"
         (closed)="closePowerConsultation()"
       />
     </div>

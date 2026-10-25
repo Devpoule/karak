@@ -162,6 +162,42 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
       : null;
     return hero;
   }
+
+  /** Les seuls pouvoirs activables depuis cette fiche sont ceux explicitement
+   * pris en charge par une action métier volontaire hors combat. */
+  get consultationPowerIsVoluntary(): boolean {
+    return this.consultation?.player.controller === 'human'
+      && this.consultationPower?.id === 'substitution';
+  }
+
+  get consultationPowerCanActivate(): boolean {
+    return this.consultationPowerIsVoluntary
+      && this.consultation?.player === this.gameService.activePlayer
+      && this.gameService.canUseXanrosSubstitution;
+  }
+
+  get consultationPowerUnavailableReason(): string {
+    if (!this.consultationPowerIsVoluntary) return '';
+    const player = this.consultation?.player;
+    if (player !== this.gameService.activePlayer) return 'Le joueur actif doit avoir la main.';
+    return this.gameService.xanrosSubstitutionUnavailableReason ?? '';
+  }
+
+  /** Retourne les pouvoirs activables afin que le badge reste synchronisé
+   * avec les gardes du service métier, sans les recopier dans le template. */
+  usablePowerIds(player: Player): readonly HeroPowerId[] {
+    if (player.controller !== 'human' || player !== this.gameService.activePlayer) return [];
+    return player.heroId === 'xanros' && this.gameService.canUseXanrosSubstitution
+      ? ['substitution']
+      : [];
+  }
+
+  /** Revalide l'action au clic puis délègue intégralement au domaine. */
+  activateConsultationPower(): void {
+    if (!this.consultationPowerCanActivate) return;
+    if (this.gameService.openXanrosSubstitution()) this.closePowerConsultation();
+  }
+
   private compactViewport = false;
   private resizeObserver: ResizeObserver | null = null;
 

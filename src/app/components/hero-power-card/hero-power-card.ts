@@ -39,6 +39,15 @@ export class HeroPowerCard {
   /** Conditions détaillées affichées uniquement dans le mode consultation. */
   @Input() conditions = '';
 
+  /** Affiche l'action métier volontaire dans la fiche descriptive. */
+  @Input() showConsultationAction = false;
+
+  /** Indique si l'action volontaire peut être lancée au moment du rendu. */
+  @Input() canActivate = false;
+
+  /** Motif court présenté lorsque l'action volontaire est indisponible. */
+  @Input() activationUnavailableReason = '';
+
   /** Choix directs affichés dans le mode obligatoire multi-options. */
   @Input() choices: readonly HeroPowerCardChoice[] = [];
 
@@ -59,4 +68,7 @@ export class HeroPowerCard {
 
   /** Émet l'annulation d'une sélection lorsque le domaine l'autorise. */
   @Output() choiceCancelled = new EventEmitter<void>();
+
+  /** Demande au parent de revalider puis de lancer l'action métier. */
+  @Output() activationRequested = new EventEmitter<void>();
 }

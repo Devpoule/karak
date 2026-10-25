@@ -88,6 +88,9 @@ export class PlayerSidebar {
   /** Verrouille les consultations lorsque le combat est en cours. */
   @Input() interactionLocked = false;
 
+  /** Pouvoirs volontaires actuellement activables par ce joueur. */
+  @Input() usablePowerIds: readonly HeroPowerId[] = [];
+
   /**
    * Demande au HUD d'appliquer le même comportement que la languette basse.
    */
@@ -119,6 +122,10 @@ export class PlayerSidebar {
 
   get heroColor(): string {
     return getHeroIdentityColor(this.player?.heroId);
+  }
+
+  isPowerUsable(powerId: HeroPowerId): boolean {
+    return this.isActive && !this.interactionLocked && this.usablePowerIds.includes(powerId);
   }
 
 /** Gere togglePower et applique les gardes necessaires avant mutation. */

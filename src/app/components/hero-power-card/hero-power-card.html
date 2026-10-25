@@ -26,6 +26,23 @@
     @if (mode === 'consultation' && conditions) {
       <p class="hero-power-card__conditions"><strong>Conditions :</strong> {{ conditions }}</p>
     }
+    @if (mode === 'consultation' && showConsultationAction) {
+      <div class="hero-power-card__consultation-action">
+        <button
+          type="button"
+          class="hero-power-card__activate"
+          [disabled]="!canActivate"
+          [attr.aria-disabled]="!canActivate"
+          [attr.title]="canActivate ? activateLabel : activationUnavailableReason"
+          (click)="activationRequested.emit()"
+        >
+          {{ activateLabel }}
+        </button>
+        @if (!canActivate && activationUnavailableReason) {
+          <p class="hero-power-card__unavailable" role="status">{{ activationUnavailableReason }}</p>
+        }
+      </div>
+    }
     @if (mode === 'decision' && showActions) {
       <div class="hero-power-card__actions">
         <button

@@ -148,6 +148,53 @@ test('Substitution échange les héros sans résoudre automatiquement la tuile d
   });
 });
 
+test('Xanros peut activer Substitution depuis sa fiche descriptive', async ({ page }) => {
+  await openBoard(page);
+
+  await page.evaluate(() => {
+    const root = document.querySelector('app-root');
+    const ng = (window as Window & { ng?: { getComponent(node: Element): any } }).ng;
+    if (!root || !ng) throw new Error('Angular dev injector unavailable');
+
+    const game = ng.getComponent(root.querySelector('app-game') ?? root);
+    const gameService = game?.gameService;
+    const playerService = gameService?.['playerService'];
+    const dungeonService = gameService?.['dungeonService'];
+    const turnService = gameService?.['turnService'];
+    if (!gameService || !playerService || !dungeonService || !turnService) {
+      throw new Error('Game services unavailable');
+    }
+
+    const activeIndex = playerService.players.findIndex((player: any) => player.controller === 'human');
+    const targetIndex = playerService.players.findIndex((player: any, index: number) => index !== activeIndex);
+    const xanros = playerService.players[activeIndex];
+    const target = playerService.players[targetIndex];
+    gameService.activePlayerIndex.set(activeIndex);
+    xanros.heroId = 'xanros';
+    xanros.isCursed = false;
+    xanros.lives = 5;
+    xanros.recoveryState = 'none';
+    xanros.position = { x: 0, y: 0 };
+    target.position = { x: 1, y: 0 };
+    turnService.resetMovements();
+    if (!dungeonService.getTileAt(1, 0)) {
+      dungeonService.tiles.push({ definitionId: 'room-1', x: 1, y: 0, rotation: 0 });
+    }
+  });
+
+  const badge = page.getByRole('button', { name: 'Consulter pouvoir 2 : Substitution' });
+  await expect(badge).toHaveClass(/player-sidebar__power-badge--usable/);
+  await badge.click();
+
+  const consultation = page.locator('.player-hud__power-card-host');
+  await expect(consultation).toBeVisible();
+  await expect(consultation.getByRole('button', { name: 'Utiliser' })).toBeEnabled();
+  await consultation.getByRole('button', { name: 'Utiliser' }).click();
+
+  await expect(consultation).toHaveCount(0);
+  await expect(page.locator('.board__reward-backdrop app-hero-power-card')).toBeVisible();
+});
+
 test('Xanros poursuit la résolution après un lancer à égalité contre une force 8', async ({ page }) => {
   await openBoard(page);
   await prepareXanrosCombat(page);
