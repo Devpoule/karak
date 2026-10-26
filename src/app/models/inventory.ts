@@ -2,7 +2,6 @@ import { KeyEquipment, SpellEquipment, WeaponEquipment } from './equipment';
 
 export type InventorySlot<TItem = never> = TItem | null;
 
-/** Contrat de donnees PlayerInventory utilise par le domaine ou l interface. */
 export interface PlayerInventory {
   weapons: InventorySlot<WeaponEquipment>[];
   spells: InventorySlot<SpellEquipment>[];

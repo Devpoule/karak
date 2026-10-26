@@ -71,7 +71,7 @@ export interface PendingGroundEquipment {
   index: number;
 }
 
-/** Contrat de donnees PendingTokenChoice utilise par le domaine ou l interface. */
+/** Choix de jeton suspendant l'entrée sur une nouvelle salle pour Taia. */
 export interface PendingTokenChoice {
   player: Player;
   tile: PlacedTile;
@@ -88,7 +88,7 @@ export interface PendingSneakChoice {
   movementConsumed: boolean;
 }
 
-/** Contrat de donnees HealingPortalSelection utilise par le domaine ou l interface. */
+/** Sélection transitoire d'un utilisateur, d'une cible et d'une fontaine. */
 export interface HealingPortalSelection {
   readonly user: Player;
   readonly target: Player | null;
@@ -123,7 +123,7 @@ type TileEntryClassification =
   | { kind: 'closed-chest-without-key' }
   | { kind: 'treasure'; token: TreasureTokenDefinition };
 
-/** Service ou composant GameService ; coordonne sa responsabilite de domaine ou d interface. */
+/** Façade d'orchestration du cycle de vie et des résolutions d'une partie. */
 @Injectable({
   providedIn: 'root',
 })
@@ -226,7 +226,7 @@ export class GameService {
   /** Révision réactive de l'affichage des équipements au sol. */
   readonly groundEquipmentRevision = signal(0);
 
-/** Gere groundKey et applique les gardes necessaires avant mutation. */
+  /** Produit une clé stable de position pour indexer les objets déposés au sol. */
   private groundKey(tile: PlacedTile): string {
     return `${tile.x}:${tile.y}`;
   }
@@ -300,7 +300,7 @@ export class GameService {
     return null;
   }
 
-/** Gere openXanrosSubstitution et applique les gardes necessaires avant mutation. */
+  /** Ouvre la sélection de cible de Substitution après validation du tour de Xanros. */
   openXanrosSubstitution(): boolean {
     if (!this.canUseXanrosSubstitution) return false;
     this.xanrosSubstitutionPlayer = this.activePlayer;
@@ -308,7 +308,7 @@ export class GameService {
     return true;
   }
 
-/** Gere cancelXanrosSubstitution et applique les gardes necessaires avant mutation. */
+  /** Ferme la sélection de Substitution sans modifier les positions. */
   cancelXanrosSubstitution(): void {
     this.xanrosSubstitutionPlayer = null;
     this.xanrosSubstitutionSelectionOpen.set(false);
@@ -429,7 +429,7 @@ export class GameService {
     return true;
   }
 
-/** Gere canContinueUnstoppable et applique les gardes necessaires avant mutation. */
+  /** Vérifie que la suspension de Victorius peut encore être reprise. */
   private canContinueUnstoppable(player: Player): boolean {
     return this.phase() === 'playing'
       && !this.turnTransitionPending()
@@ -455,7 +455,7 @@ export class GameService {
     this.endTurn();
   }
 
-/** Gere confirmXanrosSubstitution et applique les gardes necessaires avant mutation. */
+  /** Échange les positions de Xanros et de la cible, puis ouvre l'action d'arrivée. */
   confirmXanrosSubstitution(target: Player): boolean {
     const player = this.activePlayer;
     if (!this.canConfirmXanrosSubstitution(player, target)) return false;
@@ -1011,11 +1011,8 @@ export class GameService {
    * ajoutée au donjon, un jeton est tiré du sachet
    * monstres/trésors et placé dans cette salle.
    *
-   * IMPORTANT :
-   *
-   * cette première étape se limite à la révélation.
-   *
-   * Elle ne résout pas encore :
+   * Cette méthode se limite à la révélation ; la résolution du contenu est
+   * ensuite orchestrée par `resolveTileEntry()`.
    *
    * - un éventuel combat ;
    * - l'ouverture d'un coffre ;
@@ -1068,7 +1065,7 @@ export class GameService {
     tile.tokenFace = 'front';
   }
 
-/** Gere choosePendingToken et applique les gardes necessaires avant mutation. */
+  /** Conserve un jeton de Taia, restitue l'autre et reprend la résolution de la salle. */
   choosePendingToken(index: 0 | 1): boolean {
     const pending = this.pendingTokenChoice();
     if (
@@ -1143,8 +1140,9 @@ export class GameService {
    * 3. arrêter immédiatement les déplacements si un jeton existe ;
    * 4. déclencher le combat ou mettre le coffre en attente.
    *
-   * La résolution effective du combat et l'ouverture du coffre
-   * seront implémentées dans leurs tranches respectives.
+   * La résolution effective est déléguée à `CombatService` et aux méthodes
+   * de récompense ; cette façade reste le point d'entrée commun aux humains et
+   * aux IA.
    */
   resolveTileEntry(
     player: Player,
@@ -1453,7 +1451,7 @@ export class GameService {
     return true;
   }
 
-/** Gere selectPortalTravelDestination et applique les gardes necessaires avant mutation. */
+  /** Enregistre une destination parmi les portails déjà découverts. */
   selectPortalTravelDestination(destination: PlacedTile): boolean {
     const selection = this.portalTravelSelection();
     if (!selection || !selection.destinations.includes(destination)) return false;
@@ -1461,7 +1459,7 @@ export class GameService {
     return true;
   }
 
-/** Gere closePortalTravelSelection et applique les gardes necessaires avant mutation. */
+  /** Annule la sélection de voyage sans consommer de mouvement. */
   closePortalTravelSelection(): void {
     this.portalTravelSelection.set(null);
   }
@@ -1658,7 +1656,7 @@ export class GameService {
     if (used.tileKey !== destinationKey) this.healingFountainUse.set(null);
   }
 
-/** Gere openHealingPortalSelection et applique les gardes necessaires avant mutation. */
+  /** Ouvre la sélection d'une cible et d'une fontaine pour le Portail de guérison. */
   openHealingPortalSelection(): boolean {
     if (!this.canUseHealingPortal || !this.activePlayer) return false;
     const fountains = this.getHealingFountains();
@@ -1666,26 +1664,26 @@ export class GameService {
     return true;
   }
 
-/** Gere closeHealingPortalSelection et applique les gardes necessaires avant mutation. */
+  /** Ferme la sélection de Portail de guérison sans consommer le sort. */
   closeHealingPortalSelection(): void {
     this.healingPortalSelection.set(null);
   }
 
-/** Gere selectHealingPortalTarget et applique les gardes necessaires avant mutation. */
+  /** Change la cible de la sélection sans encore téléporter de héros. */
   selectHealingPortalTarget(target: Player): void {
     const selection = this.healingPortalSelection();
     if (!selection || !this.playerService.players.includes(target)) return;
     this.healingPortalSelection.set({ ...selection, target });
   }
 
-/** Gere selectHealingPortalDestination et applique les gardes necessaires avant mutation. */
+  /** Enregistre une fontaine effectivement découverte comme destination. */
   selectHealingPortalDestination(destination: PlacedTile): void {
     const selection = this.healingPortalSelection();
     if (!selection || !this.getHealingFountains().includes(destination)) return;
     this.healingPortalSelection.set({ ...selection, destination });
   }
 
-/** Gere moveHealingPortalSelection et applique les gardes necessaires avant mutation. */
+  /** Parcourt cycliquement les fontaines disponibles pour la sélection clavier. */
   moveHealingPortalSelection(step: 1 | -1): void {
     const selection = this.healingPortalSelection();
     const fountains = this.getHealingFountains();

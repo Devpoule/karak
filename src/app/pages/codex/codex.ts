@@ -34,7 +34,6 @@ export class Codex implements OnInit {
     private readonly route: ActivatedRoute,
   ) {}
 
-/** Gere ngOnInit et applique les gardes necessaires avant mutation. */
   ngOnInit(): void {
     this.route.queryParamMap.subscribe(params => {
       this.returnContext = params.get('from') === 'game' ? 'game' : 'home';
@@ -51,24 +50,18 @@ export class Codex implements OnInit {
     });
   }
 
-/** Gere selectHero et applique les gardes necessaires avant mutation. */
   selectHero(hero: HeroDefinition): void {
     this.selectedHero = hero;
   }
 
-/** Gere selectSection et applique les gardes necessaires avant mutation. */
   selectSection(section: 'universe' | 'heroes' | 'bestiary' | 'rules'): void { this.section = section; }
-/** Gere selectMonster et applique les gardes necessaires avant mutation. */
   selectMonster(monster: BestiaryEntry): void { this.selectedMonster = monster; }
-/** Gere monsterDefinition et applique les gardes necessaires avant mutation. */
   monsterDefinition(monster: BestiaryEntry): MonsterTokenDefinition | null {
     const definition = getTokenDefinition(monster.tokenId);
     return definition?.kind === 'monster' ? definition : null;
   }
-/** Gere originLabel et applique les gardes necessaires avant mutation. */
   originLabel(origin: 'base' | 'regent'): string { return contentOrigin(origin).name; }
 
-/** Gere goBack et applique les gardes necessaires avant mutation. */
   goBack(): void {
     void this.router.navigateByUrl(this.returnContext === 'game' ? '/play' : '/');
   }

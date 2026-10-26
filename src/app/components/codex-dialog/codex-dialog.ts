@@ -34,13 +34,11 @@ export class CodexDialog implements AfterViewInit {
     queueMicrotask(() => this.dialogElement?.nativeElement.focus());
   }
 
-/** Gere close et applique les gardes necessaires avant mutation. */
   close(): void {
     this.closed.emit();
     queueMicrotask(() => this.previouslyFocusedElement?.focus());
   }
 
-/** Gere closeOnEscape et applique les gardes necessaires avant mutation. */
   @HostListener('document:keydown.escape', ['$event'])
   closeOnEscape(event: Event): void {
     event.preventDefault();

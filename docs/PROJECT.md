@@ -64,6 +64,9 @@ Le projet est client-only : aucun backend ni stockage serveur n'est actuellement
 
 Le statut fonctionnel détaillé, les risques connus et les prochaines priorités sont tenus dans [`ROADMAP.md`](./ROADMAP.md).
 
+Les contrats techniques détaillés des services métier et les règles de
+réactivité sont décrits dans [`DOMAIN_SERVICES.md`](./DOMAIN_SERVICES.md).
+
 ## Recette navigateur
 
 Playwright est configuré par `playwright.config.ts`. La commande `npm run test:e2e` utilise Chromium et réemploie le serveur Angular disponible sur `127.0.0.1:4200`. Si aucun serveur n'est disponible, Playwright tente de le lancer via `cmd.exe`, ce qui évite le problème observé avec le wrapper PowerShell. Les rapports et captures sont écrits dans `playwright-report/`, ignoré par Git.

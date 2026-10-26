@@ -119,6 +119,7 @@ export class TutorialSessionService {
     this.sessionRevision.update(revision => revision + 1);
   }
 
+  /** Ferme l'aide courante pour la session sans modifier les objectifs. */
   dismissActiveHelp(): void {
     const help = this.activeHelp();
     if (!help) return;
@@ -126,10 +127,12 @@ export class TutorialSessionService {
     this.activeHelp.set(null);
   }
 
+  /** Réduit l'aide courante ; la check-list reste indépendante de ce choix. */
   collapseHelp(): void {
     if (this.activeHelp()) this.helpDisplay.set('collapsed');
   }
 
+  /** Réaffiche l'aide courante sans recalculer la progression. */
   expandHelp(): void {
     if (this.activeHelp()) this.helpDisplay.set('expanded');
   }

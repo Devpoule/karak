@@ -1,8 +1,8 @@
 # Budgets de performance Angular
 
-## Audit du 15 octobre 2026
+## Audit historique du 15 octobre 2026
 
-Le build de production initial signalait trois avertissements :
+Le build de production de cette campagne signalait trois avertissements :
 
 - bundle initial : `528,24 kB` pour un seuil d'avertissement de `500 kB` ;
 - `combat-overlay.scss` : `20,78 kB` compilés pour `16 kB` ;
@@ -42,3 +42,12 @@ Le build de production ne doit plus émettre d'avertissement de budget. Toute
 nouvelle hausse d'un style au-delà de `24 kB` doit être traitée comme une
 régression à analyser, et non comme une raison automatique d'augmenter le
 seuil.
+
+## Validation courante du 26 octobre 2026
+
+Le build courant (`npx ng build`) produit un bundle initial de `360,80 kB`
+avant compression et n'émet aucun avertissement de budget. Les chunks lazy
+principaux sont `game` (`68,29 kB`), `codex` (`41,85 kB`), `home` (`10,09 kB`),
+`tutorial` (`19,54 kB`) et `entry` (`3,70 kB`). Ces valeurs sont le point de
+comparaison actuel ; l'audit du 15 octobre reste conservé pour expliquer la
+réduction initiale et le seuil configuré.

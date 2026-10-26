@@ -1,6 +1,8 @@
 # Karak — audit fonctionnel exhaustif et chronologique
 
-> Inventaire de l’implémentation observée le 17 octobre 2026. Ce document ne corrige aucun comportement et ne transforme pas une présence dans le code en preuve de conformité.
+> Inventaire détaillé de l’implémentation observée le 17 octobre 2026. Les
+> nombres de cette campagne sont historiques ; la validation technique du
+> checkout courant est tenue dans `ROADMAP.md`.
 
 ## 1. Périmètre et méthode
 
@@ -9,7 +11,7 @@ Sources examinées :
 - manuel local `public/assets/rules/karak-base.pdf` et ses huit pages PNG ;
 - référentiel interne `docs/RULES.md` et fiches `docs/rules/` ;
 - modèles, données, services, composants et pages Angular sous `src/app/` ;
-- 32 fichiers de tests contenant 304 cas `it/test` ;
+- 32 fichiers de tests contenant 304 cas `it/test` au moment de cet inventaire ;
 - 9 fichiers Playwright sous `e2e/`.
 
 Le manuel `karak-base.pdf` est la référence normative prioritaire. Les huit pages sont utilisées ainsi :
@@ -326,7 +328,9 @@ Les cinq points de risque initiaux se répartissent ainsi : portails **Conforme 
 
 ## 6. Couverture et limites
 
-Les 304 cas automatisés sont une mesure de présence de tests, pas une couverture fonctionnelle exhaustive. La couverture est forte sur les services métier, les transitions et les six héros, mais plus faible pour :
+Les 304 cas automatisés de cette campagne sont une mesure de présence de tests,
+pas une couverture fonctionnelle exhaustive. La couverture est forte sur les
+services métier, les transitions et les six héros, mais plus faible pour :
 
 - confrontation exacte avec chaque page du manuel officiel ;
 - déplacements entre portails et soin direct sur une fontaine ;
@@ -352,6 +356,10 @@ git diff --check
 ## 7. Synthèse finale
 
 - **143 mécanismes** recensés, répartis sur 11 phases chronologiques.
-- **304 cas unitaires/intégration recensés** dans 32 fichiers ; le nombre de 294 indiqué initialement est obsolète pour ce checkout.
+- **304 cas unitaires/intégration recensés** dans 32 fichiers pour la campagne
+  du 17 octobre ; le checkout validé le 26 octobre compte 455 tests sur 39
+  fichiers avec la commande de référence.
 - Les zones les plus risquées sont les mécanismes officiellement absents ou divergents : portails de déplacement, soin direct sur fontaine, ouverture facultative d’un coffre avec clé, Marche rampante sur pièce nouvellement découverte, égalité du premier lancer et transitions pending/asynchrones.
-- Aucun bug n’est corrigé, aucune règle n’est modifiée et aucun test existant n’est modifié dans le cadre de cet inventaire.
+- Aucun bug métier n’est corrigé ni aucune règle modifiée dans le cadre de cet
+  inventaire historique. Les tests de validation courante sont maintenus
+  séparément et leur résultat est consigné dans `ROADMAP.md`.

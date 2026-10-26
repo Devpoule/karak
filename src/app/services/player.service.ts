@@ -177,41 +177,6 @@ export class PlayerService {
     return true;
   }
   // ==========================================================
-  // JOUEUR TEMPORAIRE DU PROTOTYPE
-  // ==========================================================
-  /**
-   * Joueur actuellement utilisé
-   * par le prototype du plateau.
-   *
-   * TEMPORAIRE :
-   *
-   * cette propriété permet au Board existant
-   * de continuer à fonctionner pendant
-   * la mise en place progressive
-   * du véritable SETUP.
-   *
-   * Elle sera supprimée lorsque le Board
-   * utilisera le joueur actif déterminé
-   * par le moteur de partie.
-   *
-   * Le joueur temporaire représente
-   * un joueur humain.
-   */
-  readonly player: Player = {
-    controller: 'human',
-    lives: 5,
-    recoveryState: 'none',
-    isCursed: false,
-    inventory: createEmptyPlayerInventory(),
-    treasures: createEmptyTreasures(),
-    heroId: 'argentus',
-    position: {
-      x: 0,
-      y: 0,
-    },
-    facing: 'south',
-  };
-  // ==========================================================
   // INITIALISATION
   // ==========================================================
   /**
@@ -395,51 +360,11 @@ export class PlayerService {
     return id === 'opened-chest' || id === 'monster-treasure' || id === 'dragon-ruby' ? id : null;
   }
   // ==========================================================
-  // DÉPLACEMENT TEMPORAIRE
-  // ==========================================================
-  /**
-   * Déplace le joueur utilisé actuellement
-   * par le prototype du plateau.
-   *
-   * TEMPORAIRE :
-   *
-   * cette méthode sera remplacée lorsque Board
-   * utilisera le joueur actif déterminé
-   * par le moteur de partie.
-   */
-  moveTo(x: number, y: number, direction: Direction): void {
-    this.player.position = {
-      x,
-      y,
-    };
-    this.player.facing = direction;
-  }
-  /**
-   * Modifie uniquement l'orientation
-   * graphique du pion.
-   *
-   * CHOIX D'IMPLÉMENTATION :
-   *
-   * cette orientation sert uniquement
-   * à la représentation visuelle du héros
-   * et n'a aucune incidence
-   * sur les règles du jeu.
-   */
-  face(direction: Direction): void {
-    this.player.facing = direction;
-  }
-  // ==========================================================
   // DÉPLACEMENT DES JOUEURS RÉELS
   // ==========================================================
   /**
    * Déplace un joueur réel de la partie vers une nouvelle
    * position du donjon.
-   *
-   * IMPORTANT :
-   *
-   * Cette méthode modifie un joueur appartenant à \\\\`players\\\\`.
-   * Elle ne concerne donc pas l'ancien joueur temporaire
-   * \\\\`player\\\\`, conservé provisoirement pour compatibilité.
    *
    * La validation du déplacement n'appartient pas à ce service :
    *

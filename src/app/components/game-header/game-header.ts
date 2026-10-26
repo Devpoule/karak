@@ -6,7 +6,6 @@ import { GameService } from '../../services/game.service';
 import { SettingsPanel } from '../settings-panel/settings-panel';
 import { EventHistory } from '../event-history/event-history';
 
-/** Service ou composant GameHeader ; coordonne sa responsabilite de domaine ou d interface. */
 @Component({
   imports: [NgOptimizedImage, RouterLink, SettingsPanel, EventHistory],
   selector: 'app-game-header',
@@ -54,7 +53,6 @@ export class GameHeader {
     queueMicrotask(() => focusTarget?.focus());
   }
 
-/** Gere requestLeave et applique les gardes necessaires avant mutation. */
   requestLeave(): void {
     this.closeMenu();
     if (this.context === 'rules') {
@@ -84,13 +82,11 @@ export class GameHeader {
     this.showLeaveConfirmation = true;
   }
 
-/** Gere cancelLeave et applique les gardes necessaires avant mutation. */
   cancelLeave(): void {
     this.showLeaveConfirmation = false;
     queueMicrotask(() => this.previouslyFocusedElement?.focus());
   }
 
-/** Gere leaveGame et applique les gardes necessaires avant mutation. */
   leaveGame(): void {
     this.showLeaveConfirmation = false;
     if (this.context === 'tutorial') {
@@ -103,7 +99,6 @@ export class GameHeader {
     void this.router.navigateByUrl('/');
   }
 
-/** Gere closeLeaveConfirmation et applique les gardes necessaires avant mutation. */
   @HostListener('document:keydown.escape')
   closeLeaveConfirmation(): void {
     if (this.showLeaveConfirmation) {

@@ -43,6 +43,9 @@ Aucune anomalie produit confirmée n'a été corrigée pendant ce jalon.
 - Playwright Chromium : 10 scénarios réussis après correction, dont le scénario intégral.
 - Compilation Angular : réussie.
 - `git diff --check` : à exécuter après les dernières modifications.
-- Avertissements SCSS conservés : `game-setup.scss` (22,20 kB pour 16 kB) et `combat-overlay.scss` (20,24 kB pour 16 kB). Ils sont connus et ne constituent pas une nouvelle régression de cette recette.
+- Au moment de cette recette historique, les avertissements SCSS concernaient
+  `game-setup.scss` (22,20 kB pour 16 kB) et `combat-overlay.scss` (20,24 kB
+  pour 16 kB). La validation courante, consignée dans `ROADMAP.md`, ne
+  reproduit plus ces avertissements.
 
 Le jalon est donc validé pour le parcours intégral couvert, mais reste ouvert pour les catégories explicitement marquées `NON COUVERT`.

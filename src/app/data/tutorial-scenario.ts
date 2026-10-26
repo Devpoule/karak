@@ -29,7 +29,6 @@ export interface TutorialScenarioPlacement {
   readonly direction: Direction;
   readonly target: { readonly x: number; readonly y: number };
   readonly definitionId: string;
-  readonly allowedRotations: readonly number[];
   /** null désigne explicitement une salle vide ; undefined ne fait pas partie du scénario. */
   readonly tokenId?: TokenDefinitionId | null;
   readonly branch?: 'west' | 'east' | 'trunk' | 'portal' | 'exit';
@@ -54,7 +53,6 @@ export const TUTORIAL_SCENARIO = {
       direction: 'south',
       target: { x: 0, y: 1 },
       definitionId: 'straight-01',
-      allowedRotations: [90, 270],
       branch: 'trunk',
     },
     {
@@ -63,7 +61,6 @@ export const TUTORIAL_SCENARIO = {
       direction: 'south',
       target: { x: 0, y: 2 },
       definitionId: 'straight-02',
-      allowedRotations: [90, 270],
       branch: 'trunk',
     },
     {
@@ -72,7 +69,6 @@ export const TUTORIAL_SCENARIO = {
       direction: 'south',
       target: { x: 0, y: 3 },
       definitionId: 'straight-room',
-      allowedRotations: [0, 180],
       tokenId: 'giant-spider',
       branch: 'trunk',
     },
@@ -82,7 +78,6 @@ export const TUTORIAL_SCENARIO = {
       direction: 'south',
       target: { x: 0, y: 4 },
       definitionId: 't-junction-01',
-      allowedRotations: [180],
       branch: 'trunk',
     },
     {
@@ -91,7 +86,6 @@ export const TUTORIAL_SCENARIO = {
       direction: 'west',
       target: { x: -1, y: 4 },
       definitionId: 'crossroads-room',
-      allowedRotations: [0, 90, 180, 270],
       tokenId: 'skeleton-swordsman',
       branch: 'west',
     },
@@ -101,7 +95,6 @@ export const TUTORIAL_SCENARIO = {
       direction: 'south',
       target: { x: -1, y: 5 },
       definitionId: 't-junction-room',
-      allowedRotations: [90],
       tokenId: 'skeleton-key-guardian',
       branch: 'west',
     },
@@ -111,7 +104,6 @@ export const TUTORIAL_SCENARIO = {
       direction: 'east',
       target: { x: 0, y: 5 },
       definitionId: 'crossroads-room',
-      allowedRotations: [0, 90, 180, 270],
       tokenId: 'closed-chest',
       branch: 'west',
     },
@@ -121,7 +113,6 @@ export const TUTORIAL_SCENARIO = {
       direction: 'east',
       target: { x: 1, y: 4 },
       definitionId: 'crossroads-room',
-      allowedRotations: [0, 90, 180, 270],
       tokenId: 'giant-rat',
       branch: 'east',
     },
@@ -131,7 +122,6 @@ export const TUTORIAL_SCENARIO = {
       direction: 'east',
       target: { x: 2, y: 4 },
       definitionId: 'healing-corner',
-      allowedRotations: [0],
       branch: 'east',
     },
     {
@@ -140,7 +130,6 @@ export const TUTORIAL_SCENARIO = {
       direction: 'south',
       target: { x: 2, y: 5 },
       definitionId: 'corner-room',
-      allowedRotations: [0],
       tokenId: null,
       branch: 'east',
     },
@@ -150,7 +139,6 @@ export const TUTORIAL_SCENARIO = {
       direction: 'east',
       target: { x: 1, y: 5 },
       definitionId: 'cross',
-      allowedRotations: [0, 90, 180, 270],
       branch: 'trunk',
     },
     {
@@ -159,7 +147,6 @@ export const TUTORIAL_SCENARIO = {
       direction: 'west',
       target: { x: 1, y: 5 },
       definitionId: 'cross',
-      allowedRotations: [0, 90, 180, 270],
       branch: 'trunk',
     },
     {
@@ -168,7 +155,6 @@ export const TUTORIAL_SCENARIO = {
       direction: 'south',
       target: { x: 1, y: 6 },
       definitionId: 'portal-straight-01',
-      allowedRotations: [90, 270],
       branch: 'portal',
     },
     {
@@ -177,7 +163,6 @@ export const TUTORIAL_SCENARIO = {
       direction: 'south',
       target: { x: 1, y: 7 },
       definitionId: 'portal-straight-02',
-      allowedRotations: [90, 270],
       branch: 'portal',
     },
     {
@@ -186,7 +171,6 @@ export const TUTORIAL_SCENARIO = {
       direction: 'south',
       target: { x: 1, y: 8 },
       definitionId: 'straight-03',
-      allowedRotations: [90, 270],
       branch: 'exit',
     },
   ] satisfies readonly TutorialScenarioPlacement[],

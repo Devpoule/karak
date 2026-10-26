@@ -105,7 +105,7 @@ Responsabilité cohérente : exprimer une précondition partagée par plusieurs 
 
 ## 6. État des tests
 
-Validation de référence de la consolidation 14 :
+Validation historique de référence de la consolidation 14 :
 
 - **160 tests unitaires réussis** ;
 - **14 tests E2E réussis** ;
@@ -114,7 +114,9 @@ Validation de référence de la consolidation 14 :
 - build Angular réussi ;
 - `git diff --check` réussi.
 
-Les avertissements de budget Angular restent présents sur le bundle initial et les feuilles SCSS de `game-setup` et `combat-overlay`. Ils sont indépendants de cette analyse architecturale.
+Les avertissements de budget Angular mentionnés ici décrivent cette campagne
+historique ; la validation courante sans avertissement est consignée dans
+`ROADMAP.md`.
 
 ## 7. Recommandations hiérarchisées
 

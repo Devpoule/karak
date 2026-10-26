@@ -62,7 +62,6 @@ type FirstPlayerResolutionState =
   | 'winner'
   | 'waiting';
 
-/** Service ou composant GameSetup ; coordonne sa responsabilite de domaine ou d interface. */
 @Component({
   selector: 'app-game-setup',
   imports: [ContextualHelpComponent],
@@ -464,7 +463,6 @@ export class GameSetup {
     }
   }
 
-/** Gere goToSetupStep et applique les gardes necessaires avant mutation. */
   goToSetupStep(step: 'players' | 'heroes'): void {
     const target: SetupStep = step === 'players' ? 'player-count' : 'hero-draw';
     this.gameService.goBackToSetupStep(target);
@@ -477,7 +475,6 @@ export class GameSetup {
     this.aiRollScheduled = false;
   }
 
-/** Gere continueAfterHeroDraw et applique les gardes necessaires avant mutation. */
   continueAfterHeroDraw(): void {
     this.gameService.continueAfterHeroDraw();
     this.heroDrawState.set('revealed');
@@ -492,13 +489,11 @@ export class GameSetup {
       : this.gameService.setupStep() === 'hero-draw' && this.heroDrawState() === 'revealed';
   }
 
-/** Gere navigatePrevious et applique les gardes necessaires avant mutation. */
   navigatePrevious(): void {
     if (this.gameService.setupStep() === 'first-player-roll') this.goToSetupStep('heroes');
     else if (this.gameService.setupStep() === 'hero-draw') this.goToSetupStep('players');
   }
 
-/** Gere navigateNext et applique les gardes necessaires avant mutation. */
   navigateNext(): void {
     if (!this.canNavigateNext) return;
     if (this.gameService.setupStep() === 'hero-draw') this.continueAfterHeroDraw();

@@ -128,7 +128,6 @@ export class PlayerSidebar {
     return this.isActive && !this.interactionLocked && this.usablePowerIds.includes(powerId);
   }
 
-/** Gere togglePower et applique les gardes necessaires avant mutation. */
   togglePower(powerId: HeroPowerId, event?: Event): void {
     if (this.interactionLocked) return;
     this.biographyOpen = false;
@@ -146,14 +145,12 @@ export class PlayerSidebar {
     this.changeDetector?.detectChanges();
   }
 
-/** Gere toggleBiography et applique les gardes necessaires avant mutation. */
   toggleBiography(): void {
     if (this.interactionLocked) return;
     this.selectedPowerId = null;
     this.biographyOpen = !this.biographyOpen;
   }
 
-/** Gere openCurseDialog et applique les gardes necessaires avant mutation. */
   openCurseDialog(): void {
     if (this.interactionLocked) return;
     this.selectedPowerId = null;
@@ -161,7 +158,6 @@ export class PlayerSidebar {
     this.curseDialogOpen = true;
   }
 
-/** Gere closeDetails et applique les gardes necessaires avant mutation. */
   closeDetails(): void {
     this.selectedPowerId = null;
     this.biographyOpen = false;
@@ -174,7 +170,6 @@ export class PlayerSidebar {
     if (!this.interactionLocked) this.playerTabClicked.emit();
   }
 
-/** Gere powerImage et applique les gardes necessaires avant mutation. */
   powerImage(powerIndex: number): string {
     const hero = this.heroDefinition;
     const powerKind = powerIndex === 0 ? 'primary' : 'secondary';
@@ -183,7 +178,6 @@ export class PlayerSidebar {
       : '';
   }
 
-/** Gere onEscape et applique les gardes necessaires avant mutation. */
   @HostListener('document:keydown.escape')
   onEscape(): void {
     this.closeDetails();

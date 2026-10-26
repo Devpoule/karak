@@ -4,7 +4,6 @@ import { Player } from '../../models/player';
 import { PlayerService } from '../../services/player.service';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
 
-/** Contrat de donnees TreasureGroup utilise par le domaine ou l interface. */
 interface TreasureGroup {
   readonly type: Treasure;
   readonly singularLabel: string;
@@ -45,7 +44,6 @@ export class TreasurePanel {
     return calculateTreasurePoints(this.player?.treasures ?? []);
   }
 
-/** Gere getLabel et applique les gardes necessaires avant mutation. */
   private getLabel(type: Treasure, form: 'singular' | 'plural'): string {
     switch (type) {
       case 'opened-chest': return form === 'singular' ? 'Coffre ouvert' : 'Coffres ouverts';
@@ -54,7 +52,6 @@ export class TreasurePanel {
     }
   }
 
-/** Gere getImage et applique les gardes necessaires avant mutation. */
   private getImage(type: Treasure): string {
     switch (type) {
       case 'opened-chest': return '/assets/tokens/open-chest.png';

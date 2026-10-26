@@ -7,10 +7,18 @@ sauvegarde de la partie normale.
 
 ## Choix numérique : scénario déterministe
 
-`src/app/data/tutorial-scenario.ts` décrit les poses par tuile source et
-direction. Une branche découverte avant l'autre ne peut donc pas déplacer ses
-récompenses. Les jetons des salles sont révélés au premier passage réel, comme
-dans le flux normal, mais leur identité est définie par le scénario.
+`src/app/data/tutorial-scenario.ts` décrit les lieux pédagogiques par tuile
+source, direction et coordonnées. Une branche découverte avant l'autre ne
+déplace donc pas ses récompenses. Les jetons des salles sont révélés au
+premier passage réel, comme dans le flux normal, mais leur identité est
+définie par le scénario.
+
+Le scénario ne contient plus de liste de directions ou de rotations autorisées
+par objectif. `ExplorationService`, `DungeonService` et `GameService` restent
+les seules sources de vérité pour les sorties, les connexions, les rotations et
+les déplacements. Le scénario fournit uniquement des données pédagogiques
+déterministes lorsque la source n'est pas ambiguë et des identifiants de lieux
+ou de jetons pour suivre la visite.
 
 Les deux branches restent accessibles dans n'importe quel ordre. Les combats,
 leurs résultats, les pertes de vie, les récupérations, les récompenses, le

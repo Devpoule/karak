@@ -9,13 +9,11 @@ import { Component, HostListener } from '@angular/core';
 export class ScrollTopButton {
   isVisible = false;
 
-/** Gere updateVisibility et applique les gardes necessaires avant mutation. */
   @HostListener('window:scroll')
   updateVisibility(): void {
     this.isVisible = window.scrollY > 160;
   }
 
-/** Gere scrollToTop et applique les gardes necessaires avant mutation. */
   scrollToTop(): void {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }

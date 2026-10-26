@@ -199,8 +199,10 @@ export class AiService {
       || this.gameService.declineUnstoppableContinuation();
   }
 
-/** Gere resolveXanrosSacrificeDecision et applique les gardes necessaires avant mutation. */
-/** Gere resolveXanrosSacrificeDecision et applique les gardes necessaires avant mutation. */
+  /**
+   * Utilise le sacrifice seulement lorsqu'un point supplémentaire transforme
+   * le lancer courant en victoire ou en égalité favorable à Xanros.
+   */
   resolveXanrosSacrificeDecision(): boolean {
     const player = this.gameService.activePlayer;
     const combat = this.combatService.pendingCombat();

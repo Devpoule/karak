@@ -92,12 +92,10 @@ export class MovementCounter implements OnDestroy {
     });
   }
 
-/** Gere isPointConsumed et applique les gardes necessaires avant mutation. */
   isPointConsumed(index: number): boolean {
     return !this.active || index >= this.turnService.remainingMovements();
   }
 
-/** Gere isPointAnimating et applique les gardes necessaires avant mutation. */
   isPointAnimating(index: number): boolean {
     this.animationStateRevision();
     return this.active && this.animatingPointIndexes.has(index);
@@ -108,13 +106,11 @@ export class MovementCounter implements OnDestroy {
     return this.active && this.resetting();
   }
 
-/** Gere ngOnDestroy et applique les gardes necessaires avant mutation. */
   ngOnDestroy(): void {
     this.clearAnimations();
     if (this.resetAnimationTimer !== undefined) clearTimeout(this.resetAnimationTimer);
   }
 
-/** Gere clearAnimations et applique les gardes necessaires avant mutation. */
   private clearAnimations(): void {
     this.animationTimers.forEach(timer => clearTimeout(timer));
     this.animationTimers.clear();

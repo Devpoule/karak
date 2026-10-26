@@ -1,17 +1,20 @@
 # Plan de refactorisation progressive de `GameService`
 
-> Document d'audit — Consolidation 08. Aucun service ni comportement n'est modifié par cette consolidation.
+> Document d'audit historique — Consolidation 08. Aucun service ni comportement
+> n'est modifié par cette consolidation.
 
 ## 1. Périmètre et état de référence
 
-L'audit porte sur `src/app/services/game.service.ts` et ses usages actuels. La branche d'audit est `audit/game-service-responsibilities`.
+L'audit porte sur `src/app/services/game.service.ts` et ses usages au moment de
+la consolidation 08. Les noms de branches et les références Git de cette
+campagne ne constituent plus un état de développement courant.
 
 État de référence validé avant l'audit :
 
-- `main`, `origin/main` et `github/main` sont synchronisés sur `55eced0` après intégration de la consolidation 07 ;
-- la consolidation 07 est enregistrée dans `261ad78` ;
+- la consolidation 07 était intégrée dans la branche principale de la campagne ;
 - 129 tests unitaires et 14 tests E2E sont verts ;
-- le build Angular est réussi, avec les avertissements de budget existants ;
+- le build Angular de cette campagne est réussi, avec les avertissements de
+  budget alors présents ;
 - aucune règle métier ni aucun contrat public n'est modifié dans ce document.
 
 ## 2. Cartographie de l'architecture actuelle

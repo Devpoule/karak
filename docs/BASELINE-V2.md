@@ -1,8 +1,12 @@
-# Karak — Baseline technique V2
+# Karak — Baseline technique V2 (historique)
 
 Date de référence : 18 octobre 2026  
 Branche : `main`  
 Statut : baseline validée après `V2.0-01` à `V2.0-06`
+
+Cette baseline constitue un point de comparaison du 18 octobre 2026. Elle ne
+remplace pas les résultats du checkout courant, maintenus dans
+[`ROADMAP.md`](./ROADMAP.md).
 
 ## Environnement
 

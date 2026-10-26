@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { TUTORIAL_SCENARIO, TutorialScenarioPlacement } from '../data/tutorial-scenario';
-import { Direction, PlacedTile, TileDefinition } from '../models/tile';
+import { TUTORIAL_SCENARIO } from '../data/tutorial-scenario';
+import { PlacedTile } from '../models/tile';
 import { TokenDefinitionId } from '../models/token';
 
 /**
@@ -11,30 +11,32 @@ import { TokenDefinitionId } from '../models/token';
 export class TutorialScenarioService {
   private readonly placements = TUTORIAL_SCENARIO.placements;
 
-  get heroId() {
+  /** Héros humain utilisé par la session indépendante du didacticiel. */
+  get heroId(): typeof TUTORIAL_SCENARIO.heroId {
     return TUTORIAL_SCENARIO.heroId;
   }
 
-  get exit() {
+  /** Coordonnées de la tuile qui valide le dernier objectif. */
+  get exit(): typeof TUTORIAL_SCENARIO.exit {
     return TUTORIAL_SCENARIO.exit;
   }
 
-  get helpDefinitions() {
+  /** Aides contextuelles ; elles n'ont aucun pouvoir de validation métier. */
+  get helpDefinitions(): typeof TUTORIAL_SCENARIO.helps {
     return TUTORIAL_SCENARIO.helps;
   }
 
-  get requiredWestLocationIds() {
+  /** Identifiants des lieux nécessaires à la branche ouest. */
+  get requiredWestLocationIds(): typeof TUTORIAL_SCENARIO.requiredWestLocations {
     return TUTORIAL_SCENARIO.requiredWestLocations;
   }
 
-  get requiredEastLocationIds() {
+  /** Identifiants des lieux nécessaires à la branche est. */
+  get requiredEastLocationIds(): typeof TUTORIAL_SCENARIO.requiredEastLocations {
     return TUTORIAL_SCENARIO.requiredEastLocations;
   }
 
-  canExplore(source: PlacedTile, direction: Direction): boolean {
-    return this.findPlacement(source.x, source.y, direction) !== undefined;
-  }
-
+  /** Retourne la tuile déterministe du scénario lorsque la source est non ambiguë. */
   getDefinitionIdForSource(source: PlacedTile): string | null {
     const choices = this.placements.filter(placement =>
       placement.source.x === source.x && placement.source.y === source.y,
@@ -46,54 +48,24 @@ export class TutorialScenarioService {
       : null;
   }
 
-  isPlacementAllowed(
-    source: PlacedTile,
-    direction: Direction,
-    definition: TileDefinition,
-    rotation: number,
-    target: { x: number; y: number },
-  ): boolean {
-    const placement = this.findPlacement(source.x, source.y, direction);
-    return !!placement
-      && placement.definitionId === definition.id
-      && placement.target.x === target.x
-      && placement.target.y === target.y
-      && placement.allowedRotations.includes(rotation);
-  }
-
+  /** Retourne le jeton prédéfini d'une salle, sans tirer ni muter le sac global. */
   getRoomTokenId(tile: PlacedTile): TokenDefinitionId | null | undefined {
     return this.placements.find(placement =>
       placement.target.x === tile.x && placement.target.y === tile.y,
     )?.tokenId;
   }
 
+  /** Traduit une tuile posée en identifiant de progression pédagogique. */
   getLocationId(tile: PlacedTile): string | null {
     return this.placements.find(placement =>
       placement.target.x === tile.x && placement.target.y === tile.y,
     )?.id ?? null;
   }
 
+  /** Compare la position d'une tuile avec la sortie du scénario. */
   isExit(tile: PlacedTile): boolean {
     return tile.x === this.exit.x && tile.y === this.exit.y;
   }
 
-  allowsMove(source: PlacedTile, destination: PlacedTile): boolean {
-    return this.placements.some(placement =>
-      (placement.source.x === source.x
-        && placement.source.y === source.y
-        && placement.target.x === destination.x
-        && placement.target.y === destination.y)
-      || (placement.target.x === source.x
-        && placement.target.y === source.y
-        && placement.source.x === destination.x
-        && placement.source.y === destination.y),
-    );
-  }
-
-  private findPlacement(x: number, y: number, direction: Direction): TutorialScenarioPlacement | undefined {
-    return this.placements.find(placement =>
-      placement.source.x === x && placement.source.y === y && placement.direction === direction,
-    );
-  }
 }
 

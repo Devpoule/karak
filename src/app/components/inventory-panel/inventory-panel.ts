@@ -10,7 +10,6 @@ import { DecisionCard, DecisionCardAction } from '../decision-card/decision-card
 
 type InventoryGroup = 'weapons' | 'spells' | 'key';
 
-/** Contrat de donnees DropSelection utilise par le domaine ou l interface. */
 interface DropSelection {
   readonly player: Player;
   readonly kind: Equipment['kind'];
@@ -68,7 +67,6 @@ export class InventoryPanel implements DoCheck, OnDestroy {
       && !this.explorationService.pendingTile;
   }
 
-/** Gere selectDrop et applique les gardes necessaires avant mutation. */
   selectDrop(kind: Equipment['kind'], index: number, equipment: Equipment): void {
     if (!this.canDropEquipment || !this.player?.position) return;
     this.dropSelection = {
@@ -80,7 +78,6 @@ export class InventoryPanel implements DoCheck, OnDestroy {
     };
   }
 
-/** Gere cancelDrop et applique les gardes necessaires avant mutation. */
   cancelDrop(): void {
     this.dropSelection = null;
   }
@@ -97,7 +94,6 @@ export class InventoryPanel implements DoCheck, OnDestroy {
     return this.gameService.healingPortalSelection();
   }
 
-/** Gere openHealingPortalSelection et applique les gardes necessaires avant mutation. */
   openHealingPortalSelection(): void {
     if (!this.canUseHealingPortal) return;
     this.gameService.openHealingPortalSelection();
@@ -140,7 +136,6 @@ export class InventoryPanel implements DoCheck, OnDestroy {
     this.gameService.selectHealingPortalDestination(destination);
   }
 
-/** Gere confirmHealingPortal et applique les gardes necessaires avant mutation. */
   confirmHealingPortal(): void {
     const selection = this.healingPortalSelection;
     if (!selection?.target || !selection.destination || !this.isHealingPortalSelectionOpen) {
@@ -151,12 +146,10 @@ export class InventoryPanel implements DoCheck, OnDestroy {
     this.gameService.closeHealingPortalSelection();
   }
 
-/** Gere cancelHealingPortal et applique les gardes necessaires avant mutation. */
   cancelHealingPortal(): void {
     this.gameService.closeHealingPortalSelection();
   }
 
-/** Gere confirmDrop et applique les gardes necessaires avant mutation. */
   confirmDrop(): void {
     const selected = this.selectedDrop;
     if (!selected || !this.player || !this.isSelectionCurrent(selected)) {
@@ -197,7 +190,6 @@ export class InventoryPanel implements DoCheck, OnDestroy {
     return this.keyItem !== null;
   }
 
-/** Gere ngDoCheck et applique les gardes necessaires avant mutation. */
   ngDoCheck(): void {
     if (this.dropSelection && !this.isSelectionCurrent(this.dropSelection)) {
       this.dropSelection = null;
@@ -236,12 +228,10 @@ export class InventoryPanel implements DoCheck, OnDestroy {
     this.feedbackTimer = setTimeout(() => this.clearFeedback(), 1100);
   }
 
-/** Gere isHighlighted et applique les gardes necessaires avant mutation. */
   isHighlighted(group: InventoryGroup): boolean {
     return this.highlightedGroups.includes(group);
   }
 
-/** Gere clearFeedback et applique les gardes necessaires avant mutation. */
   private clearFeedback(): void {
     if (this.feedbackTimer !== null) {
       clearTimeout(this.feedbackTimer);
@@ -250,7 +240,6 @@ export class InventoryPanel implements DoCheck, OnDestroy {
     this.highlightedGroups = [];
   }
 
-/** Gere ngOnDestroy et applique les gardes necessaires avant mutation. */
   ngOnDestroy(): void {
     this.clearFeedback();
     this.gameService.closeHealingPortalSelection();
@@ -269,7 +258,6 @@ export class InventoryPanel implements DoCheck, OnDestroy {
     return currentEquipment === selection.equipment;
   }
 
-/** Gere getEquipmentAt et applique les gardes necessaires avant mutation. */
   private getEquipmentAt(
     player: Player,
     kind: Equipment['kind'],

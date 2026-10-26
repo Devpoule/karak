@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 
 import { GAME_CONSTANTS } from '../constants/game.constants';
 
-/** Contrat de donnees MovementConsumptionAnimation utilise par le domaine ou l interface. */
+/** Portion du compteur de mouvements dont l'interface doit jouer la consommation. */
 export interface MovementConsumptionAnimation {
   readonly firstPointIndex: number;
   readonly count: number;
@@ -15,7 +15,7 @@ export interface MovementConsumptionAnimation {
  *
  * un héros peut effectuer jusqu'à 4 déplacements pendant son tour.
  *
- * À ce stade, le service ne gère volontairement pas encore :
+ * Le service ne gère volontairement pas :
  *
  * - l'ordre des joueurs ;
  * - le changement de joueur ;
@@ -23,8 +23,8 @@ export interface MovementConsumptionAnimation {
  * - les combats ;
  * - les autres actions susceptibles d'interrompre un déplacement.
  *
- * Ces responsabilités seront introduites avec les mécaniques
- * correspondantes.
+ * Ces responsabilités appartiennent à `GameService` et aux services de
+ * résolution spécialisés.
  */
 @Injectable({
   providedIn: 'root',
@@ -133,7 +133,7 @@ export class TurnService {
     return true;
   }
 
-/** Gere publishMovementConsumption et applique les gardes necessaires avant mutation. */
+  /** Publie uniquement une consommation effective pour synchroniser l'animation du HUD. */
   private publishMovementConsumption(firstPointIndex: number, count: number): void {
     this.lastMovementConsumption.set({
       firstPointIndex,

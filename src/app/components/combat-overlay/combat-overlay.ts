@@ -48,7 +48,6 @@ interface PowerAnnouncement {
 export type CombatWaveTarget = 'hero' | 'monster' | null;
 export type CombatWaveDirection = 'left-to-right' | 'right-to-left';
 
-/** Contrat de donnees CombatFighterBounds utilise par le domaine ou l interface. */
 interface CombatFighterBounds {
   left: number;
   right: number;
@@ -71,7 +70,6 @@ export function getCombatWaveDirection(
   return sourceCenter <= targetCenter ? 'left-to-right' : 'right-to-left';
 }
 
-/** Service ou composant CombatOverlay ; coordonne sa responsabilite de domaine ou d interface. */
 @Component({
   selector: 'app-combat-overlay',
   imports: [HeroPowerCard, DecisionCard, QuantityPipe],
@@ -269,7 +267,6 @@ export class CombatOverlay implements OnDestroy {
     return this.presentationState() === 'rolling';
   }
 
-/** Gere isDieRolling et applique les gardes necessaires avant mutation. */
   isDieRolling(die: CombatDie): boolean {
     return this.isRolling && this.animatedDice().includes(die);
   }
@@ -469,13 +466,11 @@ export class CombatOverlay implements OnDestroy {
       );
   }
 
-/** Gere useXanrosSacrifice et applique les gardes necessaires avant mutation. */
   useXanrosSacrifice(): void {
     if (!this.canUseXanrosSacrifice || !this.combatService.useXanrosSacrifice()) return;
     if (this.remainingMagicBolts === 0) this.resolveCombatAfterRoll();
   }
 
-/** Gere declineXanrosSacrifice et applique les gardes necessaires avant mutation. */
   declineXanrosSacrifice(): void {
     if (!this.canUseXanrosSacrifice) return;
     this.xanrosSacrificeDeclined.set(true);
@@ -484,7 +479,6 @@ export class CombatOverlay implements OnDestroy {
     }
   }
 
-/** Gere useHeroReroll et applique les gardes necessaires avant mutation. */
   useHeroReroll(kind: 'both' | 'die1' | 'die2'): void {
     if (!this.canUseHeroReroll || !this.combatService.useHeroReroll(kind)) return;
     const roll = this.combatService.pendingCombatRoll();
@@ -494,7 +488,6 @@ export class CombatOverlay implements OnDestroy {
     this.animateDice(roll, kind === 'both' ? ['die1', 'die2'] : [kind]);
   }
 
-/** Gere useMagicBolt et applique les gardes necessaires avant mutation. */
   useMagicBolt(): void {
     if (!this.isDecisionVisible || !this.resolving) return;
     if (!this.combatService.useMagicBolt()) return;
@@ -502,7 +495,6 @@ export class CombatOverlay implements OnDestroy {
     if (this.remainingMagicBolts === 0) this.resolveCombatAfterRoll();
   }
 
-/** Gere triggerMagicBoltFeedback et applique les gardes necessaires avant mutation. */
   private triggerMagicBoltFeedback(count = 1): void {
     for (let index = 0; index < count; index++) {
       const eventId = Date.now() + index + Math.random();
@@ -628,7 +620,6 @@ export class CombatOverlay implements OnDestroy {
     this.animateDice(roll);
   }
 
-/** Gere resolveCombatAfterRoll et applique les gardes necessaires avant mutation. */
   private resolveCombatAfterRoll(): void {
     const result = this.combatService.resolvePendingCombat();
     if (!result) {
@@ -948,7 +939,6 @@ export class CombatOverlay implements OnDestroy {
     this.completeCombatPresentation(result, combat, true);
   }
 
-/** Gere continueUnstoppable et applique les gardes necessaires avant mutation. */
   continueUnstoppable(): void {
     const result = this.presentedResult();
     const combat = this.presentedCombat();
@@ -957,7 +947,6 @@ export class CombatOverlay implements OnDestroy {
     this.completeCombatPresentation(result, combat, false);
   }
 
-/** Gere finishUnstoppable et applique les gardes necessaires avant mutation. */
   finishUnstoppable(): void {
     const result = this.presentedResult();
     const combat = this.presentedCombat();
@@ -966,7 +955,6 @@ export class CombatOverlay implements OnDestroy {
     this.completeCombatPresentation(result, combat, false);
   }
 
-/** Gere completeCombatPresentation et applique les gardes necessaires avant mutation. */
   private completeCombatPresentation(
     result: CombatResult,
     combat: PendingCombat,
@@ -1031,7 +1019,6 @@ export class CombatOverlay implements OnDestroy {
   // VERDICT
   // ==========================================================
 
-/** Gere updateWaveDirection et applique les gardes necessaires avant mutation. */
   private updateWaveDirection(outcome: CombatOutcome): void {
     const target = getCombatWaveTarget(outcome);
     if (!target) return;
@@ -1050,7 +1037,6 @@ export class CombatOverlay implements OnDestroy {
     );
   }
 
-/** Gere getOutcomeLabel et applique les gardes necessaires avant mutation. */
   getOutcomeLabel(outcome: CombatOutcome): string {
     switch (outcome) {
       case 'victory':
@@ -1068,12 +1054,10 @@ export class CombatOverlay implements OnDestroy {
   // TEMPORISATIONS
   // ==========================================================
 
-/** Gere randomDie et applique les gardes necessaires avant mutation. */
   private randomDie(): number {
     return Math.floor(Math.random() * 6) + 1;
   }
 
-/** Gere schedule et applique les gardes necessaires avant mutation. */
   private schedule(
     callback: () => void,
     delay: number,
@@ -1086,7 +1070,6 @@ export class CombatOverlay implements OnDestroy {
     this.timers.push(timer);
   }
 
-/** Gere clearTimers et applique les gardes necessaires avant mutation. */
   private clearTimers(): void {
     for (const timer of this.timers) {
       window.clearTimeout(timer);
@@ -1095,7 +1078,6 @@ export class CombatOverlay implements OnDestroy {
     this.timers.length = 0;
   }
 
-/** Gere ngOnDestroy et applique les gardes necessaires avant mutation. */
   ngOnDestroy(): void {
     this.clearTimers();
   }

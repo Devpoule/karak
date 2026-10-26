@@ -429,12 +429,10 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
       || (player.heroId === 'xanros' && this.gameService.xanrosSubstitutionSelectionOpen());
   }
 
-/** Gere isCompactViewport et applique les gardes necessaires avant mutation. */
   private isCompactViewport(): boolean {
     return typeof window !== 'undefined' && window.innerWidth < 900;
   }
 
-/** Gere onViewportResize et applique les gardes necessaires avant mutation. */
   @HostListener('window:resize')
   onViewportResize(): void {
     queueMicrotask(() => this.updateVerticalLayout());
@@ -495,7 +493,6 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
 
 
 
-/** Gere openLeftPlayer et applique les gardes necessaires avant mutation. */
   private openLeftPlayer(playerIndex: number): void {
 
     if (this.leftPlayerIndex === playerIndex) {
@@ -524,7 +521,6 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
 
 
 
-/** Gere openRightPlayer et applique les gardes necessaires avant mutation. */
   private openRightPlayer(playerIndex: number): void {
 
     if (this.rightPlayerIndex === playerIndex) {

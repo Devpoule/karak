@@ -98,7 +98,7 @@ export class CombatService {
     return this.pendingCombat() !== null;
   }
 
-/** Gere initialize et applique les gardes necessaires avant mutation. */
+  /** Efface tout état de combat transitoire avant une nouvelle partie ou restauration. */
   initialize(): void {
     this.pendingCombat.set(null);
     this.lastCombatResult.set(null);
@@ -407,7 +407,10 @@ export class CombatService {
     return player.inventory.spells.filter(spell => spell?.effect === 'magic-attack').length;
   }
 
-/** Gere consumeUsedMagicBolts et applique les gardes necessaires avant mutation. */
+  /**
+   * Consomme les projectiles utilisés par un lancer, sauf pour Argentus non
+   * maudit dont le pouvoir autorise les Tirs magiques sans retrait d'inventaire.
+   */
   private consumeUsedMagicBolts(player: Player, count: number): void {
     if (player.heroId === 'argentus' && !player.isCursed) return;
     for (let consumed = 0; consumed < count; consumed++) {

@@ -12,7 +12,6 @@ export interface ToastOptions {
   readonly icon?: string;
   readonly duration?: number;
 }
-/** Contrat de donnees ToastMessage utilise par le domaine ou l interface. */
 export interface ToastMessage {
   readonly id: number;
   readonly text: string;
@@ -83,7 +82,6 @@ export class ToastService {
 
   constructor(@Optional() private readonly audioService?: AudioService) {}
 
-/** Gere show et applique les gardes necessaires avant mutation. */
   show(text: string, tone: ToastTone = 'info', target?: ToastTarget, options: ToastOptions = {}): void {
     const message: ToastMessage = {
       id: ++this.nextId,
@@ -111,7 +109,6 @@ export class ToastService {
     this.history.set([]);
   }
 
-/** Gere dismiss et applique les gardes necessaires avant mutation. */
   dismiss(): void {
     if (!this.current() || this.isDismissing()) return;
 
@@ -121,7 +118,6 @@ export class ToastService {
     this.fadeTimer = setTimeout(() => this.finishDismissal(), this.toastFadeDuration);
   }
 
-/** Gere display et applique les gardes necessaires avant mutation. */
   private display(message: ToastMessage): void {
     this.current.set(message);
     this.schedule(message);
@@ -131,7 +127,6 @@ export class ToastService {
     this.history.update(history => [...history, message].slice(-this.historyLimit));
   }
 
-/** Gere schedule et applique les gardes necessaires avant mutation. */
   private schedule(message: ToastMessage): void {
     this.timer = setTimeout(() => {
       if (this.current()?.id === message.id) this.dismiss();
@@ -148,7 +143,6 @@ export class ToastService {
     ));
   }
 
-/** Gere finishDismissal et applique les gardes necessaires avant mutation. */
   private finishDismissal(): void {
     this.fadeTimer = null;
     this.isDismissing.set(false);

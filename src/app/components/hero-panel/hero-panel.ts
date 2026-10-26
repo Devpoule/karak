@@ -27,13 +27,9 @@ type CurseAnimation = '' | 'hero-panel__curse--appearing' | 'hero-panel__curse--
  * Le composant conserve l'asset servant de support au héros,
  * mais l'identité affichée provient désormais du joueur actif.
  *
- * Il ne gère pas encore :
- *
- * - son pouvoir spécial ;
- * - les autres états du héros pendant la partie.
- *
- * Ces informations seront ajoutées lorsque le modèle des héros
- * et l'état des joueurs seront implémentés.
+ * Les décisions de pouvoir sont déléguées à `HeroPowerCard` et aux services
+ * métier ; ce composant se limite à leur présentation et à leurs interactions
+ * de panneau.
  */
 @Component({
   imports: [HeroPowerCard],
@@ -124,7 +120,6 @@ export class HeroPanel implements DoCheck, OnDestroy {
     }
   });
 
-/** Gere ngDoCheck et applique les gardes necessaires avant mutation. */
   ngDoCheck(): void {
     this.syncCurseState(this.player?.isCursed === true);
     if (this.substitutionPlayer !== null && this.substitutionPlayer !== this.player) {
@@ -132,7 +127,6 @@ export class HeroPanel implements DoCheck, OnDestroy {
     }
   }
 
-/** Gere syncCurseState et applique les gardes necessaires avant mutation. */
   private syncCurseState(cursed: boolean): void {
     if (this.player !== this.previousPlayer) {
       this.previousPlayer = this.player;
@@ -340,7 +334,6 @@ export class HeroPanel implements DoCheck, OnDestroy {
     this.substitutionWaitingForAction = false;
   }
 
-/** Gere openBiography et applique les gardes necessaires avant mutation. */
   openBiography(): void {
     if (this.gameService.healingPortalSelection() && this.player) {
       this.gameService.selectHealingPortalTarget(this.player);

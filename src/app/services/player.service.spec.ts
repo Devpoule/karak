@@ -8,7 +8,7 @@ describe('PlayerService treasures', () => {
   it('initialise les trésors vides pour la création et la réinitialisation', () => {
     const service = new PlayerService();
 
-    expect(service.player.treasures).toEqual([]);
+    expect(service.players).toHaveLength(0);
     service.initialize(2);
     expect(service.players.every(player => player.treasures.length === 0)).toBe(true);
 

@@ -14,8 +14,6 @@ const FRENCH_NUMBER_FORMATTER = new Intl.NumberFormat('fr-FR');
   standalone: true,
 })
 export class QuantityPipe implements PipeTransform {
-/** Gere transform et applique les gardes necessaires avant mutation. */
-/** Gere transform et applique les gardes necessaires avant mutation. */
   transform(
     value: number | null | undefined,
     singular: string,
