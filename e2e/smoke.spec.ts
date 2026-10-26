@@ -50,6 +50,41 @@ test('l’accueil met en avant le logo et conserve une hiérarchie typographique
   expect(visual.titleFont.toLowerCase()).toContain('georgia');
 });
 
+test('le menu d’accueil harmonise les quatre actions et conserve leurs interactions', async ({ page }) => {
+  await page.goto('/');
+
+  const secondaryButtons = page.locator('.home__didacticiel, .home__lore, .home__navigation app-settings-panel .settings-panel__trigger');
+  await expect(secondaryButtons).toHaveCount(3);
+
+  const geometry = await page.locator('.home__navigation').evaluate(element => {
+    const controls = [
+      element.querySelector('.home__play'),
+      element.querySelector('.home__didacticiel'),
+      element.querySelector('.home__lore'),
+      element.querySelector('app-settings-panel .settings-panel__trigger'),
+    ].filter((control): control is HTMLElement => control instanceof HTMLElement);
+    const rectangles = controls.map(control => control.getBoundingClientRect());
+    return {
+      widths: rectangles.map(rectangle => Math.round(rectangle.width)),
+      heights: rectangles.map(rectangle => Math.round(rectangle.height)),
+      secondaryBackgrounds: rectangles.length > 0
+        ? Array.from(element.querySelectorAll('.home__didacticiel, .home__lore'))
+          .map(control => getComputedStyle(control).backgroundImage)
+        : [],
+    };
+  });
+
+  expect(new Set(geometry.widths).size).toBe(1);
+  expect(Math.max(...geometry.heights) - Math.min(...geometry.heights)).toBeLessThanOrEqual(1);
+  expect(new Set(geometry.secondaryBackgrounds).size).toBe(1);
+
+  const play = page.getByRole('link', { name: 'Jouer' });
+  await play.focus();
+  await expect(play).toBeFocused();
+  await page.getByRole('link', { name: 'Didacticiel' }).click();
+  await expect(page).toHaveURL(/\/tutorial$/);
+});
+
 test('la préférence de mouvement réduit neutralise les animations de l’accueil', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');

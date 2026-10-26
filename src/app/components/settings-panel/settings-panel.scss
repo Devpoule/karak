@@ -10,6 +10,51 @@
 
 .settings-panel:not(.settings-panel--compact) .settings-panel__trigger { width: 100%; }
 
+/* Variante limitée au bouton Paramètres du menu d'accueil. */
+:host(.home__settings) .settings-panel__trigger {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 3.35rem;
+  justify-content: center;
+  padding: .65rem 1rem;
+  color: var(--karak-button-text);
+  font: 600 clamp(.86rem, 1.4vw, 1.05rem) / 1.2 var(--karak-font-body);
+  background: linear-gradient(180deg, rgba(62, 45, 39, .94), rgba(33, 25, 25, .96));
+  border: var(--karak-border-default);
+  border-radius: var(--karak-radius-sm);
+  box-shadow: 0 .45rem 1rem rgba(0, 0, 0, .36);
+  transition:
+    transform var(--karak-motion-fast) var(--karak-ease-standard),
+    border-color var(--karak-motion-fast) var(--karak-ease-standard),
+    filter var(--karak-motion-fast) var(--karak-ease-standard),
+    box-shadow var(--karak-motion-fast) var(--karak-ease-standard);
+}
+
+:host(.home__settings) .settings-panel__trigger:hover:not([disabled]),
+:host(.home__settings) .settings-panel__trigger:focus-visible {
+  transform: translateY(-1px);
+  border-color: var(--karak-text-highlight);
+  filter: brightness(1.08);
+  box-shadow: 0 .6rem 1.2rem rgba(0, 0, 0, .46), 0 0 .8rem rgba(224, 177, 93, .22);
+}
+
+:host(.home__settings) .settings-panel__trigger:active:not([disabled]) {
+  transform: translateY(1px) scale(.985);
+  filter: brightness(.96);
+}
+
+:host(.home__settings) .settings-panel__icon {
+  width: 1.45rem;
+  height: 1.45rem;
+  color: var(--karak-text-highlight);
+}
+
+:host(.home__settings) .settings-panel__trigger:focus-visible {
+  outline: var(--karak-focus-width) solid var(--karak-focus-color);
+  outline-offset: var(--karak-focus-offset);
+}
+
 .settings-panel--compact .settings-panel__trigger {
   width: 100%;
   min-height: 2.75rem;

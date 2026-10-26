@@ -104,13 +104,24 @@
   max-width: 38ch;
   margin: clamp(5rem, 11vh, 8rem) 0 0;
 
-  color: var(--karak-text-highlight);
+  color: #fff1c9;
   font: 600 clamp(1rem, 1.8vw, 1.45rem) / 1.35 var(--karak-font-display);
   letter-spacing: .02em;
-
   text-shadow:
-    0 1px 0 rgba(255, 250, 235, .46),
-    0 2px 8px rgba(0, 0, 0, .86);
+    0 1px 0 rgba(27, 15, 17, .92),
+    0 2px 4px rgba(0, 0, 0, .9),
+    0 0 12px rgba(0, 0, 0, .68);
+
+  background: rgba(18, 12, 16, .24);
+  border-radius: .35rem;
+  box-shadow: 0 0 .8rem rgba(12, 8, 13, .18);
+}
+
+/* Le slogan accompagne le bas du bâton du magicien sur les grands écrans. */
+@media (min-width: 701px) and (min-height: 681px) {
+  .home__tagline {
+    margin-top: clamp(8rem, 19vh, 12.5rem);
+  }
 }
 
 /* ==========================================================
@@ -138,6 +149,9 @@
 
   width: 100%;
   max-width: 100%;
+  box-sizing: border-box;
+  height: 3.35rem;
+  min-height: 3.35rem;
 
   color: var(--karak-button-text);
   text-decoration: none;
@@ -155,15 +169,14 @@
 }
 
 .home__play {
-  min-height: clamp(3.5rem, 7vw, 5.25rem);
-  padding: .75rem clamp(1.5rem, 4vw, 3rem);
+  padding: .65rem clamp(1.5rem, 4vw, 3rem);
   gap: .7rem;
 
   overflow: hidden;
 
   color: var(--karak-text-on-danger);
-  font: 700 clamp(1.15rem, 2.4vw, 1.65rem) / 1 var(--karak-font-display);
-  letter-spacing: .16em;
+  font: 700 clamp(1.1rem, 2.2vw, 1.45rem) / 1 var(--karak-font-display);
+  letter-spacing: .08em;
   text-transform: uppercase;
 
   background:
@@ -178,10 +191,7 @@
     0 .7rem 1.6rem rgba(0, 0, 0, .44),
     0 0 1rem rgba(224, 177, 93, .24);
 
-  animation: home-play-glow 2.8s ease-in-out infinite;
-
-  &::before,
-  &::after {
+  &::before {
     content: '';
 
     position: absolute;
@@ -193,18 +203,6 @@
     inset: .22rem;
     border: 1px solid rgba(255, 225, 146, .58);
     border-radius: calc(var(--karak-radius-sm) - .1rem);
-  }
-
-  /* Balayage lumineux très ponctuel au repos. */
-  &::after {
-    top: -45%;
-    bottom: -45%;
-    left: -35%;
-    width: 18%;
-    transform: rotate(18deg);
-    background: linear-gradient(90deg, transparent, rgba(255, 235, 181, .58), transparent);
-    filter: blur(1px);
-    animation: home-play-shimmer 3.8s ease-in-out infinite;
   }
 
   &:hover {
@@ -226,38 +224,24 @@
 }
 
 .home__didacticiel {
-  min-height: 3rem;
+  display: inline-flex;
   gap: .7rem;
   padding: .65rem 1rem;
-
   color: var(--karak-text-highlight);
-  font: 700 clamp(.86rem, 1.4vw, 1.05rem) / 1.2 var(--karak-font-display);
-
-  background: rgba(40, 56, 76, .92);
+  font: 600 clamp(.86rem, 1.4vw, 1.05rem) / 1.2 var(--karak-font-display);
+  background: linear-gradient(180deg, rgba(62, 45, 39, .94), rgba(33, 25, 25, .96));
   border: var(--karak-border-default);
   border-radius: var(--karak-radius-sm);
   box-shadow: 0 .45rem 1rem rgba(0, 0, 0, .36);
-
-  &:hover {
-    transform: translateY(-1px);
-    border-color: var(--karak-text-highlight);
-    background: rgba(54, 75, 100, .98);
-  }
-
-  &:active {
-    transform: translateY(1px);
-  }
 }
 
 .home__lore {
-  min-height: 3rem;
+  display: inline-flex;
   gap: .7rem;
   padding: .65rem 1rem;
-
   color: var(--karak-text-highlight);
   font: 600 clamp(.86rem, 1.4vw, 1.05rem) / 1.2 var(--karak-font-display);
-
-  background: rgba(10, 14, 31, .88);
+  background: linear-gradient(180deg, rgba(62, 45, 39, .94), rgba(33, 25, 25, .96));
   border: var(--karak-border-default);
   border-radius: var(--karak-radius-sm);
   box-shadow: 0 .45rem 1rem rgba(0, 0, 0, .36);
@@ -265,7 +249,7 @@
   &:hover {
     transform: translateY(-1px);
     border-color: var(--karak-text-highlight);
-    background: rgba(23, 27, 50, .96);
+    background: linear-gradient(180deg, rgba(76, 55, 45, .98), rgba(42, 31, 29, .98));
     box-shadow: 0 .6rem 1.2rem rgba(0, 0, 0, .46), 0 0 .8rem rgba(224, 177, 93, .22);
   }
 
@@ -274,6 +258,20 @@
   }
 }
 
+.home__didacticiel:hover,
+.home__lore:hover {
+  transform: translateY(-1px);
+  border-color: var(--karak-text-highlight);
+  filter: brightness(1.06);
+}
+
+.home__didacticiel:active,
+.home__lore:active {
+  transform: translateY(1px) scale(.985);
+  filter: brightness(.96);
+}
+
+.home__action-icon,
 .home__lore-icon {
   flex: 0 0 auto;
   width: 1.5rem;
@@ -333,48 +331,10 @@
   }
 }
 
-@keyframes home-play-glow {
-  0%,
-  100% {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 245, 207, .46),
-      inset 0 -5px 0 rgba(49, 8, 12, .28),
-      0 .7rem 1.6rem rgba(0, 0, 0, .44),
-      0 0 1rem rgba(224, 177, 93, .24);
-  }
-
-  50% {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 245, 207, .56),
-      inset 0 -5px 0 rgba(49, 8, 12, .22),
-      0 .8rem 1.8rem rgba(0, 0, 0, .48),
-      0 0 1.5rem rgba(255, 224, 157, .42);
-  }
-}
-
-@keyframes home-play-shimmer {
-  0%,
-  57% {
-    left: -35%;
-    opacity: 0;
-  }
-
-  70% {
-    opacity: 1;
-  }
-
-  84%,
-  100% {
-    left: 125%;
-    opacity: 0;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .home__content,
   .home__logo,
   .home__play,
-  .home__play::after,
   .home__didacticiel,
   .home__lore {
     animation: none;
