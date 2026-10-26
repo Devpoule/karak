@@ -94,18 +94,17 @@
   padding: 0;
   border: 0;
   background: transparent;
-  cursor: pointer;
   pointer-events: auto;
   transition: filter 140ms ease, transform 140ms ease;
 }
 
-.hero-panel__hero:hover {
+.hero-panel__hero:not(.hero-panel__hero--deciding):hover {
   filter: brightness(1.08);
 }
 
-.hero-panel__hero:hover { transform: scale(1.01); }
+.hero-panel__hero:not(.hero-panel__hero--deciding):hover { transform: scale(1.01); }
 
-.hero-panel__hero:focus-visible {
+.hero-panel__portrait-button:focus-visible {
   filter: brightness(1.08);
   outline: 2px solid rgba(245, 216, 132, .85);
   outline-offset: -2px;
@@ -132,6 +131,17 @@
 
 .hero-panel--unconscious .hero-panel__hero::after {
   opacity: 1;
+}
+
+.hero-panel--unconscious .hero-panel__hero--deciding::after { opacity: 0; }
+
+.hero-panel__portrait-button {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
 }
 
 .hero-panel--healing-target .hero-panel__hero {

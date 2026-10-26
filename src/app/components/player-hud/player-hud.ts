@@ -113,7 +113,7 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
 
   /** Ouvre la consultation globale hors du panneau animé. */
   openPowerConsultation(player: Player, selection: PowerSelection): void {
-    if (this.isCombatActive) return;
+    if (this.isCombatActive || this.inventoryPowerDecisionActive) return;
     if (!selection.powerId) {
       this.closePowerConsultation();
       return;
@@ -328,11 +328,12 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
     effect(() => {
       const playerIndex = this.gameService.activePlayerIndex();
       const pendingCombat = this.combatService.pendingCombat();
+      const powerDecision = this.inventoryPowerDecisionActive;
       const sequence = ++this.activeTurnSequence;
 
       // Pendant un combat, la fiche du combattant est prioritaire.
       // En dehors d'un combat, on suit le joueur actif.
-      const targetIndex = pendingCombat
+      const targetIndex = !powerDecision && pendingCombat
         ? this.players.indexOf(pendingCombat.player)
         : playerIndex;
 
@@ -396,6 +397,16 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
   /** Indique si une séquence de combat interdit les interactions du HUD. */
   get isCombatActive(): boolean {
     return this.combatService.pendingCombat() !== null;
+  }
+
+  /** Une décision obligatoire reste visible même si le volet a été replié. */
+  get inventoryPowerDecisionActive(): boolean {
+    const player = this.gameService.activePlayer;
+    if (!player || player.controller !== 'human') return false;
+    return this.gameService.pendingSneakChoice()?.player === player
+      || this.gameService.pendingTokenChoice()?.player === player
+      || this.gameService.horanReincarnationSelection()?.player === player
+      || (player.heroId === 'xanros' && this.gameService.xanrosSubstitutionSelectionOpen());
   }
 
 /** Gere isCompactViewport et applique les gardes necessaires avant mutation. */
@@ -693,7 +704,7 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
    */
 
   togglePlayerPanel(playerIndex: number): void {
-    if (this.isCombatActive) return;
+    if (this.isCombatActive || this.inventoryPowerDecisionActive) return;
     const selectedPlayer = this.players[playerIndex];
     if (this.compactViewport) {
       if (selectedPlayer?.controller === 'human') this.rightPanelOpen = false;

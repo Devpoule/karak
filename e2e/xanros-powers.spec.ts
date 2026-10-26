@@ -98,6 +98,10 @@ test('Substitution échange les héros sans résoudre automatiquement la tuile d
     if (!dungeonService.getTileAt(1, 0)) {
       dungeonService.tiles.push({ definitionId: 'room-1', x: 1, y: 0, rotation: 0 });
     }
+    // Le changement de héros est propre à cette fixture ; notifier Angular
+    // même lorsque le joueur humain était déjà actif.
+    gameService.activePlayerIndex.set(null);
+    gameService.activePlayerIndex.set(activeIndex);
   });
 
   await page.evaluate(() => {
@@ -110,7 +114,7 @@ test('Substitution échange les héros sans résoudre automatiquement la tuile d
       throw new Error('Xanros substitution could not be opened');
     }
   });
-  const card = page.locator('.board__reward-backdrop app-hero-power-card');
+  const card = page.locator('.hero-panel__card-stage--flipped app-hero-power-card');
   await expect(card).toBeVisible();
   await expect(card.locator('.hero-power-card__choice')).toHaveCount(1);
   await card.locator('.hero-power-card__choice').click();
@@ -148,6 +152,65 @@ test('Substitution échange les héros sans résoudre automatiquement la tuile d
   });
 });
 
+test('Substitution propose une liste défilante accessible au clavier sur un petit écran', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 360 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await openBoard(page);
+
+  await page.evaluate(() => {
+    const root = document.querySelector('app-root')!;
+    const ng = (window as Window & { ng?: { getComponent(node: Element): any } }).ng!;
+    const gameService = ng.getComponent(root.querySelector('app-game') ?? root).gameService;
+    const players = gameService['playerService'].players;
+    const dungeon = gameService['dungeonService'];
+    const xanros = players.find((player: any) => player.controller === 'human');
+    const other = players.find((player: any) => player !== xanros);
+    if (!xanros || !other) throw new Error('Players unavailable');
+    players.splice(0, players.length, xanros);
+    xanros.heroId = 'xanros';
+    xanros.isCursed = false;
+    xanros.lives = 5;
+    xanros.recoveryState = 'none';
+    xanros.position = { x: 0, y: 0 };
+    ['aderyn', 'horan', 'taia', 'victorius'].forEach((heroId, index) => {
+      players.push({ ...other, heroId, position: { x: index + 1, y: 0 }, lives: 5, recoveryState: 'none' });
+      if (!dungeon.getTileAt(index + 1, 0)) {
+        dungeon.tiles.push({ definitionId: 'room-1', x: index + 1, y: 0, rotation: 0 });
+      }
+    });
+    gameService['turnService'].resetMovements();
+    gameService.activePlayerIndex.set(null);
+    gameService.activePlayerIndex.set(0);
+    if (!gameService.openXanrosSubstitution()) throw new Error('Substitution unavailable');
+  });
+
+  const card = page.locator('.hero-panel__card-stage--flipped app-hero-power-card');
+  const choices = card.locator('.hero-power-card__choice');
+  await expect(choices).toHaveCount(4);
+  await expect(choices.first()).toBeFocused();
+  const geometry = await card.locator('.hero-power-card__choices').evaluate(element => {
+    const bounds = element.getBoundingClientRect();
+    return {
+      scrollable: element.scrollHeight > element.clientHeight,
+      bottom: bounds.bottom,
+      width: element.querySelector('button')!.getBoundingClientRect().width,
+      height: element.querySelector('button')!.getBoundingClientRect().height,
+    };
+  });
+  expect(geometry.scrollable).toBe(true);
+  expect(geometry.bottom).toBeLessThanOrEqual(360);
+  expect(geometry.width).toBeGreaterThanOrEqual(44);
+  expect(geometry.height).toBeGreaterThanOrEqual(44);
+  await choices.last().focus();
+  await page.keyboard.press('Enter');
+  await expect.poll(() => page.evaluate(() => {
+    const root = document.querySelector('app-root')!;
+    const ng = (window as Window & { ng?: { getComponent(node: Element): any } }).ng!;
+    const game = ng.getComponent(root.querySelector('app-game') ?? root).gameService;
+    return { position: game.activePlayer.position, moves: game['turnService'].movementsMadeThisTurn() };
+  })).toEqual({ position: { x: 4, y: 0 }, moves: 4 });
+});
+
 test('Xanros peut activer Substitution depuis sa fiche descriptive', async ({ page }) => {
   await openBoard(page);
 
@@ -180,9 +243,11 @@ test('Xanros peut activer Substitution depuis sa fiche descriptive', async ({ pa
     if (!dungeonService.getTileAt(1, 0)) {
       dungeonService.tiles.push({ definitionId: 'room-1', x: 1, y: 0, rotation: 0 });
     }
+    gameService.activePlayerIndex.set(null);
+    gameService.activePlayerIndex.set(activeIndex);
   });
 
-  const badge = page.getByRole('button', { name: 'Consulter pouvoir 2 : Substitution' });
+  const badge = page.locator('button.player-sidebar__power-badge--usable[aria-label="Consulter pouvoir 2 : Substitution"]');
   await expect(badge).toHaveClass(/player-sidebar__power-badge--usable/);
   await badge.click();
 
@@ -192,7 +257,7 @@ test('Xanros peut activer Substitution depuis sa fiche descriptive', async ({ pa
   await consultation.getByRole('button', { name: 'Utiliser' }).click();
 
   await expect(consultation).toHaveCount(0);
-  await expect(page.locator('.board__reward-backdrop app-hero-power-card')).toBeVisible();
+  await expect(page.locator('.hero-panel__card-stage--flipped app-hero-power-card')).toBeVisible();
 });
 
 test('Xanros poursuit la résolution après un lancer à égalité contre une force 8', async ({ page }) => {

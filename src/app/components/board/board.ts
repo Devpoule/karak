@@ -11,11 +11,11 @@ import { PlayerService } from '../../services/player.service';
 import { DungeonService } from '../../services/dungeon.service';
 import { TurnService } from '../../services/turn.service';
 import { ExplorationService, PendingTilePlacement } from '../../services/exploration.service';
-import { GameService, PendingGroundEquipment, PendingReward, PendingTreasure } from '../../services/game.service';
+import { GameService, PendingGroundEquipment, PendingReward, PendingTokenChoice, PendingTreasure } from '../../services/game.service';
 import { CombatService } from '../../services/combat.service';
 import { TREASURE_POINTS, Treasure } from '../../models/treasure';
 import { CombatOverlay } from '../combat-overlay/combat-overlay';
-import { HeroPowerCard, HeroPowerCardChoice } from '../hero-power-card/hero-power-card';
+import { HeroPowerCard } from '../hero-power-card/hero-power-card';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
 import { DecisionCard, DecisionCardAction } from '../decision-card/decision-card';
 
@@ -98,7 +98,7 @@ export class Board {
   private observedSubstitutionRevision = 0;
   private observedHoranReincarnationRevision = 0;
   private observedAstralWalkRevision = 0;
-  private observedTokenChoice: unknown = null;
+  private observedTokenChoice: PendingTokenChoice | null = null;
   constructor(
     private readonly dungeonService: DungeonService,
     private readonly explorationService: ExplorationService,
@@ -140,8 +140,9 @@ export class Board {
         const player = this.gameService.lastXanrosSubstitutionPlayer();
         const hero = player?.heroId ? getHeroDefinition(player.heroId) : undefined;
         const power = hero?.powers.find(candidate => candidate.id === 'substitution');
+        if (player === this.gameService.activePlayer) queueMicrotask(() => this.centerOnActivePlayer());
         if (hero && power && player?.controller !== 'human') {
-          this.showPowerAnnouncement(hero, power, `${hero.name} utilise Substitution.`);
+          this.showPowerAnnouncement(hero, power, 'Position échangée.');
         }
       }
       this.observedSubstitutionRevision = revision;
@@ -149,10 +150,12 @@ export class Board {
 
     effect(() => {
       const choice = this.gameService.pendingTokenChoice();
-      if (choice && choice.player.controller === 'ai' && choice !== this.observedTokenChoice) {
-        const hero = choice.player.heroId ? getHeroDefinition(choice.player.heroId) : undefined;
+      const previous = this.observedTokenChoice;
+      if (!choice && previous?.player.controller === 'ai'
+        && previous.tokens.some(token => token.id === previous.tile.tokenId)) {
+        const hero = previous.player.heroId ? getHeroDefinition(previous.player.heroId) : undefined;
         const power = hero?.powers.find(candidate => candidate.id === 'fate-weaver');
-        if (hero && power) this.showPowerAnnouncement(hero, power, `${hero.name} utilise Tisseuse de destin.`);
+        if (hero && power) this.showPowerAnnouncement(hero, power, 'Jeton choisi.');
       }
       this.observedTokenChoice = choice;
     });
@@ -163,7 +166,7 @@ export class Board {
         const player = this.gameService.lastHoranReincarnationPlayer();
         const hero = player?.heroId ? getHeroDefinition(player.heroId) : undefined;
         const power = hero?.powers.find(candidate => candidate.id === 'reincarnation');
-        if (hero && power) this.showPowerAnnouncement(hero, power, `${hero.name} revient à la vie grâce à Réincarnation.`);
+        if (hero && power) this.showPowerAnnouncement(hero, power, 'Réincarnation.');
       }
       this.observedHoranReincarnationRevision = revision;
     });
@@ -174,7 +177,7 @@ export class Board {
         const player = this.gameService.lastAstralWalkPlayer();
         const hero = player?.heroId ? getHeroDefinition(player.heroId) : undefined;
         const power = hero?.powers.find(candidate => candidate.id === 'astral-walk');
-        if (hero && power) this.showPowerAnnouncement(hero, power, `${hero.name} utilise Marche astrale.`);
+        if (hero && power) this.showPowerAnnouncement(hero, power, 'Déplacement astral.');
       }
       this.observedAstralWalkRevision = revision;
     });
@@ -196,49 +199,6 @@ export class Board {
 
   get horanReincarnationSelection() {
     return this.gameService.horanReincarnationSelection();
-  }
-
-  /** Prépare les deux jetons de Tisseuse de destin pour la carte unique. */
-  get fateWeaverChoices(): readonly HeroPowerCardChoice[] {
-    const choice = this.gameService.pendingTokenChoice();
-    return choice?.tokens.map(token => ({ label: token.id, image: token.image, alt: token.id })) ?? [];
-  }
-
-  /** Prépare les fontaines éligibles déjà calculées par le service métier. */
-  get horanReincarnationChoices(): readonly HeroPowerCardChoice[] {
-    return this.healingFountains.map((fountain, index) => {
-      const definition = this.getTileDefinition(fountain);
-      return {
-        label: `Fontaine ${index + 1} · (${fountain.x}, ${fountain.y})`,
-        image: definition?.image ?? '',
-        alt: `Fontaine d’eau curative ${index + 1}`,
-      };
-    });
-  }
-
-  /** Sélectionne puis confirme une fontaine sans dupliquer les règles métier. */
-  chooseHoranReincarnationDestination(index: number): void {
-    const fountain = this.healingFountains[index];
-    if (!fountain || !this.horanReincarnationSelection) return;
-    this.gameService.selectHoranReincarnationDestination(fountain);
-    this.gameService.confirmHoranReincarnation();
-  }
-
-  /** Prépare les cibles autorisées par les gardes métier de Substitution. */
-  get xanrosSubstitutionChoices(): readonly HeroPowerCardChoice[] {
-    return this.gameService.xanrosSubstitutionTargets.map((target) => {
-      const hero = target.heroId ? getHeroDefinition(target.heroId) : undefined;
-      return {
-        label: hero?.name ?? 'Héros',
-        image: hero?.character ?? '',
-        alt: hero?.name ?? 'Héros disponible',
-      };
-    });
-  }
-
-  /** Retourne la cible métier correspondant à l'index affiché par la carte. */
-  getXanrosSubstitutionTarget(index: number): Player | undefined {
-    return this.gameService.xanrosSubstitutionTargets[index];
   }
 
   get portalTravelSelection() {
@@ -378,11 +338,6 @@ export class Board {
 
     event.preventDefault();
     this.handleTileClick(tile);
-  }
-
-/** Gere confirmXanrosSubstitution et applique les gardes necessaires avant mutation. */
-  confirmXanrosSubstitution(target: Player): void {
-    if (this.gameService.confirmXanrosSubstitution(target)) this.centerOnActivePlayer();
   }
 
 /** Gere finishXanrosSubstitutionAction et applique les gardes necessaires avant mutation. */

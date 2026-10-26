@@ -95,7 +95,7 @@ test('Horan peut conserver un résultat défavorable sans Tir magique', async ({
   await page.getByRole('button', { name: 'Lancer les dés' }).click({ force: true });
   const keep = page.getByRole('button', { name: 'Continuer sans' });
   await expect(keep).toBeVisible({ timeout: 10_000 });
-  await keep.click({ force: true });
+  await keep.click();
   await expect(page.locator('.combat-overlay__verdict-title')).toContainText('gagne', { timeout: 10_000 });
   await expect(page.locator('.combat-overlay')).toBeHidden({ timeout: 10_000 });
 });
@@ -106,22 +106,27 @@ test('Horan anime les deux dés lorsqu il accepte sa relance', async ({ page }) 
 
   await page.getByRole('button', { name: 'Lancer les dés' }).click({ force: true });
   await expect(page.getByRole('button', { name: 'Relancer avec le pouvoir' })).toBeVisible({ timeout: 10_000 });
-  await page.getByRole('button', { name: 'Relancer avec le pouvoir' }).click({ force: true });
+  await page.getByRole('button', { name: 'Relancer avec le pouvoir' }).click();
 
   await expect(page.locator('.combat-overlay__die--rolling')).toHaveCount(2);
   await expect(page.locator('.combat-overlay__verdict-title')).toBeVisible({ timeout: 10_000 });
 });
 
 test('Horan choisit une fontaine lors de sa Réincarnation', async ({ page }) => {
+  test.setTimeout(60_000);
   await openBoard(page);
   await prepareHoranCombat(page, true, true);
 
   await page.getByRole('button', { name: 'Lancer les dés' }).click({ force: true });
+  await expect.poll(() => page.locator('.combat-overlay__hero-card-face--back').evaluate(element => {
+    const matrix = new DOMMatrixReadOnly(getComputedStyle(element).transform);
+    return Math.abs(matrix.m11 - 1) < .02 && Math.abs(matrix.m33 - 1) < .02;
+  })).toBe(true);
   await page.getByRole('button', { name: 'Continuer sans' }).click({ force: true });
-  const reincarnationCard = page.locator('.board__reward-backdrop app-hero-power-card');
+  const reincarnationCard = page.locator('.hero-panel__card-stage--flipped app-hero-power-card');
   await expect(reincarnationCard).toBeVisible({ timeout: 15_000 });
   await expect(reincarnationCard.locator('.hero-power-card__choice')).toHaveCount(2);
-  await reincarnationCard.locator('.hero-power-card__choice').nth(1).click({ force: true });
+  await reincarnationCard.locator('.hero-power-card__choice').nth(1).click();
 
   await expect.poll(async () => page.evaluate(() => {
     const root = document.querySelector('app-root');

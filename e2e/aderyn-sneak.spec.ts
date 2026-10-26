@@ -40,7 +40,7 @@ test('Aderyn reprend ses mouvements après avoir refusé Marche rampante', async
     const gameService = game?.gameService;
     const playerService = gameService?.['playerService'];
     const turnService = gameService?.['turnService'];
-    const player = gameService?.activePlayer;
+    const player = playerService?.players.find((candidate: any) => candidate.controller === 'human');
     if (!gameService || !playerService || !turnService || !player) {
       throw new Error('Game services unavailable');
     }
@@ -66,7 +66,7 @@ test('Aderyn reprend ses mouvements après avoir refusé Marche rampante', async
 
   const dialog = page.getByRole('dialog', { name: 'Aderyn' });
   await expect(dialog).toBeVisible();
-  await dialog.getByRole('button', { name: 'Utiliser le pouvoir' }).click();
+  await dialog.getByRole('button', { name: 'Passer sans combattre' }).click();
   await expect(dialog).toBeHidden();
 
   const state = await page.evaluate(() => {
@@ -103,8 +103,10 @@ test('la carte de Marche rampante reste utilisable en mobile avec mouvement réd
     const ng = (window as Window & { ng?: { getComponent(node: Element): any } }).ng;
     const game = ng?.getComponent(root?.querySelector('app-game') ?? root!);
     const gameService = game?.gameService;
-    const player = gameService?.activePlayer;
+    const playerService = gameService?.['playerService'];
+    const player = playerService?.players.find((candidate: any) => candidate.controller === 'human');
     if (!gameService || !player) throw new Error('Game services unavailable');
+    gameService.activePlayerIndex.set(playerService.players.indexOf(player));
     player.controller = 'human';
     player.heroId = 'aderyn';
     const source = { definitionId: 'start', x: 0, y: 0, rotation: 0 };
@@ -117,10 +119,10 @@ test('la carte de Marche rampante reste utilisable en mobile avec mouvement réd
     }
   });
 
-  const card = page.locator('app-hero-power-card');
+  const card = page.locator('.hero-panel__card-stage--flipped app-hero-power-card');
   await expect(card).toBeVisible();
-  await expect(card.getByRole('button', { name: 'Utiliser le pouvoir' })).toBeVisible();
-  await expect(card.getByRole('button', { name: 'Continuer sans' })).toBeVisible();
+  await expect(card.getByRole('button', { name: 'Passer sans combattre' })).toBeVisible();
+  await expect(card.getByRole('button', { name: 'Combattre le monstre' })).toBeVisible();
   for (const viewport of [{ width: 390, height: 844 }, { width: 844, height: 390 }, { width: 390, height: 360 }]) {
     await page.setViewportSize(viewport);
     const visual = await card.evaluate(element => {

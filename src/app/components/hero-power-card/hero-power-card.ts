@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, inject, Input, Output } from '@angular/core';
 import { HeroDefinition, HeroPowerDefinition } from '../../models/hero';
 
 export interface HeroPowerCardChoice {
@@ -14,12 +14,16 @@ export interface HeroPowerCardChoice {
   templateUrl: './hero-power-card.html',
   styleUrl: './hero-power-card.scss',
 })
-export class HeroPowerCard {
+export class HeroPowerCard implements AfterViewInit {
+  private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   /** Contexte visuel de la carte : choix, annonce métier ou consultation. */
   @Input() mode: 'decision' | 'choice' | 'announcement' | 'consultation' = 'decision';
 
   /** Rend la carte dans le rectangle d'une carte de combattant existante. */
   @Input() embedded = false;
+
+  /** Présentation interactive à l'intérieur du portrait d'inventaire. */
+  @Input() inventory = false;
 
   /** Héros dont le pouvoir est actuellement proposé. */
   @Input({ required: true }) hero!: HeroDefinition;
@@ -30,10 +34,13 @@ export class HeroPowerCard {
   /** Libellé de l’action principale, conservé personnalisable pour les relances. */
   @Input() activateLabel = 'Utiliser le pouvoir';
 
+  /** Formulation explicite du choix alternatif selon le pouvoir. */
+  @Input() declineLabel = 'Continuer sans utiliser le pouvoir';
+
   /** Masque les actions lorsque le moteur présente une décision déjà pilotée par l’IA. */
   @Input() showActions = true;
 
-  /** Message contextualisé d’une activation déjà confirmée. */
+  /** Texte court adapté à une décision ou à une activation déjà confirmée. */
   @Input() message = '';
 
   /** Conditions détaillées affichées uniquement dans le mode consultation. */
@@ -71,4 +78,9 @@ export class HeroPowerCard {
 
   /** Demande au parent de revalider puis de lancer l'action métier. */
   @Output() activationRequested = new EventEmitter<void>();
+
+  ngAfterViewInit(): void {
+    if (!this.inventory || (this.mode !== 'decision' && this.mode !== 'choice')) return;
+    queueMicrotask(() => this.elementRef.nativeElement.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus());
+  }
 }

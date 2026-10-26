@@ -177,3 +177,80 @@ describe('HeroPanel brouillard d’inconscience', () => {
     expect(fixture.nativeElement.querySelector('.hero-panel__curse')).toBeNull();
   });
 });
+
+describe('HeroPanel décisions de pouvoir', () => {
+  function setup(heroId: NonNullable<Player['heroId']>) {
+    TestBed.configureTestingModule({ imports: [HeroPanel] });
+    const fixture = TestBed.createComponent(HeroPanel);
+    const players = TestBed.inject(PlayerService);
+    const game = TestBed.inject(GameService);
+    players.initialize(2);
+    const player = players.players[0];
+    player.heroId = heroId;
+    game.phase.set('playing');
+    game.activePlayerIndex.set(0);
+    fixture.componentRef.setInput('player', player);
+    fixture.componentRef.setInput('playerIndex', 0);
+    fixture.detectChanges();
+    return { fixture, player, players, game };
+  }
+
+  it('présente le choix d’Aderyn sur le verso et délègue le combat', () => {
+    const { fixture, player, game } = setup('aderyn');
+    const choose = vi.spyOn(game, 'choosePendingSneak').mockReturnValue(true);
+    game.pendingSneakChoice.set({ player } as never);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.hero-panel__card-stage--flipped')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.hero-power-card__power').textContent).toContain('Marche rampante');
+    (fixture.nativeElement.querySelector('.hero-power-card__decline') as HTMLButtonElement).click();
+    expect(choose).toHaveBeenCalledWith('combat');
+    game.pendingSneakChoice.set(null);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.hero-panel__card-stage--flipped')).toBeNull();
+  });
+
+  it('présente les jetons de Taia et transmet le choix au service', () => {
+    const { fixture, player, game } = setup('taia');
+    const choose = vi.spyOn(game, 'choosePendingToken').mockReturnValue(true);
+    game.pendingTokenChoice.set({ player, tokens: [
+      { kind: 'monster', name: 'Rat', strength: 3, image: '/rat.png' },
+      { kind: 'treasure', image: '/chest.png' },
+    ] } as never);
+    fixture.detectChanges();
+
+    const options = fixture.nativeElement.querySelectorAll('.hero-power-card__choice') as NodeListOf<HTMLButtonElement>;
+    expect(options).toHaveLength(2);
+    expect(options[0].textContent).toContain('Rat');
+    options[1].click();
+    expect(choose).toHaveBeenCalledWith(1);
+  });
+
+  it('propose les cibles de Xanros sans activer la substitution avant sélection', () => {
+    const { fixture, players, game } = setup('xanros');
+    players.players[1].heroId = 'aderyn';
+    players.players[1].position = { x: 1, y: 0 };
+    const confirm = vi.spyOn(game, 'confirmXanrosSubstitution').mockReturnValue(true);
+    game.xanrosSubstitutionSelectionOpen.set(true);
+    fixture.detectChanges();
+
+    expect(confirm).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('4 déplacements');
+    (fixture.nativeElement.querySelector('.hero-power-card__choice') as HTMLButtonElement).click();
+    expect(confirm).toHaveBeenCalledWith(players.players[1]);
+  });
+
+  it('délègue la fontaine de Réincarnation sélectionnée', () => {
+    const { fixture, player, game } = setup('horan');
+    const fountain = { definitionId: 'healing-corner', x: 2, y: 0, rotation: 0 };
+    vi.spyOn(game, 'getHealingFountains').mockReturnValue([fountain]);
+    const select = vi.spyOn(game, 'selectHoranReincarnationDestination').mockImplementation(() => {});
+    const confirm = vi.spyOn(game, 'confirmHoranReincarnation').mockReturnValue(true);
+    game.horanReincarnationSelection.set({ player, destination: fountain });
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.hero-power-card__choice') as HTMLButtonElement).click();
+    expect(select).toHaveBeenCalledWith(fountain);
+    expect(confirm).toHaveBeenCalledOnce();
+  });
+});

@@ -26,6 +26,15 @@
   height: 100%;
 }
 
+/* Sur un écran très bas, le portrait décisionnel doit rester entièrement
+   visible sans changer sa taille ni la composition de la fiche. */
+@media (max-height: 480px) {
+  .player-hud--power-decision .player-hud__side--active {
+    top: 0;
+    max-height: 100%;
+  }
+}
+
 /* Les fiches restent visibles pour montrer les conséquences du combat, mais
    aucune commande du HUD ne doit concurrencer la décision de combat. */
 .player-hud--combat-active {

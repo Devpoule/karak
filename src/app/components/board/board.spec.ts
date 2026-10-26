@@ -42,6 +42,22 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     expect(fixture.componentInstance.powerAnnouncement()).toBeNull();
   });
 
+  it('annonce Tisseuse de destin seulement après le choix effectif de l’IA', () => {
+    const { fixture, gameService, playerService, dungeonService } = createBoard();
+    const player = playerService.players[1];
+    player.heroId = 'taia';
+    const tile = dungeonService.getTileAt(0, 0)!;
+    const tokens = [getTokenDefinition('giant-rat')!, getTokenDefinition('closed-chest')!] as const;
+    gameService.pendingTokenChoice.set({ player, tile, sourceTile: tile, tokens });
+    TestBed.flushEffects();
+    expect(fixture.componentInstance.powerAnnouncement()).toBeNull();
+
+    tile.tokenId = tokens[0].id;
+    gameService.pendingTokenChoice.set(null);
+    TestBed.flushEffects();
+    expect(fixture.componentInstance.powerAnnouncement()?.power.id).toBe('fate-weaver');
+  });
+
   it('conserve le verso tant qu’une récompense du jeton est en attente', () => {
     const { fixture, gameService, playerService, dungeonService } = createBoard();
     const player = playerService.players[0];

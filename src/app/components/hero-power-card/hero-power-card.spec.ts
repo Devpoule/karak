@@ -54,6 +54,24 @@ describe('HeroPowerCard', () => {
     expect(fixture.componentInstance.declined).toBe(1);
   });
 
+  it('rend explicites le coût et les deux choix d’une décision de pouvoir', () => {
+    const cardFixture = TestBed.createComponent(HeroPowerCard);
+    cardFixture.componentRef.setInput('hero', HERO_DEFINITIONS.find(hero => hero.id === 'xanros')!);
+    cardFixture.componentRef.setInput('power', HERO_DEFINITIONS.find(hero => hero.id === 'xanros')!.powers[0]);
+    cardFixture.componentRef.setInput('embedded', true);
+    cardFixture.componentRef.setInput('message', 'Sacrifiez 1 vie pour ajouter +1 à votre attaque.');
+    cardFixture.componentRef.setInput('activateLabel', 'Sacrifier 1 PV pour +1 attaque');
+    cardFixture.componentRef.setInput('declineLabel', 'Conserver mes PV');
+    cardFixture.detectChanges();
+
+    const element = cardFixture.nativeElement as HTMLElement;
+    expect(element.textContent).toContain('Sacrifiez 1 vie');
+    expect(element.querySelector('.hero-power-card__activate')?.getAttribute('aria-label'))
+      .toBe('Sacrifier 1 PV pour +1 attaque');
+    expect(element.querySelector('.hero-power-card__decline')?.getAttribute('aria-label'))
+      .toBe('Conserver mes PV');
+  });
+
   it('n’affiche aucune décision en mode annonce et expose le message métier', () => {
     const cardFixture = TestBed.createComponent(HeroPowerCard);
     cardFixture.componentRef.setInput('hero', fixture.componentInstance.hero);

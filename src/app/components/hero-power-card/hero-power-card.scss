@@ -236,6 +236,20 @@
   .hero-power-card__choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hero-power-card__choice { flex: initial !important; }
   .hero-power-card__choice img { height: 76px; }
+  .hero-power-card.hero-power-card--embedded { padding: .5rem; }
+  .hero-power-card--embedded .hero-power-card__content { padding: .25rem; }
+  .hero-power-card--embedded .hero-power-card__actions { flex-wrap: nowrap; gap: .25rem; }
+}
+
+@media (max-width: 340px) {
+  .hero-power-card--embedded .hero-power-card__actions { gap: 0; }
+  .hero-power-card--embedded .hero-power-card__actions button {
+    flex-basis: 40px;
+    width: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    height: 40px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -255,4 +269,101 @@
   .hero-power-card__content > p:not(.hero-power-card__power) { font-size: .78rem; line-height: 1.25; }
   .hero-power-card__actions { gap: .35rem; margin-top: .55rem; }
   .hero-power-card button { min-height: 40px; padding: .45rem .6rem; font-size: .82rem; }
+}
+
+/* Dans l'inventaire, le verso garde la taille du portrait : seules les
+   options défilent, sans réduire les cibles tactiles ni couper leur libellé. */
+:host(.hero-panel__power-card) .hero-power-card--inventory {
+  display: block;
+  padding: 4px;
+}
+
+:host(.hero-panel__power-card) .hero-power-card--inventory .hero-power-card__portrait,
+:host(.hero-panel__power-card) .hero-power-card--inventory .hero-power-card__eyebrow {
+  display: none;
+}
+
+:host(.hero-panel__power-card) .hero-power-card--inventory .hero-power-card__content {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+:host(.hero-panel__power-card) .hero-power-card--inventory h2 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+:host(.hero-panel__power-card) .hero-power-card--inventory .hero-power-card__power {
+  flex: none;
+  margin: 0;
+  font-size: .8rem;
+  line-height: 1.1;
+  overflow-wrap: normal;
+}
+
+:host(.hero-panel__power-card) .hero-power-card--inventory .hero-power-card__content > p:not(.hero-power-card__power) {
+  flex: none;
+  font-size: .75rem;
+  line-height: 1.15;
+  overflow-wrap: normal;
+}
+
+:host(.hero-panel__power-card) .hero-power-card--inventory .hero-power-card__actions {
+  flex: 0 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  min-height: 44px;
+  margin-top: auto;
+  overflow-y: auto;
+}
+
+:host(.hero-panel__power-card) .hero-power-card--inventory .hero-power-card__actions button {
+  flex: 1 1 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  font-size: 1.25rem;
+}
+
+:host(.hero-panel__power-card) .hero-power-card--inventory .hero-power-card__choices {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 44px;
+  margin-top: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+:host(.hero-panel__power-card) .hero-power-card--inventory .hero-power-card__choices button {
+  flex: none;
+  width: 100%;
+  min-height: 44px;
+  padding: 3px;
+  font-size: .75rem;
+  line-height: 1.1;
+}
+
+:host(.hero-panel__power-card) .hero-power-card--inventory .hero-power-card__choice {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+:host(.hero-panel__power-card) .hero-power-card--inventory .hero-power-card__choice img {
+  flex: none;
+  width: 28px;
+  height: 28px;
 }

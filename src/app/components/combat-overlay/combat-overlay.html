@@ -80,6 +80,8 @@
                     [hero]="optionalPower.hero"
                     [power]="optionalPower.power"
                     [activateLabel]="optionalPower.activateLabel"
+                    [declineLabel]="optionalPower.declineLabel"
+                    [message]="optionalPower.message"
                     [showActions]="currentCombat.player.controller === 'human'"
                     (activated)="activateOptionalPower()"
                     (declined)="declineOptionalPower()"
@@ -109,6 +111,7 @@
                     [hero]="unstoppablePower.hero"
                     [power]="unstoppablePower.power"
                     activateLabel="Continuer le tour"
+                    declineLabel="Terminer le tour"
                     (activated)="continueUnstoppable()"
                     (declined)="finishUnstoppable()"
                   />

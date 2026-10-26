@@ -137,6 +137,7 @@ export class CombatOverlay implements OnDestroy {
    */
   private resolving = false;
   private aiUnstoppableDecisionWasPending = false;
+  private readonly resultDismissalStarted = signal(false);
 
   constructor(
     private readonly combatService: CombatService,
@@ -208,7 +209,8 @@ export class CombatOverlay implements OnDestroy {
       const result = this.presentedResult();
 
       if (
-        hasPendingResolution
+        !this.resultDismissalStarted()
+        || hasPendingResolution
         || !combat
         || !result?.unstoppableEligible
         || this.presentationState() !== 'result'
@@ -395,7 +397,7 @@ export class CombatOverlay implements OnDestroy {
   }
 
   /** Pouvoir facultatif prioritaire présenté par la carte cinématique. */
-  get optionalPowerPresentation(): { hero: HeroDefinition; power: HeroPowerDefinition; activateLabel: string } | null {
+  get optionalPowerPresentation(): { hero: HeroDefinition; power: HeroPowerDefinition; activateLabel: string; declineLabel: string; message: string } | null {
     if (!this.isDecisionVisible || !this.combat?.player) return null;
     const player = this.combat.player;
     if (!player.heroId) return null;
@@ -408,7 +410,13 @@ export class CombatOverlay implements OnDestroy {
     if (!powerId) return null;
     const power = hero.powers.find(candidate => candidate.id === powerId);
     return power
-      ? { hero, power, activateLabel: powerId === 'sacrifice' ? 'Activer le pouvoir' : 'Relancer avec le pouvoir' }
+      ? {
+          hero,
+          power,
+          activateLabel: powerId === 'sacrifice' ? 'Sacrifier 1 PV pour +1 attaque' : 'Relancer avec le pouvoir',
+          declineLabel: powerId === 'sacrifice' ? 'Conserver mes PV' : 'Continuer sans utiliser le pouvoir',
+          message: powerId === 'sacrifice' ? 'Sacrifiez 1 vie pour ajouter +1 à votre attaque.' : power.summary,
+        }
       : null;
   }
 
@@ -650,6 +658,7 @@ export class CombatOverlay implements OnDestroy {
 
     this.trackedCombat = combat;
     this.resolving = false;
+    this.resultDismissalStarted.set(false);
 
     this.presentedCombat.set(combat);
     this.presentedResult.set(null);
@@ -804,7 +813,7 @@ export class CombatOverlay implements OnDestroy {
         this.powerAnnouncement.set({
           hero,
           power,
-          message: `${hero.name} utilise ${power.name}.`,
+          message: 'Pouvoir utilisé.',
         });
         this.schedule(() => {
           this.powerAnnouncement.set(null);
@@ -832,7 +841,7 @@ export class CombatOverlay implements OnDestroy {
       this.powerAnnouncement.set({
         hero,
         power,
-        message: `${hero.name} continue sans utiliser ${power.name}.`,
+        message: 'Pouvoir refusé.',
       });
       this.schedule(() => {
         this.powerAnnouncement.set(null);
@@ -881,6 +890,7 @@ export class CombatOverlay implements OnDestroy {
       return;
     }
 
+    this.resultDismissalStarted.set(true);
     this.clearTimers();
 
     // La Réincarnation valide encore l'identité du dernier combat avant
@@ -979,6 +989,7 @@ export class CombatOverlay implements OnDestroy {
     this.trackedCombat = null;
     this.resolving = false;
     this.aiUnstoppableDecisionWasPending = false;
+    this.resultDismissalStarted.set(false);
 
     /**
      * Une récompense obligatoire bloque le passage

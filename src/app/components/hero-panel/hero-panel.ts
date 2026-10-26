@@ -1,11 +1,23 @@
 import { Component, DoCheck, effect, EventEmitter, inject, Input, OnDestroy, Output, signal } from '@angular/core';
 
 import { getHeroDefinition, getHeroIdentityColor } from '../../data/hero-definitions';
-import { HeroDefinition } from '../../models/hero';
+import { HeroDefinition, HeroPowerDefinition } from '../../models/hero';
 import { Player } from '../../models/player';
 import { PlayerService } from '../../services/player.service';
 import { GameService } from '../../services/game.service';
-import { HeroPowerCard } from '../hero-power-card/hero-power-card';
+import { HeroPowerCard, HeroPowerCardChoice } from '../hero-power-card/hero-power-card';
+import { DungeonService } from '../../services/dungeon.service';
+
+interface InventoryPowerDecision {
+  kind: 'sneak' | 'fate-weaver' | 'substitution' | 'reincarnation';
+  power: HeroPowerDefinition;
+  mode: 'decision' | 'choice';
+  message: string;
+  choices: readonly HeroPowerCardChoice[];
+  activateLabel: string;
+  declineLabel: string;
+  cancelable: boolean;
+}
 
 type CurseAnimation = '' | 'hero-panel__curse--appearing' | 'hero-panel__curse--disappearing';
 
@@ -31,6 +43,7 @@ type CurseAnimation = '' | 'hero-panel__curse--appearing' | 'hero-panel__curse--
 })
 export class HeroPanel implements DoCheck, OnDestroy {
   private readonly playerService = inject(PlayerService);
+  private readonly dungeonService = inject(DungeonService);
   readonly gameService = inject(GameService);
 
   /** Côté d'affichage, utilisé pour placer le médaillon vers le centre du plateau. */
@@ -89,6 +102,7 @@ export class HeroPanel implements DoCheck, OnDestroy {
       if (
         player === this.player
         && player?.heroId === 'xanros'
+        && player.controller === 'human'
         && this.playerIndex === activePlayerIndex
       ) {
         this.showSubstitutionCard(pendingAction?.player === player);
@@ -189,10 +203,80 @@ export class HeroPanel implements DoCheck, OnDestroy {
     return this.heroDefinition?.powers.find(power => power.id === 'substitution') ?? null;
   }
 
+  /** Présentation issue exclusivement des décisions déjà ouvertes par le moteur. */
+  get powerDecision(): InventoryPowerDecision | null {
+    const player = this.player;
+    const hero = this.heroDefinition;
+    if (!player || player.controller !== 'human' || player !== this.gameService.activePlayer || !hero) return null;
+
+    const create = (
+      kind: InventoryPowerDecision['kind'],
+      mode: InventoryPowerDecision['mode'],
+      message: string,
+      choices: readonly HeroPowerCardChoice[] = [],
+      cancelable = false,
+    ): InventoryPowerDecision | null => {
+      const power = hero.powers.find(candidate => candidate.id === kind);
+      return power ? { kind, power, mode, message, choices, cancelable,
+        activateLabel: 'Passer sans combattre', declineLabel: 'Combattre le monstre' } : null;
+    };
+
+    if (this.gameService.pendingSneakChoice()?.player === player) {
+      return create('sneak', 'decision', 'Passer ou combattre ?');
+    }
+    const tokens = this.gameService.pendingTokenChoice();
+    if (tokens?.player === player) {
+      return create('fate-weaver', 'choice', 'Choisissez un jeton.', tokens.tokens.map(token => ({
+        label: token.kind === 'monster' ? `${token.name} · ${token.strength}` : 'Trésor',
+        image: token.image,
+        alt: '',
+      })));
+    }
+    if (this.gameService.xanrosSubstitutionSelectionOpen() && hero.id === 'xanros') {
+      return create('substitution', 'choice', 'Échange : 4 déplacements.', this.gameService.xanrosSubstitutionTargets.map(target => {
+        const targetHero = target.heroId ? getHeroDefinition(target.heroId) : undefined;
+        return { label: targetHero?.name ?? 'Héros', image: targetHero?.character ?? '', alt: '' };
+      }), true);
+    }
+    if (this.gameService.horanReincarnationSelection()?.player === player) {
+      return create('reincarnation', 'choice', 'Choisissez une fontaine.', this.gameService.getHealingFountains().map((fountain, index) => ({
+        label: `Fontaine ${index + 1} (${fountain.x}, ${fountain.y})`,
+        image: this.dungeonService.getTileDefinition(fountain)?.image ?? '',
+        alt: '',
+      })));
+    }
+    return null;
+  }
+
+  choosePowerOption(index: number): void {
+    const decision = this.powerDecision;
+    if (!decision || index < 0 || index >= decision.choices.length) return;
+    if (decision.kind === 'fate-weaver') this.gameService.choosePendingToken(index === 0 ? 0 : 1);
+    if (decision.kind === 'substitution') {
+      const target = this.gameService.xanrosSubstitutionTargets[index];
+      if (target) this.gameService.confirmXanrosSubstitution(target);
+    }
+    if (decision.kind === 'reincarnation') {
+      const fountain = this.gameService.getHealingFountains()[index];
+      if (fountain) {
+        this.gameService.selectHoranReincarnationDestination(fountain);
+        this.gameService.confirmHoranReincarnation();
+      }
+    }
+  }
+
+  chooseSneak(action: 'sneak' | 'combat'): void {
+    if (this.powerDecision?.kind === 'sneak') this.gameService.choosePendingSneak(action);
+  }
+
+  cancelPowerChoice(): void {
+    if (this.powerDecision?.kind === 'substitution') this.gameService.cancelXanrosSubstitution();
+  }
+
   get substitutionMessage(): string {
     return this.substitutionWaitingForAction
       ? 'Position échangée. Choisissez une action.'
-      : 'Xanros a changé de position.';
+      : 'Position échangée.';
   }
 
   get isHealingPortalTarget(): boolean {

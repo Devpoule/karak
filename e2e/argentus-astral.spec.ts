@@ -31,15 +31,12 @@ test('Marche astrale autorise à traverser un mur entre deux tuiles découvertes
     const playerService = gameService?.['playerService'];
     const dungeonService = gameService?.['dungeonService'];
     const turnService = gameService?.['turnService'];
-    const player = gameService?.activePlayer;
+    const player = playerService?.players.find((candidate: any) => candidate.controller === 'human');
     if (!gameService || !playerService || !dungeonService || !turnService || !player) {
       throw new Error('Game services unavailable');
     }
 
     const playerIndex = playerService.players.indexOf(player);
-    gameService.activePlayerIndex.set(null);
-    gameService.activePlayerIndex.set(playerIndex);
-    player.controller = 'human';
     player.heroId = 'argentus';
     player.isCursed = false;
     player.position = { x: 0, y: 0 };
@@ -50,11 +47,14 @@ test('Marche astrale autorise à traverser un mur entre deux tuiles découvertes
       y: 0,
       rotation: 90,
     });
+    gameService.activePlayerIndex.set(null);
+    gameService.activePlayerIndex.set(playerIndex);
   });
 
   await expect(page.locator('app-board')).toBeVisible();
-  await expect(page.getByRole('button', { name: /Se déplacer vers l'est/ })).toBeVisible();
-  await page.getByRole('button', { name: /Se déplacer vers l'est/ }).click({ force: true });
+  const destination = page.getByRole('button', { name: 'Déplacer le héros vers cette tuile' });
+  await expect(destination).toBeVisible();
+  await destination.click();
 
   const astralAnnouncement = page.locator('.board__power-announcement');
   await expect(astralAnnouncement).toBeVisible({ timeout: 5_000 });

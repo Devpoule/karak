@@ -343,25 +343,6 @@
         }
       }
     }
-    @if (gameService.xanrosSubstitutionSelectionOpen()) {
-      @if (gameService.activePlayer; as substitutionPlayer) {
-        @if (getHeroDefinition(substitutionPlayer); as hero) {
-          @if (getHeroPower(substitutionPlayer, 'substitution'); as power) {
-          <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
-            <app-hero-power-card
-              mode="choice"
-              [hero]="hero"
-              [power]="power"
-              [choices]="xanrosSubstitutionChoices"
-              [choiceCancelable]="true"
-              (choiceSelected)="confirmXanrosSubstitution(getXanrosSubstitutionTarget($event)!)"
-              (choiceCancelled)="gameService.cancelXanrosSubstitution()"
-            />
-          </div>
-          }
-        }
-      }
-    }
     @if (healingPortalSelection; as selection) {
       <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
         <app-decision-card
@@ -374,21 +355,6 @@
           (actionSelected)="resolveHealingPortalAction($event)"
         />
       </div>
-    }
-    @if (horanReincarnationSelection; as selection) {
-      @if (getHeroDefinition(selection.player); as hero) {
-        @if (getHeroPower(selection.player, 'reincarnation'); as power) {
-          <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
-            <app-hero-power-card
-              mode="choice"
-              [hero]="hero"
-              [power]="power"
-              [choices]="horanReincarnationChoices"
-              (choiceSelected)="chooseHoranReincarnationDestination($event)"
-            />
-          </div>
-        }
-      }
     }
     @if (portalTravelSelection; as selection) {
       <div
@@ -427,39 +393,6 @@
         [message]="announcement.message"
       />
     </div>
-  }
-  @if (gameService.pendingSneakChoice(); as sneak) {
-    @if (sneak.player.controller === 'human') {
-      <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
-        @if (getHeroDefinition(sneak.player); as hero) {
-          @if (getHeroPower(sneak.player, 'sneak'); as power) {
-            <app-hero-power-card
-              [hero]="hero"
-              [power]="power"
-              (activated)="gameService.choosePendingSneak('sneak')"
-              (declined)="gameService.choosePendingSneak('combat')"
-            />
-          }
-        }
-      </div>
-    }
-  }
-  @if (gameService.pendingTokenChoice(); as choice) {
-    @if (choice.player.controller === 'human') {
-      <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
-        @if (getHeroDefinition(choice.player); as hero) {
-          @if (getHeroPower(choice.player, 'fate-weaver'); as power) {
-            <app-hero-power-card
-              mode="choice"
-              [hero]="hero"
-              [power]="power"
-              [choices]="fateWeaverChoices"
-              (choiceSelected)="gameService.choosePendingToken($event === 0 ? 0 : 1)"
-            />
-          }
-        }
-      </div>
-    }
   }
   @if (humanPendingTreasure; as pending) {
     <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
