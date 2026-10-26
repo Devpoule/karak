@@ -47,6 +47,16 @@
         </a>
 
         <a
+          class="home__didacticiel"
+          routerLink="/tutorial"
+          aria-label="Didacticiel"
+          title="Didacticiel"
+        >
+          <span aria-hidden="true">?</span>
+          <span>Didacticiel</span>
+        </a>
+
+        <a
           class="home__lore"
           routerLink="/codex"
           [queryParams]="{ from: 'home' }"
@@ -61,7 +71,6 @@
         </a>
 
         <app-settings-panel />
-        <app-tutorial-panel />
       </nav>
     </div>
   </section>

@@ -1,0 +1,143 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--karak-dungeon-deep);
+}
+
+.tutorial {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-rows: 80px minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.tutorial__play-area {
+  --tutorial-sidebar-edge: 1.25rem;
+  --tutorial-sidebar-width: clamp(120px, 17vh, 220px);
+
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tutorial__play-area > app-board {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.tutorial__play-area > app-player-hud {
+  position: absolute;
+  z-index: 60;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.tutorial__play-area > app-tutorial-checklist {
+  position: absolute;
+  z-index: 70;
+  top: .65rem;
+  right: .65rem;
+  width: auto;
+  pointer-events: auto;
+}
+
+.tutorial__play-area--board-focus::after,
+.tutorial__play-area--hud-focus::after {
+  position: absolute;
+  z-index: 55;
+  inset: .5rem;
+  pointer-events: none;
+  content: '';
+  border: 2px solid rgba(245, 216, 132, .72);
+  border-radius: .7rem;
+  box-shadow: inset 0 0 1.5rem rgba(245, 216, 132, .1);
+}
+
+.tutorial__completion {
+  position: absolute;
+  z-index: 1600;
+  top: 50%;
+  left: 50%;
+  width: min(34rem, calc(100% - 2rem));
+  padding: clamp(1.25rem, 4vw, 2rem);
+  color: #f8efd8;
+  text-align: center;
+  background: rgba(25, 18, 14, .98);
+  border: 1px solid rgba(245, 216, 132, .8);
+  border-radius: 1rem;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, .62);
+  transform: translate(-50%, -50%);
+}
+
+.tutorial__completion-eyebrow,
+.tutorial__completion h1,
+.tutorial__completion p {
+  margin: 0;
+}
+
+.tutorial__completion-eyebrow {
+  color: #f5d884;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.tutorial__completion h1 {
+  margin-top: .45rem;
+  font: 700 clamp(1.5rem, 4vw, 2.2rem) / 1.1 var(--karak-font-display);
+}
+
+.tutorial__completion p:not(.tutorial__completion-eyebrow) {
+  margin-top: .75rem;
+  line-height: 1.45;
+}
+
+.tutorial__completion-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: .65rem;
+  margin-top: 1rem;
+}
+
+.tutorial__completion button {
+  min-height: 2.6rem;
+  padding: .6rem .9rem;
+  color: #281b12;
+  font: 700 .9rem / 1 var(--karak-font-display);
+  background: #f5d884;
+  border: 1px solid #ffe9a8;
+  border-radius: .45rem;
+  cursor: pointer;
+}
+
+.tutorial__completion .tutorial__completion-secondary {
+  color: #f8efd8;
+  background: transparent;
+  border-color: rgba(248, 239, 216, .58);
+}
+
+.tutorial__completion button:focus-visible {
+  outline: var(--karak-focus-width) solid var(--karak-focus-color);
+  outline-offset: var(--karak-focus-offset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial__completion {
+    transition: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .tutorial__play-area > app-tutorial-checklist {
+    top: .5rem;
+    right: .5rem;
+  }
+}
+

@@ -1,15 +1,14 @@
-import { Component, ElementRef, HostListener, Input } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { CombatService } from '../../services/combat.service';
 import { GameService } from '../../services/game.service';
 import { SettingsPanel } from '../settings-panel/settings-panel';
-import { TutorialPanel } from '../tutorial-panel/tutorial-panel';
 import { EventHistory } from '../event-history/event-history';
 
 /** Service ou composant GameHeader ; coordonne sa responsabilite de domaine ou d interface. */
 @Component({
-  imports: [NgOptimizedImage, RouterLink, SettingsPanel, TutorialPanel, EventHistory],
+  imports: [NgOptimizedImage, RouterLink, SettingsPanel, EventHistory],
   selector: 'app-game-header',
   styleUrl: './game-header.scss',
   templateUrl: './game-header.html',
@@ -27,7 +26,8 @@ export class GameHeader {
     private readonly elementRef: ElementRef<HTMLElement>,
   ) {}
 
-  @Input() context: 'game' | 'rules' = 'game';
+  @Input() context: 'game' | 'rules' | 'tutorial' = 'game';
+  @Output() readonly tutorialLeave = new EventEmitter<void>();
 
   get navigationLocked(): boolean {
     return this.combatService.hasPendingCombat || this.combatService.lastCombatResult() !== null;
@@ -57,8 +57,16 @@ export class GameHeader {
 /** Gere requestLeave et applique les gardes necessaires avant mutation. */
   requestLeave(): void {
     this.closeMenu();
-    if (this.context !== 'game') {
+    if (this.context === 'rules') {
       void this.router.navigateByUrl('/');
+      return;
+    }
+
+    if (this.context === 'tutorial') {
+      this.previouslyFocusedElement = document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+      this.showLeaveConfirmation = true;
       return;
     }
 
@@ -85,6 +93,10 @@ export class GameHeader {
 /** Gere leaveGame et applique les gardes necessaires avant mutation. */
   leaveGame(): void {
     this.showLeaveConfirmation = false;
+    if (this.context === 'tutorial') {
+      this.tutorialLeave.emit();
+      return;
+    }
     // Quitter confirme une nouvelle partie vierge : le prochain clic sur
     // "Jouer" doit ouvrir la préparation, jamais restaurer cette aventure.
     this.gameService.initialize();

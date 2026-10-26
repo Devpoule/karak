@@ -1,6 +1,6 @@
 # Karak — feuille de route réelle
 
-État relevé le 18 octobre 2026. Ce document décrit le dépôt observé, pas une promesse de livraison.
+État relevé le 26 octobre 2026. Ce document décrit le dépôt observé, pas une promesse de livraison.
 
 ## Déjà en place
 
@@ -13,7 +13,7 @@
 - panneaux de vie, trésors et inventaire, animations et harmonisation visuelle partielle ;
 - écran de fin de partie enrichi avec emblème du Dragon, vainqueur mis en avant et classement détaillé par héros ;
 - panneau de paramètres partagé entre l'accueil et la partie, avec préférences persistantes de mouvement, contraste, taille du texte et audio facultatif ;
-- tutoriel interactif consultatif en cinq étapes, accessible depuis l'accueil et l'en-tête de partie.
+- didacticiel jouable indépendant, avec checklist de progression, aides contextuelles et règles normales du jeu ;
 - signal sonore court et optionnel pour les notifications, désactivé par défaut et tolérant à l'absence de Web Audio.
 
 ## Incomplet ou à risque
@@ -28,10 +28,10 @@
 
 ## Dernière recette technique
 
-- 317 tests réussis sur 27 fichiers avec `npx ng test --no-watch --no-progress` ;
-- compilation Angular réussie avec `npx ng build` ;
+- 451 tests réussis sur 37 fichiers avec `npx ng test --no-watch --no-progress` ;
+- compilation Angular réussie avec `npx ng build`, avec un dépassement de 140 octets du budget SCSS de `GameSetup` ;
 - `git diff --check` réussi ;
-- recette Playwright Chromium : 22 scénarios ciblés réussis, dont les parcours d’interface, responsive, exploration, coffre, combat, fin et portail ;
+- recette Playwright Chromium ciblée sur l’accueil, l’accessibilité, le responsive et le header ; les scénarios Codex et de sortie ont été rejoués avec succès en isolation ;
 - avertissement `NG0913` du logo documenté ;
 - aucune anomalie fonctionnelle confirmée pendant cette recette.
 

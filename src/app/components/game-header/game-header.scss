@@ -113,14 +113,12 @@
   cursor: default;
 }
 
-.game-header__menu app-tutorial-panel,
 .game-header__menu app-settings-panel,
 .game-header__menu app-event-history {
   display: block;
   width: 100%;
 }
 
-.game-header__menu app-tutorial-panel .karak-header-action,
 .game-header__menu app-settings-panel .karak-header-action {
   width: 100%;
   min-height: 2.75rem;
@@ -133,8 +131,6 @@
   text-align: left;
 }
 
-.game-header__menu app-tutorial-panel .karak-header-action:hover,
-.game-header__menu app-tutorial-panel .karak-header-action:focus-visible,
 .game-header__menu app-settings-panel .karak-header-action:hover,
 .game-header__menu app-settings-panel .karak-header-action:focus-visible {
   color: var(--karak-text-highlight);

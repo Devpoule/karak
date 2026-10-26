@@ -1,0 +1,35 @@
+<section id="main-content" class="tutorial" tabindex="-1" aria-label="Didacticiel Karak">
+  <app-game-header context="tutorial" (tutorialLeave)="leaveTutorial()" />
+
+  <div
+    class="tutorial__play-area"
+    [class.tutorial__play-area--board-focus]="session.activeHelp()?.target === 'board' && !session.helpSuspended()"
+    [class.tutorial__play-area--hud-focus]="session.activeHelp()?.target === 'hud' && !session.helpSuspended()"
+  >
+    <app-board />
+    <app-player-hud [rightAuxiliaryTemplate]="isCompactChecklist() ? null : desktopChecklist" />
+
+    @if (isCompactChecklist()) {
+      <app-tutorial-checklist mode="mobile" />
+    }
+
+    <ng-template #desktopChecklist>
+      <app-tutorial-checklist mode="sidebar" />
+    </ng-template>
+
+    <app-tutorial-help />
+
+    @if (session.isComplete()) {
+      <section class="tutorial__completion" role="dialog" aria-modal="true" aria-labelledby="tutorial-complete-title">
+        <p class="tutorial__completion-eyebrow">Didacticiel terminé</p>
+        <h1 id="tutorial-complete-title">Vous êtes prêt à explorer Karak.</h1>
+        <p>Vous avez utilisé les déplacements, l’exploration, le combat et les portails avec les vraies règles du jeu.</p>
+        <div class="tutorial__completion-actions">
+          <button type="button" (click)="playNormalGame()">Lancer une partie</button>
+          <button type="button" class="tutorial__completion-secondary" (click)="leaveTutorial()">Retour à l’accueil</button>
+        </div>
+      </section>
+    }
+  </div>
+</section>
+

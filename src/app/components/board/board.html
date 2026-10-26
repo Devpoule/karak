@@ -42,6 +42,7 @@
       <div
         class="board__tile"
         [class.board__tile--active-player]="isActivePlayerOnTile(tile)"
+        [class.board__tile--tutorial-exit]="isTutorialExit(tile)"
         [class.board__tile--reachable]="canMoveToTile(tile)"
         [class.board__tile--healing-selected]="healingPortalSelection?.destination === tile || horanReincarnationSelection?.destination === tile"
         [class.board__tile--portal-selected]="portalTravelSelection?.destination === tile"
@@ -65,6 +66,9 @@
           alt=""
           draggable="false"
         />
+        @if (isTutorialExit(tile)) {
+          <span class="board__tutorial-exit-label">Sortie</span>
+        }
         @if (canMoveToTile(tile)) {
           <span class="board__move-icon" aria-hidden="true"></span>
           <span class="board__interaction-tooltip" role="tooltip">Se déplacer</span>

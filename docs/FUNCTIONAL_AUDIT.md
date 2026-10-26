@@ -286,7 +286,7 @@ Les contrôles suivants traversent plusieurs phases et doivent faire l’objet d
 8. Xanros Substitution → échange → tuile occupée/équipement/coffre → fin sans résolution implicite ;
 9. Victorius/Horan → relance → reprise des mouvements ou décision de fin ;
 10. IA → action pending → combat/choix → récompense → joueur suivant ;
-11. retour à l’accueil pendant animation, sélection ou transition ;
+11. Retour à l’accueil pendant animation, sélection ou transition ;
 12. Dragon obtenu pendant une animation ou une résolution de récompense.
 
 ## 5. Bilan chiffré de vérification

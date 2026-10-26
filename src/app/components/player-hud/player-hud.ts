@@ -1,5 +1,6 @@
-import { AfterViewInit, Component, effect, HostBinding, HostListener, QueryList, ViewChildren } from '@angular/core';
+import { AfterViewInit, Component, Input, TemplateRef, effect, HostBinding, HostListener, QueryList, ViewChildren } from '@angular/core';
 import { ElementRef, OnDestroy } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 
 
 
@@ -93,7 +94,7 @@ interface HudPlayerEntry {
 
   selector: 'app-player-hud',
 
-  imports: [PlayerSidebar, HeroPowerCard, ToastContainer],
+  imports: [PlayerSidebar, HeroPowerCard, ToastContainer, NgTemplateOutlet],
 
   templateUrl: './player-hud.html',
 
@@ -102,6 +103,8 @@ interface HudPlayerEntry {
 })
 
 export class PlayerHud implements AfterViewInit, OnDestroy {
+  /** Contenu du didacticiel occupant le logement droit en l’absence d’IA. */
+  @Input() rightAuxiliaryTemplate: TemplateRef<unknown> | null = null;
   @ViewChildren(PlayerSidebar) private readonly sidebars!: QueryList<PlayerSidebar>;
 
   @HostBinding('class.player-hud--power-consultation')

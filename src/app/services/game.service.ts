@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, Optional, signal } from '@angular/core';
 import { GamePhase, GameRankingEntry, SetupStep } from '../models/game';
 import { calculateTreasurePoints } from '../models/treasure';
 import { getTokenDefinition } from '../data/token-definitions';
@@ -20,6 +20,7 @@ import { TOAST_LABELS, ToastAnchor, ToastEventType, ToastService, ToastTarget, T
 import { getHeroDefinition } from '../data/hero-definitions';
 import { GameSavePayloadV2, SaveEnvelopeV2 } from '../models/save';
 import { SaveService } from './save.service';
+import { TutorialScenarioService } from './tutorial-scenario.service';
 
 /**
  * Résultat du lancer effectué par un joueur
@@ -216,6 +217,9 @@ export class GameService {
   /** Action facultative autorisée sur la tuile d'arrivée de Xanros. */
   readonly pendingXanrosSubstitutionAction = signal<PendingXanrosSubstitutionAction | null>(null);
   readonly portalTravelSelection = signal<PortalTravelSelection | null>(null);
+  /** Révision publiée seulement après un voyage portail réellement confirmé. */
+  readonly portalTravelRevision = signal(0);
+  readonly lastPortalTraveler = signal<Player | null>(null);
 
   /** Objets déposés indépendamment des jetons monstres/trésors. */
   private groundEquipmentByTile = new Map<string, Equipment>();
@@ -575,6 +579,7 @@ export class GameService {
     private readonly combatService: CombatService,
     private readonly toastService: ToastService,
     private readonly saveService: SaveService,
+    @Optional() private readonly tutorialScenario?: TutorialScenarioService,
   ) {}
 
   /** Restaure une sauvegarde stable avant l'affichage de la partie. */
@@ -711,6 +716,8 @@ export class GameService {
     this.pendingSneakChoice.set(null);
     this.pendingTokenChoice.set(null);
     this.portalTravelSelection.set(null);
+    this.portalTravelRevision.set(0);
+    this.lastPortalTraveler.set(null);
     this.healingPortalSelection.set(null);
     this.healingFountainUse.set(null);
     this.healingFountainPresenceKey = null;
@@ -973,6 +980,22 @@ export class GameService {
     this.phase.set('playing');
   }
 
+  /**
+   * Démarre une aventure déjà préparée par un mode spécialisé, sans lancer
+   * le parcours de configuration multijoueur ni consulter une sauvegarde.
+   */
+  startPreparedAdventure(playerIndex = 0): boolean {
+    if (this.phase() !== 'setup' || !this.playerService.players[playerIndex]) return false;
+    this.playerService.placeHeroesOnStart();
+    this.ensureStartTileExists();
+    this.firstPlayerIndex.set(playerIndex);
+    this.activePlayerIndex.set(playerIndex);
+    this.turnService.resetMovements();
+    this.prepareActivePlayerTurn();
+    this.phase.set('playing');
+    return true;
+  }
+
   // ==========================================================
   // ENTRÉE DANS UNE SALLE
 
@@ -1007,6 +1030,16 @@ export class GameService {
      * Une salle ne doit recevoir son contenu qu'une seule fois.
      */
     if (tile.tokenId) {
+      return;
+    }
+    const scenarioTokenId = this.tutorialScenario?.getRoomTokenId(tile);
+    if (scenarioTokenId === null) {
+      return;
+    }
+
+    if (scenarioTokenId) {
+      tile.tokenId = scenarioTokenId;
+      tile.tokenFace = 'front';
       return;
     }
     const firstToken = this.tokenBagService.draw();
@@ -1443,6 +1476,8 @@ export class GameService {
     this.playerService.movePlayerTo(player, destination.x, destination.y, player.facing ?? 'south');
     this.turnService.consumeMovement();
     this.portalTravelSelection.set(null);
+    this.lastPortalTraveler.set(player);
+    this.portalTravelRevision.update(revision => revision + 1);
     if (!this.turnService.canMove && !this.hasPendingTileResolution) this.endTurn();
     return true;
   }

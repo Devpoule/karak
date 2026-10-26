@@ -1,0 +1,108 @@
+:host {
+  position: absolute;
+  z-index: 1500;
+  top: .85rem;
+  right: .85rem;
+  display: block;
+  width: min(22rem, calc(100% - 1.7rem));
+  pointer-events: none;
+}
+
+.tutorial-help {
+  pointer-events: auto;
+  padding: .85rem;
+  color: #f8efd8;
+  background: rgba(19, 22, 38, .96);
+  border: 1px solid rgba(245, 211, 117, .75);
+  border-radius: .75rem;
+  box-shadow: 0 .65rem 1.5rem rgba(0, 0, 0, .42);
+}
+
+.tutorial-help__eyebrow,
+.tutorial-help__title,
+.tutorial-help__message {
+  margin: 0;
+}
+
+.tutorial-help__eyebrow {
+  color: #f5d884;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.tutorial-help__title {
+  margin-top: .25rem;
+  font: 700 1.05rem / 1.2 var(--karak-font-display);
+}
+
+.tutorial-help__message {
+  margin-top: .45rem;
+  color: rgba(248, 239, 216, .9);
+  font-size: .9rem;
+  line-height: 1.4;
+}
+
+.tutorial-help__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .45rem;
+  margin-top: .7rem;
+}
+
+button {
+  min-height: 2.25rem;
+  padding: .45rem .65rem;
+  color: #261b13;
+  font: 700 .8rem / 1 var(--karak-font-display);
+  background: #f5d884;
+  border: 1px solid #ffe9a8;
+  border-radius: .4rem;
+  cursor: pointer;
+}
+
+.tutorial-help__quiet-action {
+  color: #f8efd8;
+  background: transparent;
+  border-color: rgba(248, 239, 216, .5);
+}
+
+.tutorial-help__expand {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  max-width: 100%;
+  color: #f8efd8;
+  background: rgba(19, 22, 38, .96);
+  border-color: rgba(245, 211, 117, .75);
+}
+
+button:focus-visible {
+  outline: var(--karak-focus-width) solid var(--karak-focus-color);
+  outline-offset: var(--karak-focus-offset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-help,
+  button {
+    transition: none;
+  }
+}
+
+@media (max-width: 700px) {
+  :host {
+    top: auto;
+    right: .65rem;
+    bottom: .65rem;
+    width: min(21rem, calc(100% - 1.3rem));
+  }
+}
+
+/* À partir du format desktop, la colonne droite appartient à la checklist. */
+@media (min-width: 901px) {
+  :host {
+    right: calc(var(--tutorial-sidebar-width) + var(--tutorial-sidebar-edge) + 1rem);
+  }
+}
+

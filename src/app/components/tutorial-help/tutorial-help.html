@@ -1,0 +1,26 @@
+@if (session.activeHelp(); as help) {
+  @if (!session.helpSuspended()) {
+    <aside
+      class="tutorial-help"
+      [class.tutorial-help--collapsed]="session.helpDisplay() === 'collapsed'"
+      aria-live="polite"
+      aria-label="Aide contextuelle : {{ help.notion }}"
+    >
+      @if (session.helpDisplay() === 'expanded') {
+        <p class="tutorial-help__eyebrow">{{ help.notion }}</p>
+        <h2 class="tutorial-help__title">{{ help.title }}</h2>
+        <p class="tutorial-help__message">{{ help.message }}</p>
+        <div class="tutorial-help__actions">
+          <button type="button" (click)="session.dismissActiveHelp()">Compris</button>
+          <button type="button" class="tutorial-help__quiet-action" (click)="session.collapseHelp()">Réduire</button>
+        </div>
+      } @else {
+        <button type="button" class="tutorial-help__expand" (click)="session.expandHelp()">
+          <span aria-hidden="true">?</span>
+          <span>Aide : {{ help.notion }}</span>
+        </button>
+      }
+    </aside>
+  }
+}
+

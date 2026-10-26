@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SettingsPanel } from '../../components/settings-panel/settings-panel';
-import { TutorialPanel } from '../../components/tutorial-panel/tutorial-panel';
 
 
 /**
@@ -17,7 +16,7 @@ import { TutorialPanel } from '../../components/tutorial-panel/tutorial-panel';
  * Cette page ne contient aucun état de jeu.
  */
 @Component({
-  imports: [NgOptimizedImage, RouterLink, SettingsPanel, TutorialPanel],
+  imports: [NgOptimizedImage, RouterLink, SettingsPanel],
   selector: 'app-home',
   styleUrl: './home.scss',
   templateUrl: './home.html',

@@ -127,9 +127,9 @@
 }
 
 .home__play,
+.home__didacticiel,
 .home__lore,
-.home__navigation app-settings-panel,
-.home__navigation app-tutorial-panel {
+.home__navigation app-settings-panel {
   position: relative;
 
   display: inline-flex;
@@ -150,11 +150,6 @@
 }
 
 .home__navigation app-settings-panel {
-  display: block;
-  width: 100%;
-}
-
-.home__navigation app-tutorial-panel {
   display: block;
   width: 100%;
 }
@@ -230,6 +225,30 @@
   }
 }
 
+.home__didacticiel {
+  min-height: 3rem;
+  gap: .7rem;
+  padding: .65rem 1rem;
+
+  color: var(--karak-text-highlight);
+  font: 700 clamp(.86rem, 1.4vw, 1.05rem) / 1.2 var(--karak-font-display);
+
+  background: rgba(40, 56, 76, .92);
+  border: var(--karak-border-default);
+  border-radius: var(--karak-radius-sm);
+  box-shadow: 0 .45rem 1rem rgba(0, 0, 0, .36);
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: var(--karak-text-highlight);
+    background: rgba(54, 75, 100, .98);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
 .home__lore {
   min-height: 3rem;
   gap: .7rem;
@@ -280,6 +299,7 @@
 }
 
 .home__play:focus-visible,
+.home__didacticiel:focus-visible,
 .home__lore:focus-visible {
   outline: var(--karak-focus-width) solid var(--karak-focus-color);
   outline-offset: var(--karak-focus-offset);
@@ -355,12 +375,14 @@
   .home__logo,
   .home__play,
   .home__play::after,
+  .home__didacticiel,
   .home__lore {
     animation: none;
     transition: none;
   }
 
   .home__play:hover,
+  .home__didacticiel:hover,
   .home__lore:hover {
     transform: none;
   }

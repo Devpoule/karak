@@ -109,9 +109,9 @@ test('le Codex depuis l’accueil revient à l’accueil', async ({ page }) => {
 
   await expect(page).toHaveURL(/\/codex\?from=home$/);
   await expect(page.getByRole('heading', { name: 'Karak', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: '← Accueil' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Retour à l’accueil' })).toBeVisible();
 
-  await page.getByRole('button', { name: '← Accueil' }).click();
+  await page.getByRole('button', { name: 'Retour à l’accueil' }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('link', { name: /Jouer/ })).toBeVisible();
 });
@@ -122,7 +122,7 @@ test('le Codex depuis la préparation revient à la préparation', async ({ page
   await page.getByRole('menuitem', { name: 'Encyclopédie' }).click();
 
   await expect(page).toHaveURL(/\/codex\?from=game$/);
-  await page.getByRole('button', { name: '← Retour à la partie' }).click();
+  await page.getByRole('button', { name: 'Retour à la partie' }).click();
   await expect(page).toHaveURL(/\/play$/);
   await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
 });
@@ -162,7 +162,7 @@ test('la préparation reste lisible sur écran étroit', async ({ page }) => {
     document.documentElement.scrollWidth <= document.documentElement.clientWidth,
   )).toBe(true);
   await openHeaderMenu(page);
-  await expect(page.getByRole('button', { name: "Retour à l'accueil" })).toBeVisible();
+  await expect(page.getByRole('button', { name: "⌂" })).toBeVisible();
   await expect(page.getByRole('menuitem', { name: 'Encyclopédie' })).toBeVisible();
   await expect(page.getByAltText('Karak')).toBeVisible();
   await page.screenshot({
@@ -192,7 +192,7 @@ test('le header contient et centre son logo et son menu', async ({ page }) => {
     expect(Math.abs(geometry.logo!.center - geometry.header.center)).toBeLessThanOrEqual(2);
     await page.getByRole('button', { name: 'Ouvrir le menu de partie' }).click();
     await expect(page.getByRole('menu', { name: 'Commandes de partie' })).toBeVisible();
-    await expect(page.getByRole('button', { name: "Retour à l'accueil" })).toBeVisible();
+    await expect(page.getByRole('button', { name: "⌂" })).toBeVisible();
     await expect(page.getByRole('menuitem', { name: 'Encyclopédie' })).toBeVisible();
   }
 });
@@ -210,7 +210,6 @@ test('le menu du header reste compact et accessible sur toutes les largeurs', as
     await menuTrigger.click();
     const menu = page.getByRole('menu', { name: 'Commandes de partie' });
     await expect(menu).toBeVisible();
-    await expect(menu.getByRole('button', { name: 'Tutoriel' })).toBeVisible();
     await expect(menu.getByRole('button', { name: 'Paramètres' })).toBeVisible();
     await expect(menu.getByRole('menuitem', { name: 'Encyclopédie' })).toBeVisible();
     await page.keyboard.press('Escape');
@@ -422,7 +421,7 @@ test('quitter la préparation réinitialise la partie sans confirmation', async 
   await expect(page.getByRole('heading', { name: 'Tirage des héros' })).toBeVisible();
 
   await openHeaderMenu(page);
-  await page.getByRole('button', { name: "Retour à l'accueil" }).click();
+  await page.getByRole('button', { name: "⌂" }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('link', { name: 'Jouer' })).toBeVisible();
 
@@ -447,14 +446,14 @@ test('quitter une partie active demande confirmation et permet l’annulation', 
   await expect(page.locator('app-board')).toBeVisible();
 
   await openHeaderMenu(page);
-  await page.getByRole('button', { name: "Retour à l'accueil" }).click();
+  await page.getByRole('button', { name: "⌂" }).click();
   await expect(page.getByRole('heading', { name: 'Quitter la partie ?' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { name: 'Quitter la partie ?' })).toHaveCount(0);
   await expect(page.locator('app-board')).toBeVisible();
 
   await openHeaderMenu(page);
-  await page.getByRole('button', { name: "Retour à l'accueil" }).click();
+  await page.getByRole('button', { name: "⌂" }).click();
   await page.getByRole('button', { name: 'Quitter la partie' }).click();
   await expect(page).toHaveURL(/\/$/);
   await page.getByRole('link', { name: 'Jouer' }).click();

@@ -102,6 +102,29 @@ export class PlayerService {
     this.treasuresRevision.update(revision => revision + 1);
     this.curseRevision.update(revision => revision + 1);
   }
+
+  /** Prépare l'unique héros humain du didacticiel, hors configuration normale. */
+  initializeTutorialPlayer(heroId: HeroId): void {
+    if (!HERO_DEFINITIONS.some(hero => hero.id === heroId)) return;
+    this.players.splice(0, this.players.length, {
+      controller: 'human',
+      heroId,
+      lives: 5,
+      recoveryState: 'none',
+      isCursed: false,
+      inventory: createEmptyPlayerInventory(),
+      treasures: createEmptyTreasures(),
+      position: { x: 0, y: 0 },
+      facing: 'south',
+    });
+    this.configurationRevision += 1;
+    this.lastLifeLoss.set(null);
+    this.livesRevision.update(revision => revision + 1);
+    this.inventoryRevision.update(revision => revision + 1);
+    this.treasuresRevision.update(revision => revision + 1);
+    this.curseRevision.update(revision => revision + 1);
+  }
+
   /** Applique ou lève la malédiction sans modifier les autres attributs du héros. */
   setCursed(player: Player, isCursed: boolean): boolean {
     if (!this.players.includes(player) || player.isCursed === isCursed) return false;

@@ -5,8 +5,8 @@
 Ouvrez Karak depuis l'URL fournie par l'hébergement. Depuis l'accueil :
 
 - **Jouer** ouvre la préparation d'une partie ;
+- **Didacticiel** ouvre une aventure guidée jouable avec les règles normales ;
 - **Découvrir l'univers du jeu** ouvre le Codex, ses règles, ses héros et son bestiaire ;
-- **Tutoriel** présente les cinq grandes étapes du jeu ;
 - **Paramètres** règle le confort d'affichage et les sons.
 
 Sur un navigateur compatible, le menu propose également l'installation de Karak

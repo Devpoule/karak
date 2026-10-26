@@ -149,6 +149,10 @@
   transform: translateX(0);
 }
 
+.player-hud__side--auxiliary {
+  overflow: hidden;
+}
+
 .player-hud__hero-palette-button {
   padding: 0.35rem 0.55rem;
   color: #fff8df;

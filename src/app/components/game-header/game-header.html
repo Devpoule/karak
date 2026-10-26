@@ -2,8 +2,8 @@
   <button
     class="game-header__logo-link"
     type="button"
-    aria-label="Retour à l'accueil"
-    title="Retour à l'accueil"
+    aria-label="⌂"
+    title="⌂"
     (click)="requestLeave()"
   >
     <img
@@ -42,21 +42,16 @@
     role="menu"
     aria-label="Commandes de partie"
   >
-    <app-tutorial-panel
-      [compact]="true"
-      [disabled]="navigationLocked"
-      (closed)="closeMenu()"
-    />
     <app-settings-panel
       [compact]="true"
       [disabled]="navigationLocked"
       (closed)="closeMenu()"
     />
-    @if (context === 'game') {
+    @if (context === 'game' || context === 'tutorial') {
       <a class="game-header__menu-item" role="menuitem" routerLink="/codex" [queryParams]="{ from: 'game' }" (click)="closeMenu()">
         <span aria-hidden="true">▣</span><span>Encyclopédie</span>
       </a>
-      @if (gameService.phase() === 'playing') {
+      @if (context === 'game' && gameService.phase() === 'playing') {
         <app-event-history />
       }
     } @else {
@@ -75,13 +70,15 @@
       aria-describedby="leave-game-message"
       (click)="$event.stopPropagation()"
     >
-      <h2 id="leave-game-title">Quitter la partie ?</h2>
+      <h2 id="leave-game-title">{{ context === 'tutorial' ? 'Quitter le didacticiel ?' : 'Quitter la partie ?' }}</h2>
       <p id="leave-game-message">
         Une aventure est en cours. Si vous quittez maintenant, votre progression sera définitivement perdue.
       </p>
       <div class="game-header__dialog-actions">
         <button type="button" class="game-header__dialog-cancel" (click)="cancelLeave()">Annuler</button>
-        <button type="button" class="game-header__dialog-confirm" (click)="leaveGame()" autofocus>Quitter la partie</button>
+        <button type="button" class="game-header__dialog-confirm" (click)="leaveGame()" autofocus>
+          {{ context === 'tutorial' ? 'Quitter le didacticiel' : 'Quitter la partie' }}
+        </button>
       </div>
     </section>
   </div>

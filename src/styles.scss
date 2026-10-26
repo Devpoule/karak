@@ -281,7 +281,6 @@ html[data-karak-contrast='high'] {
 
 @media (min-width: 641px) and (max-width: 900px) {
   .game-header .karak-header-action,
-  .tutorial-panel--compact .karak-header-action,
   .settings-panel--compact .karak-header-action {
     flex-direction: column;
     width: 5rem;
@@ -296,7 +295,6 @@ html[data-karak-contrast='high'] {
 
 @media (max-width: 640px) {
   .game-header .karak-header-action,
-  .tutorial-panel--compact .karak-header-action,
   .settings-panel--compact .karak-header-action {
     width: 2.75rem;
     min-width: 2.75rem;
@@ -304,7 +302,6 @@ html[data-karak-contrast='high'] {
   }
 
   .game-header .karak-header-action__label,
-  .tutorial-panel--compact .karak-header-action__label,
   .settings-panel--compact .karak-header-action__label {
     position: absolute;
     width: 1px;
@@ -314,8 +311,7 @@ html[data-karak-contrast='high'] {
     white-space: nowrap;
   }
 
-  /* Dans le menu ouvert, les onglets restent textuels : les icônes seules
-   * rendaient Tutoriel et Paramètres incomplets sur mobile. */
+  /* Dans le menu ouvert, les commandes restent textuelles. */
   .game-header__menu .karak-header-action__label {
     position: static;
     width: auto;

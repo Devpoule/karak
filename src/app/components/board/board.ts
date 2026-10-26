@@ -1,4 +1,4 @@
-import { Component, effect, HostListener, signal } from '@angular/core';
+import { Component, effect, HostListener, Optional, signal } from '@angular/core';
 import { getPlayerUiConfig } from '../../constants/player-ui.constants';
 import { getHeroDefinition, getHeroIdentityColor } from '../../data/hero-definitions';
 import { getTokenDefinition } from '../../data/token-definitions';
@@ -18,6 +18,7 @@ import { CombatOverlay } from '../combat-overlay/combat-overlay';
 import { HeroPowerCard } from '../hero-power-card/hero-power-card';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
 import { DecisionCard, DecisionCardAction } from '../decision-card/decision-card';
+import { TutorialScenarioService } from '../../services/tutorial-scenario.service';
 
 /**
  * Joueur prêt à être représenté sur le plateau.
@@ -106,6 +107,7 @@ export class Board {
     private readonly turnService: TurnService,
     readonly combatService: CombatService,
     readonly gameService: GameService,
+    @Optional() private readonly tutorialScenario?: TutorialScenarioService,
   ) {
     /*
      * Lorsqu'un nouveau joueur prend la main, la caméra
@@ -521,6 +523,11 @@ export class Board {
    */
   getTileDefinition(tile: PlacedTile): TileDefinition | undefined {
     return this.dungeonService.getTileDefinition(tile);
+  }
+
+  /** Distingue la sortie scénarisée des portails du didacticiel. */
+  isTutorialExit(tile: PlacedTile): boolean {
+    return this.tutorialScenario?.isExit(tile) ?? false;
   }
 
   /**

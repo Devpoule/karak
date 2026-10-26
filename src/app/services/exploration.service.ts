@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, Optional, signal } from '@angular/core';
 
 import {
   Direction,
@@ -10,6 +10,8 @@ import {
 
 import { DungeonService } from './dungeon.service';
 import { TileDeckService } from './tile-deck.service';
+import { TILE_DEFINITIONS } from '../data/tile-definitions';
+import { TutorialScenarioService } from './tutorial-scenario.service';
 
 /**
  * Représente une exploration commencée mais dont la nouvelle
@@ -109,6 +111,7 @@ export class ExplorationService {
   constructor(
     private readonly dungeonService: DungeonService,
     private readonly tileDeckService: TileDeckService,
+    @Optional() private readonly tutorialScenario?: TutorialScenarioService,
   ) {}
 
   // ==========================================================
@@ -125,6 +128,10 @@ export class ExplorationService {
   /** Révision UI des mutations de la tuile révélée en attente. */
   readonly pendingTileRevision = signal(0);
 
+  /** Dernière tuile effectivement ajoutée au donjon, jamais une simple prévisualisation. */
+  readonly lastPlacedTile = signal<PlacedTile | null>(null);
+  readonly placementRevision = signal(0);
+
   /**
    * Réinitialise l'état d'exploration.
    *
@@ -133,7 +140,9 @@ export class ExplorationService {
    */
   initialize(): void {
     this.pendingTile = null;
+    this.lastPlacedTile.set(null);
     this.pendingTileRevision.update(revision => revision + 1);
+    this.placementRevision.update(revision => revision + 1);
   }
 
   // ==========================================================
@@ -169,7 +178,8 @@ export class ExplorationService {
    * Cette méthode :
    *
    * 1. vérifie qu'aucune exploration n'est déjà en cours ;
-   * 2. retire une tuile de la pioche ;
+   * 2. révèle le contenu déterministe du didacticiel ou retire une tuile
+   *    de la pioche normale ;
    * 3. mémorise la tuile source sans imposer de direction.
    *
    * La tuile ne rejoint le donjon qu'après confirmation
@@ -180,7 +190,10 @@ export class ExplorationService {
       return;
     }
 
-    const definition = this.tileDeckService.draw();
+    const scenarioDefinitionId = this.tutorialScenario?.getDefinitionIdForSource(tile);
+    const definition = scenarioDefinitionId
+      ? TILE_DEFINITIONS.find(candidate => candidate.id === scenarioDefinitionId)
+      : this.tileDeckService.draw();
 
     if (!definition) {
       return;
@@ -278,12 +291,14 @@ export class ExplorationService {
     }
 
     const requiredDirection = getOppositeDirection(this.pendingTile.direction);
-
-    return hasOpening(
+    const target = this.getPendingTilePosition();
+    const connectsToSource = hasOpening(
       this.pendingTile.definition.openings,
       this.pendingTile.rotation,
       requiredDirection,
     );
+
+    return !!target && connectsToSource;
   }
 
   // ==========================================================
@@ -337,7 +352,9 @@ export class ExplorationService {
     this.dungeonService.placeTile(placedTile);
 
     this.pendingTile = null;
+    this.lastPlacedTile.set(placedTile);
     this.pendingTileRevision.update(revision => revision + 1);
+    this.placementRevision.update(revision => revision + 1);
 
     return placedTile;
   }

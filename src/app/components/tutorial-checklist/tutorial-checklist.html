@@ -1,0 +1,65 @@
+<section
+  class="tutorial-checklist"
+  [class.tutorial-checklist--sidebar]="mode === 'sidebar'"
+  [class.tutorial-checklist--mobile]="mode === 'mobile'"
+  [class.tutorial-checklist--collapsed]="!expanded"
+  aria-labelledby="tutorial-checklist-title"
+>
+  <header class="tutorial-checklist__header">
+    <h2 id="tutorial-checklist-title">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M6 4.5h10.5A2.5 2.5 0 0 1 19 7v10.5A2.5 2.5 0 0 1 16.5 20H6A2.5 2.5 0 0 1 3.5 17.5V7A2.5 2.5 0 0 1 6 4.5Z" />
+        <path d="M7.5 9h7M7.5 13h7M7.5 17h4" />
+      </svg>
+      DIDACTICIEL
+    </h2>
+    @if (mode === 'mobile') {
+      <button
+        type="button"
+        class="tutorial-checklist__toggle"
+        [attr.aria-expanded]="expanded"
+        aria-controls="tutorial-checklist-objectives"
+        [attr.aria-label]="expanded ? 'Replier les objectifs du didacticiel' : 'Déplier les objectifs du didacticiel'"
+        (click)="toggle()"
+      >
+        <span class="tutorial-checklist__compact-progress">{{ session.completedObjectiveCount() }}/{{ session.totalObjectiveCount }}</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m7 14 5-5 5 5" /></svg>
+      </button>
+    }
+  </header>
+
+  <div class="tutorial-checklist__progress-summary">
+    <span>{{ session.completedObjectiveCount() }} / {{ session.totalObjectiveCount }} objectifs</span>
+    <span>{{ progressPercentage() }} %</span>
+  </div>
+  <div
+    class="tutorial-checklist__progress-track"
+    role="progressbar"
+    aria-label="Progression du didacticiel"
+    aria-valuemin="0"
+    [attr.aria-valuemax]="session.totalObjectiveCount"
+    [attr.aria-valuenow]="session.completedObjectiveCount()"
+    [attr.aria-valuetext]="session.completedObjectiveCount() + ' objectifs accomplis sur ' + session.totalObjectiveCount"
+  >
+    <span class="tutorial-checklist__progress-value" [style.width.%]="progressPercentage()"></span>
+  </div>
+
+  @if (expanded) {
+    <ul id="tutorial-checklist-objectives" class="tutorial-checklist__items">
+      @for (objective of checklistItems; track objective.id) {
+        @let completed = session.objectives()[objective.id];
+        @let current = currentObjective() === objective.id;
+        <li
+          [class.tutorial-checklist__item--completed]="completed"
+          [class.tutorial-checklist__item--current]="current"
+          [attr.aria-current]="current ? 'step' : null"
+          [attr.aria-label]="objective.label + ': ' + (completed ? 'accompli' : current ? 'en cours' : 'à faire')"
+        >
+          <span class="tutorial-checklist__box" aria-hidden="true">{{ completed ? '✓' : '' }}</span>
+          <span>{{ objective.label }}</span>
+        </li>
+      }
+    </ul>
+  }
+</section>
+

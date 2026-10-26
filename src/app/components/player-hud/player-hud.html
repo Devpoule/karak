@@ -79,6 +79,13 @@
         (powerSelected)="openPowerConsultation(player, $event)"
       />
     </aside>
+  } @else if (rightAuxiliaryTemplate) {
+    <aside
+      class="player-hud__side player-hud__side--right player-hud__side--auxiliary player-hud__side--open"
+      aria-label="Objectifs du didacticiel"
+    >
+      <ng-container [ngTemplateOutlet]="rightAuxiliaryTemplate" />
+    </aside>
   }
 
   <!-- =====================================================

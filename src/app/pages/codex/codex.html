@@ -2,11 +2,18 @@
   <div class="codex-page__atmosphere" aria-hidden="true"></div>
 
   <header class="codex-page__header">
-    <button type="button" class="codex-page__back" (click)="goBack()">
+    <button
+      type="button"
+      class="codex-page__back"
+      [class.codex-page__back--icon-only]="returnContext !== 'game'"
+      [attr.aria-label]="returnContext === 'game' ? 'Retour à la partie' : 'Retour à l’accueil'"
+      [attr.title]="returnContext === 'game' ? 'Retour à la partie' : 'Retour à l’accueil'"
+      (click)="goBack()"
+    >
       <span class="codex-page__back-icon" aria-hidden="true">←</span>
-      <span>
-          {{ returnContext === 'game' ? 'Retour à la partie' : 'Retour à l’accueil' }}
-      </span>
+      @if (returnContext === 'game') {
+        <span>Retour à la partie</span>
+      }
     </button>
 
     <div class="codex-page__brand">

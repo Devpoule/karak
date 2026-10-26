@@ -193,6 +193,33 @@
   z-index: 10;
 }
 
+.board__tile--tutorial-exit {
+  &::before {
+    position: absolute;
+    z-index: 5;
+    inset: .2rem;
+    pointer-events: none;
+    content: '';
+    border: 2px solid rgba(245, 216, 132, .92);
+    border-radius: .35rem;
+    box-shadow: 0 0 .8rem rgba(245, 216, 132, .62), inset 0 0 .7rem rgba(245, 216, 132, .18);
+  }
+}
+
+.board__tutorial-exit-label {
+  position: absolute;
+  z-index: 6;
+  right: .2rem;
+  bottom: .2rem;
+  padding: .16rem .28rem;
+  color: #271a12;
+  font: 800 .58rem / 1 var(--karak-font-display);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  background: #f5d884;
+  border-radius: .2rem;
+}
+
 .board__tile--active-player::before {
   position: absolute;
   z-index: 3;

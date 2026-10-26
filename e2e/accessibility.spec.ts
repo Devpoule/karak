@@ -17,5 +17,5 @@ test('les actions principales de l’accueil restent nommées au clavier', async
 
   expect(unnamedButtons).toBe(0);
   await expect(page.getByRole('button', { name: 'Paramètres' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Tutoriel' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Didacticiel' })).toBeVisible();
 });
