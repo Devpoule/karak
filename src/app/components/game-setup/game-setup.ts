@@ -23,7 +23,6 @@ import {
 import { SetupStep } from '../../models/game';
 import { ContextualHelpComponent } from '../contextual-help/contextual-help';
 import { PREPARATION_HELP } from '../../data/contextual-help';
-import { QuantityPipe } from '../../pipes/quantity.pipe';
 
 /**
  * Vue actuellement affichée dans le panneau principal.
@@ -38,6 +37,11 @@ import { QuantityPipe } from '../../pipes/quantity.pipe';
 type SetupView =
   | 'welcome'
   | 'setup';
+
+type GameMode =
+  | 'solo'
+  | 'friends'
+  | 'ai';
 
 /**
  * États visuels du tirage des héros.
@@ -61,7 +65,7 @@ type FirstPlayerResolutionState =
 /** Service ou composant GameSetup ; coordonne sa responsabilite de domaine ou d interface. */
 @Component({
   selector: 'app-game-setup',
-  imports: [ContextualHelpComponent, QuantityPipe],
+  imports: [ContextualHelpComponent],
   templateUrl: './game-setup.html',
   styleUrl: './game-setup.scss',
 })
@@ -166,22 +170,30 @@ export class GameSetup {
    */
   localMultiplayerOpen = false;
 
-  /** Libellé court du mode actuellement configuré. */
-  get gameModeLabel(): string {
-    if (this.aiVsAi) return 'IA contre IA';
-    if (this.localMultiplayerOpen || this.humanPlayerCount > 1) {
-      return 'Multijoueur local';
+  /** Résumé lisible de la configuration réellement envoyée au moteur. */
+  get gameSummary(): string {
+    if (this.aiVsAi) {
+      return `${this.selectedPlayerCount} aventuriers IA`;
     }
-    return 'Humain contre IA';
+
+    if (this.humanPlayerCount === 1) {
+      const aiCount = this.selectedPlayerCount - 1;
+      return `Vous + ${aiCount} ${aiCount === 1 ? 'adversaire IA' : 'adversaires IA'}`;
+    }
+
+    const aiCount = this.selectedPlayerCount - this.humanPlayerCount;
+    if (aiCount === 0) {
+      return `${this.humanPlayerCount} joueurs humains`;
+    }
+
+    return `${this.humanPlayerCount} joueurs humains + ${aiCount} ${aiCount === 1 ? 'adversaire IA' : 'adversaires IA'}`;
   }
 
-  /** Explication concise du mode sans ajouter d'étape au parcours. */
-  get gameModeDescription(): string {
-    if (this.aiVsAi) return 'Tous les aventuriers sont contrôlés automatiquement.';
-    if (this.localMultiplayerOpen || this.humanPlayerCount > 1) {
-      return 'Plusieurs personnes jouent sur cet appareil.';
-    }
-    return 'Vous jouez avec des aventuriers contrôlés par l’IA.';
+  /** Indique le mode actuellement sélectionné par l'utilisateur. */
+  isGameModeSelected(mode: GameMode): boolean {
+    if (mode === 'ai') return this.aiVsAi;
+    if (mode === 'friends') return !this.aiVsAi && this.localMultiplayerOpen;
+    return !this.aiVsAi && !this.localMultiplayerOpen && this.humanPlayerCount === 1;
   }
 
   // ==========================================================
@@ -362,43 +374,27 @@ export class GameSetup {
     }
   }
 
-  /**
-   * Affiche ou masque les options
-   * du multijoueur local.
-   *
-   * PAR DÉFAUT :
-   *
-   * J1 est humain ;
-   * J2 à J5 sont IA selon le nombre
-   * total de participants.
-   *
-   * À L'OUVERTURE :
-   *
-   * au moins J1 et J2 deviennent humains.
-   *
-   * À LA FERMETURE :
-   *
-   * la configuration revient au mode par défaut :
-   * un seul humain et tous les autres participants IA.
-   */
-  toggleLocalMultiplayer(): void {
-    this.aiVsAi = false;
-    this.localMultiplayerOpen =
-      !this.localMultiplayerOpen;
-
-    if (this.localMultiplayerOpen) {
-      this.humanPlayerCount =
-        Math.max(
-          2,
-          Math.min(
-            this.humanPlayerCount,
-            this.selectedPlayerCount,
-          ),
-        );
-
+  /** Sélectionne l'un des trois modes présentés par le configurateur. */
+  selectGameMode(mode: GameMode): void {
+    if (mode === 'ai') {
+      this.aiVsAi = true;
+      this.localMultiplayerOpen = false;
+      this.humanPlayerCount = 0;
       return;
     }
 
+    this.aiVsAi = false;
+
+    if (mode === 'friends') {
+      this.localMultiplayerOpen = true;
+      this.humanPlayerCount = Math.max(
+        2,
+        Math.min(this.humanPlayerCount || 2, this.selectedPlayerCount),
+      );
+      return;
+    }
+
+    this.localMultiplayerOpen = false;
     this.humanPlayerCount = 1;
   }
 
@@ -439,13 +435,6 @@ export class GameSetup {
     this.humanPlayerCount =
       humanPlayerCount;
     this.aiVsAi = false;
-  }
-
-  /** Active ou désactive la simulation IA contre IA. */
-  toggleAiVsAi(): void {
-    this.aiVsAi = !this.aiVsAi;
-    this.localMultiplayerOpen = false;
-    this.humanPlayerCount = this.aiVsAi ? 0 : 1;
   }
 
   /**

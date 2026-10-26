@@ -46,7 +46,7 @@ test('recette 01 : égalités répétées, relances et premier tour de quatre mo
   test.setTimeout(90_000);
   await page.goto('/');
   await page.getByRole('link', { name: 'Jouer' }).click();
-  await page.getByRole('button', { name: 'Jouer à plusieurs sur cet appareil' }).click();
+  await page.getByRole('radio', { name: /Entre amis/ }).click();
   await page.locator('.game-setup__human-count').filter({ hasText: '2' }).click();
   await page.getByRole('button', { name: 'Continuer' }).click();
   await page.getByRole('button', { name: 'Tirer les héros', exact: true }).click({ force: true });
@@ -122,7 +122,7 @@ test('recette 01 : des IA ex æquo attendent puis relancent automatiquement', as
   test.setTimeout(60_000);
   await page.goto('/');
   await page.getByRole('link', { name: 'Jouer' }).click();
-  await page.getByRole('button', { name: 'Simuler une partie IA contre IA' }).click();
+  await page.getByRole('radio', { name: /IA contre IA/ }).click();
   await page.getByRole('button', { name: 'Continuer' }).click();
   await page.getByRole('button', { name: 'Tirer les héros', exact: true }).click({ force: true });
   await expect(page.getByRole('heading', { name: 'Qui commence ?' })).toBeVisible({ timeout: 10_000 });

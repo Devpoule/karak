@@ -12,8 +12,8 @@ test('AI-010 : une partie IA contre IA enchaîne plusieurs rotations sans interv
 
   await page.goto('/play');
   await page.getByRole('button', { name: '2', exact: true }).click();
-  await page.getByRole('button', { name: 'Simuler une partie IA contre IA' }).click();
-  await expect(page.getByText('Simulation IA contre IA')).toBeVisible();
+  await page.getByRole('radio', { name: /IA contre IA/ }).click();
+  await expect(page.getByText('2 aventuriers IA')).toBeVisible();
   await page.getByRole('button', { name: 'Continuer' }).click();
 
   await expect(page.getByRole('heading', { name: 'Tirage des héros' })).toBeVisible();

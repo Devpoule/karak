@@ -5,13 +5,14 @@ test('INIT-001 affiche l’accueil puis l’écran initial de préparation', asy
   await expect(page.getByRole('link', { name: 'Jouer' })).toBeVisible();
   await page.getByRole('link', { name: 'Jouer' }).click();
   await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
-  await expect(page.getByText("Combien d'aventuriers entrent dans le donjon ?")).toBeVisible();
+  await expect(page.getByText('Prépare ton aventure dans le donjon')).toBeVisible();
+  await expect(page.getByRole('radio', { name: /Solo contre IA/ })).toHaveAttribute('aria-checked', 'true');
 });
 
 test('INIT-004 à INIT-010 configurent cinq participants, reviennent en arrière et tirent des héros uniques', async ({ page }) => {
   await page.goto('/play');
   await page.getByRole('button', { name: '5' }).click();
-  await page.getByRole('button', { name: 'Jouer à plusieurs sur cet appareil' }).click();
+  await page.getByRole('radio', { name: /Entre amis/ }).click();
   await page.locator('.game-setup__human-count', { hasText: '3' }).click();
   await expect(page.getByText(/3 joueurs humains/)).toBeVisible();
   await page.getByRole('button', { name: 'Continuer' }).click();
@@ -30,6 +31,25 @@ test('INIT-004 à INIT-010 configurent cinq participants, reviennent en arrière
   await expect(heroCards).toHaveCount(5);
   expect(new Set(await heroCards.evaluateAll((images) => images.map((image) => image.getAttribute('src')))).size).toBe(5);
   await expect(page.getByRole('heading', { name: 'Qui commence ?' })).toBeVisible({ timeout: 10_000 });
+});
+
+test('la première étape présente les trois modes et un résumé synchronisé', async ({ page }) => {
+  await page.goto('/play');
+
+  const summary = page.locator('.game-setup__party-summary');
+  await expect(summary).toContainText('Vous + 1 adversaire IA');
+
+  await page.getByRole('button', { name: '4', exact: true }).click();
+  await expect(summary).toContainText('Vous + 3 adversaires IA');
+
+  await page.getByRole('radio', { name: /Entre amis/ }).click();
+  await page.locator('.game-setup__human-count', { hasText: '3' }).click();
+  await expect(summary).toContainText('3 joueurs humains + 1 adversaire IA');
+
+  await page.getByRole('radio', { name: /IA contre IA/ }).click();
+  await expect(summary).toContainText('4 aventuriers IA');
+  await expect(page.getByRole('radio', { name: /Solo contre IA/ })).toHaveAttribute('aria-checked', 'false');
+  await expect(page.getByRole('radio', { name: /IA contre IA/ })).toHaveAttribute('aria-checked', 'true');
 });
 
 test('INIT-003 conserve une préparation initialisée lors du retour depuis le Codex', async ({ page }) => {

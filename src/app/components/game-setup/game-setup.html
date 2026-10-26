@@ -118,9 +118,9 @@
         @if (gameService.setupStep() === 'player-count') {
           <div class="game-setup__stage">
             <div class="game-setup__stage-header">
-              <h1>Nouvelle partie <app-contextual-help [help]="preparationHelp.players" /></h1>
+              <h1>Nouvelle partie</h1>
 
-              <p>Combien d'aventuriers entrent dans le donjon ?</p>
+              <p>Prépare ton aventure dans le donjon</p>
             </div>
 
             <div class="game-setup__stage-main">
@@ -135,10 +135,12 @@
                 -->
 
                 <div class="game-setup__player-counts">
+                  <h2 class="game-setup__section-label">1. Combien d'aventuriers ?</h2>
                   @for (playerCount of playerCounts; track playerCount) {
                     <button
                       type="button"
                       class="game-setup__player-count"
+                      [attr.aria-pressed]="selectedPlayerCount === playerCount"
                       [class.game-setup__player-count--selected]="
                         selectedPlayerCount === playerCount
                       "
@@ -149,32 +151,60 @@
                   }
                 </div>
 
-                <div class="game-setup__mode" role="group" aria-label="Mode de jeu">
-                  <div class="game-setup__mode-summary" aria-live="polite">
-                    <span class="game-setup__mode-label">Mode de jeu</span>
-                    <strong>{{ gameModeLabel }}</strong>
-                    <span>{{ gameModeDescription }}</span>
-                  </div>
-
+                <div class="game-setup__mode" role="radiogroup" aria-label="Mode de jeu">
+                  <h2 class="game-setup__section-label">2. Comment veux-tu jouer ?</h2>
                   <button
                     type="button"
-                    class="game-setup__local-multiplayer-toggle"
-                    [class.game-setup__local-multiplayer-toggle--active]="localMultiplayerOpen"
-                    [attr.aria-expanded]="localMultiplayerOpen"
-                    aria-controls="local-multiplayer-options"
-                    (click)="toggleLocalMultiplayer()"
+                    role="radio"
+                    class="game-setup__mode-card"
+                    [class.game-setup__mode-card--selected]="isGameModeSelected('solo')"
+                    [attr.aria-checked]="isGameModeSelected('solo')"
+                    (click)="selectGameMode('solo')"
                   >
-                    Jouer à plusieurs sur cet appareil
+                    <span class="game-setup__mode-icon" aria-hidden="true">♙</span>
+                    <span class="game-setup__mode-copy">
+                      <strong>Solo contre IA</strong>
+                      <span>Tu joues contre l'ordinateur</span>
+                    </span>
+                    <span class="game-setup__mode-indicator" aria-hidden="true">
+                      {{ isGameModeSelected('solo') ? '✓' : '' }}
+                    </span>
                   </button>
 
                   <button
                     type="button"
-                    class="game-setup__local-multiplayer-toggle"
-                    [class.game-setup__local-multiplayer-toggle--active]="aiVsAi"
-                    [attr.aria-pressed]="aiVsAi"
-                    (click)="toggleAiVsAi()"
+                    role="radio"
+                    class="game-setup__mode-card"
+                    [class.game-setup__mode-card--selected]="isGameModeSelected('friends')"
+                    [attr.aria-checked]="isGameModeSelected('friends')"
+                    (click)="selectGameMode('friends')"
                   >
-                    Simuler une partie IA contre IA
+                    <span class="game-setup__mode-icon" aria-hidden="true">♙♙</span>
+                    <span class="game-setup__mode-copy">
+                      <strong>Entre amis</strong>
+                      <span>Plusieurs joueurs sur cet appareil</span>
+                    </span>
+                    <span class="game-setup__mode-indicator" aria-hidden="true">
+                      {{ isGameModeSelected('friends') ? '✓' : '' }}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    role="radio"
+                    class="game-setup__mode-card"
+                    [class.game-setup__mode-card--selected]="isGameModeSelected('ai')"
+                    [attr.aria-checked]="isGameModeSelected('ai')"
+                    (click)="selectGameMode('ai')"
+                  >
+                    <span class="game-setup__mode-icon" aria-hidden="true">⚙</span>
+                    <span class="game-setup__mode-copy">
+                      <strong>IA contre IA</strong>
+                      <span>Regarder une partie automatique</span>
+                    </span>
+                    <span class="game-setup__mode-indicator" aria-hidden="true">
+                      {{ isGameModeSelected('ai') ? '✓' : '' }}
+                    </span>
                   </button>
                 </div>
 
@@ -186,10 +216,13 @@
                   dépasser le nombre total de participants.
                 -->
 
-                @if (localMultiplayerOpen) {
+                @if (isGameModeSelected('friends')) {
                   <div id="local-multiplayer-options" class="game-setup__local-multiplayer">
                     <span class="game-setup__local-multiplayer-label">
-                      Combien de personnes jouent ?
+                      Nombre de joueurs humains
+                    </span>
+                    <span class="game-setup__local-multiplayer-help">
+                      De 2 à {{ selectedPlayerCount }} joueurs sur cet appareil
                     </span>
 
                     <div class="game-setup__human-counts">
@@ -198,6 +231,8 @@
                           <button
                             type="button"
                             class="game-setup__human-count"
+                            [attr.aria-label]="humanCount + ' joueurs humains'"
+                            [attr.aria-pressed]="humanPlayerCount === humanCount"
                             [class.game-setup__human-count--selected]="
                               humanPlayerCount === humanCount
                             "
@@ -218,34 +253,12 @@
               de la composition de la partie.
             -->
 
-            <div class="game-setup__stage-feedback">
-              @if (aiVsAi) {
-                <p>Simulation IA contre IA</p>
-              } @else if (humanPlayerCount === 1) {
-                <p>
-                  Vous ·
-                  {{ selectedPlayerCount - 1 }}
-                  {{
-                    selectedPlayerCount - 1 === 1
-                      ? 'adversaire IA'
-                      : 'adversaires IA'
-                  }}
-                </p>
-              } @else {
-                <p>
-                  {{ humanPlayerCount | quantity: 'joueur humain' : 'joueurs humains' }}
-
-                  @if (selectedPlayerCount - humanPlayerCount > 0) {
-                    ·
-                    {{ selectedPlayerCount - humanPlayerCount }}
-                    {{
-                      selectedPlayerCount - humanPlayerCount === 1
-                        ? 'adversaire IA'
-                        : 'adversaires IA'
-                    }}
-                  }
-                </p>
-              }
+            <div class="game-setup__stage-feedback game-setup__party-summary" aria-live="polite">
+              <div class="game-setup__party-summary-title">
+                <span aria-hidden="true">⊙</span>
+                <strong>Ta partie</strong>
+              </div>
+              <p>{{ gameSummary }}</p>
             </div>
 
             <div class="game-setup__stage-action">

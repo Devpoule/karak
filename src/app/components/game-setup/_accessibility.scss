@@ -1,11 +1,7 @@
 /** Accessibilité des animations de préparation. */
 @media (prefers-reduced-motion: reduce) {
-  .game-setup__welcome,
   .game-setup__content,
   .game-setup__setup,
-  .game-setup__play,
-  .game-setup__play::before,
-  .game-setup__play::after,
   .game-setup__player-roll--awaiting,
   .game-setup__roll-trigger--active,
   .game-setup__die,
@@ -17,7 +13,4 @@
     animation: none !important;
   }
 
-  .game-setup__play {
-    transition: none !important;
-  }
 }

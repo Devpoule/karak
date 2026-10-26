@@ -24,7 +24,7 @@ test('la page de jeu affiche la préparation de partie', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Jouer' })).toBeVisible();
   await page.getByRole('link', { name: 'Jouer' }).click();
   await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
-  await expect(page.getByText("Combien d'aventuriers entrent dans le donjon ?")).toBeVisible();
+  await expect(page.getByText('Prépare ton aventure dans le donjon')).toBeVisible();
 });
 
 test('l’accueil met en avant le logo et conserve une hiérarchie typographique cohérente', async ({ page }) => {
