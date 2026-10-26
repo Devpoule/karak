@@ -27,6 +27,14 @@ export class DecisionCard {
   @Input() showActions = true;
   @Output() actionSelected = new EventEmitter<number>();
 
+  /** Nombre de colonnes de présentation, limité pour préserver la lisibilité. */
+  get actionColumns(): number {
+    if (this.actions.length <= 1) return 1;
+    if (this.actions.length <= 3) return this.actions.length;
+    if (this.actions.length === 4) return 2;
+    return 3;
+  }
+
   /** Notifie le parent de l'action choisie sans appliquer de règle métier. */
   selectAction(index: number): void {
     this.actionSelected.emit(index);

@@ -52,8 +52,8 @@
 .hero-power-card__consultation-action { display: grid; gap: .45rem; margin-top: .8rem; }
 .hero-power-card__unavailable { margin: 0; color: #d8c9b0; font-size: .78rem; line-height: 1.3; }
 .hero-power-card__actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.25rem; }
-.hero-power-card__choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin-top: 1rem; }
-.hero-power-card__choice { display: grid; gap: .35rem; justify-items: center; min-width: 0; background: rgba(28, 21, 18, .82); }
+.hero-power-card__choices { display: grid; grid-template-columns: repeat(var(--choice-columns, 1), minmax(0, 1fr)); gap: .65rem; margin-top: 1rem; }
+.hero-power-card__choice { display: grid; align-content: center; gap: .35rem; justify-items: center; min-width: 0; min-height: 5.5rem; padding: .55rem; overflow-wrap: anywhere; background: rgba(28, 21, 18, .82); text-align: center; transition: filter var(--karak-motion-fast) var(--karak-ease-standard), border-color var(--karak-motion-fast) var(--karak-ease-standard), box-shadow var(--karak-motion-fast) var(--karak-ease-standard), transform var(--karak-motion-fast) var(--karak-ease-standard); }
 .hero-power-card__choice img { width: min(100%, 120px); height: 100px; object-fit: contain; }
 .hero-power-card button { min-height: 44px; padding: .65rem .9rem; border: 1px solid rgba(245, 216, 132, .7); border-radius: 6px; color: #f4ead1; font: 700 .95rem var(--karak-font-display); cursor: pointer; }
 .hero-power-card button:focus-visible { outline: 3px solid #fff1bc; outline-offset: 3px; }
@@ -61,6 +61,9 @@
 .hero-power-card__decline { background: rgba(28, 21, 18, .8); }
 .hero-power-card__close { background: rgba(28, 21, 18, .8); }
 .hero-power-card button:hover { filter: brightness(1.16); }
+.hero-power-card__choice:hover { border-color: var(--karak-text-highlight); box-shadow: 0 0 0 2px rgba(255, 229, 183, .2); transform: translateY(-1px); }
+.hero-power-card__choice:active { transform: translateY(0); }
+.hero-power-card__choice:focus-visible { outline: 3px solid #fff1bc; outline-offset: 3px; }
 .hero-power-card button:disabled { cursor: not-allowed; filter: saturate(.25); opacity: .58; box-shadow: none; }
 
 .hero-power-card--aderyn .hero-power-card__aura { background: radial-gradient(circle, rgba(101, 198, 76, .27), transparent 58%); }
@@ -196,7 +199,8 @@
   justify-content: center;
 }
 .hero-power-card--embedded .hero-power-card__actions { display: flex; gap: .65rem; }
-.hero-power-card--embedded .hero-power-card__choices { overflow: auto; }
+.hero-power-card--embedded .hero-power-card__choices { display: grid; grid-template-columns: repeat(var(--choice-columns, 1), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); align-items: stretch; overflow: auto; }
+.hero-power-card--embedded .hero-power-card__choice { min-height: 0; height: 100%; }
 .hero-power-card--embedded .hero-power-card__actions button {
   flex: 0 0 44px;
   width: 44px;
@@ -233,8 +237,7 @@
   .hero-power-card__content { padding-left: .7rem; }
   .hero-power-card__actions { margin-top: .9rem; }
   .hero-power-card button { flex: 1 1 100%; }
-  .hero-power-card__choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .hero-power-card__choice { flex: initial !important; }
+  .hero-power-card__choices { grid-template-columns: repeat(var(--choice-columns, 1), minmax(0, 1fr)); }
   .hero-power-card__choice img { height: 76px; }
   .hero-power-card.hero-power-card--embedded { padding: .5rem; }
   .hero-power-card--embedded .hero-power-card__content { padding: .25rem; }
@@ -338,8 +341,9 @@
 
 :host(.hero-panel__power-card) .hero-power-card--inventory .hero-power-card__choices {
   flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(var(--choice-count, 1), minmax(44px, 1fr));
   gap: 3px;
   min-height: 44px;
   margin-top: 0;
@@ -348,9 +352,9 @@
 }
 
 :host(.hero-panel__power-card) .hero-power-card--inventory .hero-power-card__choices button {
-  flex: none;
   width: 100%;
-  min-height: 44px;
+  min-height: 0;
+  height: 100%;
   padding: 3px;
   font-size: .75rem;
   line-height: 1.1;

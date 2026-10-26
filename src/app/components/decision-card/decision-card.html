@@ -8,7 +8,7 @@
     <h2 id="decision-card-title">{{ title }}</h2>
     <p>{{ description }}</p>
     @if (showActions) {
-      <div class="decision-card__actions">
+      <div class="decision-card__actions" [attr.data-action-count]="actions.length" [style.--action-columns]="actionColumns">
         @for (action of actions; track action.label; let index = $index) {
           <button
             type="button"

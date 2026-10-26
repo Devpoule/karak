@@ -149,4 +149,24 @@ describe('HeroPowerCard', () => {
     cancel.click();
     expect(cardFixture.componentInstance.choiceCancelled.emit).toBeDefined();
   });
+
+  it('répartit une liste de choix et son annulation sur une grille commune', () => {
+    const cardFixture = TestBed.createComponent(HeroPowerCard);
+    cardFixture.componentRef.setInput('hero', fixture.componentInstance.hero);
+    cardFixture.componentRef.setInput('power', fixture.componentInstance.power);
+    cardFixture.componentRef.setInput('mode', 'choice');
+    cardFixture.componentRef.setInput('choices', [
+      { label: 'Choix A', image: '/a.png', alt: 'Choix A' },
+      { label: 'Choix B', image: '/b.png', alt: 'Choix B' },
+      { label: 'Choix C', image: '/c.png', alt: 'Choix C' },
+    ]);
+    cardFixture.componentRef.setInput('choiceCancelable', true);
+    cardFixture.detectChanges();
+
+    const choices = cardFixture.nativeElement.querySelector('.hero-power-card__choices') as HTMLElement;
+    expect(choices.dataset['choiceCount']).toBe('4');
+    expect(choices.style.getPropertyValue('--choice-columns')).toBe('2');
+    expect(choices.querySelectorAll('button')).toHaveLength(4);
+    expect(choices.querySelector('.hero-power-card__choice--cancel')).not.toBeNull();
+  });
 });

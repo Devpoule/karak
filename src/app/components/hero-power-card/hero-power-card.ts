@@ -79,6 +79,19 @@ export class HeroPowerCard implements AfterViewInit {
   /** Demande au parent de revalider puis de lancer l'action métier. */
   @Output() activationRequested = new EventEmitter<void>();
 
+  /** Surface interactive totale, utilisée uniquement pour la mise en page. */
+  get choiceCount(): number {
+    return this.choices.length + (this.choiceCancelable ? 1 : 0);
+  }
+
+  /** Trois colonnes maximum gardent les libellés lisibles lorsque les choix sont nombreux. */
+  get choiceColumns(): number {
+    if (this.choiceCount <= 1) return 1;
+    if (this.choiceCount <= 3) return this.choiceCount;
+    if (this.choiceCount === 4) return 2;
+    return 3;
+  }
+
   ngAfterViewInit(): void {
     if (!this.inventory || (this.mode !== 'decision' && this.mode !== 'choice')) return;
     queueMicrotask(() => this.elementRef.nativeElement.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus());

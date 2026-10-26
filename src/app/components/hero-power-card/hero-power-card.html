@@ -67,7 +67,7 @@
         </button>
       </div>
     } @else if (mode === 'choice') {
-      <div class="hero-power-card__choices" role="group" [attr.aria-label]="'Choix de ' + power.name">
+      <div class="hero-power-card__choices" role="group" [attr.aria-label]="'Choix de ' + power.name" [attr.data-choice-count]="choiceCount" [style.--choice-columns]="choiceColumns" [style.--choice-count]="choiceCount">
         @for (choice of choices; track choice.label; let index = $index) {
           <button type="button" class="hero-power-card__choice" (click)="choiceSelected.emit(index)">
             <img [src]="choice.image" [alt]="choice.alt" draggable="false" />
@@ -75,7 +75,7 @@
           </button>
         }
         @if (choiceCancelable) {
-          <button type="button" class="hero-power-card__decline" (click)="choiceCancelled.emit()">
+          <button type="button" class="hero-power-card__choice hero-power-card__choice--cancel hero-power-card__decline" (click)="choiceCancelled.emit()">
             Annuler
           </button>
         }
