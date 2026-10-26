@@ -15,7 +15,7 @@
   align-items: center;
   gap: var(--karak-space-3);
 
-  width: clamp(180px, 24vw, 360px);
+  width: max-content;
   max-width: calc(100vw - 1rem);
   min-width: 0;
   height: 52px;
@@ -133,14 +133,8 @@
 }
 
 @media (max-width: 640px) {
-  /* Exception responsive documentee : sous 640 px, la largeur devient
-     lisible et fluide au lieu de rester strictement egale au tiers du viewport. */
   .toast-container {
-    width: min(260px, calc(100vw - 4rem));
-    min-width: 0;
     max-width: calc(100vw - 1rem);
-    height: 52px;
-    min-height: 52px;
     padding-inline: .75rem;
     font-size: .9rem;
   }
@@ -148,7 +142,6 @@
 
 @media (max-width: 360px) {
   .toast-container {
-    width: min(220px, calc(100vw - 4.25rem));
     padding-inline: .55rem;
     font-size: .78rem;
   }

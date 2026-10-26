@@ -183,30 +183,30 @@
                 @for (weapon of displayedWeapons; track weapon.id + $index) {
                   <span
                     class="combat-overlay__bonus combat-overlay__bonus--weapon"
-                    [attr.aria-label]="'Bonus d’équipement : +' + (weapon.attackBonus | quantity: 'point' : 'points')"
+                    [attr.aria-label]="'Bonus d’équipement : +' + (weapon.attackBonus | quantity: 'PT' : 'PTS')"
                   >
-                    +{{ weapon.attackBonus | quantity: 'pt' : 'PTS' }}
+                    +{{ weapon.attackBonus | quantity: 'PT' : 'PTS' }}
                   </span>
                 }
                 @for (bolt of displayedMagicBonusEntries; track bolt) {
                   <span
                     class="combat-overlay__bonus combat-overlay__bonus--magic"
-                    aria-label="Bonus magique : +1 point"
+                    aria-label="Bonus magique : +1 PT"
                   >
-                    +1PT
+                    +1 PT
                   </span>
                 }
                 @if (displayedSacrificeBonus > 0) {
-                  <span class="combat-overlay__bonus combat-overlay__bonus--hero" aria-label="Bonus de sacrifice : +1 point">
-                    +1PT
+                  <span class="combat-overlay__bonus combat-overlay__bonus--hero" aria-label="Bonus de sacrifice : +1 PT">
+                    +1 PT
                   </span>
                 }
                 @if (displayedHeroBonus > 0) {
                   <span
                     class="combat-overlay__bonus combat-overlay__bonus--hero"
-                    [attr.aria-label]="'Bonus du pouvoir : +' + (displayedHeroBonus | quantity: 'point' : 'points')"
+                    [attr.aria-label]="'Bonus du pouvoir : +' + (displayedHeroBonus | quantity: 'PT' : 'PTS')"
                   >
-                    +{{ displayedHeroBonus | quantity: 'PT' : 'PTS' : '' }}
+                    +{{ displayedHeroBonus | quantity: 'PT' : 'PTS' }}
                   </span>
                 }
               </div>
@@ -220,7 +220,7 @@
             >
               <strong class="combat-overlay__score-value">{{ decision.attackPower | quantity: 'PT' : 'PTS' }}</strong>
               @if (canUseXanrosSacrifice) {
-                <span class="combat-overlay__bonus combat-overlay__bonus--hero" aria-label="Bonus du sacrifice : +1 point">
+                <span class="combat-overlay__bonus combat-overlay__bonus--hero" aria-label="Bonus du sacrifice : +1 PT">
                   +1 PT
                 </span>
               }

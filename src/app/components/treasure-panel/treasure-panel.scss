@@ -80,18 +80,31 @@
 }
 
 .treasure-panel__empty {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #fff2d6;
-  font-weight: 700;
-  text-align: center;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95);
+}
+
+.treasure-panel__empty img {
+  width: min(3rem, 80%);
+  height: 90%;
+  object-fit: contain;
+  filter: grayscale(1);
+  opacity: 0.42;
+}
+
+.treasure-panel__empty-strike {
+  position: absolute;
+  width: 72%;
+  height: 0.18rem;
+  border-radius: 999px;
+  background: #fff2d6;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.95);
+  transform: rotate(-32deg);
 }
 
 .treasure-panel__points {
@@ -100,10 +113,9 @@
   justify-content: center;
   min-width: 0;
   height: 100%;
-  transform: translateX(12%);
   overflow: hidden;
   color: #ffd45f;
-  font-size: 0.65rem;
+  font-size: 0.70rem;
   line-height: 1;
   text-align: center;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95);

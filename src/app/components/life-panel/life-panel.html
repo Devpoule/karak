@@ -4,7 +4,7 @@
   [attr.data-player-index]="playerIndex"
   [class.life-panel--damage]="feedback === 'damage'"
   [class.life-panel--heal]="feedback === 'heal'"
-  [attr.aria-label]="(lives | quantity: 'point de vie' : 'points de vie') + ' sur 5'"
+  [attr.aria-label]="lives + ' PV sur 5'"
 >
   <img
     class="life-panel__board"

@@ -24,26 +24,42 @@ export interface ToastMessage {
   readonly target?: ToastTarget;
 }
 
-export type EquipmentAgreement = 'masculine-singular' | 'feminine-singular' | 'masculine-plural';
+interface EquipmentToastLabel {
+  readonly quantity: number;
+  readonly singular: string;
+  readonly plural: string;
+}
+
+const EQUIPMENT_TOAST_LABELS: Readonly<Record<string, EquipmentToastLabel>> = {
+  daggers: { quantity: 2, singular: 'Poignard', plural: 'Poignards' },
+  sword: { quantity: 1, singular: 'Épée', plural: 'Épées' },
+  axe: { quantity: 1, singular: 'Hache', plural: 'Haches' },
+  key: { quantity: 1, singular: 'Clé', plural: 'Clés' },
+  'fire-sword': { quantity: 1, singular: 'Épée de feu', plural: 'Épées de feu' },
+  heart: { quantity: 1, singular: 'Sort de soin', plural: 'Sorts de soin' },
+};
+
+function formatGain(label: EquipmentToastLabel): string {
+  const name = label.quantity === 1 ? label.singular : label.plural;
+  return `+${label.quantity} ${name}`;
+}
 
 /** Libellés courts et stables utilisés par les notifications de partie. */
 export const TOAST_LABELS = {
   damage: (amount = 1): string => `−${amount} PV`,
   healing: (amount = 1): string => `+${amount} PV`,
-  key: (): string => 'Clé obtenue',
+  lifeMax: (): string => 'PV au max',
+  key: (): string => formatGain(EQUIPMENT_TOAST_LABELS['key']),
   victory: (): string => 'Victoire !',
   defeat: (): string => '−1 PV',
   draw: (): string => 'Égalité',
-  cursed: (): string => 'Maudit !',
-  treasure: (): string => 'Trésor obtenu',
-  equipment: (name: string, agreement: EquipmentAgreement = 'masculine-singular'): string => {
-    const participle = agreement === 'masculine-plural'
-      ? 'obtenus'
-      : agreement === 'feminine-singular'
-        ? 'obtenue'
-        : 'obtenu';
-    return `${name} ${participle}`;
-  },
+  cursed: (): string => 'Malédiction',
+  treasure: (quantity = 1): string => formatGain({ quantity, singular: 'Trésor', plural: 'Trésors' }),
+  equipment: (id: string): string => formatGain(EQUIPMENT_TOAST_LABELS[id] ?? {
+    quantity: 1,
+    singular: 'Équipement',
+    plural: 'Équipements',
+  }),
 } as const;
 
 /** File unique de notifications informatives, non bloquantes. */

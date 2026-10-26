@@ -59,6 +59,16 @@ describe('TreasurePanel', () => {
     fixture.componentInstance.player = playerService.players[0];
     fixture.detectChanges();
 
+    const content = fixture.nativeElement.querySelector('.treasure-panel__content') as HTMLElement;
+    expect([...content.children].map(child => child.className)).toEqual([
+      'treasure-panel__points',
+      'treasure-panel__treasures',
+    ]);
+    const emptyTreasure = fixture.nativeElement.querySelector('.treasure-panel__empty') as HTMLElement;
+    expect(emptyTreasure.getAttribute('role')).toBe('img');
+    expect(emptyTreasure.getAttribute('aria-label')).toBe('Aucun trésor');
+    expect(emptyTreasure.querySelector('img')?.getAttribute('src')).toBe('/assets/tokens/treasure-transparent.png');
+    expect(emptyTreasure.querySelector('.treasure-panel__empty-strike')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.treasure-panel__points')?.textContent).toContain('0 PT');
 
     playerService.addTreasure(playerService.players[0], 'dragon-ruby');

@@ -2,7 +2,6 @@ import { Component, DoCheck, Input, OnDestroy } from '@angular/core';
 import { Player } from '../../models/player';
 import { PlayerService } from '../../services/player.service';
 import { CombatService } from '../../services/combat.service';
-import { QuantityPipe } from '../../pipes/quantity.pipe';
 
 const MAX_LIVES = 5;
 /** Contrat de donnees LifeSlot utilise par le domaine ou l interface. */
@@ -10,7 +9,6 @@ interface LifeSlot { index: number; active: boolean; }
 
 /** Service ou composant LifePanel ; coordonne sa responsabilite de domaine ou d interface. */
 @Component({
-  imports: [QuantityPipe],
   selector: 'app-life-panel',
   styleUrl: './life-panel.scss',
   templateUrl: './life-panel.html',

@@ -17,7 +17,7 @@ import { GameService } from '../../services/game.service';
 import { getHeroDefinition } from '../../data/hero-definitions';
 import { Player } from '../../models/player';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
-import { ToastService } from '../../services/toast.service';
+import { TOAST_LABELS, ToastService } from '../../services/toast.service';
 
 /**
  * Page principale du jeu.
@@ -114,7 +114,7 @@ export class Game implements OnInit, OnDestroy {
     queueMicrotask(() => {
       if (this.destroyed || this.gameService.activePlayerIndex() !== index) return;
       const recovery = player.recoveryState === 'resting';
-      if (recovery) this.toastService?.show('+1 PV', 'success', { playerIndex: index, anchor: 'life' }, {
+      if (recovery) this.toastService?.show(TOAST_LABELS.healing(), 'success', { playerIndex: index, anchor: 'life' }, {
         eventType: 'healing', heroId: player.heroId, icon: '♥', duration: 2800,
       });
     });

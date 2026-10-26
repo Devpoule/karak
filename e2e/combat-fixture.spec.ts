@@ -315,7 +315,7 @@ async function runCombatScenario(
       return Math.abs(matrix.m11 - 1) < .02 && Math.abs(matrix.m33 - 1) < .02;
     })).toBe(true);
     await magicAction.click({ force: true });
-    await expect(page.locator('.combat-overlay__bonus--magic')).toHaveText('+1PT');
+    await expect(page.locator('.combat-overlay__bonus--magic')).toHaveText('+1 PT');
   }
   await page.screenshot({ path: `playwright-report/${rollFile}`, fullPage: true });
 

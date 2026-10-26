@@ -68,21 +68,21 @@ describe('LifePanel feedback de perte de vie', () => {
     expect(fixture.componentInstance.feedback).toBeNull();
   });
 
-  it('accorde le libellé des points de vie pour zéro, un et plusieurs points', () => {
+  it('expose les points de vie sous le libellé court PV', () => {
     const { fixture, player, playerService } = createPanel();
     const panel = fixture.nativeElement.querySelector('.life-panel') as HTMLElement;
 
-    expect(panel.getAttribute('aria-label')).toBe('5 points de vie sur 5');
+    expect(panel.getAttribute('aria-label')).toBe('5 PV sur 5');
 
     player.lives = 1;
     playerService.livesRevision.update(value => value + 1);
     fixture.detectChanges();
-    expect(panel.getAttribute('aria-label')).toBe('1 point de vie sur 5');
+    expect(panel.getAttribute('aria-label')).toBe('1 PV sur 5');
 
     player.lives = 0;
     playerService.livesRevision.update(value => value + 1);
     fixture.detectChanges();
-    expect(panel.getAttribute('aria-label')).toBe('0 point de vie sur 5');
+    expect(panel.getAttribute('aria-label')).toBe('0 PV sur 5');
   });
 
   it('anime le cœur réellement restauré et affiche +1 PV', () => {

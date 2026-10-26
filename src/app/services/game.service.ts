@@ -16,7 +16,7 @@ import { TokenBagService } from './token-bag.service';
 import { TurnService } from './turn.service';
 import { CombatService } from './combat.service';
 import type { CombatResult } from './combat.service';
-import { EquipmentAgreement, TOAST_LABELS, ToastAnchor, ToastEventType, ToastService, ToastTarget, ToastTone } from './toast.service';
+import { TOAST_LABELS, ToastAnchor, ToastEventType, ToastService, ToastTarget, ToastTone } from './toast.service';
 import { getHeroDefinition } from '../data/hero-definitions';
 import { GameSavePayloadV2, SaveEnvelopeV2 } from '../models/save';
 import { SaveService } from './save.service';
@@ -658,21 +658,9 @@ export class GameService {
     );
   }
 
-  /** Accorde le libellé d'obtention avec le nom de l'équipement affiché. */
+  /** Construit le libellé court d'obtention depuis l'identifiant métier. */
   private getEquipmentObtainedLabel(equipment: Equipment): string {
-    if (equipment.id === 'key') return TOAST_LABELS.key();
-
-    return TOAST_LABELS.equipment(
-      equipment.name.toLocaleLowerCase('fr-FR'),
-      this.getEquipmentAgreement(equipment),
-    );
-  }
-
-  /** Décrit l'accord grammatical des équipements du catalogue de base. */
-  private getEquipmentAgreement(equipment: Equipment): EquipmentAgreement {
-    if (equipment.name.trim().toLocaleLowerCase('fr-FR').endsWith('s')) return 'masculine-plural';
-    if (equipment.id === 'sword' || equipment.id === 'axe') return 'feminine-singular';
-    return 'masculine-singular';
+    return equipment.id === 'key' ? TOAST_LABELS.key() : TOAST_LABELS.equipment(equipment.id);
   }
 
   /**

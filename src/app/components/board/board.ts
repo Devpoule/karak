@@ -711,7 +711,7 @@ export class Board {
       return 'Choisissez un emplacement à remplacer ou laissez cet équipement sur la tuile.';
     }
     if (this.hasPendingCurse) return 'Choisissez le héros qui recevra la malédiction.';
-    return `Récompense de combat : ${this.pendingTreasureRewardPoints} point${this.pendingTreasureRewardPoints > 1 ? 's' : ''}.`;
+    return `Récompense : +${this.pendingTreasureRewardPoints} ${this.pendingTreasureRewardPoints === 1 ? 'PT' : 'PTS'}`;
   }
 
   /** Construit les actions à partir des choix déjà exposés par le domaine. */

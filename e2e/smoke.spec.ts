@@ -409,6 +409,10 @@ test('les fiches de héros sont accessibles depuis le plateau', async ({ page })
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   await expect(page.getByRole('button', { name: /^Consulter pouvoir 1 :/ }).first()).toBeVisible();
+  const emptyTreasure = page.locator('.player-sidebar--left .treasure-panel__empty');
+  await expect(emptyTreasure).toHaveAttribute('aria-label', 'Aucun trésor');
+  await expect(emptyTreasure.locator('img')).toBeVisible();
+  await expect(emptyTreasure.locator('.treasure-panel__empty-strike')).toBeVisible();
 });
 
 test('quitter la préparation réinitialise la partie sans confirmation', async ({ page }) => {

@@ -5,13 +5,21 @@ describe('ToastService', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it('accorde les libellés d équipements au genre et au nombre', () => {
-    expect(TOAST_LABELS.equipment('poignards', 'masculine-plural')).toBe('poignards obtenus');
-    expect(TOAST_LABELS.equipment('épée', 'feminine-singular')).toBe('épée obtenue');
-    expect(TOAST_LABELS.equipment('hache', 'feminine-singular')).toBe('hache obtenue');
-    expect(TOAST_LABELS.equipment('tir magique')).toBe('tir magique obtenu');
-    expect(TOAST_LABELS.equipment('portail de guérison')).toBe('portail de guérison obtenu');
-    expect(TOAST_LABELS.key()).toBe('Clé obtenue');
+  it('centralise les notifications d équipements avec leur quantité exacte', () => {
+    expect(TOAST_LABELS.equipment('daggers')).toBe('+2 Poignards');
+    expect(TOAST_LABELS.equipment('sword')).toBe('+1 Épée');
+    expect(TOAST_LABELS.equipment('axe')).toBe('+1 Hache');
+    expect(TOAST_LABELS.equipment('key')).toBe('+1 Clé');
+    expect(TOAST_LABELS.equipment('fire-sword')).toBe('+1 Épée de feu');
+    expect(TOAST_LABELS.equipment('heart')).toBe('+1 Sort de soin');
+    expect(TOAST_LABELS.key()).toBe('+1 Clé');
+    expect(TOAST_LABELS.treasure()).toBe('+1 Trésor');
+    expect(TOAST_LABELS.treasure(2)).toBe('+2 Trésors');
+    expect(TOAST_LABELS.cursed()).toBe('Malédiction');
+    expect(TOAST_LABELS.lifeMax()).toBe('PV au max');
+    expect(TOAST_LABELS.damage(2)).toBe('−2 PV');
+    expect(TOAST_LABELS.healing()).toBe('+1 PV');
+    expect(TOAST_LABELS.defeat()).toBe('−1 PV');
   });
 
   it('prolonge la durée d’affichage de moitié avant le fondu de sortie', () => {

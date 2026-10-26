@@ -5,12 +5,12 @@ describe('QuantityPipe', () => {
   const pipe = new QuantityPipe();
 
   it.each([
-    [0, '0 PT'],
-    [1, '1 PT'],
-    [2, '2 PTS'],
-    [7.5, '7,5 PTS'],
+    [0, '0 POINT'],
+    [1, '1 POINT'],
+    [2, '2 POINTS'],
+    [7.5, '7,5 POINTS'],
   ])('formate %s avec la forme attendue', (value, expected) => {
-    expect(pipe.transform(value, 'PT', 'PTS')).toBe(expected);
+    expect(pipe.transform(value, 'POINT', 'POINTS')).toBe(expected);
   });
 
   it('gère explicitement un pluriel irrégulier', () => {
@@ -23,7 +23,7 @@ describe('QuantityPipe', () => {
   });
 
   it('permet de conserver un séparateur compact pour les bonus existants', () => {
-    expect(pipe.transform(1, 'PT', 'PTS', '')).toBe('1PT');
-    expect(pipe.transform(2, 'PT', 'PTS', '')).toBe('2PTS');
+    expect(pipe.transform(1, 'POINT', 'POINTS', '')).toBe('1POINT');
+    expect(pipe.transform(2, 'POINT', 'POINTS', '')).toBe('2POINTS');
   });
 });

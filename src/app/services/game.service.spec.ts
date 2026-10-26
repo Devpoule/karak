@@ -1359,7 +1359,7 @@ describe('GameService récupération automatique des équipements humains', () =
 
     expect(player.inventory.weapons[0]?.id).toBe('daggers');
     expect(gameService.pendingReward()).toBeNull();
-    expect(toastService.current()?.text).toBe('poignards obtenus');
+    expect(toastService.current()?.text).toBe('+2 Poignards');
   });
 
   it('stocke un exemplaire de puissance équivalente lorsqu’une case reste libre', () => {
@@ -1468,7 +1468,7 @@ describe('GameService récupération automatique des équipements humains', () =
     expect(gameService.pendingReward()).toBeNull();
     expect(tile.tokenId).toBeUndefined();
     expect(gameService.getGroundEquipment(tile).map(item => item.id)).toEqual(['daggers']);
-    expect(toastService.current()?.text).toBe('épée obtenue');
+    expect(toastService.current()?.text).toBe('+1 Épée');
   });
   it('permet de remplacer un sort lorsque les trois emplacements sont occupés', () => {
     vi.useFakeTimers();
