@@ -47,7 +47,7 @@
         <div class="tutorial-panel__body" aria-live="polite">
           <p id="tutorial-panel-summary" class="tutorial-panel__summary">{{ currentStep.summary }}</p>
           <ul>
-            @for (tip of currentStep.tips; track tip) {
+            @for (tip of currentStep.tips; track $index) {
               <li>{{ tip }}</li>
             }
           </ul>
