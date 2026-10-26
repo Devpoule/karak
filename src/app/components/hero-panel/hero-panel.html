@@ -33,14 +33,14 @@
     >
       <div
         class="hero-panel__card-stage"
-        [class.hero-panel__card-stage--flipped]="substitutionFlipped() || powerDecision !== null"
+        [class.hero-panel__card-stage--flipped]="isPowerCardFlipped"
       >
-        <div class="hero-panel__card-face hero-panel__card-face--front" [attr.aria-hidden]="substitutionFlipped() || powerDecision ? 'true' : null">
+        <div class="hero-panel__card-face hero-panel__card-face--front" [attr.aria-hidden]="isPowerCardFlipped ? 'true' : null">
           <button
             class="hero-panel__portrait-button"
             type="button"
-            [disabled]="substitutionFlipped() || powerDecision !== null"
-            [attr.tabindex]="substitutionFlipped() || powerDecision ? -1 : null"
+            [disabled]="isPowerCardFlipped"
+            [attr.tabindex]="isPowerCardFlipped ? -1 : null"
             [attr.aria-label]="gameService.healingPortalSelection() ? 'Sélectionner ' + hero.name + ' comme cible du portail' : 'Afficher les informations de ' + hero.name"
             (click)="openBiography()"
           >
@@ -49,7 +49,7 @@
         </div>
         <div
           class="hero-panel__card-face hero-panel__card-face--back"
-          [attr.aria-hidden]="substitutionFlipped() || powerDecision ? null : 'true'"
+          [attr.aria-hidden]="isPowerCardFlipped ? null : 'true'"
           aria-live="polite"
         >
           @if (powerDecision; as decision) {
@@ -68,6 +68,19 @@
               (declined)="chooseSneak('combat')"
               (choiceSelected)="choosePowerOption($event)"
               (choiceCancelled)="cancelPowerChoice()"
+            />
+          } @else if (selectedPowerConsultation; as power) {
+            <app-hero-power-card
+              class="hero-panel__power-card"
+              [inventory]="true"
+              mode="consultation"
+              [hero]="hero"
+              [power]="power"
+              [showConsultationAction]="true"
+              [canActivate]="gameService.canUseXanrosSubstitution"
+              [activationUnavailableReason]="gameService.xanrosSubstitutionUnavailableReason ?? ''"
+              activateLabel="Utiliser"
+              (activationRequested)="activateSelectedPower()"
             />
           } @else if (substitutionPower; as power) {
             <app-hero-power-card

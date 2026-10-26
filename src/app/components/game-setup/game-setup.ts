@@ -166,6 +166,24 @@ export class GameSetup {
    */
   localMultiplayerOpen = false;
 
+  /** Libellé court du mode actuellement configuré. */
+  get gameModeLabel(): string {
+    if (this.aiVsAi) return 'IA contre IA';
+    if (this.localMultiplayerOpen || this.humanPlayerCount > 1) {
+      return 'Multijoueur local';
+    }
+    return 'Humain contre IA';
+  }
+
+  /** Explication concise du mode sans ajouter d'étape au parcours. */
+  get gameModeDescription(): string {
+    if (this.aiVsAi) return 'Tous les aventuriers sont contrôlés automatiquement.';
+    if (this.localMultiplayerOpen || this.humanPlayerCount > 1) {
+      return 'Plusieurs personnes jouent sur cet appareil.';
+    }
+    return 'Vous jouez avec des aventuriers contrôlés par l’IA.';
+  }
+
   // ==========================================================
   // TIRAGE DES HÉROS
   // ==========================================================
@@ -442,32 +460,39 @@ export class GameSetup {
    * le contrôleur "ai" à toutes les places restantes.
    */
   confirmPlayerCount(): void {
-    this.gameService.initializePlayers(
+    const initialized = this.gameService.initializePlayers(
       this.selectedPlayerCount,
       this.aiVsAi ? 0 : this.humanPlayerCount,
     );
+
+    if (initialized) {
+      this.heroDrawState.set(
+        this.gameService.players.every(player => player.heroId)
+          ? 'revealed'
+          : 'hidden',
+      );
+      this.resetFirstPlayerVisuals();
+    }
   }
 
 /** Gere goToSetupStep et applique les gardes necessaires avant mutation. */
   goToSetupStep(step: 'players' | 'heroes'): void {
     const target: SetupStep = step === 'players' ? 'player-count' : 'hero-draw';
     this.gameService.goBackToSetupStep(target);
-    this.heroDrawState.set(step === 'heroes' ? 'revealed' : 'hidden');
-    this.displayedDice.set({});
-    this.revealedPlayerIndexes.set([]);
-    this.rollingPlayerIndex.set(null);
-    this.firstPlayerResolutionState.set('waiting');
-    this.isFirstPlayerTieBreakerRound.set(false);
-    this.tieTransitionRolls.set({});
+    this.heroDrawState.set(
+      this.gameService.players.every(player => player.heroId)
+        ? 'revealed'
+        : 'hidden',
+    );
+    this.resetFirstPlayerVisuals();
     this.aiRollScheduled = false;
   }
 
 /** Gere continueAfterHeroDraw et applique les gardes necessaires avant mutation. */
   continueAfterHeroDraw(): void {
     this.gameService.continueAfterHeroDraw();
-    this.firstPlayerResolutionState.set('waiting');
-    this.isFirstPlayerTieBreakerRound.set(false);
-    this.tieTransitionRolls.set({});
+    this.heroDrawState.set('revealed');
+    this.restoreFirstPlayerVisuals();
   }
 
   get canNavigatePrevious(): boolean { return this.gameService.setupStep() !== 'player-count'; }
@@ -488,7 +513,35 @@ export class GameSetup {
   navigateNext(): void {
     if (!this.canNavigateNext) return;
     if (this.gameService.setupStep() === 'hero-draw') this.continueAfterHeroDraw();
-    else this.gameService.goToNextSetupStep();
+    else this.confirmPlayerCount();
+  }
+
+  /** Réinitialise uniquement la projection visuelle des lancers. */
+  private resetFirstPlayerVisuals(): void {
+    this.displayedDice.set({});
+    this.revealedPlayerIndexes.set([]);
+    this.rollingPlayerIndex.set(null);
+    this.firstPlayerResolutionState.set('waiting');
+    this.isFirstPlayerTieBreakerRound.set(false);
+    this.tieTransitionRolls.set({});
+  }
+
+  /** Reconstruit l'affichage depuis les résultats métier conservés. */
+  private restoreFirstPlayerVisuals(): void {
+    const rolls = this.gameService.firstPlayerRolls();
+    this.displayedDice.set(
+      Object.fromEntries(rolls.map(roll => [roll.playerIndex, [roll.die1, roll.die2]])),
+    );
+    this.revealedPlayerIndexes.set(rolls.map(roll => roll.playerIndex));
+    this.rollingPlayerIndex.set(null);
+    this.isFirstPlayerTieBreakerRound.set(
+      this.gameService.firstPlayerContenders().length < this.gameService.players.length,
+    );
+    this.firstPlayerResolutionState.set(
+      this.gameService.firstPlayerIndex() === null ? 'waiting' : 'winner',
+    );
+    this.tieTransitionRolls.set({});
+    this.aiRollScheduled = false;
   }
 
   // ==========================================================

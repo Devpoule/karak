@@ -149,32 +149,34 @@
                   }
                 </div>
 
-                <!--
-                  Option secondaire.
+                <div class="game-setup__mode" role="group" aria-label="Mode de jeu">
+                  <div class="game-setup__mode-summary" aria-live="polite">
+                    <span class="game-setup__mode-label">Mode de jeu</span>
+                    <strong>{{ gameModeLabel }}</strong>
+                    <span>{{ gameModeDescription }}</span>
+                  </div>
 
-                  Le parcours solo contre l'IA ne nécessite
-                  aucune configuration supplémentaire.
-                -->
+                  <button
+                    type="button"
+                    class="game-setup__local-multiplayer-toggle"
+                    [class.game-setup__local-multiplayer-toggle--active]="localMultiplayerOpen"
+                    [attr.aria-expanded]="localMultiplayerOpen"
+                    aria-controls="local-multiplayer-options"
+                    (click)="toggleLocalMultiplayer()"
+                  >
+                    Jouer à plusieurs sur cet appareil
+                  </button>
 
-                <button
-                  type="button"
-                  class="game-setup__local-multiplayer-toggle"
-                  [class.game-setup__local-multiplayer-toggle--active]="localMultiplayerOpen"
-                  [attr.aria-expanded]="localMultiplayerOpen"
-                  (click)="toggleLocalMultiplayer()"
-                >
-                  Jouer à plusieurs sur cet appareil
-                </button>
-
-                <button
-                  type="button"
-                  class="game-setup__local-multiplayer-toggle"
-                  [class.game-setup__local-multiplayer-toggle--active]="aiVsAi"
-                  [attr.aria-pressed]="aiVsAi"
-                  (click)="toggleAiVsAi()"
-                >
-                  Simuler une partie IA contre IA
-                </button>
+                  <button
+                    type="button"
+                    class="game-setup__local-multiplayer-toggle"
+                    [class.game-setup__local-multiplayer-toggle--active]="aiVsAi"
+                    [attr.aria-pressed]="aiVsAi"
+                    (click)="toggleAiVsAi()"
+                  >
+                    Simuler une partie IA contre IA
+                  </button>
+                </div>
 
                 <!--
                   Cette zone n'apparaît que lorsque
@@ -185,7 +187,7 @@
                 -->
 
                 @if (localMultiplayerOpen) {
-                  <div class="game-setup__local-multiplayer">
+                  <div id="local-multiplayer-options" class="game-setup__local-multiplayer">
                     <span class="game-setup__local-multiplayer-label">
                       Combien de personnes jouent ?
                     </span>
@@ -269,7 +271,7 @@
 
               @if (heroDrawState() === 'hidden') {
                 <p>
-                  Découvrez les héros qui accompagneront les aventuriers dans le donjon.
+                  Tirez les cartes pour révéler les héros qui accompagneront les aventuriers.
                 </p>
               }
 
@@ -304,7 +306,7 @@
 
             <div class="game-setup__stage-feedback">
               @if (heroDrawState() === 'hidden') {
-                <p>Lancez le tirage pour révéler les héros.</p>
+                <p>Une seule action suffit : tirez les héros.</p>
               }
             </div>
 
@@ -312,12 +314,13 @@
               @if (heroDrawState() === 'hidden') {
                 <button
                   type="button"
-                  class="game-setup__icon-action game-setup__icon-action--attention"
+                  class="game-setup__continue game-setup__draw-action"
                   aria-label="Tirer les héros"
                   title="Tirer les héros"
                   (click)="drawHeroes()"
                 >
-                  <span aria-hidden="true">⟳</span>
+                  <span class="game-setup__draw-icon" aria-hidden="true">⟳</span>
+                  <span>Tirer les héros</span>
                 </button>
               }
 
@@ -360,7 +363,10 @@
         @if (gameService.setupStep() === 'first-player-roll') {
           <div class="game-setup__stage game-setup__stage--player-cards">
             <div class="game-setup__stage-header">
-              <h1>Qui commence ? <app-contextual-help [help]="preparationHelp.firstPlayer" /></h1>
+              <h1>
+                {{ gameService.firstPlayerIndex() === null ? 'Qui commence ?' : 'Prêts pour l’aventure ?' }}
+                <app-contextual-help [help]="preparationHelp.firstPlayer" />
+              </h1>
 
               @if (firstPlayerResolutionState() === 'tie-transition') {
                 <p role="status">

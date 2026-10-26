@@ -88,14 +88,16 @@ test('recette 01 : égalités répétées, relances et premier tour de quatre mo
   await page.getByRole('button', { name: 'Relancer les dés du joueur 2' }).click({ force: true });
   await expectDice(page, 1, 6, 6);
   await expect(page.getByText("Joueur 2 commence l'aventure !")).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Prêts pour l’aventure ?' })).toBeVisible();
   await expect(page.getByRole('button', { name: /Relancer les dés du joueur/ })).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Entrer dans le donjon' }).click();
   await expect(page.locator('app-board')).toBeVisible();
   await expect(page.locator('.board__hero--active')).toHaveCount(1);
   await expect(page.locator('.player-hud__player-control--active')).toContainText('J2');
-  await expect(page.locator('app-movement-counter .movement-counter__point')).toHaveCount(4);
-  await expect(page.locator('app-movement-counter .movement-counter__point--consumed')).toHaveCount(0);
+  const activeMovementCounter = page.locator('.player-hud__side--active app-movement-counter');
+  await expect(activeMovementCounter.locator('.movement-counter__point')).toHaveCount(4);
+  await expect(activeMovementCounter.locator('.movement-counter__point--consumed')).toHaveCount(0);
 });
 
 test('recette 01 : une IA participe automatiquement après le joueur humain', async ({ page }) => {

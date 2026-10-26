@@ -240,6 +240,26 @@ describe('HeroPanel décisions de pouvoir', () => {
     expect(confirm).toHaveBeenCalledWith(players.players[1]);
   });
 
+  it('présente l’activation manuelle de Substitution sur le verso de l’inventaire', () => {
+    const { fixture, player, players, game } = setup('xanros');
+    players.players[1].heroId = 'aderyn';
+    player.position = { x: 0, y: 0 };
+    players.players[1].position = { x: 1, y: 0 };
+    const open = vi.spyOn(game, 'openXanrosSubstitution').mockReturnValue(true);
+
+    fixture.componentRef.setInput('selectedPowerId', 'substitution');
+    fixture.detectChanges();
+
+    const stage = fixture.nativeElement.querySelector('.hero-panel__card-stage') as HTMLElement;
+    expect(stage.classList.contains('hero-panel__card-stage--flipped')).toBe(true);
+    expect(stage.querySelector('.hero-power-card--consultation')).not.toBeNull();
+    const activate = stage.querySelector('.hero-power-card__activate') as HTMLButtonElement;
+    expect(activate.disabled).toBe(false);
+
+    activate.click();
+    expect(open).toHaveBeenCalledOnce();
+  });
+
   it('délègue la fontaine de Réincarnation sélectionnée', () => {
     const { fixture, player, game } = setup('horan');
     const fountain = { definitionId: 'healing-corner', x: 2, y: 0, rotation: 0 };

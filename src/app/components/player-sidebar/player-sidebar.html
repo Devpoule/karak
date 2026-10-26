@@ -40,7 +40,7 @@
   }
 
   @if (showPlayer) {
-    <app-hero-panel [player]="player" [playerIndex]="playerIndex" [side]="side" [isActive]="isActive" (portraitClicked)="toggleBiography()" (curseClicked)="openCurseDialog()" />
+    <app-hero-panel [player]="player" [playerIndex]="playerIndex" [side]="side" [isActive]="isActive" [selectedPowerId]="selectedPowerId" (portraitClicked)="toggleBiography()" (curseClicked)="openCurseDialog()" />
     <app-life-panel [player]="player" [playerIndex]="playerIndex" />
   }
 

@@ -116,8 +116,8 @@ test('Substitution échange les héros sans résoudre automatiquement la tuile d
   });
   const card = page.locator('.hero-panel__card-stage--flipped app-hero-power-card');
   await expect(card).toBeVisible();
-  await expect(card.locator('.hero-power-card__choice')).toHaveCount(1);
-  await card.locator('.hero-power-card__choice').click();
+  await expect(card.locator('.hero-power-card__choice')).toHaveCount(2);
+  await card.locator('.hero-power-card__choice').first().click();
 
   await expect(page.locator('.board__power-announcement')).toHaveCount(0);
   await expect(page.locator('.hero-panel__card-stage--flipped')).toHaveCount(1);
@@ -186,7 +186,7 @@ test('Substitution propose une liste défilante accessible au clavier sur un pet
 
   const card = page.locator('.hero-panel__card-stage--flipped app-hero-power-card');
   const choices = card.locator('.hero-power-card__choice');
-  await expect(choices).toHaveCount(4);
+  await expect(choices).toHaveCount(5);
   await expect(choices.first()).toBeFocused();
   const geometry = await card.locator('.hero-power-card__choices').evaluate(element => {
     const bounds = element.getBoundingClientRect();
@@ -201,7 +201,7 @@ test('Substitution propose une liste défilante accessible au clavier sur un pet
   expect(geometry.bottom).toBeLessThanOrEqual(360);
   expect(geometry.width).toBeGreaterThanOrEqual(44);
   expect(geometry.height).toBeGreaterThanOrEqual(44);
-  await choices.last().focus();
+  await card.locator('button.hero-power-card__choice:not(.hero-power-card__choice--cancel)').last().focus();
   await page.keyboard.press('Enter');
   await expect.poll(() => page.evaluate(() => {
     const root = document.querySelector('app-root')!;
@@ -211,7 +211,7 @@ test('Substitution propose une liste défilante accessible au clavier sur un pet
   })).toEqual({ position: { x: 4, y: 0 }, moves: 4 });
 });
 
-test('Xanros peut activer Substitution depuis sa fiche descriptive', async ({ page }) => {
+test('Xanros active Substitution depuis le verso de sa carte d’inventaire', async ({ page }) => {
   await openBoard(page);
 
   await page.evaluate(() => {
@@ -251,13 +251,13 @@ test('Xanros peut activer Substitution depuis sa fiche descriptive', async ({ pa
   await expect(badge).toHaveClass(/player-sidebar__power-badge--usable/);
   await badge.click();
 
-  const consultation = page.locator('.player-hud__power-card-host');
-  await expect(consultation).toBeVisible();
-  await expect(consultation.getByRole('button', { name: 'Utiliser' })).toBeEnabled();
-  await consultation.getByRole('button', { name: 'Utiliser' }).click();
-
-  await expect(consultation).toHaveCount(0);
-  await expect(page.locator('.hero-panel__card-stage--flipped app-hero-power-card')).toBeVisible();
+  await expect(page.locator('.player-hud__power-card-host')).toHaveCount(0);
+  const card = page.locator('.hero-panel__card-stage--flipped app-hero-power-card');
+  await expect(card).toBeVisible();
+  await expect(card.locator('.hero-power-card__choice')).toHaveCount(2);
+  await card.locator('.hero-power-card__choice').first().click();
+  await expect(page.locator('.player-hud__power-card-host')).toHaveCount(0);
+  await expect(page.locator('.hero-panel__card-stage--flipped')).toHaveCount(0);
 });
 
 test('Xanros poursuit la résolution après un lancer à égalité contre une force 8', async ({ page }) => {

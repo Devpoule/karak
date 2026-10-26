@@ -85,6 +85,9 @@ export class GameHeader {
 /** Gere leaveGame et applique les gardes necessaires avant mutation. */
   leaveGame(): void {
     this.showLeaveConfirmation = false;
+    // Quitter confirme une nouvelle partie vierge : le prochain clic sur
+    // "Jouer" doit ouvrir la préparation, jamais restaurer cette aventure.
+    this.gameService.initialize();
     void this.router.navigateByUrl('/');
   }
 

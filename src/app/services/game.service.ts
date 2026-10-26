@@ -768,11 +768,23 @@ export class GameService {
    * J4 IA
    * J5 IA
    */
-  initializePlayers(playerCount: number, humanPlayerCount = 1): void {
-    if (this.phase() !== 'setup') return;
-    if (this.setupStep() !== 'player-count') return;
-    this.playerService.initialize(playerCount, humanPlayerCount);
+  initializePlayers(playerCount: number, humanPlayerCount = 1): boolean {
+    if (this.phase() !== 'setup') return false;
+    if (this.setupStep() !== 'player-count') return false;
+
+    const configurationMatches = this.playerService.players.length === playerCount
+      && this.playerService.players.every((player, playerIndex) =>
+        player.controller === (playerIndex < humanPlayerCount ? 'human' : 'ai'));
+
+    if (!configurationMatches) {
+      this.playerService.initialize(playerCount, humanPlayerCount);
+      this.firstPlayerRolls.set([]);
+      this.firstPlayerContenders.set([]);
+      this.firstPlayerIndex.set(null);
+    }
+
     this.setupStep.set('hero-draw');
+    return true;
   }
 
   /** Revient à une étape déjà franchie sans relancer de hasard. */
@@ -792,7 +804,9 @@ export class GameService {
     if (this.phase() !== 'setup' || this.setupStep() !== 'hero-draw') return;
     if (!this.playerService.players.every(player => player.heroId)) return;
     this.playerService.placeHeroesOnStart();
-    this.firstPlayerContenders.set(this.playerService.players.map((_, index) => index));
+    if (this.firstPlayerContenders().length === 0) {
+      this.firstPlayerContenders.set(this.playerService.players.map((_, index) => index));
+    }
     this.setupStep.set('first-player-roll');
   }
 

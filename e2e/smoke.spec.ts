@@ -457,4 +457,7 @@ test('quitter une partie active demande confirmation et permet l’annulation', 
   await page.getByRole('button', { name: "Retour à l'accueil" }).click();
   await page.getByRole('button', { name: 'Quitter la partie' }).click();
   await expect(page).toHaveURL(/\/$/);
+  await page.getByRole('link', { name: 'Jouer' }).click();
+  await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
+  await expect(page.locator('app-board')).toHaveCount(0);
 });

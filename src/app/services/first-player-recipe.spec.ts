@@ -115,4 +115,41 @@ describe('Recette 01 - premier joueur', () => {
     expect(turn.remainingMovements()).toBe(3);
     expect(turn.movementsMadeThisTurn()).toBe(1);
   });
+
+  it('conserve les résultats valides lorsqu’on revient au tirage sans changer la composition', () => {
+    const game = prepare(2, 1);
+    game.continueAfterHeroDraw();
+    game.firstPlayerRolls.set([
+      { playerIndex: 0, die1: 4, die2: 2, total: 6 },
+      { playerIndex: 1, die1: 3, die2: 1, total: 4 },
+    ]);
+    game.firstPlayerIndex.set(0);
+
+    game.goBackToSetupStep('hero-draw');
+    game.continueAfterHeroDraw();
+
+    expect(game.players.every(player => player.heroId)).toBe(true);
+    expect(game.firstPlayerRolls()).toEqual([
+      { playerIndex: 0, die1: 4, die2: 2, total: 6 },
+      { playerIndex: 1, die1: 3, die2: 1, total: 4 },
+    ]);
+    expect(game.firstPlayerIndex()).toBe(0);
+    expect(game.setupStep()).toBe('first-player-roll');
+  });
+
+  it('invalide les résultats dépendants lorsqu’une nouvelle composition est confirmée', () => {
+    const game = prepare(2, 1);
+    game.continueAfterHeroDraw();
+    game.firstPlayerRolls.set([{ playerIndex: 0, die1: 6, die2: 6, total: 12 }]);
+    game.firstPlayerIndex.set(0);
+
+    game.goBackToSetupStep('player-count');
+    game.initializePlayers(3, 1);
+
+    expect(game.players).toHaveLength(3);
+    expect(game.players.some(player => player.heroId)).toBe(false);
+    expect(game.firstPlayerRolls()).toEqual([]);
+    expect(game.firstPlayerContenders()).toEqual([]);
+    expect(game.firstPlayerIndex()).toBeNull();
+  });
 });

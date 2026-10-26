@@ -1,7 +1,7 @@
 import { Component, DoCheck, effect, EventEmitter, inject, Input, OnDestroy, Output, signal } from '@angular/core';
 
 import { getHeroDefinition, getHeroIdentityColor } from '../../data/hero-definitions';
-import { HeroDefinition, HeroPowerDefinition } from '../../models/hero';
+import { HeroDefinition, HeroPowerDefinition, HeroPowerId } from '../../models/hero';
 import { Player } from '../../models/player';
 import { PlayerService } from '../../services/player.service';
 import { GameService } from '../../services/game.service';
@@ -59,6 +59,8 @@ export class HeroPanel implements DoCheck, OnDestroy {
   */
   @Input() player: Player | null = null;
   @Input() playerIndex: number | null = null;
+  /** Pouvoir sélectionné dans la fiche technique de l'inventaire. */
+  @Input() selectedPowerId: HeroPowerId | null = null;
   /** Active le contour de la carte uniquement pour le joueur dont c'est le tour. */
   @Input() isActive = false;
   @Input() curseImagePath = '/assets/tokens/curse.png';
@@ -203,6 +205,28 @@ export class HeroPanel implements DoCheck, OnDestroy {
     return this.heroDefinition?.powers.find(power => power.id === 'substitution') ?? null;
   }
 
+  /** Consultation intégrée au verso pour l'activation manuelle de Substitution. */
+  get selectedPowerConsultation(): HeroPowerDefinition | null {
+    const player = this.player;
+    if (
+      !player
+      || player.controller !== 'human'
+      || player !== this.gameService.activePlayer
+      || player.heroId !== 'xanros'
+      || this.selectedPowerId !== 'substitution'
+      || this.powerDecision !== null
+    ) {
+      return null;
+    }
+    return this.substitutionPower;
+  }
+
+  get isPowerCardFlipped(): boolean {
+    return this.substitutionFlipped()
+      || this.powerDecision !== null
+      || this.selectedPowerConsultation !== null;
+  }
+
   /** Présentation issue exclusivement des décisions déjà ouvertes par le moteur. */
   get powerDecision(): InventoryPowerDecision | null {
     const player = this.player;
@@ -267,6 +291,12 @@ export class HeroPanel implements DoCheck, OnDestroy {
 
   chooseSneak(action: 'sneak' | 'combat'): void {
     if (this.powerDecision?.kind === 'sneak') this.gameService.choosePendingSneak(action);
+  }
+
+  /** Active Substitution après revalidation par le moteur métier. */
+  activateSelectedPower(): void {
+    if (this.selectedPowerConsultation?.id !== 'substitution') return;
+    this.gameService.openXanrosSubstitution();
   }
 
   cancelPowerChoice(): void {

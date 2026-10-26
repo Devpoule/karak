@@ -40,8 +40,42 @@ test('INIT-003 conserve une préparation initialisée lors du retour depuis le C
   await page.getByRole('button', { name: 'Ouvrir le menu de partie' }).click();
   await page.getByRole('menuitem', { name: 'Encyclopédie' }).click();
   await expect(page).toHaveURL(/\/codex\?from=game$/);
-  await page.getByRole('button', { name: '← Retour à la partie' }).click();
+  await page.getByRole('button', { name: 'Retour à la partie' }).click();
   await expect(page).toHaveURL(/\/play$/);
   await expect(page.getByRole('heading', { name: 'Tirage des héros' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toHaveCount(0);
+});
+
+test('le gabarit de préparation reste contenu sur les écrans intermédiaires et courts', async ({ page }) => {
+  for (const viewport of [
+    { width: 800, height: 500 },
+    { width: 1024, height: 480 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/play');
+    await expect(page.getByRole('heading', { name: 'Nouvelle partie' })).toBeVisible();
+
+    const geometry = await page.locator('.game-setup__content').evaluate(element => {
+      const content = element.getBoundingClientRect();
+      const stage = element.querySelector('.game-setup__stage')!.getBoundingClientRect();
+      return {
+        contentLeft: content.left,
+        contentRight: content.right,
+        contentBottom: content.bottom,
+        stageLeft: stage.left,
+        stageRight: stage.right,
+        stageBottom: stage.bottom,
+      };
+    });
+
+    expect(geometry.contentLeft).toBeGreaterThanOrEqual(-1);
+    expect(geometry.contentRight).toBeLessThanOrEqual(viewport.width + 1);
+    expect(geometry.contentBottom).toBeLessThanOrEqual(viewport.height + 1);
+    expect(geometry.stageLeft).toBeGreaterThanOrEqual(-1);
+    expect(geometry.stageRight).toBeLessThanOrEqual(viewport.width + 1);
+    expect(geometry.stageBottom).toBeLessThanOrEqual(viewport.height + 1);
+
+    await page.getByRole('button', { name: 'Continuer' }).click();
+    await expect(page.getByRole('heading', { name: 'Tirage des héros' })).toBeVisible();
+  }
 });

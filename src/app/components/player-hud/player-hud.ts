@@ -118,6 +118,23 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
       this.closePowerConsultation();
       return;
     }
+
+    // Substitution est une activation manuelle hors combat : sa carte reste
+    // dans l'inventaire et son verso porte directement la sélection de cible.
+    // Les gardes métier restent la source de vérité, y compris lorsque le
+    // pouvoir est temporairement indisponible.
+    if (
+      selection.powerId === 'substitution'
+      && player.controller === 'human'
+      && player === this.gameService.activePlayer
+    ) {
+      this.consultation = null;
+      if (this.gameService.canUseXanrosSubstitution) {
+        this.gameService.openXanrosSubstitution();
+      }
+      return;
+    }
+
     this.consultation = { player, powerId: selection.powerId, trigger: selection.trigger, sidebar: selection.sidebar };
     setTimeout(() => document.querySelector<HTMLElement>('.player-hud__power-card-host .hero-power-card')?.focus());
   }
