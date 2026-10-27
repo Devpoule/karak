@@ -1039,7 +1039,12 @@ export class GameService {
       tile.tokenFace = 'front';
       return;
     }
-    const firstToken = this.tokenBagService.draw();
+    const drawToken = this.tutorialScenario
+      ? () => this.tokenBagService.drawWithMonsterRestriction(
+        this.tutorialScenario!.getAllowedMonsterTokenIds(),
+      )
+      : () => this.tokenBagService.draw();
+    const firstToken = drawToken();
     if (!firstToken) {
       // Adaptation numérique : le manuel ne décrit pas la découverte
       // d'une pièce lorsque le sachet est vide.
@@ -1048,7 +1053,7 @@ export class GameService {
     const canUseFateWeaver = player?.heroId === 'taia'
       && !player.isCursed
       && sourceTile !== undefined;
-    const secondToken = canUseFateWeaver ? this.tokenBagService.draw() : undefined;
+    const secondToken = canUseFateWeaver ? drawToken() : undefined;
     if (secondToken && player && sourceTile) {
       this.turnService.stopMovements();
       this.pendingTokenChoice.set({

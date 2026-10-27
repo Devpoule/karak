@@ -150,6 +150,9 @@
 }
 
 .player-hud__side--auxiliary {
+  top: .65rem;
+  bottom: auto;
+  max-height: calc(100% - 1.3rem);
   overflow: hidden;
 }
 

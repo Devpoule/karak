@@ -20,12 +20,16 @@ describe('TutorialScenarioService', () => {
     expect(scenario.getDefinitionIdForSource(tile(2, 5))).toBe('cross');
     expect(scenario.getRoomTokenId({ definitionId: 'corner-room', x: 2, y: 5, rotation: 0 }))
       .toBeNull();
+    expect(scenario.getRoomTokenId({ definitionId: 'straight-room', x: 99, y: 99, rotation: 0 }))
+      .toBeUndefined();
+    expect(scenario.getAllowedMonsterTokenIds()).toEqual(['giant-spider', 'giant-rat']);
     expect(scenario.getRoomTokenId({ definitionId: 'crossroads-room', x: -1, y: 4, rotation: 0 }))
-      .toBe('giant-bat');
+      .toBe('giant-rat');
     const tutorialMonsterIds = TUTORIAL_SCENARIO.placements
       .map(placement => placement.tokenId)
       .filter((tokenId): tokenId is string => !!tokenId && getTokenDefinition(tokenId)?.kind === 'monster');
-    expect(tutorialMonsterIds.every(tokenId => tokenId === 'giant-spider' || tokenId === 'giant-bat')).toBe(true);
+    expect(tutorialMonsterIds).toHaveLength(4);
+    expect(tutorialMonsterIds.every(tokenId => tokenId === 'giant-spider' || tokenId === 'giant-rat')).toBe(true);
   });
 
   it('réutilise le flux d’exploration sans filtrer les directions légales', () => {

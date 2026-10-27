@@ -52,6 +52,8 @@ export interface TutorialScenarioPlacement {
  */
 export const TUTORIAL_SCENARIO = {
   heroId: 'argentus' as const,
+  /** Bestiaire autorisé pour les tirages non scénarisés du didacticiel. */
+  allowedMonsterTokenIds: ['giant-spider', 'giant-rat'] as const,
   exit: { x: 1, y: 8 },
   requiredWestLocations: ['west-swordsman', 'west-key-guardian'] as const,
   requiredEastLocations: ['east-rat', 'east-fountain', 'east-return'] as const,
@@ -95,7 +97,7 @@ export const TUTORIAL_SCENARIO = {
       direction: 'west',
       target: { x: -1, y: 4 },
       definitionId: 'crossroads-room',
-      tokenId: 'giant-bat',
+      tokenId: 'giant-rat',
       branch: 'west',
     },
     {
@@ -122,7 +124,7 @@ export const TUTORIAL_SCENARIO = {
       direction: 'east',
       target: { x: 1, y: 4 },
       definitionId: 'crossroads-room',
-      tokenId: 'giant-bat',
+      tokenId: 'giant-rat',
       branch: 'east',
     },
     {

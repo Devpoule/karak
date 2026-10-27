@@ -122,6 +122,32 @@ export class TokenBagService {
   }
 
   /**
+   * Tire un jeton en conservant les probabilités du sachet pour les objets.
+   *
+   * Lorsque le jeton tiré est un monstre, son identifiant peut être remplacé
+   * par un monstre autorisé par le contexte appelant. Le sachet classique
+   * reste inchangé : cette restriction est appliquée uniquement au résultat
+   * du tirage utilisé par le didacticiel.
+   */
+  drawWithMonsterRestriction(
+    allowedMonsterIds: readonly TokenDefinitionId[],
+  ): TokenDefinition | undefined {
+    const drawn = this.draw();
+    if (!drawn || drawn.kind !== 'monster') {
+      return drawn;
+    }
+
+    const allowedMonsters = allowedMonsterIds
+      .map(id => getTokenDefinition(id))
+      .filter((definition): definition is TokenDefinition => definition?.kind === 'monster');
+
+    if (allowedMonsters.length === 0) return drawn;
+
+    const index = Math.floor(Math.random() * allowedMonsters.length);
+    return allowedMonsters[index] ?? allowedMonsters[0];
+  }
+
+  /**
    * Replace un exemplaire non retenu par le choix de Taia dans le sachet.
    *
    * Le sachet est remélangé immédiatement afin que le token refusé

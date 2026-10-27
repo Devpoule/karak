@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PlacedTile } from '../models/tile';
 import { CombatService } from './combat.service';
 import { DungeonService } from './dungeon.service';
@@ -17,6 +17,7 @@ describe('TutorialSessionService', () => {
   let game: GameService;
   let dungeon: DungeonService;
   let players: PlayerService;
+  let tokenBag: TokenBagService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -37,9 +38,13 @@ describe('TutorialSessionService', () => {
     game = TestBed.inject(GameService);
     dungeon = TestBed.inject(DungeonService);
     players = TestBed.inject(PlayerService);
+    tokenBag = TestBed.inject(TokenBagService);
   });
 
-  afterEach(() => TestBed.resetTestingModule());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    TestBed.resetTestingModule();
+  });
 
   it('prépare un seul héros humain, sans passer par la configuration normale', () => {
     session.initialize();
@@ -73,6 +78,34 @@ describe('TutorialSessionService', () => {
 
     expect(spiderRoom).toMatchObject({ tokenId: 'giant-spider', tokenFace: 'front' });
     expect(emptyRoom.tokenId).toBeUndefined();
+  });
+
+  it('tire un monstre autorisé dans une salle hors scénario', () => {
+    session.initialize();
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const bag = tokenBag as unknown as { bag: string[] };
+    bag.bag = ['giant-rat'];
+    tokenBag.remainingTokens.set(1);
+    const unmappedRoom: PlacedTile = { definitionId: 'straight-room', x: 99, y: 99, rotation: 0 };
+
+    game.revealNewRoom(unmappedRoom);
+
+    expect(unmappedRoom.tokenId).toBe('giant-spider');
+    expect(tokenBag.remainingTokens()).toBe(0);
+  });
+
+  it('ne retire pas un second jeton au retour dans une salle révélée', () => {
+    session.initialize();
+    const bag = tokenBag as unknown as { bag: string[] };
+    bag.bag = ['giant-rat', 'closed-chest'];
+    tokenBag.remainingTokens.set(2);
+    const room: PlacedTile = { definitionId: 'straight-room', x: 99, y: 99, rotation: 0 };
+
+    game.revealNewRoom(room);
+    const remainingAfterReveal = tokenBag.remainingTokens();
+    game.revealNewRoom(room);
+
+    expect(tokenBag.remainingTokens()).toBe(remainingAfterReveal);
   });
 
   it('synchronise le guidage avec les trois actions d’exploration', () => {

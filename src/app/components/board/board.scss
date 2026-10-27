@@ -201,7 +201,7 @@
     pointer-events: none;
     content: '';
     border: 2px solid rgba(245, 216, 132, .92);
-    border-radius: .35rem;
+    border-radius: 0;
     box-shadow: 0 0 .8rem rgba(245, 216, 132, .62), inset 0 0 .7rem rgba(245, 216, 132, .18);
   }
 }
@@ -222,14 +222,13 @@
 
 .board__tile--active-player::before {
   position: absolute;
-  z-index: 3;
-  inset: 0.16rem;
-  border: 3px solid #f5d58a;
-  border-radius: 0.4rem;
+  z-index: 6;
+  inset: 0;
+  box-sizing: border-box;
+  border: 3px solid var(--karak-active-position);
+  border-radius: 0;
   box-shadow:
-    0 0 0.45rem rgba(245, 213, 138, 0.8),
-    0 0 1rem rgba(218, 170, 72, 0.48),
-    inset 0 0 0 1px rgba(255, 248, 232, 0.42);
+    inset 0 0 0 1px color-mix(in srgb, var(--karak-active-position) 72%, #fff1d6);
   content: '';
   pointer-events: none;
 }
@@ -243,7 +242,7 @@
   z-index: 4;
   inset: 0.22rem;
   border: 3px solid var(--karak-movement-destination);
-  border-radius: 0.35rem;
+  border-radius: 0;
   box-shadow:
     0 0 0.55rem color-mix(in srgb, var(--karak-movement-destination) 78%, transparent),
     0 0 1.2rem color-mix(in srgb, var(--karak-movement-destination) 42%, transparent),
@@ -252,11 +251,7 @@
   pointer-events: none;
 }
 
-/*
- * Guidage pédagogique : le halo attire l'œil sans désactiver les autres
- * possibilités légales du plateau. La classe racine n'existe que dans le
- * didacticiel, le jeu principal conserve donc son rendu habituel.
- */
+/* Le guidage pédagogique anime le contour existant sans changer sa couleur. */
 @keyframes tutorial-guidance-pulse {
   0%,
   100% {
@@ -273,30 +268,16 @@
 .board--tutorial-movement .board__tile--reachable::after,
 .board--tutorial-branches .board__tile--reachable::after,
 .board--tutorial-combat .board__tile--tutorial-combat::after,
-.board--tutorial-portal .board__tile--tutorial-portal::after,
-.board--tutorial-exit .board__tile--tutorial-exit-target::after {
+.board--tutorial-portal .board__tile--reachable::after,
+.board--tutorial-exit .board__tile--reachable::after {
   animation: tutorial-guidance-pulse 1.8s ease-in-out infinite;
-}
-
-.board__tile--tutorial-combat::after,
-.board__tile--tutorial-portal::after,
-.board__tile--tutorial-exit-target::after {
-  position: absolute;
-  z-index: 4;
-  inset: .18rem;
-  border: 3px solid #f5d884;
-  border-radius: .35rem;
-  box-shadow:
-    0 0 .7rem rgba(245, 216, 132, .82),
-    0 0 1.35rem rgba(224, 177, 93, .46),
-    inset 0 0 .5rem rgba(245, 216, 132, .16);
-  content: '';
-  pointer-events: none;
 }
 
 .board__tile--reachable:hover::after,
 .board__tile--reachable:focus-visible::after {
-  border-color: color-mix(in srgb, var(--karak-movement-destination) 72%, white);
+  inset: 0;
+  box-sizing: border-box;
+  border: 3px solid #fff8e8;
   box-shadow:
     0 0 0.8rem color-mix(in srgb, var(--karak-movement-destination) 92%, white),
     0 0 1.5rem color-mix(in srgb, var(--karak-movement-destination) 56%, transparent),
@@ -304,8 +285,7 @@
 }
 
 .board__tile--reachable:focus-visible {
-  outline: 2px solid #fff8e8;
-  outline-offset: 3px;
+  outline: none;
 }
 
 .board__move-icon {
@@ -534,10 +514,14 @@
   width: 34px;
   height: 34px;
   padding: 0;
-  border: 1px solid rgba(220, 200, 160, 0.75);
+  border: 2px solid var(--board-action-accent, var(--karak-movement-destination));
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(105, 93, 75, 0.95), rgba(37, 32, 27, 0.95));
-  color: #eee1c5;
+  background: radial-gradient(
+    circle at 35% 30%,
+    color-mix(in srgb, var(--board-action-accent, var(--karak-movement-destination)) 25%, #655646),
+    #25201b 72%
+  );
+  color: color-mix(in srgb, var(--board-action-accent, var(--karak-movement-destination)) 68%, white);
   font-size: 17px;
   line-height: 1;
   cursor: pointer;
@@ -553,8 +537,11 @@
     filter: brightness(1.25);
     box-shadow:
       0 2px 8px rgba(0, 0, 0, 0.9),
-      0 0 8px rgba(220, 200, 160, 0.35),
+      0 0 8px color-mix(in srgb, var(--board-action-accent, var(--karak-movement-destination)) 58%, transparent),
       inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  }
+  &:active:not(:disabled) {
+    filter: brightness(0.92);
   }
 }
 /* Nord */
@@ -601,11 +588,11 @@
  * la règle d'exploration reste gérée par ExplorationService.
  */
 .board__movement-control--explore {
+  --board-action-accent: var(--karak-exploration-destination);
   border-color: var(--karak-exploration-destination);
-  color: var(--karak-exploration-destination);
   box-shadow:
     0 2px 5px rgba(0, 0, 0, 0.8),
-    0 0 9px rgba(218, 170, 72, 0.45),
+    0 0 9px color-mix(in srgb, var(--karak-exploration-destination) 58%, transparent),
     inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
@@ -745,18 +732,16 @@
  * La tuile piochée est affichée au-dessus des tuiles déjà
  * présentes tant que son placement n'est pas confirmé.
  *
- * CHOIX D'IMPLÉMENTATION :
- * un halo bronze stable indique qu'une action du joueur
- * est encore attendue.
+ * La tuile et ses commandes utilisent l'accent or de l'exploration.
  */
 .board__tile--pending {
   z-index: 25;
   box-sizing: border-box;
-  border: 3px solid #e0ad68;
-  border-radius: 0.35rem;
+  border: 3px solid var(--karak-exploration-destination);
+  border-radius: 0;
   box-shadow:
-    0 0 0.65rem rgba(224, 173, 104, 0.74),
-    0 0 1.2rem rgba(176, 112, 43, 0.42);
+    0 0 0.65rem color-mix(in srgb, var(--karak-exploration-destination) 82%, transparent),
+    0 0 1.2rem color-mix(in srgb, var(--karak-exploration-destination) 42%, transparent);
   /*
    * Une orientation invalide remplace le halo bronze
    * par un signal rouge stable.
@@ -777,6 +762,7 @@
  */
 .board__rotate,
 .board__confirm {
+  --board-action-accent: var(--karak-exploration-destination);
   position: absolute;
   bottom: -44px;
   display: flex;
@@ -786,15 +772,16 @@
   height: 40px;
   padding: 0;
   transform: translateX(-50%);
-  border: 2px solid #d7a35b;
+  box-sizing: border-box;
+  border: 2px solid var(--board-action-accent);
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, rgba(129, 91, 43, 0.98), rgba(37, 25, 16, 0.98));
-  color: #ffe0a2;
+  color: color-mix(in srgb, var(--board-action-accent) 72%, white);
   cursor: pointer;
   pointer-events: auto;
   box-shadow:
     0 2px 5px rgba(0, 0, 0, 0.8),
-    0 0 0.65rem rgba(215, 163, 91, 0.46),
+    0 0 0.65rem color-mix(in srgb, var(--board-action-accent) 52%, transparent),
     inset 0 1px 1px rgba(255, 255, 255, 0.15);
   line-height: 1;
   transition:
@@ -805,7 +792,7 @@
     filter: brightness(1.25);
     box-shadow:
       0 2px 8px rgba(0, 0, 0, 0.9),
-      0 0 0.85rem rgba(255, 224, 162, 0.7),
+      0 0 0.85rem color-mix(in srgb, var(--board-action-accent) 78%, transparent),
       inset 0 1px 1px rgba(255, 255, 255, 0.2);
   }
   &:active:not(:disabled) {
@@ -1092,6 +1079,7 @@
   pointer-events: none;
 }
 .board__context-action {
+  --board-action-accent: var(--karak-active-position);
   position: absolute;
   z-index: 5;
   top: -0.4rem;
@@ -1101,11 +1089,11 @@
   height: 2.2rem;
   padding: 0.22rem;
   place-items: center;
-  border: 1px solid rgba(146, 219, 216, 0.9);
+  border: 2px solid var(--board-action-accent);
   border-radius: 50%;
   background: radial-gradient(circle at 50% 35%, #315d62 0, #18343c 62%, #10252d 100%);
   box-shadow:
-    0 0 0.7rem rgba(41, 223, 218, 0.55),
+    0 0 0.7rem color-mix(in srgb, var(--board-action-accent) 58%, transparent),
     inset 0 0 0 1px rgba(224, 246, 232, 0.24);
   cursor: pointer;
   transition:
@@ -1117,8 +1105,12 @@
 .board__context-action:focus-visible:not(:disabled) {
   filter: brightness(1.15);
   box-shadow:
-    0 0 1rem rgba(63, 240, 226, 0.8),
+    0 0 1rem color-mix(in srgb, var(--board-action-accent) 82%, transparent),
     inset 0 0 0 1px rgba(239, 255, 237, 0.45);
+}
+
+.board__context-action:active:not(:disabled) {
+  filter: brightness(0.92);
 }
 
 .board__context-action:disabled {
@@ -1190,17 +1182,16 @@
 }
 
 .board__context-action--portal {
-  border-color: rgba(197, 156, 255, 0.9);
-  background: radial-gradient(circle at 50% 35%, #523b70 0, #2b1c48 62%, #1c1530 100%);
+  background: radial-gradient(circle at 50% 35%, #70401f 0, #392116 62%, #211510 100%);
   box-shadow:
-    0 0 0.7rem rgba(177, 112, 255, 0.62),
+    0 0 0.7rem color-mix(in srgb, var(--board-action-accent) 62%, transparent),
     inset 0 0 0 1px rgba(240, 225, 255, 0.24);
 }
 
 .board__context-action--portal:hover:not(:disabled),
 .board__context-action--portal:focus-visible:not(:disabled) {
   box-shadow:
-    0 0 1rem rgba(198, 141, 255, 0.9),
+    0 0 1rem color-mix(in srgb, var(--board-action-accent) 84%, transparent),
     inset 0 0 0 1px rgba(250, 240, 255, 0.48);
 }
 
@@ -1208,8 +1199,8 @@
   .board--tutorial-movement .board__tile--reachable::after,
   .board--tutorial-branches .board__tile--reachable::after,
   .board--tutorial-combat .board__tile--tutorial-combat::after,
-  .board--tutorial-portal .board__tile--tutorial-portal::after,
-  .board--tutorial-exit .board__tile--tutorial-exit-target::after,
+  .board--tutorial-portal .board__tile--reachable::after,
+  .board--tutorial-exit .board__tile--reachable::after,
   .board--tutorial-exploration .board__exploration-target--tutorial-focus,
   .board--tutorial-rotate .board__rotate--tutorial-focus,
   .board--tutorial-confirm .board__confirm--tutorial-focus,

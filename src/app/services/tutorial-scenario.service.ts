@@ -48,11 +48,22 @@ export class TutorialScenarioService {
       : null;
   }
 
-  /** Retourne le jeton prédéfini d'une salle, sans tirer ni muter le sac global. */
+  /**
+   * Retourne le jeton prédéfini d'une salle.
+   *
+   * `null` signifie que la salle scénarisée doit rester vide. `undefined`
+   * signifie qu'elle doit suivre le tirage normal du didacticiel.
+   */
   getRoomTokenId(tile: PlacedTile): TokenDefinitionId | null | undefined {
-    return this.placements.find(placement =>
+    const placement = this.placements.find(placement =>
       placement.target.x === tile.x && placement.target.y === tile.y,
-    )?.tokenId;
+    );
+    return placement?.tokenId;
+  }
+
+  /** Retourne la configuration du bestiaire autorisé pour les tirages libres. */
+  getAllowedMonsterTokenIds(): readonly TokenDefinitionId[] {
+    return TUTORIAL_SCENARIO.allowedMonsterTokenIds;
   }
 
   /** Traduit une tuile posée en identifiant de progression pédagogique. */
