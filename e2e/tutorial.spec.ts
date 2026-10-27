@@ -28,7 +28,7 @@ test('le didacticiel affiche les objectifs dans le logement droit du HUD sur des
   await expect(checklist.getByRole('button')).toHaveCount(0);
   await expect(page.locator('.tutorial__play-area > app-tutorial-checklist')).toHaveCount(0);
   await expect(page.locator('.player-hud__side--right app-player-sidebar')).toHaveCount(0);
-  await expect(page.getByRole('heading', { name: 'Avancez dans le donjon' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Choisissez le passage à explorer' })).toBeVisible();
   await expect(page.locator('.board__tile')).toHaveCount(1);
   await expect(page.locator('.player-hud__side--left .movement-counter')).toHaveAttribute('aria-label', '4 points disponibles');
 
@@ -57,8 +57,8 @@ test('le didacticiel affiche les objectifs dans le logement droit du HUD sur des
   expect(layout.panel.left).toBeGreaterThan(layout.leftSidebar.right);
 
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('heading', { name: 'Avancez dans le donjon' })).toBeHidden();
-  await expect(page.getByRole('button', { name: 'Aide : Déplacement' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Choisissez le passage à explorer' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Aide : Exploration · passage' })).toBeVisible();
 });
 
 test('la check-list reflète les jalons métier à 0/7, 3/7 et 7/7', async ({ page }) => {
@@ -83,14 +83,24 @@ test('la check-list reflète les jalons métier à 0/7, 3/7 et 7/7', async ({ pa
 
 test('quitter le didacticiel demande confirmation et ne garde pas sa session', async ({ page }) => {
   await page.goto('/tutorial');
-  await page.locator('.game-header__logo-link').click();
+  const leaveButton = page.locator('.game-header__leave-trigger');
+  const menuButton = page.getByRole('button', { name: 'Ouvrir le menu de partie' });
+  await expect(leaveButton).toBeVisible();
+  const headerActions = await Promise.all([
+    leaveButton.boundingBox(),
+    menuButton.boundingBox(),
+  ]);
+  if (!headerActions[0] || !headerActions[1]) throw new Error('Tutorial header actions unavailable');
+  expect(headerActions[0].x + headerActions[0].width).toBeLessThanOrEqual(headerActions[1].x);
+
+  await leaveButton.click();
 
   await expect(page.getByRole('alertdialog')).toBeVisible();
   await page.getByRole('button', { name: 'Annuler' }).click();
   await expect(page.getByRole('alertdialog')).toBeHidden();
 
-  await page.locator('.game-header__logo-link').click();
-  await page.getByRole('button', { name: 'Quitter le didacticiel' }).click();
+  await leaveButton.click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Quitter le didacticiel' }).click();
   await expect(page.getByRole('link', { name: 'Didacticiel' })).toBeVisible();
 
   await page.goto('/tutorial');
@@ -104,7 +114,7 @@ test('le volet compact reste repliable sans chevaucher le header ou les commande
 
   const mobileChecklist = page.locator('.tutorial__play-area > app-tutorial-checklist');
   const toggle = page.getByRole('button', { name: 'Déplier les objectifs du didacticiel' });
-  await expect(page.getByRole('heading', { name: 'Avancez dans le donjon' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Choisissez le passage à explorer' })).toBeVisible();
   await expect(mobileChecklist).toBeVisible();
   await expect(page.locator('app-player-hud app-tutorial-checklist')).toHaveCount(0);
   await expect(mobileChecklist.locator('.tutorial-checklist__items li')).toHaveCount(0);
@@ -131,7 +141,7 @@ test('le volet compact reste repliable sans chevaucher le header ou les commande
     document.documentElement.scrollWidth <= document.documentElement.clientWidth,
   )).toBe(true);
   await page.getByRole('button', { name: 'Réduire' }).click();
-  await expect(page.getByRole('button', { name: 'Aide : Déplacement' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Aide : Exploration · passage' })).toBeVisible();
 
   await page.setViewportSize({ width: 844, height: 390 });
   await expect(mobileChecklist).toBeVisible();

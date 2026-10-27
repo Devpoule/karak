@@ -1,80 +1,82 @@
-<main id="main-content" class="home" tabindex="-1">
-  <!--
-    L'illustration reste un décor indépendant du menu afin que le logo,
-    l'accroche et les actions restent accessibles et responsives.
-  -->
-  <img
-    class="home__background"
-    src="/assets/board/karak-cover.png"
-    alt=""
-    aria-hidden="true"
-    draggable="false"
-  />
+<main
+  id="main-content"
+  class="home"
+  [class.home--intro-visible]="showIntro()"
+  [class.home--transitioning]="isEnteringDungeon()"
+  tabindex="-1"
+>
+  <img class="home__background" src="/assets/board/karak-cover.png" alt="" aria-hidden="true" draggable="false" />
   <div class="home__veil" aria-hidden="true"></div>
 
-  <section class="home__hero" aria-labelledby="home-title">
-    <div class="home__content">
-      <h1 class="home__title" id="home-title">
-        <img
-          class="home__logo"
-          ngSrc="/assets/logo-800.png"
-          srcset="/assets/logo-800.png 800w, /assets/logo.png 1676w"
-          sizes="(max-width: 700px) 90vw, 42vw"
-          width="1676"
-          height="938"
-          priority
-          alt="Karak"
-          draggable="false"
-        />
-      </h1>
+  <section class="home__stage" aria-label="Accueil de Karak">
+    <button
+      type="button"
+      class="home__logo-button"
+      [disabled]="showIntro()"
+      aria-label="Revenir à l'introduction"
+      title="Revenir à l'introduction"
+      (click)="revisitIntroduction()"
+    >
+      <img
+        class="home__logo"
+        ngSrc="/assets/logo-800.png"
+        srcset="/assets/logo-800.png 800w, /assets/logo.png 1676w"
+        sizes="(max-width: 700px) 90vw, 42vw"
+        width="1676"
+        height="938"
+        priority
+        alt="Karak"
+        draggable="false"
+      />
+    </button>
 
-      <p class="home__tagline">
-        Six héros. Un donjon. D'innombrables trésors.
-      </p>
+    <div class="home__mist home__mist--one" aria-hidden="true"></div>
+    <div class="home__mist home__mist--two" aria-hidden="true"></div>
 
-      <nav class="home__navigation" aria-label="Menu principal">
-        <a
-          class="home__play"
-          routerLink="/play"
-          aria-label="Jouer"
-          title="Jouer"
-        >
-          <svg class="home__play-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M6.5 8.5h11a4 4 0 0 1 3.86 3l1.1 4.6a2.4 2.4 0 0 1-4.45 1.7l-1.6-2.8H7.6L6 17.8a2.4 2.4 0 0 1-4.45-1.7l1.1-4.6a4 4 0 0 1 3.86-3z" />
-            <path d="M8 11v4M6 13h4M16 12h.01M19 14h.01" />
-          </svg>
-          <span>Jouer</span>
-        </a>
+    @if (showIntro() || isEnteringDungeon()) {
+      <section class="home__intro-copy" [class.home__intro-copy--leaving]="isEnteringDungeon()" aria-labelledby="home-intro-title">
+        <h1 class="home__sr-only" id="home-intro-title">Karak</h1>
+        <p class="home__tagline">Six héros. Un donjon. D'innombrables trésors.</p>
+        <button type="button" class="home__enter" (click)="enterDungeon()">
+          <span>Entrer dans le donjon</span>
+          <span class="home__enter-mark" aria-hidden="true">›</span>
+        </button>
+      </section>
+    }
 
-        <a
-          class="home__didacticiel"
-          routerLink="/tutorial"
-          aria-label="Didacticiel"
-          title="Didacticiel"
-        >
-          <svg class="home__action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M5 5.5 12 3l7 2.5v7c0 4.1-2.9 6.8-7 8-4.1-1.2-7-3.9-7-8z" />
-            <path d="M9 11.2a3 3 0 1 1 5.4 1.8c-.9.9-1.8 1.1-1.8 2.2M12.6 18h.01" />
-          </svg>
-          <span>Didacticiel</span>
-        </a>
+    @if (!showIntro() || isEnteringDungeon()) {
+      <section class="home__menu" aria-labelledby="home-menu-title">
+        <h1 class="home__sr-only" id="home-menu-title">Menu principal de Karak</h1>
+        <nav class="home__utility" aria-label="Informations et réglages">
+          <a class="home__utility-link" routerLink="/codex" [queryParams]="{ from: 'home' }" aria-label="Découvrir l'univers du jeu" title="Découvrir l'univers du jeu">
+            <svg class="home__utility-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H20v17H7.5A2.5 2.5 0 0 0 5 21.5z" />
+              <path d="M5 4.5v17M8 5.5h8M8 9h8M8 12.5h5" />
+            </svg>
+          </a>
+        </nav>
 
-        <a
-          class="home__lore"
-          routerLink="/codex"
-          [queryParams]="{ from: 'home' }"
-          aria-label="Découvrir l'univers du jeu"
-          title="Découvrir l'univers du jeu"
-        >
-          <svg class="home__lore-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H20v17H7.5A2.5 2.5 0 0 0 5 21.5z" />
-            <path d="M5 4.5v17M8 5.5h8M8 9h8M8 12.5h5" />
-          </svg>
-          <span>Découvrir l'univers du jeu</span>
-        </a>
-
-        <app-settings-panel class="home__settings" />
-      </nav>
-    </div>
+        <div class="home__menu-copy home__content">
+          <p class="home__tagline">Six héros. Un donjon. D'innombrables trésors.</p>
+          <nav class="home__navigation" aria-label="Menu principal">
+            <a class="home__play" routerLink="/play" aria-label="Jouer" title="Jouer">
+              <svg class="home__play-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6.5 8.5h11a4 4 0 0 1 3.86 3l1.1 4.6a2.4 2.4 0 0 1-4.45 1.7l-1.6-2.8H7.6L6 17.8a2.4 2.4 0 0 1-4.45-1.7l1.1-4.6a4 4 0 0 1 3.86-3z" />
+                <path d="M8 11v4M6 13h4M16 12h.01M19 14h.01" />
+              </svg>
+              <span>Jouer</span>
+            </a>
+            <a class="home__didacticiel" routerLink="/tutorial" aria-label="Didacticiel" title="Didacticiel">
+              <svg class="home__action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 2.75 20 5.8v6.05c0 4.85-3.2 8.35-8 9.4-4.8-1.05-8-4.55-8-9.4V5.8z" />
+                <path d="M9.7 9.45a2.45 2.45 0 1 1 4.35 1.55c-.75.8-1.55 1.05-1.55 2.15M12.5 16.65h.01" />
+              </svg>
+              <span>Didacticiel</span>
+            </a>
+          </nav>
+        </div>
+      </section>
+      <app-settings-panel class="home__settings" [compact]="true" />
+    }
   </section>
 </main>

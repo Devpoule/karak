@@ -10,6 +10,14 @@
      ========================================================= -->
 <section
   class="board"
+  [class.board--tutorial-movement]="tutorialGuidanceStep === 'movement'"
+  [class.board--tutorial-exploration]="tutorialGuidanceStep === 'explore-direction'"
+  [class.board--tutorial-rotate]="tutorialGuidanceStep === 'explore-rotate'"
+  [class.board--tutorial-confirm]="tutorialGuidanceStep === 'explore-confirm'"
+  [class.board--tutorial-combat]="tutorialGuidanceStep === 'combat'"
+  [class.board--tutorial-branches]="tutorialGuidanceStep === 'branches'"
+  [class.board--tutorial-portal]="tutorialGuidanceStep === 'portal'"
+  [class.board--tutorial-exit]="tutorialGuidanceStep === 'exit'"
   [style.--tile-size.px]="tileSize"
   (pointerdown)="startDragging($event)"
   (pointermove)="drag($event)"
@@ -44,6 +52,9 @@
         [class.board__tile--active-player]="isActivePlayerOnTile(tile)"
         [class.board__tile--tutorial-exit]="isTutorialExit(tile)"
         [class.board__tile--reachable]="canMoveToTile(tile)"
+        [class.board__tile--tutorial-combat]="isTutorialCombatTarget(tile)"
+        [class.board__tile--tutorial-portal]="isTutorialPortalTarget(tile)"
+        [class.board__tile--tutorial-exit-target]="isTutorialExitTarget(tile)"
         [class.board__tile--healing-selected]="healingPortalSelection?.destination === tile || horanReincarnationSelection?.destination === tile"
         [class.board__tile--portal-selected]="portalTravelSelection?.destination === tile"
         [class.board__tile--portal-destination]="portalTravelSelection?.destinations?.includes(tile)"
@@ -77,6 +88,7 @@
           <button
             type="button"
             class="board__context-action board__context-action--portal"
+            [class.board__context-action--tutorial-focus]="tutorialGuidanceStep === 'portal'"
             [disabled]="!canUsePortalTravel"
             aria-label="Utiliser le portail de téléportation"
             title="Utiliser le portail de téléportation"
@@ -151,6 +163,7 @@
         <button
           type="button"
           class="board__exploration-target"
+          [class.board__exploration-target--tutorial-focus]="tutorialGuidanceStep === 'explore-direction'"
           [class.board__exploration-target--selected]="pendingTile?.direction === target.direction"
           [attr.aria-pressed]="pendingTile?.direction === target.direction"
           [attr.aria-label]="pendingTile ? 'Déplacer la tuile vers le ' + getDirectionLabel(target.direction) : 'Explorer vers le ' + getDirectionLabel(target.direction)"
@@ -236,6 +249,7 @@
           <button
             type="button"
             class="board__rotate"
+            [class.board__rotate--tutorial-focus]="tutorialGuidanceStep === 'explore-rotate'"
             aria-label="Tourner la tuile révélée"
             title="Tourner la tuile"
             (pointerdown)="$event.stopPropagation()"
@@ -249,6 +263,7 @@
           <button
             type="button"
             class="board__confirm"
+            [class.board__confirm--tutorial-focus]="tutorialGuidanceStep === 'explore-confirm'"
             [disabled]="!pending.direction || !isPendingTilePlacementValid()"
             aria-label="Valider le placement de la tuile"
             title="Placer la tuile"

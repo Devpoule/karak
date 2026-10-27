@@ -16,22 +16,41 @@
     />
   </button>
 
-  <button
-    #menuTrigger
-    class="karak-header-action game-header__menu-trigger"
-    type="button"
-    aria-label="Ouvrir le menu de partie"
-    title="Menu"
-    aria-haspopup="true"
-    [attr.aria-expanded]="isMenuOpen"
-    [attr.aria-disabled]="navigationLocked"
-    [disabled]="navigationLocked"
-    aria-controls="game-header-menu"
-    (click)="toggleMenu(menuTrigger)"
-  >
-    <span class="game-header__menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
-    <span class="karak-header-action__label">Menu</span>
-  </button>
+  <div class="game-header__actions">
+    @if (context === 'tutorial') {
+      <button
+        class="karak-header-action game-header__leave-trigger"
+        type="button"
+        aria-label="Quitter le didacticiel"
+        title="Quitter"
+        (click)="requestLeave()"
+      >
+        <svg class="game-header__leave-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M14 3H5.5A1.5 1.5 0 0 0 4 4.5v15A1.5 1.5 0 0 0 5.5 21H14" />
+          <path d="M11 12h9" />
+          <path d="m16 8 4 4-4 4" />
+        </svg>
+        <span class="karak-header-action__label">Quitter</span>
+      </button>
+    }
+
+    <button
+      #menuTrigger
+      class="karak-header-action game-header__menu-trigger"
+      type="button"
+      aria-label="Ouvrir le menu de partie"
+      title="Menu"
+      aria-haspopup="true"
+      [attr.aria-expanded]="isMenuOpen"
+      [attr.aria-disabled]="navigationLocked"
+      [disabled]="navigationLocked"
+      aria-controls="game-header-menu"
+      (click)="toggleMenu(menuTrigger)"
+    >
+      <span class="game-header__menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span class="karak-header-action__label">Menu</span>
+    </button>
+  </div>
 
 </header>
 

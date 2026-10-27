@@ -8,6 +8,13 @@ export default defineConfig({
   outputDir: 'playwright-report/test-results',
   use: {
     baseURL: process.env['PLAYWRIGHT_BASE_URL'] ?? 'http://127.0.0.1:4200',
+    storageState: {
+      cookies: [],
+      origins: [{
+        origin: 'http://127.0.0.1:4200',
+        localStorage: [{ name: 'karak-home-intro-seen-v1', value: 'true' }],
+      }],
+    },
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'off',

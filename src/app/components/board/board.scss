@@ -252,6 +252,48 @@
   pointer-events: none;
 }
 
+/*
+ * Guidage pédagogique : le halo attire l'œil sans désactiver les autres
+ * possibilités légales du plateau. La classe racine n'existe que dans le
+ * didacticiel, le jeu principal conserve donc son rendu habituel.
+ */
+@keyframes tutorial-guidance-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+    opacity: .78;
+  }
+
+  50% {
+    filter: brightness(1.18);
+    opacity: 1;
+  }
+}
+
+.board--tutorial-movement .board__tile--reachable::after,
+.board--tutorial-branches .board__tile--reachable::after,
+.board--tutorial-combat .board__tile--tutorial-combat::after,
+.board--tutorial-portal .board__tile--tutorial-portal::after,
+.board--tutorial-exit .board__tile--tutorial-exit-target::after {
+  animation: tutorial-guidance-pulse 1.8s ease-in-out infinite;
+}
+
+.board__tile--tutorial-combat::after,
+.board__tile--tutorial-portal::after,
+.board__tile--tutorial-exit-target::after {
+  position: absolute;
+  z-index: 4;
+  inset: .18rem;
+  border: 3px solid #f5d884;
+  border-radius: .35rem;
+  box-shadow:
+    0 0 .7rem rgba(245, 216, 132, .82),
+    0 0 1.35rem rgba(224, 177, 93, .46),
+    inset 0 0 .5rem rgba(245, 216, 132, .16);
+  content: '';
+  pointer-events: none;
+}
+
 .board__tile--reachable:hover::after,
 .board__tile--reachable:focus-visible::after {
   border-color: color-mix(in srgb, var(--karak-movement-destination) 72%, white);
@@ -611,6 +653,13 @@
     border-color 120ms ease,
     box-shadow 120ms ease,
     transform 120ms ease;
+}
+
+.board--tutorial-exploration .board__exploration-target--tutorial-focus,
+.board--tutorial-rotate .board__rotate--tutorial-focus,
+.board--tutorial-confirm .board__confirm--tutorial-focus,
+.board--tutorial-portal .board__context-action--tutorial-focus {
+  animation: tutorial-guidance-pulse 1.8s ease-in-out infinite;
 }
 
 .board__exploration-target:hover,
@@ -1156,6 +1205,18 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .board--tutorial-movement .board__tile--reachable::after,
+  .board--tutorial-branches .board__tile--reachable::after,
+  .board--tutorial-combat .board__tile--tutorial-combat::after,
+  .board--tutorial-portal .board__tile--tutorial-portal::after,
+  .board--tutorial-exit .board__tile--tutorial-exit-target::after,
+  .board--tutorial-exploration .board__exploration-target--tutorial-focus,
+  .board--tutorial-rotate .board__rotate--tutorial-focus,
+  .board--tutorial-confirm .board__confirm--tutorial-focus,
+  .board--tutorial-portal .board__context-action--tutorial-focus {
+    animation: none;
+  }
+
   .board__interaction-tooltip {
     transition: none;
   }

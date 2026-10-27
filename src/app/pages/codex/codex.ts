@@ -62,6 +62,14 @@ export class Codex implements OnInit {
   }
   originLabel(origin: 'base' | 'regent'): string { return contentOrigin(origin).name; }
 
+  /** Ferme le Codex lorsque l'utilisateur clique dans le décor extérieur. */
+  onPageClick(event: MouseEvent): void {
+    const target = event.target;
+    if (target === event.currentTarget || (target instanceof HTMLElement && target.classList.contains('codex-page__atmosphere'))) {
+      this.goBack();
+    }
+  }
+
   goBack(): void {
     void this.router.navigateByUrl(this.returnContext === 'game' ? '/play' : '/');
   }

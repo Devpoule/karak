@@ -12,6 +12,15 @@ export type TutorialObjectiveId =
   | 'exit';
 
 export type TutorialHelpTarget = 'board' | 'hud';
+export type TutorialGuidanceStep =
+  | 'movement'
+  | 'explore-direction'
+  | 'explore-rotate'
+  | 'explore-confirm'
+  | 'combat'
+  | 'branches'
+  | 'portal'
+  | 'exit';
 
 export interface TutorialHelpDefinition {
   readonly id: string;
@@ -86,7 +95,7 @@ export const TUTORIAL_SCENARIO = {
       direction: 'west',
       target: { x: -1, y: 4 },
       definitionId: 'crossroads-room',
-      tokenId: 'skeleton-swordsman',
+      tokenId: 'giant-bat',
       branch: 'west',
     },
     {
@@ -95,7 +104,7 @@ export const TUTORIAL_SCENARIO = {
       direction: 'south',
       target: { x: -1, y: 5 },
       definitionId: 't-junction-room',
-      tokenId: 'skeleton-key-guardian',
+      tokenId: 'giant-spider',
       branch: 'west',
     },
     {
@@ -113,7 +122,7 @@ export const TUTORIAL_SCENARIO = {
       direction: 'east',
       target: { x: 1, y: 4 },
       definitionId: 'crossroads-room',
-      tokenId: 'giant-rat',
+      tokenId: 'giant-bat',
       branch: 'east',
     },
     {
@@ -188,7 +197,34 @@ export const TUTORIAL_SCENARIO = {
       id: 'explore',
       notion: 'Exploration',
       title: 'Révélez une nouvelle tuile',
-      message: 'Utilisez le marqueur d’exploration, orientez la tuile puis confirmez son placement.',
+      message: 'Les marqueurs ambrés indiquent les passages encore inexplorés. Choisissez-en un pour tirer une tuile.',
+      target: 'board',
+      display: 'expanded',
+      validates: ['exploration'],
+    },
+    {
+      id: 'explore-direction',
+      notion: 'Exploration · passage',
+      title: 'Choisissez le passage à explorer',
+      message: 'Vous pouvez choisir n’importe quelle sortie ambrée disponible. Le didacticiel ne bloque pas les autres directions autorisées.',
+      target: 'board',
+      display: 'expanded',
+      validates: ['exploration'],
+    },
+    {
+      id: 'explore-rotate',
+      notion: 'Exploration · orientation',
+      title: 'Orientez la tuile',
+      message: 'Tournez la tuile révélée jusqu’à raccorder ses passages à la tuile quittée. Les rotations restent libres.',
+      target: 'board',
+      display: 'expanded',
+      validates: ['exploration'],
+    },
+    {
+      id: 'explore-confirm',
+      notion: 'Exploration · placement',
+      title: 'Validez le placement',
+      message: 'Quand les passages sont raccordés, confirmez l’emplacement pour entrer réellement dans la nouvelle tuile.',
       target: 'board',
       display: 'expanded',
       validates: ['exploration'],

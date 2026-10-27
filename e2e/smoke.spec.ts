@@ -18,6 +18,28 @@ test('Karak se charge et affiche l’entrée de partie', async ({ page }) => {
   });
 });
 
+test('la première visite présente une introduction mémorisée avant le menu', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.removeItem('karak-home-intro-seen-v1'));
+  await page.reload();
+
+  await expect(page.getByRole('button', { name: 'Entrer dans le donjon' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Jouer' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Entrer dans le donjon' }).click();
+  await expect(page.getByRole('link', { name: 'Jouer' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Entrer dans le donjon' })).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('karak-home-intro-seen-v1'))).toBe('true');
+});
+
+test('le logo du menu permet de revoir l’introduction', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.home__logo-button').click();
+
+  await expect(page.getByRole('button', { name: 'Entrer dans le donjon' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Jouer' })).toHaveCount(0);
+});
+
 test('la page de jeu affiche la préparation de partie', async ({ page }) => {
   await page.goto('/');
 
@@ -37,9 +59,9 @@ test('l’accueil met en avant le logo et conserve une hiérarchie typographique
   await expect(page.getByText("Six héros. Un donjon. D'innombrables trésors.")).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Explorez les catacombes' })).toHaveCount(0);
 
-  const visual = await page.locator('.home__content').evaluate(element => {
-    const logoElement = element.querySelector('.home__logo');
-    const title = element.querySelector('h1');
+  const visual = await page.locator('.home__menu-copy').evaluate(() => {
+    const logoElement = document.querySelector('.home__logo');
+    const title = document.querySelector('.home__menu h1');
     return {
       logoWidth: logoElement?.getBoundingClientRect().width ?? 0,
       titleFont: title ? getComputedStyle(title).fontFamily : '',
@@ -50,33 +72,27 @@ test('l’accueil met en avant le logo et conserve une hiérarchie typographique
   expect(visual.titleFont.toLowerCase()).toContain('georgia');
 });
 
-test('le menu d’accueil harmonise les quatre actions et conserve leurs interactions', async ({ page }) => {
+test('le menu d’accueil met en avant les deux parcours et conserve les actions secondaires', async ({ page }) => {
   await page.goto('/');
 
-  const secondaryButtons = page.locator('.home__didacticiel, .home__lore, .home__navigation app-settings-panel .settings-panel__trigger');
-  await expect(secondaryButtons).toHaveCount(3);
+  await expect(page.locator('.home__play, .home__didacticiel')).toHaveCount(2);
+  await expect(page.locator('.home__utility-link')).toHaveCount(1);
+  await expect(page.locator('.home__settings .settings-panel__trigger')).toHaveCount(1);
 
   const geometry = await page.locator('.home__navigation').evaluate(element => {
     const controls = [
       element.querySelector('.home__play'),
       element.querySelector('.home__didacticiel'),
-      element.querySelector('.home__lore'),
-      element.querySelector('app-settings-panel .settings-panel__trigger'),
     ].filter((control): control is HTMLElement => control instanceof HTMLElement);
     const rectangles = controls.map(control => control.getBoundingClientRect());
     return {
       widths: rectangles.map(rectangle => Math.round(rectangle.width)),
       heights: rectangles.map(rectangle => Math.round(rectangle.height)),
-      secondaryBackgrounds: rectangles.length > 0
-        ? Array.from(element.querySelectorAll('.home__didacticiel, .home__lore'))
-          .map(control => getComputedStyle(control).backgroundImage)
-        : [],
     };
   });
 
   expect(new Set(geometry.widths).size).toBe(1);
   expect(Math.max(...geometry.heights) - Math.min(...geometry.heights)).toBeLessThanOrEqual(1);
-  expect(new Set(geometry.secondaryBackgrounds).size).toBe(1);
 
   const play = page.getByRole('link', { name: 'Jouer' });
   await play.focus();
@@ -140,7 +156,7 @@ test('une aide contextuelle se ferme par clic extérieur', async ({ page }) => {
 
 test('le Codex depuis l’accueil revient à l’accueil', async ({ page }) => {
   await page.goto('/');
-  await page.locator('.home__lore').click();
+  await page.locator('.home__utility-link').click();
 
   await expect(page).toHaveURL(/\/codex\?from=home$/);
   await expect(page.getByRole('heading', { name: 'Karak', exact: true })).toBeVisible();
@@ -149,6 +165,13 @@ test('le Codex depuis l’accueil revient à l’accueil', async ({ page }) => {
   await page.getByRole('button', { name: 'Retour à l’accueil' }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('link', { name: /Jouer/ })).toBeVisible();
+});
+
+test('un clic dans le fond extérieur du Codex revient à la page précédente', async ({ page }) => {
+  await page.goto('/codex?from=home');
+  await page.locator('.codex-page').click({ position: { x: 4, y: 4 } });
+
+  await expect(page).toHaveURL(/\/$/);
 });
 
 test('le Codex depuis la préparation revient à la préparation', async ({ page }) => {

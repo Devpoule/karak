@@ -19,6 +19,8 @@ import { HeroPowerCard } from '../hero-power-card/hero-power-card';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
 import { DecisionCard, DecisionCardAction } from '../decision-card/decision-card';
 import { TutorialScenarioService } from '../../services/tutorial-scenario.service';
+import { TutorialSessionService } from '../../services/tutorial-session.service';
+import { TutorialGuidanceStep } from '../../data/tutorial-scenario';
 
 /**
  * Joueur prêt à être représenté sur le plateau.
@@ -108,6 +110,7 @@ export class Board {
     readonly combatService: CombatService,
     readonly gameService: GameService,
     @Optional() private readonly tutorialScenario?: TutorialScenarioService,
+    @Optional() private readonly tutorialSession?: TutorialSessionService,
   ) {
     /*
      * Lorsqu'un nouveau joueur prend la main, la caméra
@@ -453,6 +456,32 @@ export class Board {
         this.gameService.canPerformNormalMovement(this.gameService.activePlayer)
         || this.gameService.canSelectPendingExplorationDirection(this.gameService.activePlayer)
       );
+  }
+
+  /** Étape pédagogique observée sans modifier les règles du plateau. */
+  get tutorialGuidanceStep(): TutorialGuidanceStep | null {
+    return this.tutorialSession?.guidanceStep() ?? null;
+  }
+
+  /** Cible de combat réellement accessible dans l'étape courante. */
+  isTutorialCombatTarget(tile: PlacedTile): boolean {
+    return this.tutorialGuidanceStep === 'combat'
+      && this.canMoveToTile(tile)
+      && getTokenDefinition(tile.tokenId ?? '')?.kind === 'monster';
+  }
+
+  /** Porte une attention particulière aux portails disponibles, sans les imposer. */
+  isTutorialPortalTarget(tile: PlacedTile): boolean {
+    return this.tutorialGuidanceStep === 'portal'
+      && this.getTileDefinition(tile)?.feature === 'portal'
+      && (this.canMoveToTile(tile) || this.isActivePlayerOnTile(tile));
+  }
+
+  /** Signale uniquement la sortie atteignable ou déjà occupée. */
+  isTutorialExitTarget(tile: PlacedTile): boolean {
+    return this.tutorialGuidanceStep === 'exit'
+      && this.isTutorialExit(tile)
+      && (this.canMoveToTile(tile) || this.isActivePlayerOnTile(tile));
   }
 
   /** Indique si une tuile existante est une destination de déplacement directe. */

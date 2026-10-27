@@ -74,5 +74,19 @@ describe('TutorialSessionService', () => {
     expect(spiderRoom).toMatchObject({ tokenId: 'giant-spider', tokenFace: 'front' });
     expect(emptyRoom.tokenId).toBeUndefined();
   });
+
+  it('synchronise le guidage avec les trois actions d’exploration', () => {
+    session.initialize();
+    expect(session.guidanceStep()).toBe('explore-direction');
+
+    const start = dungeon.getTileAt(0, 0)!;
+    const exploration = TestBed.inject(ExplorationService);
+    exploration.start(start);
+    exploration.changePendingDirection('south');
+    expect(session.guidanceStep()).toBe('explore-rotate');
+
+    exploration.rotatePendingTile();
+    expect(session.guidanceStep()).toBe('explore-confirm');
+  });
 });
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TUTORIAL_SCENARIO } from '../data/tutorial-scenario';
+import { getTokenDefinition } from '../data/token-definitions';
 import { PlacedTile } from '../models/tile';
 import { DungeonService } from './dungeon.service';
 import { ExplorationService } from './exploration.service';
@@ -20,7 +21,11 @@ describe('TutorialScenarioService', () => {
     expect(scenario.getRoomTokenId({ definitionId: 'corner-room', x: 2, y: 5, rotation: 0 }))
       .toBeNull();
     expect(scenario.getRoomTokenId({ definitionId: 'crossroads-room', x: -1, y: 4, rotation: 0 }))
-      .toBe('skeleton-swordsman');
+      .toBe('giant-bat');
+    const tutorialMonsterIds = TUTORIAL_SCENARIO.placements
+      .map(placement => placement.tokenId)
+      .filter((tokenId): tokenId is string => !!tokenId && getTokenDefinition(tokenId)?.kind === 'monster');
+    expect(tutorialMonsterIds.every(tokenId => tokenId === 'giant-spider' || tokenId === 'giant-bat')).toBe(true);
   });
 
   it('réutilise le flux d’exploration sans filtrer les directions légales', () => {

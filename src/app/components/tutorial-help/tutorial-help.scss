@@ -78,6 +78,23 @@ button {
   border-color: rgba(245, 211, 117, .75);
 }
 
+.tutorial-help--persistent {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.tutorial-help__persistent-trigger {
+  min-width: 4.5rem;
+  color: #f8efd8;
+  background: rgba(19, 22, 38, .96);
+  border-color: rgba(245, 211, 117, .75);
+  box-shadow: 0 .4rem 1rem rgba(0, 0, 0, .35);
+}
+
 button:focus-visible {
   outline: var(--karak-focus-width) solid var(--karak-focus-color);
   outline-offset: var(--karak-focus-offset);

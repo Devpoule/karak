@@ -24,3 +24,12 @@
   }
 }
 
+@if (!session.helpSuspended() && !session.activeHelp()) {
+  <aside class="tutorial-help tutorial-help--persistent" aria-label="Aide du didacticiel">
+    <button type="button" class="tutorial-help__persistent-trigger" (click)="session.reopenHelp()">
+      <span aria-hidden="true">?</span>
+      <span>Aide</span>
+    </button>
+  </aside>
+}
+

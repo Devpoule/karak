@@ -1,5 +1,6 @@
 import { Injectable, computed, effect, signal } from '@angular/core';
-import { TutorialHelpDefinition, TutorialObjectiveId } from '../data/tutorial-scenario';
+import { TutorialGuidanceStep, TutorialHelpDefinition, TutorialObjectiveId } from '../data/tutorial-scenario';
+import { DIRECTIONS } from '../models/tile';
 import { CombatService } from './combat.service';
 import { DungeonService } from './dungeon.service';
 import { ExplorationService } from './exploration.service';
@@ -43,11 +44,39 @@ export class TutorialSessionService {
   private readonly visitedLocationIds = new Set<string>();
   private readonly dismissedHelpIds = new Set<string>();
   private readonly sessionRevision = signal(0);
+  private observedPendingTileKey: string | null = null;
+  private observedPendingRotation = 0;
+  private pendingTileWasRotated = false;
 
   readonly objectives = signal<TutorialObjectives>(createObjectives());
   readonly activeHelp = signal<TutorialHelpDefinition | null>(null);
   readonly helpDisplay = signal<TutorialHelpDisplay>('expanded');
   readonly isComplete = signal(false);
+
+  /** Étape visuelle actuelle, dérivée des possibilités réelles du moteur. */
+  readonly guidanceStep = computed<TutorialGuidanceStep | null>(() => {
+    this.explorationService.pendingTileRevision();
+    if (this.helpSuspended()) return null;
+
+    const objectives = this.objectives();
+    const pending = this.explorationService.pendingTile;
+    if (!objectives.movement) {
+      if (pending) {
+        if (!pending.direction) return 'explore-direction';
+        return this.pendingTileWasRotated || pending.rotation !== 0 ? 'explore-confirm' : 'explore-rotate';
+      }
+      return this.hasAvailableExistingMovement() ? 'movement' : 'explore-direction';
+    }
+    if (!objectives.exploration) {
+      if (!pending || !pending.direction) return 'explore-direction';
+      return this.pendingTileWasRotated || pending.rotation !== 0 ? 'explore-confirm' : 'explore-rotate';
+    }
+    if (!objectives.combat) return 'combat';
+    if (!objectives['west-branch'] || !objectives['east-branch']) return 'branches';
+    if (!objectives.portal) return 'portal';
+    if (!objectives.exit) return 'exit';
+    return null;
+  });
 
   readonly completedObjectiveCount = computed(() =>
     OBJECTIVE_IDS.filter(objective => this.objectives()[objective]).length,
@@ -61,7 +90,6 @@ export class TutorialSessionService {
       || this.isComplete()
       || this.combatService.pendingCombat() !== null
       || this.combatService.lastCombatResult() !== null
-      || this.gameService.hasPendingTileResolution
       || this.gameService.portalTravelSelection() !== null
       || this.gameService.healingPortalSelection() !== null;
   });
@@ -94,6 +122,9 @@ export class TutorialSessionService {
     this.initialized = false;
     this.visitedLocationIds.clear();
     this.dismissedHelpIds.clear();
+    this.observedPendingTileKey = null;
+    this.observedPendingRotation = 0;
+    this.pendingTileWasRotated = false;
     this.objectives.set(createObjectives());
     this.activeHelp.set(null);
     this.helpDisplay.set('expanded');
@@ -112,6 +143,9 @@ export class TutorialSessionService {
     this.initialized = false;
     this.visitedLocationIds.clear();
     this.dismissedHelpIds.clear();
+    this.observedPendingTileKey = null;
+    this.observedPendingRotation = 0;
+    this.pendingTileWasRotated = false;
     this.activeHelp.set(null);
     this.isComplete.set(false);
     this.gameService.initialize();
@@ -127,6 +161,17 @@ export class TutorialSessionService {
     this.activeHelp.set(null);
   }
 
+  /** Rend l'aide courante disponible à nouveau, sans réinitialiser la progression. */
+  reopenHelp(): void {
+    const helpId = this.getRelevantHelpId();
+    if (!helpId) return;
+    this.dismissedHelpIds.delete(helpId);
+    const help = this.scenario.helpDefinitions.find(candidate => candidate.id === helpId);
+    if (!help) return;
+    this.activeHelp.set(help);
+    this.helpDisplay.set('expanded');
+  }
+
   /** Réduit l'aide courante ; la check-list reste indépendante de ce choix. */
   collapseHelp(): void {
     if (this.activeHelp()) this.helpDisplay.set('collapsed');
@@ -140,7 +185,9 @@ export class TutorialSessionService {
   private updateFromGameState(): void {
     if (!this.initialized) return;
 
-    if (this.turnService.lastMovementConsumption() !== null) {
+    this.observePendingTileRotation();
+
+    if (this.turnService.lastMovementConsumption() !== null && this.wasDirectMovement()) {
       this.completeObjective('movement');
     }
     if (this.explorationService.lastPlacedTile() !== null) {
@@ -226,13 +273,70 @@ export class TutorialSessionService {
 
   private getRelevantHelpId(): string | null {
     const objectives = this.objectives();
-    if (!objectives.movement) return 'move';
-    if (!objectives.exploration) return 'explore';
+    if (!objectives.movement) {
+      const pending = this.explorationService.pendingTile;
+      if (pending) {
+        if (!pending.direction) return 'explore-direction';
+        return this.pendingTileWasRotated || pending.rotation !== 0 ? 'explore-confirm' : 'explore-rotate';
+      }
+      return this.hasAvailableExistingMovement() ? 'move' : 'explore-direction';
+    }
+    if (!objectives.exploration) {
+      const pending = this.explorationService.pendingTile;
+      if (!pending || !pending.direction) return 'explore-direction';
+        return this.pendingTileWasRotated || pending.rotation !== 0 ? 'explore-confirm' : 'explore-rotate';
+    }
     if (!objectives.combat) return 'combat';
     if (!objectives['west-branch'] || !objectives['east-branch']) return 'branches';
     if (!objectives.portal) return 'portal';
     if (!objectives.exit) return 'exit';
     return null;
+  }
+
+  /** Observe uniquement la rotation effective, sans intervenir dans le moteur. */
+  private observePendingTileRotation(): void {
+    const pending = this.explorationService.pendingTile;
+    if (!pending) {
+      this.observedPendingTileKey = null;
+      this.pendingTileWasRotated = false;
+      return;
+    }
+
+    const key = `${pending.sourceTile.x}:${pending.sourceTile.y}:${pending.definition.id}`;
+    if (key !== this.observedPendingTileKey) {
+      this.observedPendingTileKey = key;
+      this.observedPendingRotation = pending.rotation;
+      this.pendingTileWasRotated = false;
+      return;
+    }
+
+    if (pending.rotation !== this.observedPendingRotation) {
+      this.observedPendingRotation = pending.rotation;
+      this.pendingTileWasRotated = true;
+    }
+  }
+
+  /** Détermine si une tuile existante offre réellement un déplacement légal. */
+  private hasAvailableExistingMovement(): boolean {
+    const player = this.gameService.activePlayer;
+    if (!player?.position || !this.gameService.canPerformNormalMovement(player)) return false;
+
+    const source = this.dungeonService.getTileAt(player.position.x, player.position.y);
+    if (!source) return false;
+    return DIRECTIONS.some(direction => {
+      const destination = this.dungeonService.getNeighbor(source, direction);
+      return !!destination && this.gameService.canMoveTo(player, source, destination);
+    });
+  }
+
+  /** Une entrée sur une tuile nouvellement placée ne valide pas encore le déplacement pédagogique. */
+  private wasDirectMovement(): boolean {
+    const player = this.gameService.activePlayer;
+    const placed = this.explorationService.lastPlacedTile();
+    return !placed
+      || !player?.position
+      || player.position.x !== placed.x
+      || player.position.y !== placed.y;
   }
 }
 

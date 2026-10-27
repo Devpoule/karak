@@ -15,7 +15,6 @@
   box-sizing: border-box;
   width: 100%;
   height: 100%;
-  min-height: 3.35rem;
   justify-content: center;
   padding: .65rem 1rem;
   color: var(--karak-button-text);
@@ -45,14 +44,39 @@
 }
 
 :host(.home__settings) .settings-panel__icon {
-  width: 1.45rem;
-  height: 1.45rem;
+  width: 1.6rem;
+  height: 1.6rem;
   color: var(--karak-text-highlight);
+  stroke-width: 1.8;
 }
 
 :host(.home__settings) .settings-panel__trigger:focus-visible {
   outline: var(--karak-focus-width) solid var(--karak-focus-color);
   outline-offset: var(--karak-focus-offset);
+}
+
+/* Variante icône utilisée par les actions secondaires de l'accueil. */
+:host(.home__settings) .settings-panel--compact .settings-panel__trigger {
+  width: 2.75rem;
+  height: 2.75rem;
+  min-height: 2.75rem;
+  padding: .55rem;
+  border-radius: var(--karak-radius-round);
+}
+
+:host(.home__settings) .settings-panel--compact .settings-panel__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+:host(.home__settings) .settings-panel--compact .settings-panel__icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  stroke-width: 1.8;
 }
 
 .settings-panel--compact .settings-panel__trigger {
@@ -102,9 +126,8 @@
 .settings-panel__dialog {
   display: flex;
   flex-direction: column;
-  width: min(34rem, calc(100vw - 2rem));
-  max-height: min(90vh, 38rem);
-  overflow: hidden;
+  width: min(48rem, calc(100vw - 2rem));
+  overflow: visible;
   color: var(--karak-text-light);
   background: linear-gradient(125deg, rgba(30, 23, 19, .99), rgba(67, 42, 25, .98));
   border: 1px solid rgba(245, 216, 132, .7);
@@ -155,8 +178,8 @@
 
 .settings-panel__body {
   display: grid;
-  gap: var(--karak-space-5);
-  overflow-y: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--karak-space-5) var(--karak-space-6);
   padding: var(--karak-space-5);
 }
 
@@ -229,7 +252,10 @@
 @media (max-width: 600px) {
   .settings-panel__dialog { width: calc(100vw - 1rem); }
   .settings-panel__header { padding: 1rem; }
-  .settings-panel__body { padding: 1rem; }
+  .settings-panel__body {
+    gap: var(--karak-space-4);
+    padding: 1rem;
+  }
   .settings-panel__actions { padding: .8rem 1rem 1rem; }
   .settings-panel__actions button { flex: 1; }
 }
