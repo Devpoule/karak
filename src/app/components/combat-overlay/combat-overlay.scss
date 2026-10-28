@@ -1166,10 +1166,6 @@
     --combat-name-size: 52px;
   }
 
-  .combat-overlay__visual.combat-overlay__hero-card--flipped {
-    left: calc(50% + (100vw - 100%) / 2);
-  }
-
   .combat-overlay__weapon-entry {
     max-width: 100%;
   }

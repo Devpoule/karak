@@ -5,6 +5,8 @@ import { AudioEffectCue, AudioService } from './audio.service';
 export type ToastTone = 'info' | 'success' | 'warning' | 'combat';
 export type ToastEventType = 'info' | 'turn' | 'combat' | 'life-loss' | 'healing' | 'equipment' | 'treasure' | 'curse' | 'power';
 export type ToastAnchor = 'global' | 'life' | 'inventory-top' | 'inventory-weapons' | 'inventory-spells' | 'inventory-key' | 'treasure' | 'power' | 'curse';
+export type ToastContext = 'combat' | 'general';
+export type ToastPriority = 'normal' | 'important' | 'critical';
 export interface ToastTarget { readonly playerIndex: number; readonly anchor: Exclude<ToastAnchor, 'global'>; }
 export interface ToastOptions {
   readonly eventType?: ToastEventType;
@@ -12,6 +14,8 @@ export interface ToastOptions {
   readonly icon?: string;
   readonly duration?: number;
   readonly audioCue?: AudioEffectCue | null;
+  readonly context?: ToastContext;
+  readonly priority?: ToastPriority;
 }
 export interface ToastMessage {
   readonly id: number;
@@ -23,6 +27,8 @@ export interface ToastMessage {
   readonly duration: number;
   readonly audioCue: AudioEffectCue | null;
   readonly target?: ToastTarget;
+  readonly context: ToastContext;
+  readonly priority: ToastPriority;
 }
 
 interface EquipmentToastLabel {
@@ -73,6 +79,7 @@ export class ToastService {
   /** Les notifications restent lisibles 50 % plus longtemps que la base historique. */
   private readonly toastDurationScale = 1.5;
   private readonly toastFadeDuration = 300;
+  private readonly queueLimit = 8;
 
   readonly current = signal<ToastMessage | null>(null);
   readonly isDismissing = signal(false);
@@ -95,15 +102,38 @@ export class ToastService {
       duration: options.duration ?? this.durationFor(text),
       audioCue: options.audioCue ?? null,
       target,
+      context: options.context ?? 'general',
+      priority: options.priority ?? 'normal',
     };
+
+    // Un ancien résultat de combat ne doit jamais survivre au démarrage
+    // d'une nouvelle séquence de combat.
+    if (message.context === 'combat') this.removeQueuedContext('combat');
+
+    if (message.context === 'combat') {
+      this.displayCritical(message);
+      return;
+    }
+
     if (this.current()) {
       if (this.queue.some(item => item.text === text) || this.current()?.text === text) return;
       this.addToHistory(message);
-      this.queue.push(message);
+      this.enqueue(message);
       return;
     }
     this.addToHistory(message);
     this.display(message);
+  }
+
+  /** Invalide les notifications d'un contexte devenu obsolète. */
+  cancelContext(context: ToastContext): void {
+    this.removeQueuedContext(context);
+    if (this.current()?.context !== context) return;
+
+    this.clearCurrentTimers();
+    this.current.set(null);
+    this.isDismissing.set(false);
+    this.displayNextQueued();
   }
 
   /** Réinitialise les événements affichés pour une nouvelle partie. */
@@ -124,6 +154,47 @@ export class ToastService {
     this.current.set(message);
     this.schedule(message);
     if (message.audioCue) this.audioService?.play(message.audioCue);
+  }
+
+  /** Affiche immédiatement un événement critique, sans attendre la FIFO. */
+  private displayCritical(message: ToastMessage): void {
+    const displaced = this.current();
+    if (displaced) {
+      if (displaced.priority === 'important' && displaced.context !== 'combat') {
+        this.enqueue(displaced);
+      }
+      this.clearCurrentTimers();
+      this.current.set(null);
+      this.isDismissing.set(false);
+    }
+    this.addToHistory(message);
+    this.display(message);
+  }
+
+  private enqueue(message: ToastMessage): void {
+    if (this.queue.length >= this.queueLimit) {
+      const normalIndex = this.queue.findIndex(item => item.priority === 'normal');
+      this.queue.splice(normalIndex >= 0 ? normalIndex : 0, 1);
+    }
+    this.queue.push(message);
+  }
+
+  private removeQueuedContext(context: ToastContext): void {
+    for (let index = this.queue.length - 1; index >= 0; index--) {
+      if (this.queue[index]?.context === context) this.queue.splice(index, 1);
+    }
+  }
+
+  private clearCurrentTimers(): void {
+    if (this.timer !== null) clearTimeout(this.timer);
+    if (this.fadeTimer !== null) clearTimeout(this.fadeTimer);
+    this.timer = null;
+    this.fadeTimer = null;
+  }
+
+  private displayNextQueued(): void {
+    const next = this.queue.shift() ?? null;
+    if (next) this.display(next);
   }
 
   private addToHistory(message: ToastMessage): void {
@@ -149,8 +220,7 @@ export class ToastService {
   private finishDismissal(): void {
     this.fadeTimer = null;
     this.isDismissing.set(false);
-    const next = this.queue.shift() ?? null;
-    if (next) this.display(next);
+    if (this.queue.length > 0) this.displayNextQueued();
     else this.current.set(null);
   }
 }

@@ -448,6 +448,7 @@ describe('GameService Tisseuse de destin de Taia', () => {
   let dungeonService: DungeonService;
   let tokenBagService: TokenBagService;
   let turnService: TurnService;
+  let combatService: CombatService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({ providers: [GameService, PlayerService] });
@@ -456,6 +457,7 @@ describe('GameService Tisseuse de destin de Taia', () => {
     dungeonService = TestBed.inject(DungeonService);
     tokenBagService = TestBed.inject(TokenBagService);
     turnService = TestBed.inject(TurnService);
+    combatService = TestBed.inject(CombatService);
     playerService.initialize(2);
     gameService.initialize();
     gameService.phase.set('playing');
@@ -522,6 +524,25 @@ describe('GameService Tisseuse de destin de Taia', () => {
     expect(gameService.pendingTokenChoice()).toBeNull();
     expect(TestBed.inject(CombatService).hasPendingCombat).toBe(true);
     expect(gameService.choosePendingToken(1)).toBe(false);
+  });
+
+  it('conserve sur la tuile le monstre choisi par Taia après une défaite', () => {
+    const { taia, source, destination } = prepareTaia();
+    const rat = getTokenDefinition('giant-rat')!;
+    const chest = getTokenDefinition('closed-chest')!;
+    vi.spyOn(tokenBagService, 'draw')
+      .mockReturnValueOnce(rat)
+      .mockReturnValueOnce(chest);
+
+    turnService.consumeMovement();
+    expect(gameService.resolveTileEntry(taia, source, destination, true, true)).toBe('token-choice');
+    expect(gameService.choosePendingToken(0)).toBe(true);
+
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    expect(combatService.rollPendingCombat()).not.toBeNull();
+    expect(combatService.resolvePendingCombat()?.outcome).toBe('defeat');
+    expect(destination.tokenId).toBe('giant-rat');
+    expect(destination.tokenFace).toBe('front');
   });
 
   it('résout normalement un coffre choisi lorsque Taia possède une clé', () => {

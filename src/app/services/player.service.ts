@@ -34,6 +34,15 @@ export const MIN_PLAYER_COUNT = 2;
  * lors de la préparation.
  */
 export const MAX_PLAYER_COUNT = 5;
+
+/** Acquisition effectivement validée, destinée aux surfaces de feedback. */
+export interface EquipmentAcquisition {
+  readonly player: Player;
+  readonly kind: EquipmentKind;
+  readonly slotIndex: number;
+  readonly equipment: Equipment;
+  readonly revision: number;
+}
 /**
  * Gère l'état des joueurs pendant une partie.
  *
@@ -74,6 +83,8 @@ export class PlayerService {
   readonly lastLifeLoss = signal<{ player: Player; amount: number; revision: number } | null>(null);
   /** Notification réactive des changements d’inventaire. */
   readonly inventoryRevision = signal(0);
+  /** Dernière acquisition métier, avec l’emplacement réellement occupé. */
+  readonly lastEquipmentAcquisition = signal<EquipmentAcquisition | null>(null);
   /** Notification réactive des changements de trésors. */
   readonly treasuresRevision = signal(0);
   /** Notification réactive des changements de malédiction. */
@@ -97,6 +108,7 @@ export class PlayerService {
   reset(): void {
     this.players.length = 0;
     this.lastLifeLoss.set(null);
+    this.lastEquipmentAcquisition.set(null);
     this.livesRevision.update(revision => revision + 1);
     this.inventoryRevision.update(revision => revision + 1);
     this.treasuresRevision.update(revision => revision + 1);
@@ -119,6 +131,7 @@ export class PlayerService {
     });
     this.configurationRevision += 1;
     this.lastLifeLoss.set(null);
+    this.lastEquipmentAcquisition.set(null);
     this.livesRevision.update(revision => revision + 1);
     this.inventoryRevision.update(revision => revision + 1);
     this.treasuresRevision.update(revision => revision + 1);
@@ -272,6 +285,7 @@ export class PlayerService {
      */
     this.players.length = 0;
     this.configurationRevision += 1;
+    this.lastEquipmentAcquisition.set(null);
     this.livesRevision.update((revision) => revision + 1);
     this.curseRevision.update(revision => revision + 1);
     this.treasuresRevision.update(revision => revision + 1);
@@ -326,6 +340,7 @@ export class PlayerService {
     });
     if (restored.some((player) => player.lives < 0 || player.lives > 5 || player.inventory.weapons.length !== 2 || player.inventory.spells.length !== 3)) return false;
     this.players.splice(0, this.players.length, ...restored);
+    this.lastEquipmentAcquisition.set(null);
     this.configurationRevision += 1;
     this.livesRevision.update((revision) => revision + 1);
     this.inventoryRevision.update((revision) => revision + 1);
@@ -553,7 +568,31 @@ export class PlayerService {
       player.inventory.spells[index] = equipment;
     }
     this.inventoryRevision.update((revision) => revision + 1);
+    this.publishEquipmentAcquisition(player, equipment);
     return true;
+  }
+
+  /**
+   * Publie une acquisition après la validation complète du parcours métier.
+   * Cette méthode est également utilisée après un remplacement, une fois
+   * que l'ancien équipement a bien été déposé ou écarté.
+   */
+  publishEquipmentAcquisition(player: Player, equipment: Equipment): void {
+    if (!this.players.includes(player)) return;
+    const slotIndex = equipment.kind === 'key'
+      ? (player.inventory.key === equipment ? 0 : -1)
+      : player.inventory[equipment.kind === 'weapon' ? 'weapons' : 'spells']
+        .findIndex(item => item === equipment);
+    if (slotIndex < 0) return;
+
+    const currentRevision = (this.lastEquipmentAcquisition()?.revision ?? 0) + 1;
+    this.lastEquipmentAcquisition.set({
+      player,
+      kind: equipment.kind,
+      slotIndex,
+      equipment,
+      revision: currentRevision,
+    });
   }
   /**
    * Remplace explicitement un emplacement du type approprié.

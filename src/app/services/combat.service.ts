@@ -9,6 +9,7 @@ import { PlacedTile } from '../models/tile';
 import { MonsterTokenDefinition } from '../models/token';
 import { TurnService } from './turn.service';
 import { AudioService } from './audio.service';
+import { ToastService } from './toast.service';
 
 /** Construit ou calcule le resultat de isWinningCombatRoll. */
 function isWinningCombatRoll(combat: PendingCombat, roll: CombatRoll): boolean {
@@ -89,6 +90,7 @@ export class CombatService {
     private readonly playerService: PlayerService,
     @Optional() private readonly turnService?: TurnService,
     @Optional() private readonly audioService?: AudioService,
+    @Optional() private readonly toastService?: ToastService,
   ) {}
 
   readonly pendingCombat = signal<PendingCombat | null>(null);
@@ -103,6 +105,7 @@ export class CombatService {
   /** Efface tout état de combat transitoire avant une nouvelle partie ou restauration. */
   initialize(): void {
     this.audioService?.cancelAudioSequence?.();
+    this.toastService?.cancelContext('combat');
     this.pendingCombat.set(null);
     this.lastCombatResult.set(null);
     this.pendingCombatRoll.set(null);
@@ -140,6 +143,7 @@ export class CombatService {
     }
 
     this.audioService?.cancelAudioSequence?.();
+    this.toastService?.cancelContext('combat');
 
     this.lastCombatResult.set(null);
 
@@ -390,6 +394,14 @@ export class CombatService {
       combat.monsterTile.tokenFace = 'back';
       return;
     }
+
+    /*
+     * Une égalité ou une défaite ne résout pas le monstre. Réaffirmer son
+     * identité et son recto évite qu'un tirage temporaire (notamment celui de
+     * Taia) soit interprété comme un jeton consommé lors d'une nouvelle entrée.
+     */
+    combat.monsterTile.tokenId = combat.monster.id;
+    combat.monsterTile.tokenFace = 'front';
 
     if (outcome === 'defeat') {
       this.playerService.loseLife(combat.player);

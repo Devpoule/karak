@@ -46,6 +46,31 @@ describe('ToastService', () => {
     expect(service.isDismissing()).toBe(false);
   });
 
+  it('affiche immédiatement un résultat de combat sans attendre la FIFO', () => {
+    const service = new ToastService();
+    service.show('Ancienne information');
+    service.show('Victoire !', 'success', undefined, {
+      context: 'combat',
+      priority: 'critical',
+    });
+
+    expect(service.current()?.text).toBe('Victoire !');
+    expect(service.current()?.context).toBe('combat');
+  });
+
+  it('supprime les résultats de combat devenus obsolètes au début du combat suivant', () => {
+    const service = new ToastService();
+    service.show('Victoire précédente', 'success', undefined, {
+      context: 'combat',
+      priority: 'critical',
+    });
+
+    service.cancelContext('combat');
+
+    expect(service.current()).toBeNull();
+    expect(service.history().map(message => message.text)).toEqual(['Victoire précédente']);
+  });
+
   it('synchronise le son avec l affichage initial puis avec chaque toast sorti de la file', () => {
     const audio = { play: vi.fn() } as unknown as AudioService;
     const service = new ToastService(audio);

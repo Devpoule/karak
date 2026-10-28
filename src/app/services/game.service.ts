@@ -646,6 +646,7 @@ export class GameService {
 
   /** Annonce une récupération ou une amélioration sans ouvrir une décision. */
   private announceEquipmentObtained(player: Player, equipment: Equipment): void {
+    this.playerService.publishEquipmentAcquisition(player, equipment);
     this.showPlayerToast(
       player,
       this.getEquipmentObtainedLabel(equipment),
@@ -659,6 +660,7 @@ export class GameService {
 
   /** Annonce un remplacement d'arme après la validation complète de l'échange. */
   private announceWeaponReplacement(player: Player, replacement: Equipment): void {
+    this.playerService.publishEquipmentAcquisition(player, replacement);
     this.showPlayerToast(
       player,
       this.getEquipmentObtainedLabel(replacement),

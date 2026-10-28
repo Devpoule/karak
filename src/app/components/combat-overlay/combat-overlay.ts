@@ -27,6 +27,11 @@ import { QuantityPipe } from '../../pipes/quantity.pipe';
 import { DecisionCard, DecisionCardAction } from '../decision-card/decision-card';
 import { HeroPowerCard } from '../hero-power-card/hero-power-card';
 import { AudioService } from '../../services/audio.service';
+import {
+  DICE_RESULT_DISPLAY_DELAY_MS,
+  DICE_RESULT_SETTLE_DELAY_MS,
+  DICE_ROLL_DELAYS_MS,
+} from '../../data/dice-roll-timing';
 
 /**
  * Étapes visuelles de présentation d'un combat.
@@ -720,23 +725,9 @@ export class CombatOverlay implements OnDestroy {
   ): void {
     this.animatedDice.set(diceToAnimate);
 
-    const speeds = [
-      70,
-      70,
-      80,
-      90,
-      105,
-      125,
-      150,
-      180,
-      215,
-      260,
-      315,
-    ];
-
     let elapsed = 0;
 
-    for (const speed of speeds) {
+    for (const speed of DICE_ROLL_DELAYS_MS) {
       elapsed += speed;
 
       this.schedule(() => {
@@ -751,7 +742,7 @@ export class CombatOverlay implements OnDestroy {
     /**
      * Arrêt sur les dés réels.
      */
-    elapsed += 180;
+    elapsed += DICE_RESULT_SETTLE_DELAY_MS;
 
     this.schedule(() => {
       const dice = this.displayedDice();
@@ -764,7 +755,7 @@ export class CombatOverlay implements OnDestroy {
     /**
      * Temps de lecture des dés avant le verdict.
      */
-    elapsed += 1050;
+    elapsed += DICE_RESULT_DISPLAY_DELAY_MS;
 
     this.schedule(() => {
       this.presentationState.set('decision');
@@ -1015,12 +1006,14 @@ export class CombatOverlay implements OnDestroy {
     const playerIndex = this.gameService.players.indexOf(result.player);
     const target = playerIndex >= 0 ? { playerIndex, anchor: 'inventory-top' as const } : undefined;
     const eventType = result.outcome === 'defeat' ? 'life-loss' as const : 'combat' as const;
-    queueMicrotask(() => this.toastService.show(combatMessage, combatTone, target, {
+    this.toastService.show(combatMessage, combatTone, target, {
       eventType,
       heroId: result.player.heroId,
       icon: result.outcome === 'defeat' ? '♥' : '⚔',
       audioCue: result.outcome === 'defeat' ? 'DEAD_IMPACT' : undefined,
-    }));
+      context: 'combat',
+      priority: 'critical',
+    });
 
     if (endTurn) {
       this.gameService.endTurn();

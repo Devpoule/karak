@@ -52,6 +52,32 @@ test('la première étape présente les trois modes et un résumé synchronisé'
   await expect(page.getByRole('radio', { name: /IA contre IA/ })).toHaveAttribute('aria-checked', 'true');
 });
 
+test('la progression du setup reste entièrement visible sur mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 407, height: 904 });
+  await page.goto('/play');
+
+  const content = page.locator('.game-setup__content');
+  await expect(content).toBeVisible();
+  await expect(content).toHaveCSS('background-image', /hero-background-panel\.png/);
+
+  const progress = page.locator('.game-setup__progress');
+  await expect(progress).toBeVisible();
+
+  const geometry = await progress.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    const children = Array.from(element.children).map(child => child.getBoundingClientRect());
+    return {
+      left: bounds.left,
+      right: bounds.right,
+      childrenInside: children.every(child => child.left >= bounds.left - 1 && child.right <= bounds.right + 1),
+      hasHorizontalOverflow: element.scrollWidth > element.clientWidth + 1,
+    };
+  });
+
+  expect(geometry.childrenInside).toBe(true);
+  expect(geometry.hasHorizontalOverflow).toBe(false);
+});
+
 test('INIT-003 conserve une préparation initialisée lors du retour depuis le Codex', async ({ page }) => {
   await page.goto('/play');
   await page.getByRole('button', { name: 'Continuer' }).click();

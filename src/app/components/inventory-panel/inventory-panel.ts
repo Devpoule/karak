@@ -163,7 +163,7 @@ export class InventoryPanel implements DoCheck, OnDestroy {
   readonly highlightedSlots = new Set<string>();
 
   private observedPlayer: Player | null = null;
-  private observedItems: unknown[] = [];
+  private observedAcquisitionRevision = 0;
   private readonly feedbackTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
   get inventory(): PlayerInventory | null {
@@ -193,40 +193,23 @@ export class InventoryPanel implements DoCheck, OnDestroy {
       this.dropSelection = null;
     }
 
-    const current = [...this.weaponSlots, ...this.spellSlots, this.keyItem];
-
     if (this.player !== this.observedPlayer) {
       this.dropSelection = null;
       this.observedPlayer = this.player;
-      this.observedItems = current;
+      this.observedAcquisitionRevision = this.playerService.lastEquipmentAcquisition()?.revision ?? 0;
       this.clearFeedback();
       return;
     }
 
-    const previous = this.observedItems;
-    if (current.length === previous.length && current.every((item, i) => item === previous[i])) {
-      return;
-    }
-
-    this.observedItems = current;
-    current.forEach((item, index) => {
-      if (item === previous[index]) return;
-      const slotKey = this.slotKey(index);
-      if (item === null) this.clearSlotFeedback(slotKey);
-      else this.highlightSlot(slotKey);
-    });
+    const acquisition = this.playerService.lastEquipmentAcquisition();
+    if (!acquisition || acquisition.revision <= this.observedAcquisitionRevision) return;
+    this.observedAcquisitionRevision = acquisition.revision;
+    if (acquisition.player !== this.player) return;
+    this.highlightSlot(`${acquisition.kind}-${acquisition.slotIndex}`);
   }
 
   isSlotHighlighted(kind: 'weapon' | 'spell' | 'key', index: number): boolean {
     return this.highlightedSlots.has(`${kind}-${index}`);
-  }
-
-  private slotKey(index: number): string {
-    if (index < this.capacity.weapons) return `weapon-${index}`;
-    if (index < this.capacity.weapons + this.capacity.spells) {
-      return `spell-${index - this.capacity.weapons}`;
-    }
-    return 'key-0';
   }
 
   private highlightSlot(slotKey: string): void {

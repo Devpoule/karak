@@ -23,6 +23,11 @@ import {
 } from '../../services/player.service';
 import { SetupStep } from '../../models/game';
 import { AudioService } from '../../services/audio.service';
+import {
+  DICE_RESULT_DISPLAY_DELAY_MS,
+  DICE_RESULT_SETTLE_DELAY_MS,
+  DICE_ROLL_DELAYS_MS,
+} from '../../data/dice-roll-timing';
 import { ContextualHelpComponent } from '../contextual-help/contextual-help';
 import { PREPARATION_HELP } from '../../data/contextual-help';
 
@@ -820,44 +825,29 @@ export class GameSetup {
     // un lancer refusé ne produit donc aucun bruitage de dés.
     this.audioService.play('DICE_ROLL');
 
-    const speeds = [
-      70,
-      70,
-      80,
-      90,
-      105,
-      125,
-      150,
-      180,
-      215,
-      260,
-      315,
-    ];
-
     let step = 0;
 
     const animate = (): void => {
-      if (step >= speeds.length) {
-        this.setDisplayedDice(
-          playerIndex,
-          finalRoll.die1,
-          finalRoll.die2,
-        );
-
-        this.revealedPlayerIndexes
-          .update(
-            (indexes) => [
-              ...indexes,
-              playerIndex,
-            ],
+      if (step >= DICE_ROLL_DELAYS_MS.length) {
+        window.setTimeout(() => {
+          this.setDisplayedDice(
+            playerIndex,
+            finalRoll.die1,
+            finalRoll.die2,
           );
 
-        this.rollingPlayerIndex.set(
-          null,
-        );
+          this.revealedPlayerIndexes.update((indexes) => [
+            ...indexes,
+            playerIndex,
+          ]);
 
-        this.resolveFirstPlayerIfPossible();
-
+          // Le résultat reste lisible pendant la même durée que dans
+          // l'animation de combat avant de résoudre la manche.
+          window.setTimeout(() => {
+            this.rollingPlayerIndex.set(null);
+            this.resolveFirstPlayerIfPossible();
+          }, DICE_RESULT_DISPLAY_DELAY_MS);
+        }, DICE_RESULT_SETTLE_DELAY_MS);
         return;
       }
 
@@ -867,7 +857,7 @@ export class GameSetup {
         this.randomDie(),
       );
 
-      const delay = speeds[step];
+      const delay = DICE_ROLL_DELAYS_MS[step];
 
       step++;
 
