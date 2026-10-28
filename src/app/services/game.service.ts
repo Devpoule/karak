@@ -21,6 +21,7 @@ import { getHeroDefinition } from '../data/hero-definitions';
 import { GameSavePayloadV2, SaveEnvelopeV2 } from '../models/save';
 import { SaveService } from './save.service';
 import { TutorialScenarioService } from './tutorial-scenario.service';
+import { AudioService } from './audio.service';
 
 /**
  * Résultat du lancer effectué par un joueur
@@ -579,6 +580,7 @@ export class GameService {
     private readonly combatService: CombatService,
     private readonly toastService: ToastService,
     private readonly saveService: SaveService,
+    private readonly audioService: AudioService,
     @Optional() private readonly tutorialScenario?: TutorialScenarioService,
   ) {}
 
@@ -1481,6 +1483,7 @@ export class GameService {
     this.portalTravelSelection.set(null);
     this.lastPortalTraveler.set(player);
     this.portalTravelRevision.update(revision => revision + 1);
+    this.audioService.play('HERO_TELEPORTED');
     if (!this.turnService.canMove && !this.hasPendingTileResolution) this.endTurn();
     return true;
   }

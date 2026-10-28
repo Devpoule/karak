@@ -66,6 +66,16 @@ describe('SettingsPanel', () => {
     expect(document.documentElement.dataset['karakAudio']).toBe('on');
   });
 
+  it('identifie clairement les sons activés par défaut', () => {
+    const trigger = fixture.nativeElement.querySelector('button[aria-label="Paramètres"]') as HTMLButtonElement;
+    trigger.click();
+    fixture.detectChanges();
+
+    const audioOn = fixture.nativeElement.querySelector('input[value="on"]') as HTMLInputElement;
+    expect(audioOn.checked).toBe(true);
+    expect(audioOn.parentElement?.textContent).toContain('Activés');
+  });
+
   it('réinitialise les préférences depuis le panneau', () => {
     const trigger = fixture.nativeElement.querySelector('button[aria-label="Paramètres"]') as HTMLButtonElement;
     trigger.click();
@@ -76,6 +86,6 @@ describe('SettingsPanel', () => {
     expect(document.documentElement.dataset['karakMotion']).toBeUndefined();
     expect(document.documentElement.dataset['karakTextScale']).toBeUndefined();
     expect(document.documentElement.dataset['karakContrast']).toBeUndefined();
-    expect(document.documentElement.dataset['karakAudio']).toBeUndefined();
+    expect(document.documentElement.dataset['karakAudio']).toBe('on');
   });
 });

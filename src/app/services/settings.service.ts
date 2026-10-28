@@ -17,7 +17,7 @@ const DEFAULT_SETTINGS: StoredSettings = {
   motionPreference: 'system',
   textScale: 'standard',
   contrastPreference: 'standard',
-  audioPreference: 'off',
+  audioPreference: 'on',
 };
 
 /** Préférences de confort locales, indépendantes de l'état d'une partie. */

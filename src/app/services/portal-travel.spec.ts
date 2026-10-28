@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { PlacedTile } from '../models/tile';
+import { AudioService } from './audio.service';
 import { CombatService } from './combat.service';
 import { DungeonService } from './dungeon.service';
 import { ExplorationService } from './exploration.service';
@@ -25,19 +26,21 @@ describe('GameService déplacement entre portails', () => {
         TurnService,
         CombatService,
         ToastService,
+        AudioService,
       ],
     });
     const game = TestBed.inject(GameService);
     const players = TestBed.inject(PlayerService);
     const dungeon = TestBed.inject(DungeonService);
     const turn = TestBed.inject(TurnService);
+    const audio = TestBed.inject(AudioService);
     players.initialize(2, 1);
     game.initialize();
     game.phase.set('playing');
     game.activePlayerIndex.set(0);
     players.players[0].heroId = 'argentus';
     players.players[0].position = { x: 0, y: 0 };
-    return { game, players, dungeon, turn };
+    return { game, players, dungeon, turn, audio };
   }
 
   function portal(x: number, y: number): PlacedTile {
@@ -45,7 +48,8 @@ describe('GameService déplacement entre portails', () => {
   }
 
   it('refuse le voyage avec un seul portail et l’autorise entre deux portails pour un mouvement', () => {
-    const { game, players, dungeon, turn } = createGame();
+    const { game, players, dungeon, turn, audio } = createGame();
+    const play = vi.spyOn(audio, 'play').mockImplementation(() => undefined);
     const source = portal(0, 0);
     const destination = portal(4, 4);
     dungeon.tiles[0] = source;
@@ -60,10 +64,13 @@ describe('GameService déplacement entre portails', () => {
     expect(players.players[0].position).toEqual({ x: 4, y: 4 });
     expect(turn.remainingMovements()).toBe(3);
     expect(game.portalTravelSelection()).toBeNull();
+    expect(play).toHaveBeenCalledOnce();
+    expect(play).toHaveBeenCalledWith('HERO_TELEPORTED');
   });
 
   it('refuse les conditions illégales et protège la confirmation répétée', () => {
-    const { game, players, dungeon, turn } = createGame();
+    const { game, players, dungeon, turn, audio } = createGame();
+    const play = vi.spyOn(audio, 'play').mockImplementation(() => undefined);
     const source = portal(0, 0);
     dungeon.tiles[0] = source;
     expect(game.canUsePortalTravel(players.players[0])).toBe(false);
@@ -77,10 +84,12 @@ describe('GameService déplacement entre portails', () => {
     turn.remainingMovements.set(0);
     expect(game.openPortalTravelSelection()).toBe(false);
     expect(game.confirmPortalTravel()).toBe(false);
+    expect(play).not.toHaveBeenCalled();
   });
 
   it('ne résout pas la tuile d’arrivée et accepte un joueur IA actif', () => {
-    const { game, players, dungeon, turn } = createGame();
+    const { game, players, dungeon, turn, audio } = createGame();
+    const play = vi.spyOn(audio, 'play').mockImplementation(() => undefined);
     players.players[0].controller = 'ai';
     dungeon.tiles[0] = portal(0, 0);
     dungeon.tiles.push(portal(2, 2));
@@ -91,5 +100,7 @@ describe('GameService déplacement entre portails', () => {
     expect(game.pendingTokenChoice()).toBeNull();
     expect(game.pendingReward()).toBeNull();
     expect(turn.movementsMadeThisTurn()).toBe(1);
+    expect(play).toHaveBeenCalledOnce();
+    expect(play).toHaveBeenCalledWith('HERO_TELEPORTED');
   });
 });

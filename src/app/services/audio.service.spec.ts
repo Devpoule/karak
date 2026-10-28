@@ -32,9 +32,30 @@ class FakeAudioContext {
   resume(): Promise<void> { return Promise.resolve(); }
 }
 
+class FakeAudioElement {
+  static instances: FakeAudioElement[] = [];
+  readonly play = vi.fn(() => Promise.resolve());
+  currentTime = 0;
+  preload = '';
+  private errorListener: (() => void) | null = null;
+
+  constructor(readonly src: string) {
+    FakeAudioElement.instances.push(this);
+  }
+
+  addEventListener(type: string, listener: () => void): void {
+    if (type === 'error') this.errorListener = listener;
+  }
+
+  emitError(): void {
+    this.errorListener?.();
+  }
+}
+
 describe('AudioService', () => {
   beforeEach(() => {
     FakeAudioContext.instances = 0;
+    FakeAudioElement.instances = [];
     localStorage.clear();
     TestBed.resetTestingModule();
   });
@@ -46,6 +67,7 @@ describe('AudioService', () => {
 
   it('reste silencieux lorsque les sons sont désactivés', () => {
     vi.stubGlobal('AudioContext', FakeAudioContext);
+    TestBed.inject(SettingsService).setAudioPreference('off');
     const service = TestBed.inject(AudioService);
 
     service.play('notification');
@@ -73,5 +95,43 @@ describe('AudioService', () => {
     settings.setAudioPreference('on');
 
     expect(() => TestBed.inject(AudioService).play('notification')).not.toThrow();
+  });
+
+  it('charge et joue le bruitage du portail lorsque les sons sont activés', () => {
+    vi.stubGlobal('Audio', FakeAudioElement);
+    const settings = TestBed.inject(SettingsService);
+    settings.setAudioPreference('on');
+    const service = TestBed.inject(AudioService);
+
+    service.play('HERO_TELEPORTED');
+
+    expect(FakeAudioElement.instances).toHaveLength(1);
+    expect(FakeAudioElement.instances[0].src).toBe('/assets/audio/sfx/teleport.mp3');
+    expect(FakeAudioElement.instances[0].preload).toBe('auto');
+    expect(FakeAudioElement.instances[0].play).toHaveBeenCalledOnce();
+  });
+
+  it('ignore un refus de lecture sans lever d’erreur', () => {
+    vi.stubGlobal('Audio', FakeAudioElement);
+    const settings = TestBed.inject(SettingsService);
+    settings.setAudioPreference('on');
+    const service = TestBed.inject(AudioService);
+    service.play('HERO_TELEPORTED');
+    FakeAudioElement.instances[0].play.mockRejectedValueOnce(new Error('autoplay blocked'));
+
+    expect(() => service.play('HERO_TELEPORTED')).not.toThrow();
+  });
+
+  it('réessaie le chargement après une erreur de ressource', () => {
+    vi.stubGlobal('Audio', FakeAudioElement);
+    const settings = TestBed.inject(SettingsService);
+    settings.setAudioPreference('on');
+    const service = TestBed.inject(AudioService);
+
+    service.play('HERO_TELEPORTED');
+    FakeAudioElement.instances[0].emitError();
+    service.play('HERO_TELEPORTED');
+
+    expect(FakeAudioElement.instances).toHaveLength(2);
   });
 });

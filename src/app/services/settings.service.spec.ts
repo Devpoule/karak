@@ -70,6 +70,14 @@ describe('SettingsService', () => {
     expect(document.documentElement.dataset['karakMotion']).toBeUndefined();
     expect(document.documentElement.dataset['karakTextScale']).toBeUndefined();
     expect(document.documentElement.dataset['karakContrast']).toBeUndefined();
-    expect(document.documentElement.dataset['karakAudio']).toBeUndefined();
+    expect(service.audioPreference()).toBe('on');
+    expect(document.documentElement.dataset['karakAudio']).toBe('on');
+  });
+
+  it('active les sons par défaut lorsqu’aucune préférence n’est enregistrée', () => {
+    const service = TestBed.inject(SettingsService);
+
+    expect(service.audioPreference()).toBe('on');
+    expect(document.documentElement.dataset['karakAudio']).toBe('on');
   });
 });
