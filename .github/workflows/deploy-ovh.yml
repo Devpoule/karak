@@ -1,0 +1,142 @@
+name: Deploy Karak to OVH
+
+# Publication volontaire uniquement : aucun push, schedule ou autre événement
+# ne doit pouvoir modifier l'hébergement de Karak.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Une seconde publication attend la fin de la première au lieu de l'annuler.
+concurrency:
+  group: karak-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publish production build
+    # workflow_dispatch permet de choisir une référence dans l'interface.
+    # Cette garde empêche toute publication depuis une autre branche.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production artifact
+        run: npm run build:production
+
+      - name: Validate hosting artifact
+        run: npm run verify:hosting -- dist/karak/browser
+
+      - name: Install SFTP client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends lftp
+
+      - name: Validate OVH deployment boundary
+        env:
+          OVH_SFTP_HOST: ${{ secrets.OVH_SFTP_HOST }}
+          OVH_SFTP_USER: ${{ secrets.OVH_SFTP_USER }}
+          OVH_SFTP_PASSWORD: ${{ secrets.OVH_SFTP_PASSWORD }}
+          OVH_SFTP_TARGET: ${{ vars.OVH_SFTP_TARGET }}
+          OVH_SFTP_KNOWN_HOSTS: ${{ secrets.OVH_SFTP_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+
+          readonly expected_host='ftp.cluster100.hosting.ovh.net'
+          readonly expected_user='justinj-karak'
+          readonly expected_target='.'
+          readonly expected_fingerprint='SHA256:19oK1hYJKhS20e/dDvc9ZPL9dr7UO3o7veGKM3UcBCg'
+          readonly known_hosts_file='/tmp/karak-ovh-known-hosts'
+
+          if [[ -z "$OVH_SFTP_HOST" || -z "$OVH_SFTP_USER" || -z "$OVH_SFTP_PASSWORD" || -z "$OVH_SFTP_TARGET" ]]; then
+            echo "::error::OVH_SFTP_HOST, OVH_SFTP_USER, OVH_SFTP_PASSWORD and OVH_SFTP_TARGET are required."
+            exit 1
+          fi
+
+          if [[ "$OVH_SFTP_HOST" != "$expected_host" ]]; then
+            echo "::error::OVH_SFTP_HOST must be ftp.cluster100.hosting.ovh.net."
+            exit 1
+          fi
+
+          if [[ "$OVH_SFTP_USER" != "$expected_user" ]]; then
+            echo "::error::Only the dedicated justinj-karak SFTP account is allowed."
+            exit 1
+          fi
+
+          if [[ "$OVH_SFTP_TARGET" != "$expected_target" && "$OVH_SFTP_TARGET" != "./" ]]; then
+            echo "::error::OVH_SFTP_TARGET must be the dedicated account root ('.' or './')."
+            exit 1
+          fi
+
+          if [[ -z "$OVH_SFTP_KNOWN_HOSTS" ]]; then
+            echo "::error::OVH_SFTP_KNOWN_HOSTS is required to verify the OVH SSH host key."
+            exit 1
+          fi
+
+          printf '%s\n' "$OVH_SFTP_KNOWN_HOSTS" > "$known_hosts_file"
+          chmod 600 "$known_hosts_file"
+
+          # ssh-keygen filters matching known_hosts entries without exposing
+          # the key material in the Actions log.
+          ed25519_entries="$(ssh-keygen -F "$expected_host" -f "$known_hosts_file" 2>/dev/null | awk '$2 == "ssh-ed25519" { print $2 " " $3 }')"
+          if [[ -z "$ed25519_entries" ]]; then
+            echo "::error::OVH_SFTP_KNOWN_HOSTS must contain an ED25519 entry for the authorized server."
+            exit 1
+          fi
+
+          matching_fingerprints=0
+          while IFS= read -r public_key; do
+            [[ -z "$public_key" ]] && continue
+            fingerprint="$(printf '%s\n' "$public_key" | ssh-keygen -lf - -E sha256 | awk '{ print $2 }')"
+            if [[ "$fingerprint" != "$expected_fingerprint" ]]; then
+              echo "::error::The ED25519 host key fingerprint does not match the authorized OVH fingerprint."
+              exit 1
+            fi
+            ((matching_fingerprints += 1))
+          done <<< "$ed25519_entries"
+
+          if [[ "$matching_fingerprints" -ne 1 ]]; then
+            echo "::error::Exactly one authorized ED25519 OVH host key is required."
+            exit 1
+          fi
+
+      - name: Synchronize artifact over verified SFTP
+        env:
+          OVH_SFTP_PASSWORD: ${{ secrets.OVH_SFTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          # Toutes les valeurs externes ont été validées dans l'étape
+          # précédente. Les valeurs utilisées par LFTP sont constantes afin
+          # qu'aucun secret ou variable GitHub ne puisse injecter une commande.
+          trap 'unset LFTP_PASSWORD; rm -f -- /tmp/karak-ovh-known-hosts' EXIT
+
+          # LFTP_PASSWORD évite de placer le mot de passe dans les arguments
+          # du processus. StrictHostKeyChecking bloque toute clé inconnue.
+          export LFTP_PASSWORD="$OVH_SFTP_PASSWORD"
+          lftp --norc --env-password --user justinj-karak 'sftp://ftp.cluster100.hosting.ovh.net:22' <<'LFTP_SCRIPT'
+          set cmd:fail-exit yes
+          set net:max-retries 0
+          set sftp:auto-confirm no
+          set sftp:connect-program "ssh -a -x -o BatchMode=no -o CheckHostIP=no -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/tmp/karak-ovh-known-hosts"
+          mirror --reverse --overwrite --no-perms --verbose ./dist/karak/browser/ .
+          bye
+          LFTP_SCRIPT
