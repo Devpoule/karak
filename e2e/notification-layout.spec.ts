@@ -231,6 +231,8 @@ test('sous 900 px, seul l inventaire du joueur actif est visible', async ({ page
     { width: 548, height: 1161 },
     { width: 844, height: 1161 },
     { width: 899, height: 900 },
+    { width: 407, height: 904 },
+    { width: 904, height: 407 },
   ];
 
   for (const viewport of viewports) {

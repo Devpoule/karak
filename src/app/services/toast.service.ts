@@ -1,6 +1,6 @@
 import { Injectable, Optional, signal } from '@angular/core';
 import { HeroId } from '../models/hero';
-import { AudioService } from './audio.service';
+import { AudioEffectCue, AudioService } from './audio.service';
 
 export type ToastTone = 'info' | 'success' | 'warning' | 'combat';
 export type ToastEventType = 'info' | 'turn' | 'combat' | 'life-loss' | 'healing' | 'equipment' | 'treasure' | 'curse' | 'power';
@@ -11,6 +11,7 @@ export interface ToastOptions {
   readonly heroId?: HeroId | null;
   readonly icon?: string;
   readonly duration?: number;
+  readonly audioCue?: AudioEffectCue | null;
 }
 export interface ToastMessage {
   readonly id: number;
@@ -20,6 +21,7 @@ export interface ToastMessage {
   readonly heroId: HeroId | null;
   readonly icon?: string;
   readonly duration: number;
+  readonly audioCue: AudioEffectCue | null;
   readonly target?: ToastTarget;
 }
 
@@ -91,6 +93,7 @@ export class ToastService {
       heroId: options.heroId ?? null,
       icon: options.icon,
       duration: options.duration ?? this.durationFor(text),
+      audioCue: options.audioCue ?? null,
       target,
     };
     if (this.current()) {
@@ -101,7 +104,6 @@ export class ToastService {
     }
     this.addToHistory(message);
     this.display(message);
-    this.audioService?.play('notification');
   }
 
   /** Réinitialise les événements affichés pour une nouvelle partie. */
@@ -121,6 +123,7 @@ export class ToastService {
   private display(message: ToastMessage): void {
     this.current.set(message);
     this.schedule(message);
+    if (message.audioCue) this.audioService?.play(message.audioCue);
   }
 
   private addToHistory(message: ToastMessage): void {
@@ -147,7 +150,7 @@ export class ToastService {
     this.fadeTimer = null;
     this.isDismissing.set(false);
     const next = this.queue.shift() ?? null;
-    this.current.set(next);
-    if (next) this.schedule(next);
+    if (next) this.display(next);
+    else this.current.set(null);
   }
 }

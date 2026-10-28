@@ -1,6 +1,7 @@
 import {
   Component,
   effect,
+  inject,
   signal,
 } from '@angular/core';
 
@@ -21,6 +22,7 @@ import {
   MIN_PLAYER_COUNT,
 } from '../../services/player.service';
 import { SetupStep } from '../../models/game';
+import { AudioService } from '../../services/audio.service';
 import { ContextualHelpComponent } from '../contextual-help/contextual-help';
 import { PREPARATION_HELP } from '../../data/contextual-help';
 
@@ -69,6 +71,7 @@ type FirstPlayerResolutionState =
   styleUrl: './game-setup.scss',
 })
 export class GameSetup {
+  private readonly audioService = inject(AudioService);
   readonly preparationHelp = PREPARATION_HELP;
   /**
    * Vue initiale du jeu.
@@ -812,6 +815,10 @@ export class GameSetup {
       this.firstPlayerResolutionState.set('waiting');
       return;
     }
+
+    // Le résultat métier est validé avant l'animation : un clic invalide ou
+    // un lancer refusé ne produit donc aucun bruitage de dés.
+    this.audioService.play('DICE_ROLL');
 
     const speeds = [
       70,

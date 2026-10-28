@@ -254,6 +254,9 @@ test('Xanros active Substitution depuis le verso de sa carte d’inventaire', as
   await expect(page.locator('.player-hud__power-card-host')).toHaveCount(0);
   const card = page.locator('.hero-panel__card-stage--flipped app-hero-power-card');
   await expect(card).toBeVisible();
+  await expect(card.locator('.hero-power-card--consultation')).toBeVisible();
+  await expect(card.getByRole('button', { name: 'Utiliser' })).toBeVisible();
+  await card.getByRole('button', { name: 'Utiliser' }).click();
   await expect(card.locator('.hero-power-card__choice')).toHaveCount(2);
   await card.locator('.hero-power-card__choice').first().click();
   await expect(page.locator('.player-hud__power-card-host')).toHaveCount(0);

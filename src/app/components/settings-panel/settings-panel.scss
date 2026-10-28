@@ -183,6 +183,13 @@
   padding: var(--karak-space-5);
 }
 
+.settings-panel__audio-settings {
+  grid-column: auto;
+  grid-template-columns: 1fr;
+  column-gap: 0;
+  padding-top: .15rem;
+}
+
 .settings-panel fieldset {
   display: grid;
   gap: .65rem;
@@ -225,6 +232,73 @@
   accent-color: #f5be41;
 }
 
+.settings-panel__volume-setting {
+  display: grid;
+  gap: .35rem;
+  min-width: 0;
+}
+
+.settings-panel__volume-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .5rem;
+  color: var(--karak-text-light);
+  font-size: var(--karak-font-size-sm);
+}
+
+.settings-panel__volume-heading strong {
+  color: var(--karak-text-highlight);
+  font-size: var(--karak-font-size-xs);
+  white-space: nowrap;
+}
+
+.settings-panel__volume-stepper {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(2.5rem, 1fr) 2.25rem;
+  gap: .35rem;
+  align-items: center;
+}
+
+.settings-panel__volume-button,
+.settings-panel__volume-value {
+  display: grid !important;
+  place-items: center;
+  min-height: 2.15rem;
+  box-sizing: border-box;
+}
+
+.settings-panel__volume-button {
+  padding: .15rem;
+  color: var(--karak-text-highlight);
+  font: 700 1.15rem / 1 var(--karak-font-body);
+  background: rgba(245, 190, 65, .1);
+  border: 1px solid rgba(245, 216, 132, .45);
+  border-radius: var(--karak-radius-sm);
+  cursor: pointer;
+}
+
+.settings-panel__volume-button:hover:not(:disabled) {
+  background: rgba(245, 190, 65, .22);
+  border-color: rgba(245, 216, 132, .8);
+}
+
+.settings-panel__volume-button:focus-visible {
+  outline: var(--karak-focus-width) solid var(--karak-focus-color);
+  outline-offset: 2px;
+}
+
+.settings-panel__volume-button:disabled {
+  cursor: not-allowed;
+  opacity: .38;
+}
+
+.settings-panel__volume-value {
+  color: var(--karak-text-highlight);
+  font-weight: 800;
+  text-align: center;
+}
+
 .settings-panel__actions {
   display: flex;
   justify-content: end;
@@ -256,6 +330,45 @@
     gap: var(--karak-space-4);
     padding: 1rem;
   }
+  .settings-panel__audio-settings {
+    column-gap: 0;
+  }
   .settings-panel__actions { padding: .8rem 1rem 1rem; }
   .settings-panel__actions button { flex: 1; }
+}
+
+@media (max-height: 680px) {
+  .settings-panel__backdrop { padding: .5rem; }
+  .settings-panel__header { padding: .7rem .85rem .6rem; }
+  .settings-panel__body {
+    gap: .55rem .8rem;
+    padding: .7rem .85rem;
+  }
+  .settings-panel fieldset { gap: .35rem; }
+  .settings-panel__hint {
+    margin: -.1rem 0 0;
+    font-size: .72rem;
+    line-height: 1.2;
+  }
+  .settings-panel label {
+    min-height: 2.15rem;
+    padding: .3rem .45rem;
+  }
+  .settings-panel__volume-button,
+  .settings-panel__volume-value { min-height: 1.8rem; }
+  .settings-panel__actions { padding: .6rem .85rem .7rem; }
+}
+
+:host-context([data-karak-text-scale='large']) .settings-panel__body {
+  gap: .8rem 1.1rem;
+  padding-block: 1rem;
+}
+
+:host-context([data-karak-text-scale='large']) .settings-panel fieldset {
+  gap: .45rem;
+}
+
+:host-context([data-karak-text-scale='large']) .settings-panel label {
+  min-height: 2.25rem;
+  padding-block: .3rem;
 }

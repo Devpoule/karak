@@ -18,6 +18,7 @@ import { getHeroDefinition } from '../../data/hero-definitions';
 import { Player } from '../../models/player';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
 import { TOAST_LABELS, ToastService } from '../../services/toast.service';
+import { AudioService } from '../../services/audio.service';
 
 /**
  * Page principale du jeu.
@@ -52,8 +53,15 @@ export class Game implements OnInit, OnDestroy {
     readonly gameService: GameService,
     private readonly aiService: AiService,
     private readonly combatService: CombatService,
+    @Optional() private readonly audioService?: AudioService,
     @Optional() private readonly toastService?: ToastService,
   ) {
+    effect(() => {
+      const phase = this.gameService.phase();
+      if (phase === 'setup') this.audioService?.playHomeMusic();
+      if (phase === 'playing') this.audioService?.playGameplayTransition();
+    });
+
     effect(() => {
       const phase = this.gameService.phase();
       const activePlayerIndex = this.gameService.activePlayerIndex();

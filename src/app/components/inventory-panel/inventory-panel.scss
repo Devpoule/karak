@@ -59,6 +59,7 @@
 }
 
 .inventory-panel__slot {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -68,6 +69,40 @@
   min-width: 0;
   width: 100%;
   pointer-events: auto;
+}
+
+/* Aura locale : elle reste dans le slot et ne capte aucune interaction. */
+.inventory-panel__slot::before,
+.inventory-panel__slot::after {
+  content: '';
+  position: absolute;
+  inset: 5%;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.inventory-panel__slot::before {
+  z-index: 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 216, 102, 0.82) 0%, rgba(245, 190, 65, 0.34) 42%, transparent 74%);
+  filter: blur(5px);
+}
+
+.inventory-panel__slot::after {
+  z-index: 2;
+  background:
+    radial-gradient(circle at 17% 26%, #fff8c7 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 82% 22%, #f5be41 0 1.25px, transparent 2.25px),
+    radial-gradient(circle at 86% 76%, #fff8c7 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 18% 79%, #f5be41 0 1.25px, transparent 2.25px);
+}
+
+.inventory-panel__slot--highlighted::before {
+  animation: inventory-acquisition-aura 5500ms ease-in-out both;
+}
+
+.inventory-panel__slot--highlighted::after {
+  animation: inventory-acquisition-sparkles 5500ms ease-in-out both;
 }
 
 .inventory-panel__item-button {
@@ -107,30 +142,28 @@
 }
 
 /* Retour visuel du panneau hérité de la version stabilisée. */
-.inventory-panel--acquired .inventory-panel__board {
-  animation: inventory-board-acquired 1000ms ease-out both;
+@keyframes inventory-acquisition-aura {
+  0% { opacity: 0; transform: scale(0.72); }
+  12% { opacity: 0.95; transform: scale(0.96); }
+  35% { opacity: 0.62; transform: scale(1.08); }
+  70% { opacity: 0.76; transform: scale(0.98); }
+  88% { opacity: 0.42; transform: scale(1.02); }
+  100% { opacity: 0; transform: scale(1.08); }
 }
 
-@keyframes inventory-board-acquired {
-  0%, 100% { filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.55)); }
-  35% { filter: drop-shadow(0 0 12px rgba(245, 190, 65, 0.85)); }
-}
-
-/* Apparition des équipements provenant de la nouvelle implémentation. */
-.inventory-panel__group--highlighted .inventory-panel__item {
-  animation: inventory-item-acquired 1100ms ease-out;
-}
-
-@keyframes inventory-item-acquired {
-  0% { transform: scale(0.8); filter: brightness(1.7); }
-  45% { transform: scale(1.06); filter: brightness(1.4); }
-  100% { transform: scale(1); filter: brightness(1); }
+@keyframes inventory-acquisition-sparkles {
+  0%, 100% { opacity: 0; transform: rotate(0deg) scale(0.7); }
+  14% { opacity: 0.95; transform: rotate(12deg) scale(1); }
+  38% { opacity: 0.45; transform: rotate(-9deg) scale(1.12); }
+  62% { opacity: 0.82; transform: rotate(8deg) scale(0.94); }
+  86% { opacity: 0.35; transform: rotate(-5deg) scale(1.08); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .inventory-panel__board,
-  .inventory-panel__item {
+  .inventory-panel__slot--highlighted::before,
+  .inventory-panel__slot--highlighted::after {
     animation: none !important;
+    opacity: 0.72;
   }
 }
 

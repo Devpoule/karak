@@ -12,6 +12,7 @@ import { DungeonService } from './dungeon.service';
 import { TileDeckService } from './tile-deck.service';
 import { TILE_DEFINITIONS } from '../data/tile-definitions';
 import { TutorialScenarioService } from './tutorial-scenario.service';
+import { AudioService } from './audio.service';
 
 /**
  * Représente une exploration commencée mais dont la nouvelle
@@ -112,6 +113,7 @@ export class ExplorationService {
     private readonly dungeonService: DungeonService,
     private readonly tileDeckService: TileDeckService,
     @Optional() private readonly tutorialScenario?: TutorialScenarioService,
+    @Optional() private readonly audioService?: AudioService,
   ) {}
 
   // ==========================================================
@@ -350,6 +352,7 @@ export class ExplorationService {
     };
 
     this.dungeonService.placeTile(placedTile);
+    this.audioService?.play('TILE_PLACED');
 
     this.pendingTile = null;
     this.lastPlacedTile.set(placedTile);

@@ -1,5 +1,6 @@
 import { Component, ElementRef, EventEmitter, HostListener, Input, Output, ViewChild } from '@angular/core';
-import { AudioPreference, ContrastPreference, MotionPreference, SettingsService, TextScale } from '../../services/settings.service';
+import { AudioVolume, ContrastPreference, MotionPreference, SettingsService, TextScale } from '../../services/settings.service';
+import { AudioService } from '../../services/audio.service';
 
 /** Panneau de préférences de confort partagé par l'accueil et la partie. */
 @Component({
@@ -16,7 +17,10 @@ export class SettingsPanel {
   isOpen = false;
   private previouslyFocusedElement: HTMLElement | null = null;
 
-  constructor(readonly settings: SettingsService) {}
+  constructor(
+    readonly settings: SettingsService,
+    private readonly audioService: AudioService,
+  ) {}
 
   open(): void {
     if (this.disabled) return;
@@ -47,12 +51,31 @@ export class SettingsPanel {
     this.settings.setContrastPreference(preference);
   }
 
-  setAudioPreference(preference: AudioPreference): void {
-    this.settings.setAudioPreference(preference);
+  setMusicVolume(volume: AudioVolume): void {
+    this.settings.setMusicVolume(volume);
+    this.audioService.syncAudioSettings();
+  }
+
+  setSfxVolume(volume: AudioVolume): void {
+    this.settings.setSfxVolume(volume);
+    this.audioService.syncAudioSettings();
+  }
+
+  adjustMusicVolume(delta: number): void {
+    this.setMusicVolume(this.settings.musicVolume() + delta as AudioVolume);
+  }
+
+  adjustSfxVolume(delta: number): void {
+    this.setSfxVolume(this.settings.sfxVolume() + delta as AudioVolume);
+  }
+
+  getVolumeLabel(volume: AudioVolume): string {
+    return volume === 0 ? 'Coupé' : `${volume}/5`;
   }
 
   reset(): void {
     this.settings.reset();
+    this.audioService.syncAudioSettings();
   }
 
   @HostListener('document:keydown.escape', ['$event'])

@@ -113,29 +113,55 @@
             </label>
           </fieldset>
 
-          <fieldset>
-            <legend>Sons</legend>
-            <p class="settings-panel__hint">Les bruitages et retours sonores du jeu sont activés par défaut.</p>
-            <label>
-              <input
-                type="radio"
-                name="settings-audio"
-                value="off"
-                [checked]="settings.audioPreference() === 'off'"
-                (change)="setAudioPreference('off')"
-              />
-              <span>Désactivés</span>
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="settings-audio"
-                value="on"
-                [checked]="settings.audioPreference() === 'on'"
-                (change)="setAudioPreference('on')"
-              />
-              <span>Activés</span>
-            </label>
+          <fieldset class="settings-panel__audio-settings">
+            <legend>Audio</legend>
+            <p class="settings-panel__hint">Réglez séparément la musique et les bruitages.</p>
+            <div class="settings-panel__volume-setting">
+              <div class="settings-panel__volume-heading">
+                <span>Musique</span>
+                <strong>{{ getVolumeLabel(settings.musicVolume()) }}</strong>
+              </div>
+              <div class="settings-panel__volume-stepper" role="group" aria-label="Volume de la musique">
+                <button
+                  type="button"
+                  class="settings-panel__volume-button"
+                  [disabled]="settings.musicVolume() === 0"
+                  aria-label="Diminuer le volume de la musique"
+                  (click)="adjustMusicVolume(-1)"
+                >−</button>
+                <output class="settings-panel__volume-value" aria-live="polite">{{ settings.musicVolume() }}</output>
+                <button
+                  type="button"
+                  class="settings-panel__volume-button"
+                  [disabled]="settings.musicVolume() === 5"
+                  aria-label="Augmenter le volume de la musique"
+                  (click)="adjustMusicVolume(1)"
+                >+</button>
+              </div>
+            </div>
+            <div class="settings-panel__volume-setting">
+              <div class="settings-panel__volume-heading">
+                <span>Bruitages</span>
+                <strong>{{ getVolumeLabel(settings.sfxVolume()) }}</strong>
+              </div>
+              <div class="settings-panel__volume-stepper" role="group" aria-label="Volume des bruitages">
+                <button
+                  type="button"
+                  class="settings-panel__volume-button"
+                  [disabled]="settings.sfxVolume() === 0"
+                  aria-label="Diminuer le volume des bruitages"
+                  (click)="adjustSfxVolume(-1)"
+                >−</button>
+                <output class="settings-panel__volume-value" aria-live="polite">{{ settings.sfxVolume() }}</output>
+                <button
+                  type="button"
+                  class="settings-panel__volume-button"
+                  [disabled]="settings.sfxVolume() === 5"
+                  aria-label="Augmenter le volume des bruitages"
+                  (click)="adjustSfxVolume(1)"
+                >+</button>
+              </div>
+            </div>
           </fieldset>
         </div>
 

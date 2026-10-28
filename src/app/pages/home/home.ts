@@ -1,7 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SettingsPanel } from '../../components/settings-panel/settings-panel';
+import { AudioService } from '../../services/audio.service';
 
 
 const HOME_INTRO_STORAGE_KEY = 'karak-home-intro-seen-v1';
@@ -14,12 +15,18 @@ const HOME_INTRO_TRANSITION_MS = 520;
   styleUrl: './home.scss',
   templateUrl: './home.html',
 })
-export class Home {
+export class Home implements OnInit {
   /** Affiche l'introduction tant que le joueur n'est pas entré dans le donjon. */
   readonly showIntro = signal(this.hasUnseenIntroduction());
 
   /** Permet d'appliquer le fondu de sortie avant de révéler le menu. */
   readonly isEnteringDungeon = signal(false);
+
+  constructor(private readonly audioService: AudioService) {}
+
+  ngOnInit(): void {
+    this.audioService.playHomeMusic();
+  }
 
   private hasUnseenIntroduction(): boolean {
     if (typeof localStorage === 'undefined') return true;
@@ -30,6 +37,7 @@ export class Home {
   enterDungeon(): void {
     if (this.isEnteringDungeon() || !this.showIntro()) return;
 
+    this.audioService.unlock();
     localStorage.setItem(HOME_INTRO_STORAGE_KEY, 'true');
     this.isEnteringDungeon.set(true);
     this.showIntro.set(false);
@@ -47,5 +55,6 @@ export class Home {
   revisitIntroduction(): void {
     localStorage.removeItem(HOME_INTRO_STORAGE_KEY);
     this.showIntro.set(true);
+    this.audioService.playHomeMusic();
   }
 }

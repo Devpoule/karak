@@ -5,6 +5,7 @@ import { PlacedTile } from '../models/tile';
 import { CombatService } from './combat.service';
 import { PlayerService } from './player.service';
 import { TurnService } from './turn.service';
+import { AudioService } from './audio.service';
 
 describe('CombatService séparation du lancer et de la résolution', () => {
   afterEach(() => {
@@ -849,5 +850,66 @@ describe('CombatService séparation du lancer et de la résolution', () => {
     expect(combatService.pendingCombatRoll()?.attackPower).toBe(4);
     expect(combatService.resolvePendingCombat()?.attackPower).toBe(4);
     vi.restoreAllMocks();
+  });
+
+  it('synchronise l ouverture, le lancer et la defaite avec les bruitages metier', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const audio = { play: vi.fn(), playSequence: vi.fn() } as unknown as AudioService;
+    const combatService = new CombatService(playerService, undefined, audio);
+    const player = playerService.players[0];
+
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, createTile());
+    combatService.rollPendingCombat();
+    combatService.resolvePendingCombat();
+
+    expect(audio.play).toHaveBeenNthCalledWith(1, 'COMBAT_DISPLAYING');
+    expect(audio.play).toHaveBeenNthCalledWith(2, 'DICE_ROLL');
+    expect(audio.playSequence).toHaveBeenCalledWith('IMPACT', 'DEFEAT');
+  });
+
+  it('enchaîne impact puis victoire après une victoire de combat', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const audio = { play: vi.fn(), playSequence: vi.fn() } as unknown as AudioService;
+    const combatService = new CombatService(playerService, undefined, audio);
+    const player = playerService.players[0];
+
+    combatService.startCombat(player, { x: 0, y: 0 } as PlacedTile, createTile());
+    combatService.rollPendingCombat();
+    expect(combatService.resolvePendingCombat()?.outcome).toBe('victory');
+
+    expect(audio.playSequence).toHaveBeenCalledWith('IMPACT', 'VICTORY');
+  });
+
+  it('priorise les sons specifiques du dragon et de l egalite', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const playerService = new PlayerService();
+    playerService.initialize(2);
+    const dragonAudio = { play: vi.fn(), playSequence: vi.fn() } as unknown as AudioService;
+    const dragonCombat = new CombatService(playerService, undefined, dragonAudio);
+    dragonCombat.startCombat(playerService.players[0], { x: 0, y: 0 } as PlacedTile, {
+      ...createTile(),
+      tokenId: 'dragon',
+    });
+    dragonCombat.rollPendingCombat();
+    dragonCombat.resolvePendingCombat();
+
+    expect(dragonAudio.play).toHaveBeenNthCalledWith(1, 'DRAGON');
+    expect(dragonAudio.playSequence).toHaveBeenCalledWith('IMPACT', 'DEFEAT');
+
+    const tieAudio = { play: vi.fn() } as unknown as AudioService;
+    const tieCombat = new CombatService(playerService, undefined, tieAudio);
+    const tiePlayer = playerService.players[1];
+    tiePlayer.heroId = 'argentus';
+    (getTokenDefinition('giant-rat') as { strength: number }).strength = 8;
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    tieCombat.startCombat(tiePlayer, { x: 0, y: 0 } as PlacedTile, createTile());
+    tieCombat.rollPendingCombat();
+    tieCombat.resolvePendingCombat();
+
+    expect(tieAudio.play).toHaveBeenNthCalledWith(3, 'EQUAL_SCORE');
   });
 });

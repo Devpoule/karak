@@ -26,6 +26,7 @@ import { TOAST_LABELS, ToastService } from '../../services/toast.service';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
 import { DecisionCard, DecisionCardAction } from '../decision-card/decision-card';
 import { HeroPowerCard } from '../hero-power-card/hero-power-card';
+import { AudioService } from '../../services/audio.service';
 
 /**
  * Étapes visuelles de présentation d'un combat.
@@ -136,13 +137,23 @@ export class CombatOverlay implements OnDestroy {
   private resolving = false;
   private aiUnstoppableDecisionWasPending = false;
   private readonly resultDismissalStarted = signal(false);
+  private previousHeroCardFlipped: boolean | null = null;
 
   constructor(
     private readonly combatService: CombatService,
     private readonly gameService: GameService,
     private readonly aiService: AiService,
     private readonly toastService: ToastService,
+    private readonly audioService: AudioService,
   ) {
+    effect(() => {
+      const flipped = this.isHeroCardFlipped;
+      if (this.previousHeroCardFlipped !== null && flipped !== this.previousHeroCardFlipped) {
+        this.audioService.play('CARD_FLIP');
+      }
+      this.previousHeroCardFlipped = flipped;
+    });
+
     effect(() => {
       const combat = this.combatService.pendingCombat();
 
@@ -1008,6 +1019,7 @@ export class CombatOverlay implements OnDestroy {
       eventType,
       heroId: result.player.heroId,
       icon: result.outcome === 'defeat' ? '♥' : '⚔',
+      audioCue: result.outcome === 'defeat' ? 'DEAD_IMPACT' : undefined,
     }));
 
     if (endTurn) {

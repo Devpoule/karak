@@ -7,6 +7,7 @@ import { PlayerService } from '../../services/player.service';
 import { GameService } from '../../services/game.service';
 import { HeroPowerCard, HeroPowerCardChoice } from '../hero-power-card/hero-power-card';
 import { DungeonService } from '../../services/dungeon.service';
+import { AudioService } from '../../services/audio.service';
 
 interface InventoryPowerDecision {
   kind: 'sneak' | 'fate-weaver' | 'substitution' | 'reincarnation';
@@ -40,6 +41,7 @@ type CurseAnimation = '' | 'hero-panel__curse--appearing' | 'hero-panel__curse--
 export class HeroPanel implements DoCheck, OnDestroy {
   private readonly playerService = inject(PlayerService);
   private readonly dungeonService = inject(DungeonService);
+  private readonly audioService = inject(AudioService);
   readonly gameService = inject(GameService);
 
   /** Côté d'affichage, utilisé pour placer le médaillon vers le centre du plateau. */
@@ -70,6 +72,7 @@ export class HeroPanel implements DoCheck, OnDestroy {
   private substitutionPlayer: Player | null = null;
   private substitutionWaitingForAction = false;
   private observedSubstitutionRevision = 0;
+  private previousPowerCardFlipped: boolean | null = null;
 
   /** Synchronise l'animation avec les notifications de l'état métier. */
   private readonly curseStateEffect = effect(() => {
@@ -122,9 +125,20 @@ export class HeroPanel implements DoCheck, OnDestroy {
 
   ngDoCheck(): void {
     this.syncCurseState(this.player?.isCursed === true);
+    this.syncPowerCardAudio();
     if (this.substitutionPlayer !== null && this.substitutionPlayer !== this.player) {
       this.resetSubstitutionCard();
     }
+  }
+
+  /** Joue un seul son par transition visuelle réelle de la carte de pouvoir. */
+  private syncPowerCardAudio(): void {
+    const flipped = this.isPowerCardFlipped;
+    if (this.previousPowerCardFlipped !== null && flipped !== this.previousPowerCardFlipped) {
+      const audioService = this.audioService;
+      audioService.play('CARD_FLIP');
+    }
+    this.previousPowerCardFlipped = flipped;
   }
 
   private syncCurseState(cursed: boolean): void {
@@ -240,7 +254,7 @@ export class HeroPanel implements DoCheck, OnDestroy {
     };
 
     if (this.gameService.pendingSneakChoice()?.player === player) {
-      return create('sneak', 'decision', 'Passer ou combattre ?');
+      return create('sneak', 'decision', 'Passer ou combattre?');
     }
     const tokens = this.gameService.pendingTokenChoice();
     if (tokens?.player === player) {

@@ -6,6 +6,7 @@ import { PlayerHud } from '../../components/player-hud/player-hud';
 import { TutorialChecklist } from '../../components/tutorial-checklist/tutorial-checklist';
 import { TutorialHelp } from '../../components/tutorial-help/tutorial-help';
 import { TutorialSessionService } from '../../services/tutorial-session.service';
+import { AudioService } from '../../services/audio.service';
 
 /** Page autonome du didacticiel jouable. */
 @Component({
@@ -24,12 +25,14 @@ export class Tutorial implements OnInit, OnDestroy {
   constructor(
     readonly session: TutorialSessionService,
     private readonly router: Router,
+    private readonly audioService: AudioService,
   ) {}
 
   ngOnInit(): void {
     this.compactChecklistQuery = window.matchMedia('(max-width: 899px)');
     this.syncCompactChecklist();
     this.compactChecklistQuery.addEventListener('change', this.syncCompactChecklist);
+    this.audioService.playGameplayTransition();
     this.session.initialize();
   }
 

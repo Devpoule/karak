@@ -122,19 +122,16 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
       return;
     }
 
-    // Substitution est une activation manuelle hors combat : sa carte reste
-    // dans l'inventaire et son verso porte directement la sélection de cible.
-    // Les gardes métier restent la source de vérité, y compris lorsque le
-    // pouvoir est temporairement indisponible.
+    // Substitution est une activation manuelle hors combat : la sélection
+    // reste dans l'inventaire et le verso de la carte porte la consultation,
+    // puis la question de choix. Le moteur métier ne s'ouvre qu'après l'action
+    // « Utiliser » présentée sur ce verso.
     if (
       selection.powerId === 'substitution'
       && player.controller === 'human'
       && player === this.gameService.activePlayer
     ) {
       this.consultation = null;
-      if (this.gameService.canUseXanrosSubstitution) {
-        this.gameService.openXanrosSubstitution();
-      }
       return;
     }
 
@@ -223,7 +220,7 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
     if (this.gameService.openXanrosSubstitution()) this.closePowerConsultation();
   }
 
-  private compactViewport = false;
+  compactViewport = false;
   private resizeObserver: ResizeObserver | null = null;
 
 
@@ -430,7 +427,7 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
   }
 
   private isCompactViewport(): boolean {
-    return typeof window !== 'undefined' && window.innerWidth < 900;
+    return typeof window !== 'undefined' && (window.innerWidth < 900 || window.innerHeight <= 520);
   }
 
   @HostListener('window:resize')

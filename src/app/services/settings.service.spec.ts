@@ -44,13 +44,16 @@ describe('SettingsService', () => {
     service.setMotionPreference('reduced');
     service.setTextScale('large');
     service.setContrastPreference('high');
-    service.setAudioPreference('on');
+    service.setMusicVolume(5);
+    service.setSfxVolume(0);
 
     expect(JSON.parse(localStorage.getItem('karak-settings-v1') ?? '{}')).toEqual({
       motionPreference: 'reduced',
       textScale: 'large',
       contrastPreference: 'high',
       audioPreference: 'on',
+      musicVolume: 5,
+      sfxVolume: 0,
     });
     expect(document.documentElement.dataset['karakMotion']).toBe('reduced');
     expect(document.documentElement.dataset['karakTextScale']).toBe('large');
@@ -78,6 +81,18 @@ describe('SettingsService', () => {
     const service = TestBed.inject(SettingsService);
 
     expect(service.audioPreference()).toBe('on');
+    expect(service.musicVolume()).toBe(3);
+    expect(service.sfxVolume()).toBe(4);
     expect(document.documentElement.dataset['karakAudio']).toBe('on');
+  });
+
+  it('migre le silence historique vers deux canaux coupés', () => {
+    localStorage.setItem('karak-settings-v1', JSON.stringify({ audioPreference: 'off' }));
+
+    const service = TestBed.inject(SettingsService);
+
+    expect(service.musicVolume()).toBe(0);
+    expect(service.sfxVolume()).toBe(0);
+    expect(service.audioPreference()).toBe('off');
   });
 });

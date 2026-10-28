@@ -23,7 +23,7 @@
       [class.player-hud__side--open]="leftPanelOpen"
       [class.player-hud__side--active]="isActivePlayer(leftPlayerIndex)"
       [style.--hero-color]="getHeroColor(player)"
-      [attr.aria-hidden]="!leftPanelOpen"
+       [attr.aria-hidden]="!leftPanelOpen || (compactViewport && !isActivePlayer(leftPlayerIndex))"
       (transitionend)="onLeftPanelTransitionEnd($event)"
     >
       <app-player-sidebar
@@ -63,7 +63,7 @@
       [class.player-hud__side--open]="rightPanelOpen"
       [class.player-hud__side--active]="isActivePlayer(rightPlayerIndex)"
       [style.--hero-color]="getHeroColor(player)"
-      [attr.aria-hidden]="!rightPanelOpen"
+       [attr.aria-hidden]="!rightPanelOpen || (compactViewport && !isActivePlayer(rightPlayerIndex))"
       (transitionend)="onRightPanelTransitionEnd($event)"
     >
       <app-player-sidebar

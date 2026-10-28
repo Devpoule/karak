@@ -15,6 +15,7 @@ import { GameService } from './game.service';
 import { PlayerService } from './player.service';
 import { TurnService } from './turn.service';
 import { CombatService } from './combat.service';
+import { AudioService } from './audio.service';
 
 /**
  * Action élémentaire disponible pour l'IA.
@@ -52,6 +53,7 @@ export class AiService {
     private readonly playerService: PlayerService,
     private readonly turnService: TurnService,
     private readonly combatService: CombatService,
+    private readonly audioService: AudioService,
   ) {}
 
   // ==========================================================
@@ -498,6 +500,7 @@ export class AiService {
       destination.y,
       direction,
     );
+    this.audioService.play('MOVE');
 
     this.restorePlayerFacing(player);
     this.turnService.consumeMovement();

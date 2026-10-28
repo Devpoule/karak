@@ -21,6 +21,7 @@ import { DecisionCard, DecisionCardAction } from '../decision-card/decision-card
 import { TutorialScenarioService } from '../../services/tutorial-scenario.service';
 import { TutorialSessionService } from '../../services/tutorial-session.service';
 import { TutorialGuidanceStep } from '../../data/tutorial-scenario';
+import { AudioService } from '../../services/audio.service';
 
 /**
  * Joueur prêt à être représenté sur le plateau.
@@ -109,6 +110,7 @@ export class Board {
     private readonly turnService: TurnService,
     readonly combatService: CombatService,
     readonly gameService: GameService,
+    private readonly audioService: AudioService,
     @Optional() private readonly tutorialScenario?: TutorialScenarioService,
     @Optional() private readonly tutorialSession?: TutorialSessionService,
   ) {
@@ -1020,7 +1022,7 @@ export class Board {
    *
    * PlayerService applique ensuite la nouvelle position.
    */
-  private moveActivePlayerTo(x: number, y: number, direction: Direction): boolean {
+  private moveActivePlayerTo(x: number, y: number, direction: Direction, playMovementSound = true): boolean {
     const player = this.gameService.activePlayer;
 
     if (!player || !this.gameService.canPerformNormalMovementTo(player, x, y)) {
@@ -1028,6 +1030,7 @@ export class Board {
     }
 
     this.playerService.movePlayerTo(player, x, y, direction);
+    if (playMovementSound) this.audioService.play('MOVE');
 
     /*
      * Le pion regarde dans la direction de son déplacement
@@ -1416,7 +1419,11 @@ export class Board {
     if (!this.movementControlsEnabled || !this.canControlActivePlayer) return;
 
     if (this.pendingTile) {
+      const previousDirection = this.pendingTile.direction;
       this.explorationService.changePendingDirection(direction);
+      if (this.explorationService.pendingTile?.direction !== previousDirection) {
+        this.audioService.play('TILE_SELECT');
+      }
       return;
     }
 
@@ -1425,6 +1432,9 @@ export class Board {
 
     this.explore(tile);
     this.explorationService.changePendingDirection(direction);
+    if (this.explorationService.pendingTile?.direction === direction) {
+      this.audioService.play('TILE_SELECT');
+    }
   }
 
   /**
@@ -1473,7 +1483,11 @@ export class Board {
    * Fait pivoter la tuile actuellement en attente.
    */
   rotatePendingTile(): void {
+    const previousRotation = this.explorationService.pendingTile?.rotation;
     this.explorationService.rotatePendingTile();
+    if (this.explorationService.pendingTile?.rotation !== previousRotation) {
+      this.audioService.play('TILE_ROTATE');
+    }
   }
 
   /**
@@ -1520,7 +1534,7 @@ export class Board {
       return;
     }
 
-    const playerEntered = this.moveActivePlayerTo(placedTile.x, placedTile.y, direction);
+    const playerEntered = this.moveActivePlayerTo(placedTile.x, placedTile.y, direction, false);
 
     if (!playerEntered) {
       return;

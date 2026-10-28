@@ -10,6 +10,7 @@ import { CODEX_BESTIARY, BestiaryEntry } from '../../data/codex-bestiary';
 import { CODEX_RULE_SECTIONS } from '../../data/codex-rules';
 import { CODEX_LORE } from '../../data/codex-lore';
 import { ScrollTopButton } from '../../components/scroll-top-button/scroll-top-button';
+import { AudioService } from '../../services/audio.service';
 
 /** Encyclopédie dédiée au lore des héros de Karak. */
 @Component({
@@ -32,11 +33,13 @@ export class Codex implements OnInit {
   constructor(
     private readonly router: Router,
     private readonly route: ActivatedRoute,
+    private readonly audioService: AudioService,
   ) {}
 
   ngOnInit(): void {
     this.route.queryParamMap.subscribe(params => {
       this.returnContext = params.get('from') === 'game' ? 'game' : 'home';
+      if (this.returnContext === 'home') this.audioService.playHomeMusic();
     });
 
     this.route.fragment.subscribe(fragment => {

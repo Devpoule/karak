@@ -482,8 +482,8 @@
  */
 /* Le tiroir inférieur est réservé aux vrais écrans étroits. À 759 px,
  * deux panneaux latéraux compacts restent encore exploitables. */
-@media (max-width: 899px) {
-  .player-hud__side:not(.player-hud__side--active) {
+@media (max-width: 899px), (max-height: 520px) {
+  .player-hud__side:not(.player-hud__side--active):not(.player-hud__side--auxiliary) {
     visibility: hidden;
     pointer-events: none;
   }
@@ -547,4 +547,22 @@
     flex-basis: clamp(44px, 12vw, 52px);
   }
 
+}
+
+/* En paysage court, la fiche active reste complète sans introduire de
+   défilement interne : sa largeur suit la hauteur réellement disponible. */
+@media (max-height: 520px) {
+  .player-hud {
+    --sidebar-width: clamp(72px, 20vh, 150px);
+    --sidebar-edge: .35rem;
+  }
+
+  .player-hud__side {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .player-hud__turn-controls {
+    inset-block-start: .35rem;
+  }
 }

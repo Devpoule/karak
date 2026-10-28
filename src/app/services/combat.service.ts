@@ -8,6 +8,7 @@ import { PlayerService } from './player.service';
 import { PlacedTile } from '../models/tile';
 import { MonsterTokenDefinition } from '../models/token';
 import { TurnService } from './turn.service';
+import { AudioService } from './audio.service';
 
 /** Construit ou calcule le resultat de isWinningCombatRoll. */
 function isWinningCombatRoll(combat: PendingCombat, roll: CombatRoll): boolean {
@@ -87,6 +88,7 @@ export class CombatService {
   constructor(
     private readonly playerService: PlayerService,
     @Optional() private readonly turnService?: TurnService,
+    @Optional() private readonly audioService?: AudioService,
   ) {}
 
   readonly pendingCombat = signal<PendingCombat | null>(null);
@@ -100,6 +102,7 @@ export class CombatService {
 
   /** Efface tout état de combat transitoire avant une nouvelle partie ou restauration. */
   initialize(): void {
+    this.audioService?.cancelAudioSequence?.();
     this.pendingCombat.set(null);
     this.lastCombatResult.set(null);
     this.pendingCombatRoll.set(null);
@@ -136,6 +139,8 @@ export class CombatService {
       return false;
     }
 
+    this.audioService?.cancelAudioSequence?.();
+
     this.lastCombatResult.set(null);
 
     this.pendingCombat.set({
@@ -145,6 +150,8 @@ export class CombatService {
       sourceTile,
       startedByMovement,
     });
+
+    this.audioService?.play(token.id === 'dragon' ? 'DRAGON' : 'COMBAT_DISPLAYING');
 
     return true;
   }
@@ -188,6 +195,7 @@ export class CombatService {
       unstoppableEligible: false,
     };
     this.pendingCombatRoll.set(roll);
+    this.audioService?.play('DICE_ROLL');
     return roll;
   }
 
@@ -256,6 +264,7 @@ export class CombatService {
       attackPower: diceTotal + roll.equipmentBonus + roll.heroBonus,
       heroRerollsUsed: rerollMask,
     });
+    this.audioService?.play('DICE_ROLL');
     return true;
   }
 
@@ -344,6 +353,14 @@ export class CombatService {
     this.consumeUsedMagicBolts(combat.player, roll.magicBoltsUsed);
 
     this.applyOutcome(combat, outcome);
+
+    if (outcome === 'victory') {
+      this.audioService?.playSequence?.('IMPACT', 'VICTORY');
+    } else if (outcome === 'tie') {
+      this.audioService?.play('EQUAL_SCORE');
+    } else if (outcome === 'defeat') {
+      this.audioService?.playSequence?.('IMPACT', 'DEFEAT');
+    }
 
 
     this.pendingCombat.set(null);

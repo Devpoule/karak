@@ -1,4 +1,4 @@
-<section class="inventory-panel" [class.inventory-panel--acquired]="highlightedGroups.length > 0" data-toast-anchor="inventory-top" [attr.data-player-index]="playerIndex">
+<section class="inventory-panel" data-toast-anchor="inventory-top" [attr.data-player-index]="playerIndex">
   <!-- Le support contient déjà les emplacements : aucune case vide supplémentaire. -->
   <img
     class="inventory-panel__board"
@@ -12,10 +12,9 @@
       class="inventory-panel__group inventory-panel__group--weapons"
       data-toast-anchor="inventory-weapons"
       [attr.data-player-index]="playerIndex"
-      [class.inventory-panel__group--highlighted]="isHighlighted('weapons')"
     >
       @for (weapon of weaponSlots; track $index; let slotIndex = $index) {
-        <div class="inventory-panel__slot">
+        <div class="inventory-panel__slot" [class.inventory-panel__slot--highlighted]="isSlotHighlighted('weapon', slotIndex)">
           @if (weapon) {
             <button type="button" class="inventory-panel__item-button" [disabled]="!canDropEquipment"
               [attr.aria-label]="'Déposer volontairement ' + weapon.name"
@@ -32,10 +31,9 @@
       class="inventory-panel__group inventory-panel__group--spells"
       data-toast-anchor="inventory-spells"
       [attr.data-player-index]="playerIndex"
-      [class.inventory-panel__group--highlighted]="isHighlighted('spells')"
     >
       @for (spell of spellSlots; track $index; let slotIndex = $index) {
-        <div class="inventory-panel__slot">
+        <div class="inventory-panel__slot" [class.inventory-panel__slot--highlighted]="isSlotHighlighted('spell', slotIndex)">
           @if (spell) {
             <button type="button" class="inventory-panel__item-button" [disabled]="!canDropEquipment"
               [attr.aria-label]="spell.effect === 'healing-portal' && canUseHealingPortal ? 'Utiliser ' + spell.name : 'Déposer volontairement ' + spell.name"
@@ -52,9 +50,8 @@
       class="inventory-panel__group inventory-panel__group--key"
       data-toast-anchor="inventory-key"
       [attr.data-player-index]="playerIndex"
-      [class.inventory-panel__group--highlighted]="isHighlighted('key')"
     >
-      <div class="inventory-panel__slot">
+      <div class="inventory-panel__slot" [class.inventory-panel__slot--highlighted]="isSlotHighlighted('key', 0)">
         @if (keyItem; as key) {
           <button type="button" class="inventory-panel__item-button" [disabled]="!canDropEquipment"
             [attr.aria-label]="'Déposer volontairement ' + key.name"

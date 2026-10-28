@@ -8,7 +8,8 @@ test('le panneau de paramètres applique et conserve les préférences', async (
   await page.getByRole('radio', { name: 'Animations réduites' }).check();
   await page.getByRole('radio', { name: 'Grande' }).check();
   await page.getByRole('radio', { name: 'Contraste renforcé' }).check();
-  await page.getByRole('radio', { name: 'Activés', exact: true }).check();
+  await page.getByRole('button', { name: 'Augmenter le volume de la musique' }).click({ clickCount: 2 });
+  await page.getByRole('button', { name: 'Augmenter le volume des bruitages' }).click();
 
   await expect(page.locator('html')).toHaveAttribute('data-karak-motion', 'reduced');
   await expect(page.locator('html')).toHaveAttribute('data-karak-text-scale', 'large');
@@ -26,7 +27,7 @@ test('le panneau de paramètres applique et conserve les préférences', async (
   await expect(page.locator('html')).not.toHaveAttribute('data-karak-motion');
   await expect(page.locator('html')).not.toHaveAttribute('data-karak-text-scale');
   await expect(page.locator('html')).not.toHaveAttribute('data-karak-contrast');
-  await expect(page.locator('html')).not.toHaveAttribute('data-karak-audio');
+  await expect(page.locator('html')).toHaveAttribute('data-karak-audio', 'on');
 
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog', { name: 'Paramètres' })).toBeHidden();

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { AudioService } from './audio.service';
 import { TOAST_LABELS, ToastService } from './toast.service';
 
 describe('ToastService', () => {
@@ -43,6 +44,31 @@ describe('ToastService', () => {
 
     expect(service.current()?.text).toBe('Second message');
     expect(service.isDismissing()).toBe(false);
+  });
+
+  it('synchronise le son avec l affichage initial puis avec chaque toast sorti de la file', () => {
+    const audio = { play: vi.fn() } as unknown as AudioService;
+    const service = new ToastService(audio);
+
+    service.show('Premier message', 'info', undefined, { audioCue: 'AXE_ACQUIRED' });
+    service.show('Second message', 'info', undefined, { audioCue: 'SWORD_ACQUIRED' });
+
+    expect(audio.play).toHaveBeenCalledTimes(1);
+    expect(audio.play).toHaveBeenNthCalledWith(1, 'AXE_ACQUIRED');
+
+    vi.advanceTimersByTime(6600 + 300);
+
+    expect(audio.play).toHaveBeenCalledTimes(2);
+    expect(audio.play).toHaveBeenNthCalledWith(2, 'SWORD_ACQUIRED');
+  });
+
+  it('n emet aucun bip generique pour une notification sans bruitage dedie', () => {
+    const audio = { play: vi.fn() } as unknown as AudioService;
+    const service = new ToastService(audio);
+
+    service.show('Notification informative');
+
+    expect(audio.play).not.toHaveBeenCalled();
   });
 
   it('conserve les notifications acceptées dans leur ordre d apparition', () => {

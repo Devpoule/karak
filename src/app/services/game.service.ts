@@ -21,7 +21,7 @@ import { getHeroDefinition } from '../data/hero-definitions';
 import { GameSavePayloadV2, SaveEnvelopeV2 } from '../models/save';
 import { SaveService } from './save.service';
 import { TutorialScenarioService } from './tutorial-scenario.service';
-import { AudioService } from './audio.service';
+import { AudioEffectCue, AudioService } from './audio.service';
 
 /**
  * Résultat du lancer effectué par un joueur
@@ -473,6 +473,7 @@ export class GameService {
     this.cancelXanrosSubstitution();
     this.lastXanrosSubstitutionPlayer.set(player);
     this.xanrosSubstitutionRevision.update(revision => revision + 1);
+    this.audioService.play('XANROS_SUBSTITUTION');
     this.prepareXanrosSubstitutionAction(player, destinationTile);
     return true;
   }
@@ -633,11 +634,13 @@ export class GameService {
     eventType: ToastEventType,
     anchor: Exclude<ToastAnchor, 'global'>,
     icon?: string,
+    audioCue?: AudioEffectCue | null,
   ): void {
     this.toastService.show(text, tone, this.toastTarget(player, anchor), {
       eventType,
       heroId: player.heroId,
       icon,
+      audioCue,
     });
   }
 
@@ -650,6 +653,7 @@ export class GameService {
       'equipment',
       equipment.kind === 'weapon' ? 'inventory-weapons' : equipment.kind === 'spell' ? 'inventory-spells' : 'inventory-key',
       '✧',
+      this.getEquipmentAudioCue(equipment),
     );
   }
 
@@ -662,7 +666,16 @@ export class GameService {
       'equipment',
       'inventory-top',
       '✧',
+      this.getEquipmentAudioCue(replacement),
     );
+  }
+
+  /** Associe uniquement les armes disposant d'un asset à leur notification validée. */
+  private getEquipmentAudioCue(equipment: Equipment): AudioEffectCue | undefined {
+    if (equipment.id === 'axe') return 'AXE_ACQUIRED';
+    if (equipment.id === 'daggers') return 'DAGGERS_ACQUIRED';
+    if (equipment.id === 'sword') return 'SWORD_ACQUIRED';
+    return undefined;
   }
 
   /** Construit le libellé court d'obtention depuis l'identifiant métier. */
@@ -1307,7 +1320,7 @@ export class GameService {
     this.pendingTreasure.set(null);
     this.optionalXanrosTreasure = false;
     this.endTurn();
-    this.showPlayerToast(pending.player, TOAST_LABELS.treasure(), 'success', 'treasure', 'treasure', '◆');
+    this.showPlayerToast(pending.player, TOAST_LABELS.treasure(), 'success', 'treasure', 'treasure', '◆', 'OPEN_CHEST');
     return true;
   }
 
@@ -1636,10 +1649,19 @@ export class GameService {
     if (!this.canUseHealingFountain) return false;
     const player = this.activePlayer;
     const tile = player?.position ? this.dungeonService.getTileAt(player.position.x, player.position.y) : undefined;
+    const livesBefore = player?.lives ?? 0;
     if (!player || !tile || !this.playerService.restoreCompletely(player, 5)) return false;
     if (!this.turnService.consumeAllMovements()) return false;
     this.healingFountainUse.set({ player, tileKey: this.groundKey(tile) });
-    this.showPlayerToast(player, TOAST_LABELS.healing(), 'success', 'healing', 'inventory-top', '♥');
+    this.showPlayerToast(
+      player,
+      TOAST_LABELS.healing(),
+      'success',
+      'healing',
+      'inventory-top',
+      '♥',
+      player.lives > livesBefore ? 'HEALING' : null,
+    );
     this.endTurn();
     return true;
   }
@@ -1722,8 +1744,17 @@ export class GameService {
     if (!portal) return false;
 
     this.playerService.movePlayerTo(target, destination.x, destination.y, target.facing ?? 'north');
+    const livesBefore = target.lives;
     this.playerService.restoreCompletely(target, 5);
-    this.showPlayerToast(target, TOAST_LABELS.healing(), 'success', 'healing', 'inventory-top', '♥');
+    this.showPlayerToast(
+      target,
+      TOAST_LABELS.healing(),
+      'success',
+      'healing',
+      'inventory-top',
+      '♥',
+      target.lives > livesBefore ? 'HEALING' : null,
+    );
     const activePortalSelection = this.healingPortalSelection();
     if (activePortalSelection?.user === user) {
       this.healingPortalSelection.set(null);
@@ -1824,7 +1855,7 @@ export class GameService {
     this.horanReincarnationSelection.set(null);
     this.lastHoranReincarnationPlayer.set(selection.player);
     this.horanReincarnationRevision.update(revision => revision + 1);
-    this.showPlayerToast(selection.player, TOAST_LABELS.healing(), 'success', 'healing', 'inventory-top', '♥');
+    this.showPlayerToast(selection.player, TOAST_LABELS.healing(), 'success', 'healing', 'inventory-top', '♥', 'HEALING');
 
     // La Réincarnation est une résolution de fin de combat : elle ne rend
     // pas les mouvements consommés et le tour reprend sa fin normale.
@@ -2205,6 +2236,7 @@ export class GameService {
     );
     if (rewardIndex < 0) return false;
     const currentHolder = this.cursedPlayer;
+    let curseApplied = false;
     if (target === null) {
       if (!currentHolder) return false;
     } else {
@@ -2212,12 +2244,20 @@ export class GameService {
       if (currentHolder && currentHolder !== target) {
         this.playerService.setCursed(currentHolder, false);
       }
-      this.playerService.setCursed(target, true);
+      curseApplied = this.playerService.setCursed(target, true);
     }
     this.consumePendingReward(pending, rewardIndex);
     const cursedPlayer = target ?? currentHolder;
     if (!cursedPlayer) return false;
-    this.showPlayerToast(cursedPlayer, TOAST_LABELS.cursed(), 'warning', 'curse', 'curse', '☠');
+    this.showPlayerToast(
+      cursedPlayer,
+      TOAST_LABELS.cursed(),
+      'warning',
+      'curse',
+      'curse',
+      '☠',
+      curseApplied ? 'CURSE' : null,
+    );
     return true;
   }
 

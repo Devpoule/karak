@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { getEquipmentDefinition } from '../../data/equipment-definitions';
 import { InventoryPanel } from './inventory-panel';
 import { GameService } from '../../services/game.service';
@@ -60,6 +60,34 @@ describe('InventoryPanel', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('img[alt="Clé"]')).toBeNull();
+  });
+
+  it('met en valeur le slot exact pendant 5,5 secondes après une acquisition', () => {
+    vi.useFakeTimers();
+    try {
+      const { fixture, playerService } = createReadyPanel();
+      const player = playerService.players[0];
+      fixture.componentInstance.player = player;
+      fixture.detectChanges();
+
+      expect(playerService.addEquipment(player, getEquipmentDefinition('sword')!)).toBe(true);
+      fixture.componentInstance.ngDoCheck();
+      fixture.detectChanges();
+
+      const weaponSlot = fixture.nativeElement.querySelector('.inventory-panel__group--weapons .inventory-panel__slot') as HTMLElement;
+      expect(weaponSlot.classList.contains('inventory-panel__slot--highlighted')).toBe(true);
+      expect(fixture.nativeElement.querySelector('.inventory-panel__group--spells .inventory-panel__slot--highlighted')).toBeNull();
+
+      vi.advanceTimersByTime(5_499);
+      fixture.detectChanges();
+      expect(weaponSlot.classList.contains('inventory-panel__slot--highlighted')).toBe(true);
+
+      vi.advanceTimersByTime(1);
+      fixture.detectChanges();
+      expect(fixture.componentInstance.highlightedSlots.has('weapon-0')).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('affiche le bon inventaire lorsqu un autre joueur est transmis', async () => {

@@ -51,13 +51,16 @@ describe('SettingsPanel', () => {
     const reducedMotion = Array.from(inputs).find(input => input.value === 'reduced');
     const largeText = Array.from(inputs).find(input => input.value === 'large');
     const highContrast = Array.from(inputs).find(input => input.value === 'high');
-    const audioOn = Array.from(inputs).find(input => input.value === 'on');
-    if (!reducedMotion || !largeText || !highContrast || !audioOn) throw new Error('Settings inputs unavailable');
+    const musicLoud = fixture.nativeElement.querySelector('button[aria-label="Augmenter le volume de la musique"]') as HTMLButtonElement;
+    const sfxLouder = fixture.nativeElement.querySelector('button[aria-label="Augmenter le volume des bruitages"]') as HTMLButtonElement;
+    if (!reducedMotion || !largeText || !highContrast || !musicLoud || !sfxLouder) throw new Error('Settings controls unavailable');
 
     reducedMotion.parentElement?.click();
     largeText.parentElement?.click();
     highContrast.parentElement?.click();
-    audioOn.parentElement?.click();
+    musicLoud.click();
+    musicLoud.click();
+    sfxLouder.click();
     fixture.detectChanges();
 
     expect(document.documentElement.dataset['karakMotion']).toBe('reduced');
@@ -66,14 +69,15 @@ describe('SettingsPanel', () => {
     expect(document.documentElement.dataset['karakAudio']).toBe('on');
   });
 
-  it('identifie clairement les sons activés par défaut', () => {
+  it('identifie clairement les niveaux audio par défaut', () => {
     const trigger = fixture.nativeElement.querySelector('button[aria-label="Paramètres"]') as HTMLButtonElement;
     trigger.click();
     fixture.detectChanges();
 
-    const audioOn = fixture.nativeElement.querySelector('input[value="on"]') as HTMLInputElement;
-    expect(audioOn.checked).toBe(true);
-    expect(audioOn.parentElement?.textContent).toContain('Activés');
+    expect(fixture.nativeElement.querySelector('.settings-panel__volume-value')?.textContent).toContain('3');
+    expect(fixture.nativeElement.querySelectorAll('.settings-panel__volume-value')[1]?.textContent).toContain('4');
+    expect(fixture.nativeElement.textContent).toContain('3/5');
+    expect(fixture.nativeElement.textContent).toContain('4/5');
   });
 
   it('réinitialise les préférences depuis le panneau', () => {
@@ -87,5 +91,7 @@ describe('SettingsPanel', () => {
     expect(document.documentElement.dataset['karakTextScale']).toBeUndefined();
     expect(document.documentElement.dataset['karakContrast']).toBeUndefined();
     expect(document.documentElement.dataset['karakAudio']).toBe('on');
+    expect(fixture.componentInstance.settings.musicVolume()).toBe(3);
+    expect(fixture.componentInstance.settings.sfxVolume()).toBe(4);
   });
 });

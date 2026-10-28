@@ -8,8 +8,6 @@ import { PlayerService } from '../../services/player.service';
 import { ExplorationService } from '../../services/exploration.service';
 import { DecisionCard, DecisionCardAction } from '../decision-card/decision-card';
 
-type InventoryGroup = 'weapons' | 'spells' | 'key';
-
 interface DropSelection {
   readonly player: Player;
   readonly kind: Equipment['kind'];
@@ -162,11 +160,11 @@ export class InventoryPanel implements DoCheck, OnDestroy {
   }
 
   readonly capacity = PLAYER_INVENTORY_CAPACITY;
-  highlightedGroups: InventoryGroup[] = [];
+  readonly highlightedSlots = new Set<string>();
 
   private observedPlayer: Player | null = null;
   private observedItems: unknown[] = [];
-  private feedbackTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly feedbackTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
   get inventory(): PlayerInventory | null {
     // La lecture du signal lie le template aux mutations métier de l'inventaire.
@@ -211,33 +209,46 @@ export class InventoryPanel implements DoCheck, OnDestroy {
     }
 
     this.observedItems = current;
-    const added = (start: number, end: number): boolean =>
-      current.slice(start, end).some(item => item != null && !previous.includes(item));
-
-    const groups: InventoryGroup[] = [];
-    const weaponEnd = this.capacity.weapons;
-    const spellEnd = weaponEnd + this.capacity.spells;
-    if (added(0, weaponEnd)) groups.push('weapons');
-    if (added(weaponEnd, spellEnd)) groups.push('spells');
-    if (added(spellEnd, spellEnd + 1)) groups.push('key');
-
-    this.clearFeedback();
-    if (!groups.length) return;
-
-    this.highlightedGroups = groups;
-    this.feedbackTimer = setTimeout(() => this.clearFeedback(), 1100);
+    current.forEach((item, index) => {
+      if (item === previous[index]) return;
+      const slotKey = this.slotKey(index);
+      if (item === null) this.clearSlotFeedback(slotKey);
+      else this.highlightSlot(slotKey);
+    });
   }
 
-  isHighlighted(group: InventoryGroup): boolean {
-    return this.highlightedGroups.includes(group);
+  isSlotHighlighted(kind: 'weapon' | 'spell' | 'key', index: number): boolean {
+    return this.highlightedSlots.has(`${kind}-${index}`);
+  }
+
+  private slotKey(index: number): string {
+    if (index < this.capacity.weapons) return `weapon-${index}`;
+    if (index < this.capacity.weapons + this.capacity.spells) {
+      return `spell-${index - this.capacity.weapons}`;
+    }
+    return 'key-0';
+  }
+
+  private highlightSlot(slotKey: string): void {
+    this.clearSlotFeedback(slotKey);
+    this.highlightedSlots.add(slotKey);
+    this.feedbackTimers.set(slotKey, setTimeout(() => {
+      this.highlightedSlots.delete(slotKey);
+      this.feedbackTimers.delete(slotKey);
+    }, 5500));
+  }
+
+  private clearSlotFeedback(slotKey: string): void {
+    const timer = this.feedbackTimers.get(slotKey);
+    if (timer !== undefined) clearTimeout(timer);
+    this.feedbackTimers.delete(slotKey);
+    this.highlightedSlots.delete(slotKey);
   }
 
   private clearFeedback(): void {
-    if (this.feedbackTimer !== null) {
-      clearTimeout(this.feedbackTimer);
-      this.feedbackTimer = null;
-    }
-    this.highlightedGroups = [];
+    this.feedbackTimers.forEach(timer => clearTimeout(timer));
+    this.feedbackTimers.clear();
+    this.highlightedSlots.clear();
   }
 
   ngOnDestroy(): void {
