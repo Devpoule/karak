@@ -210,13 +210,13 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     player.heroId = 'taia';
     player.position = { x: 0, y: 0 };
 
-    expect(fixture.componentInstance.getHeroPawnImage(player)).toBe('/assets/heroes/taia/sprite-south.png');
+    expect(fixture.componentInstance.getHeroPawnImage(player)).toBe('/assets/heroes/taia/sprite-south.webp');
 
     player.facing = 'invalid' as never;
-    expect(fixture.componentInstance.getHeroPawnImage(player)).toBe('/assets/heroes/taia/sprite-south.png');
+    expect(fixture.componentInstance.getHeroPawnImage(player)).toBe('/assets/heroes/taia/sprite-south.webp');
 
     player.facing = 'east';
-    expect(fixture.componentInstance.getHeroPawnImage(player)).toBe('/assets/heroes/taia/sprite-east.png');
+    expect(fixture.componentInstance.getHeroPawnImage(player)).toBe('/assets/heroes/taia/sprite-east.webp');
   });
 
   it('traite les touches de sélection du portail de guérison', () => {

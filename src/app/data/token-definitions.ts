@@ -8,6 +8,7 @@ import {
  * Chemin des illustrations des jetons.
  */
 const TOKEN_ASSET_PATH = '/assets/tokens';
+const TOKEN_IMAGE_SUFFIX = '-small.webp';
 
 /**
  * Catalogue des jetons de Karak.
@@ -33,7 +34,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     name: 'Le Rat Géant',
     kind: 'monster',
     strength: 5,
-    image: `${TOKEN_ASSET_PATH}/giant-rat.png`,
+    image: `${TOKEN_ASSET_PATH}/giant-rat${TOKEN_IMAGE_SUFFIX}`,
     rewards: [
       { kind: 'equipment', equipmentId: 'daggers' },
     ],
@@ -45,7 +46,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     name: 'L\'Araignée Géante',
     kind: 'monster',
     strength: 6,
-    image: `${TOKEN_ASSET_PATH}/giant-spider.png`,
+    image: `${TOKEN_ASSET_PATH}/giant-spider${TOKEN_IMAGE_SUFFIX}`,
     rewards: [
       { kind: 'equipment', equipmentId: 'heart' },
     ],
@@ -57,7 +58,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     name: 'La Momie',
     kind: 'monster',
     strength: 7,
-    image: `${TOKEN_ASSET_PATH}/skeleton-mummy.png`,
+    image: `${TOKEN_ASSET_PATH}/skeleton-mummy${TOKEN_IMAGE_SUFFIX}`,
     rewards: [
       { kind: 'equipment', equipmentId: 'fire-sword' },
       { kind: 'special', effect: 'curse' },
@@ -70,7 +71,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     name: 'Le Gardien De Clé',
     kind: 'monster',
     strength: 8,
-    image: `${TOKEN_ASSET_PATH}/skeleton-key-guardian.png`,
+    image: `${TOKEN_ASSET_PATH}/skeleton-key-guardian${TOKEN_IMAGE_SUFFIX}`,
     rewards: [
       { kind: 'equipment', equipmentId: 'key' },
     ],
@@ -82,7 +83,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     name: 'L\'Épéiste',
     kind: 'monster',
     strength: 9,
-    image: `${TOKEN_ASSET_PATH}/skeleton-swordsman.png`,
+    image: `${TOKEN_ASSET_PATH}/skeleton-swordsman${TOKEN_IMAGE_SUFFIX}`,
     rewards: [
       { kind: 'equipment', equipmentId: 'sword' },
     ],
@@ -94,7 +95,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     name: 'Le Roi',
     kind: 'monster',
     strength: 10,
-    image: `${TOKEN_ASSET_PATH}/skeleton-king.png`,
+    image: `${TOKEN_ASSET_PATH}/skeleton-king${TOKEN_IMAGE_SUFFIX}`,
     rewards: [
       { kind: 'equipment', equipmentId: 'axe' },
     ],
@@ -106,7 +107,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     name: 'Le Spectre De Mort',
     kind: 'monster',
     strength: 12,
-    image: `${TOKEN_ASSET_PATH}/fallen.png`,
+    image: `${TOKEN_ASSET_PATH}/fallen${TOKEN_IMAGE_SUFFIX}`,
     rewards: [
       { kind: 'treasure', tokenId: 'open-chest' },
     ],
@@ -118,7 +119,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     name: 'Le Dragon',
     kind: 'monster',
     strength: 15,
-    image: `${TOKEN_ASSET_PATH}/dragon.png`,
+    image: `${TOKEN_ASSET_PATH}/dragon${TOKEN_IMAGE_SUFFIX}`,
     rewards: [
       { kind: 'treasure', tokenId: 'treasure' },
     ],
@@ -134,7 +135,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     name: 'La Chauve-Souris Géante',
     kind: 'monster',
     strength: 6,
-    image: `${TOKEN_ASSET_PATH}/giant-bat.png`,
+    image: `${TOKEN_ASSET_PATH}/giant-bat${TOKEN_IMAGE_SUFFIX}`,
     rewards: [
       { kind: 'equipment', equipmentId: 'skull' },
     ],
@@ -146,7 +147,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     name: 'Le Magicien De Glace',
     kind: 'monster',
     strength: 11,
-    image: `${TOKEN_ASSET_PATH}/skeleton-ice-magician.png`,
+    image: `${TOKEN_ASSET_PATH}/skeleton-ice-magician${TOKEN_IMAGE_SUFFIX}`,
     rewards: [
       { kind: 'equipment', equipmentId: 'punch' },
     ],
@@ -160,7 +161,7 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     id: 'closed-chest',
     origin: 'base',
     kind: 'treasure',
-    image: `${TOKEN_ASSET_PATH}/closed-chest.png`,
+    image: `${TOKEN_ASSET_PATH}/closed-chest${TOKEN_IMAGE_SUFFIX}`,
     backTokenId: 'open-chest',
   },
 
@@ -168,14 +169,14 @@ export const TOKEN_DEFINITIONS: TokenDefinition[] = [
     id: 'open-chest',
     origin: 'base',
     kind: 'treasure',
-    image: `${TOKEN_ASSET_PATH}/open-chest.png`,
+    image: `${TOKEN_ASSET_PATH}/open-chest${TOKEN_IMAGE_SUFFIX}`,
   },
 
   {
     id: 'treasure',
     origin: 'base',
     kind: 'treasure',
-    image: `${TOKEN_ASSET_PATH}/treasure.png`,
+    image: `${TOKEN_ASSET_PATH}/treasure${TOKEN_IMAGE_SUFFIX}`,
   },
 ];
 

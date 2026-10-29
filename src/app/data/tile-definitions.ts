@@ -13,7 +13,7 @@ import { TileDefinition } from '../models/tile';
  * Exemple :
  *
  * id: 'straight-01'
- * → /assets/tiles/straight-01.png
+ * → /assets/tiles/straight-01.jpg
  *
  * CHOIX D'IMPLÉMENTATION :
  *
@@ -30,9 +30,13 @@ import { TileDefinition } from '../models/tile';
 function defineTile(
   definition: Omit<TileDefinition, 'image'>,
 ): TileDefinition {
+  const extension = definition.id === 'start' || definition.id === 'tile-back'
+    ? 'png'
+    : 'jpg';
+
   return {
     ...definition,
-    image: `${ASSET_PATHS.tiles}/${definition.id}.png`,
+    image: `${ASSET_PATHS.tiles}/${definition.id}.${extension}`,
   };
 }
 

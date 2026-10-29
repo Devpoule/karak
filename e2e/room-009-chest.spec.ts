@@ -37,7 +37,7 @@ async function prepareHumanChest(page: import('@playwright/test').Page): Promise
     if (!player || !source) throw new Error('Human player or start tile unavailable');
 
     playerService.addEquipment(player, {
-      id: 'key', kind: 'key', name: 'Clé', image: '/assets/tokens/key.png',
+      id: 'key', kind: 'key', name: 'Clé', image: '/assets/tokens/key-small.webp',
     });
     gameService.activePlayerIndex.set(playerService.players.indexOf(player));
     const chest = {

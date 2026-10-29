@@ -3,7 +3,7 @@
   <section class="player-sidebar__movement-panel" aria-label="Points de mouvement du joueur">
     <img
       class="player-sidebar__movement-panel-image"
-      src="/assets/board/hero-movement-counter-panel.png"
+      src="/assets/board/hero-movement-counter-panel.webp"
       alt=""
       draggable="false"
     />
@@ -20,7 +20,7 @@
   @if (heroDefinition; as hero) {
     <div class="player-sidebar__name-row">
       <section class="player-sidebar__name-panel" aria-label="Héros sélectionné">
-        <img src="/assets/board/hero-name-panel.png" alt="" draggable="false" />
+        <img src="/assets/board/hero-name-panel.webp" alt="" draggable="false" />
         <h2>{{ hero.name }}</h2>
         @if (playerIndex !== null) {
         <button
@@ -62,7 +62,7 @@
 
     @if (heroDefinition; as hero) {
       <section class="player-sidebar__technical" aria-label="Informations du héros" data-toast-anchor="power" [attr.data-player-index]="playerIndex">
-        <img src="/assets/board/hero-powers-panel.png" alt="" draggable="false" />
+        <img src="/assets/board/hero-powers-panel.webp" alt="" draggable="false" />
         <div class="player-sidebar__technical-content">
           <div class="player-sidebar__powers" role="group" aria-label="Pouvoirs du héros">
             @for (power of hero.powers; track power.id; let index = $index) {
@@ -103,7 +103,7 @@
         <app-codex-dialog
           title="Malédiction"
           [subtitle]="hero.name"
-          [icon]="'/assets/tokens/curse.png'"
+          [icon]="'/assets/tokens/curse-small.webp'"
           iconAlt="Médaillon de malédiction"
           [body]="hero.name + ' est sous l’emprise d’une malédiction.'"
           [powers]="hero.powers"

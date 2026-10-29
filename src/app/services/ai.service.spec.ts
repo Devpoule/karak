@@ -815,7 +815,7 @@ describe('AiService déplacements et exploration', () => {
   it('ne consomme pas de mouvement lorsqu une résolution bloque encore l IA', () => {
     const player = playerService.players[1];
     player.inventory.key = {
-      id: 'key', kind: 'key', name: 'Clé', image: '/assets/tokens/key.png',
+      id: 'key', kind: 'key', name: 'Clé', image: '/assets/tokens/key-small.webp',
     };
     const chestTile = {
       definitionId: 'room-01', x: 1, y: 0, rotation: 0,
@@ -858,7 +858,7 @@ describe('AiService déplacements et exploration', () => {
     ai.position = { x: 0, y: 0 };
     target.position = { x: 1, y: 0 };
     ai.inventory.key = {
-      id: 'key', kind: 'key', name: 'Clé', image: '/assets/tokens/key.png',
+      id: 'key', kind: 'key', name: 'Clé', image: '/assets/tokens/key-small.webp',
     };
     const chestTile = {
       definitionId: 'room-1', x: 1, y: 0, rotation: 0,

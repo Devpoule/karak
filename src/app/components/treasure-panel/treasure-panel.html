@@ -1,5 +1,5 @@
 <section class="treasure-panel" aria-label="Trésors collectés" data-toast-anchor="treasure" [attr.data-player-index]="playerIndex">
-  <img class="treasure-panel__board" src="/assets/board/hero-points-panel.png" alt="" draggable="false" />
+  <img class="treasure-panel__board" src="/assets/board/hero-points-panel.webp" alt="" draggable="false" />
   <div class="treasure-panel__content">
     <strong class="treasure-panel__points">{{ points | quantity: 'PT' : 'PTS' }}</strong>
 
@@ -20,7 +20,7 @@
         </div>
       } @else {
         <span class="treasure-panel__empty" role="img" aria-label="Aucun trésor">
-          <img src="/assets/tokens/treasure-transparent.png" alt="" draggable="false" />
+          <img src="/assets/tokens/treasure-transparent-small.webp" alt="" draggable="false" />
           <span class="treasure-panel__empty-strike" aria-hidden="true"></span>
         </span>
       }

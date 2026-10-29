@@ -67,7 +67,7 @@ export class HeroPanel implements DoCheck, OnDestroy {
   @Input() selectedPowerId: HeroPowerId | null = null;
   /** Active le contour de la carte uniquement pour le joueur dont c'est le tour. */
   @Input() isActive = false;
-  @Input() curseImagePath = '/assets/tokens/curse.png';
+  @Input() curseImagePath = '/assets/tokens/curse-small.webp';
   readonly curseVisible = signal(false);
   readonly curseAnimation = signal<CurseAnimation>('');
   readonly substitutionFlipped = signal(false);

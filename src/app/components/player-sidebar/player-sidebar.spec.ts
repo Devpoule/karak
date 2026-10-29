@@ -14,13 +14,13 @@ describe('PlayerSidebar codex', () => {
     return sidebar;
   }
 
-  it('utilise les médaillons PNG correspondant aux deux pouvoirs', () => {
+  it('utilise les médaillons WebP correspondant aux deux pouvoirs', () => {
     const sidebar = createSidebar();
     const heroId = sidebar.heroDefinition!.id;
 
     expect(sidebar.heroDefinition!.nickname).toBeTruthy();
-    expect(sidebar.powerImage(0)).toBe(`/assets/heroes/${heroId}/character-primary-power.png`);
-    expect(sidebar.powerImage(1)).toBe(`/assets/heroes/${heroId}/character-secondary-power.png`);
+    expect(sidebar.powerImage(0)).toBe(`/assets/heroes/${heroId}/character-primary-power.webp`);
+    expect(sidebar.powerImage(1)).toBe(`/assets/heroes/${heroId}/character-secondary-power.webp`);
   });
 
   it('ouvre une seule fiche à la fois et referme la fiche active au second clic', () => {

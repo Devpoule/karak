@@ -75,7 +75,7 @@ test('partie intégrale déterministe jusqu’au classement du Dragon', async ({
     player.heroId = 'argentus';
     player.inventory.spells.fill(null);
     player.inventory.weapons[0] = {
-      id: 'sword', kind: 'weapon', name: 'Épée', image: '/assets/tokens/sword.png', attackBonus: 2,
+      id: 'sword', kind: 'weapon', name: 'Épée', image: '/assets/tokens/sword-small.webp', attackBonus: 2,
     };
     const sourceTile = { definitionId: 'start', x: 0, y: 0, rotation: 0 };
     const dragonTile = {

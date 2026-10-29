@@ -56,7 +56,7 @@ async function prepareCombat(page: import('@playwright/test').Page, strength: nu
       id: 'sword',
       kind: 'weapon',
       name: 'Épée',
-      image: '/assets/tokens/sword.png',
+      image: '/assets/tokens/sword-small.webp',
       attackBonus: 2,
     };
     if (shouldUseMagic) {
@@ -65,7 +65,7 @@ async function prepareCombat(page: import('@playwright/test').Page, strength: nu
         kind: 'spell',
         effect: 'magic-attack',
         name: 'Tir magique',
-        image: '/assets/tokens/fire-sword.png',
+        image: '/assets/tokens/fire-sword-small.webp',
       };
     }
 
@@ -191,7 +191,7 @@ async function assertCombatPortraitLayout(page: import('@playwright/test').Page)
   expect(layout.arena).not.toBeNull();
   expect(layout.center).not.toBeNull();
   expect(layout.heroImage).not.toBeNull();
-  expect(layout.heroImageSource).toContain('/character-token.png');
+  expect(layout.heroImageSource).toContain('/character-token.webp');
   expect(layout.monsterImage).not.toBeNull();
   expect(layout.heroToken).not.toBeNull();
   expect(layout.monsterToken).not.toBeNull();

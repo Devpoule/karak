@@ -23,7 +23,7 @@ test.describe('recette du livrable de production', () => {
       '/manifest.webmanifest',
       '/icons/icon-192.png',
       '/icons/icon-512.png',
-      '/assets/board/karak-cover.png',
+      '/assets/board/karak-cover.jpg',
     ]) {
       const response = await request.get(assetPath);
       expect(response.ok(), assetPath).toBe(true);

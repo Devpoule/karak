@@ -31,7 +31,7 @@
 Le manuel local est la source de vérité pour les règles officielles :
 
 - `public/assets/rules/karak-base.pdf`
-- les huit images `public/assets/rules/karak-base-01.png` à `karak-base-08.png`
+- les huit images `public/assets/rules/karak-base-01.jpg` à `karak-base-08.jpg`
 
 Le code décrit l'implémentation actuelle, pas nécessairement la règle officielle. Toute divergence ou ambiguïté doit être signalée explicitement (`INCERTAIN`, `DIVERGENCE` ou `CHOIX NUMÉRIQUE`) avant correction.
 

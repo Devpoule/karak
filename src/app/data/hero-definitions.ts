@@ -8,12 +8,12 @@ const HERO_ASSETS_PATH = '/assets/heroes';
 /**
  * Dos commun à toutes les cartes Héros.
  */
-export const HERO_CARD_BACK = `${HERO_ASSETS_PATH}/card-back.png`;
+export const HERO_CARD_BACK = `${HERO_ASSETS_PATH}/card-back.webp`;
 
 /**
  * Variante transparente du dos de carte.
  */
-export const HERO_CARD_BACK_TRANSPARENT = `${HERO_ASSETS_PATH}/card-back-transparent.png`;
+export const HERO_CARD_BACK_TRANSPARENT = `${HERO_ASSETS_PATH}/card-back-transparent.webp`;
 
 /**
  * Palette d'identité utilisée par les effets visuels propres aux héros.
@@ -153,7 +153,9 @@ const HERO_POWERS: Readonly<Record<HeroId, readonly [HeroPowerId, HeroPowerId]>>
  *
  * CONVENTION :
  *
- * assets/heroes/{heroId}/{nom-du-fichier}.png
+ * assets/heroes/{heroId}/{nom-du-fichier}.webp.
+ * Les portraits transparents utilisent une variante compacte WebP dérivée de
+ * leur source PNG conservée.
  *
  * Tous les héros utilisent les mêmes noms de fichiers.
  */
@@ -179,21 +181,21 @@ function createHeroDefinition(
      * La carte du tirage correspond à l'illustration
      * complète du personnage.
      */
-    card: `${path}/character.png`,
+    card: `${path}/character.webp`,
 
-    character: `${path}/character.png`,
+    character: `${path}/character.webp`,
 
-    characterToken: `${path}/character-token.png`,
+    characterToken: `${path}/character-token.webp`,
 
-    characterTransparent: `${path}/character-transparent.png`,
+    characterTransparent: `${path}/character-transparent-small.webp`,
 
-    characterStats: `${path}/character-stats.png`,
+    characterStats: `${path}/character-stats.webp`,
 
     pawn: {
-      north: `${path}/sprite-north.png`,
-      east: `${path}/sprite-east.png`,
-      south: `${path}/sprite-south.png`,
-      west: `${path}/sprite-west.png`,
+      north: `${path}/sprite-north.webp`,
+      east: `${path}/sprite-east.webp`,
+      south: `${path}/sprite-south.webp`,
+      west: `${path}/sprite-west.webp`,
     },
 
     powers: [HERO_POWER_DEFINITIONS[firstPower], HERO_POWER_DEFINITIONS[secondPower]],

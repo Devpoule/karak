@@ -55,7 +55,7 @@ test('l’accueil met en avant le logo et conserve une hiérarchie typographique
   const logo = page.locator('.home__logo');
   await expect(logo).toBeVisible();
   await expect(page.getByRole('link', { name: "Découvrir l'univers du jeu" })).toBeVisible();
-  await expect(page.locator('.home__background')).toHaveAttribute('src', '/assets/board/karak-cover.png');
+  await expect(page.locator('.home__background')).toHaveAttribute('src', '/assets/board/karak-cover.jpg');
   await expect(page.getByText("Six héros. Un donjon. D'innombrables trésors.")).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Explorez les catacombes' })).toHaveCount(0);
 

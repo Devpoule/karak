@@ -101,7 +101,7 @@ export interface Player {
    *
    * REPRÉSENTATION :
    *
-   * lorsque cette valeur est true, le médaillon curse.png
+   * lorsque cette valeur est true, le médaillon curse.webp
    * doit être superposé au portrait du héros dans l'inventaire.
    *
    * Cet état ne consomme aucun emplacement d'inventaire.

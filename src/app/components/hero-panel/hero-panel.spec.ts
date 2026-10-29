@@ -82,7 +82,7 @@ describe('HeroPanel brouillard d’inconscience', () => {
     expect(stage.classList.contains('hero-panel__card-stage--flipped')).toBe(true);
     expect(stage.querySelector('.hero-power-card--announcement')).not.toBeNull();
     expect(stage.querySelector('.hero-power-card__portrait')?.getAttribute('src'))
-      .toBe('/assets/heroes/xanros/character-transparent.png');
+      .toBe('/assets/heroes/xanros/character-transparent-small.webp');
     expect(stage.querySelector('.hero-power-card__power')?.textContent).toContain('Substitution');
 
     vi.advanceTimersByTime(2499);

@@ -162,7 +162,7 @@ export class PlayerSidebar {
     const hero = this.heroDefinition;
     const powerKind = powerIndex === 0 ? 'primary' : 'secondary';
     return hero
-      ? `/assets/heroes/${hero.id}/character-${powerKind}-power.png`
+      ? `/assets/heroes/${hero.id}/character-${powerKind}-power.webp`
       : '';
   }
 

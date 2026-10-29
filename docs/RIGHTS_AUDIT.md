@@ -35,9 +35,9 @@ Le dépôt contient actuellement :
 
 | Groupe | Constat | Statut des droits dans le dépôt |
 |---|---|---|
-| `public/assets` | 225 fichiers PNG | Source, auteur, licence et autorisation non documentés |
+| `public/assets` | 225 images sources et leurs dérivés WebP | Source, auteur, licence et autorisation non documentés |
 | `public/assets/rules/karak-base.pdf` | Manuel officiel local | Conditions de redistribution non documentées |
-| `public/assets/rules/karak-base-01.png` à `-08.png` | Pages du manuel | Conditions de redistribution non documentées |
+| `public/assets/rules/karak-base-01.jpg` à `-08.jpg` | Pages du manuel | Conditions de redistribution non documentées |
 | `public/favicon.ico`, manifest et icônes PWA | Assets de l'application | Attribution ou autorisation non documentée |
 
 Le dépôt ne contient pas de fichier `LICENSE`, `COPYING`, `NOTICE`,

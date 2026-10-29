@@ -53,7 +53,7 @@ describe('InventoryPanel', () => {
 
     const keyImage = fixture.nativeElement.querySelector('img[alt="Clé"]') as HTMLImageElement | null;
     expect(keyImage).not.toBeNull();
-    expect(keyImage?.getAttribute('src')).toBe('/assets/tokens/key.png');
+    expect(keyImage?.getAttribute('src')).toBe('/assets/tokens/key-small.webp');
 
     playerService.removeEquipment(player, 'key', 0);
     await fixture.whenStable();

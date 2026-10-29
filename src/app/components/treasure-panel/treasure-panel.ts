@@ -54,9 +54,9 @@ export class TreasurePanel {
 
   private getImage(type: Treasure): string {
     switch (type) {
-      case 'opened-chest': return '/assets/tokens/open-chest.png';
-      case 'monster-treasure': return '/assets/tokens/treasure.png';
-      case 'dragon-ruby': return '/assets/tokens/dragon.png';
+      case 'opened-chest': return '/assets/tokens/open-chest-small.webp';
+      case 'monster-treasure': return '/assets/tokens/treasure-small.webp';
+      case 'dragon-ruby': return '/assets/tokens/dragon-small.webp';
     }
   }
 }

@@ -67,7 +67,7 @@ describe('TreasurePanel', () => {
     const emptyTreasure = fixture.nativeElement.querySelector('.treasure-panel__empty') as HTMLElement;
     expect(emptyTreasure.getAttribute('role')).toBe('img');
     expect(emptyTreasure.getAttribute('aria-label')).toBe('Aucun trésor');
-    expect(emptyTreasure.querySelector('img')?.getAttribute('src')).toBe('/assets/tokens/treasure-transparent.png');
+    expect(emptyTreasure.querySelector('img')?.getAttribute('src')).toBe('/assets/tokens/treasure-transparent-small.webp');
     expect(emptyTreasure.querySelector('.treasure-panel__empty-strike')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.treasure-panel__points')?.textContent).toContain('0 PT');
 

@@ -1,6 +1,6 @@
 # Xanros — prince noir
 
-Source officielle : [manuel local](../../../public/assets/rules/karak-base.pdf), p. 5 (`karak-base-06.png`).
+Source officielle : [manuel local](../../../public/assets/rules/karak-base.pdf), p. 5 (`karak-base-06.jpg`).
 
 ## `HERO-XANROS-SACRIFICE`
 

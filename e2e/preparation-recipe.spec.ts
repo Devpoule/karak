@@ -58,7 +58,7 @@ test('la progression du setup reste entièrement visible sur mobile', async ({ p
 
   const content = page.locator('.game-setup__content');
   await expect(content).toBeVisible();
-  await expect(content).toHaveCSS('background-image', /hero-background-panel\.png/);
+  await expect(content).toHaveCSS('background-image', /hero-background-panel\.webp/);
 
   const progress = page.locator('.game-setup__progress');
   await expect(progress).toBeVisible();

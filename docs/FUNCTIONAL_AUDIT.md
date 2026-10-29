@@ -8,7 +8,7 @@
 
 Sources examinées :
 
-- manuel local `public/assets/rules/karak-base.pdf` et ses huit pages PNG ;
+- manuel local `public/assets/rules/karak-base.pdf` et ses huit pages JPEG ;
 - référentiel interne `docs/RULES.md` et fiches `docs/rules/` ;
 - modèles, données, services, composants et pages Angular sous `src/app/` ;
 - 32 fichiers de tests contenant 304 cas `it/test` au moment de cet inventaire ;
