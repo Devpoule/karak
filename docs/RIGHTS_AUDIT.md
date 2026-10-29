@@ -1,6 +1,6 @@
 # Audit des droits de diffusion
 
-**Date de l'audit :** 21 octobre 2026  
+**Date de l'audit :** 29 octobre 2026
 **Statut :** **DIFFUSION PUBLIQUE NON AUTORISÉE PAR CET AUDIT**
 
 Cet audit est un relevé technique de provenance et de documentation. Il ne
@@ -35,7 +35,7 @@ Le dépôt contient actuellement :
 
 | Groupe | Constat | Statut des droits dans le dépôt |
 |---|---|---|
-| `public/assets` | 212 fichiers PNG | Source, auteur, licence et autorisation non documentés |
+| `public/assets` | 225 fichiers PNG | Source, auteur, licence et autorisation non documentés |
 | `public/assets/rules/karak-base.pdf` | Manuel officiel local | Conditions de redistribution non documentées |
 | `public/assets/rules/karak-base-01.png` à `-08.png` | Pages du manuel | Conditions de redistribution non documentées |
 | `public/favicon.ico`, manifest et icônes PWA | Assets de l'application | Attribution ou autorisation non documentée |
@@ -45,12 +45,12 @@ Le dépôt ne contient pas de fichier `LICENSE`, `COPYING`, `NOTICE`,
 L'historique Git décrit les ajouts et conversions de fichiers, mais ne fournit
 pas de preuve de licence ou d'autorisation pour leur usage public.
 
-La commande d'audit identifie 38 fichiers avec un marqueur technique ou de
-droit : 36 fichiers portent des marqueurs C2PA/OpenAI Media Service et 2
+La commande d'audit identifie 52 fichiers avec un marqueur technique ou de
+droit : 50 fichiers portent des marqueurs C2PA/OpenAI Media Service et 2
 portent le marqueur `Copyright`. Ces marqueurs apportent une information
 technique de provenance et doivent être conservés ; ils ne constituent pas, à
 eux seuls, une licence de diffusion du jeu, de ses règles, de sa marque ou des
-éléments fournis en entrée. Les 179 autres fichiers publics sans marqueur ont
+éléments fournis en entrée. Les 215 autres fichiers publics sans marqueur ont
 une provenance inconnue, et non une licence implicite.
 
 Le site officiel présente Karak comme un jeu de société commercial et fournit
@@ -65,7 +65,7 @@ Les licences déclarées par les dépendances directes sont les suivantes :
 
 | Dépendance | Version auditée | Licence déclarée |
 |---|---:|---|
-| `@angular/common`, `@angular/compiler`, `@angular/core`, `@angular/forms`, `@angular/platform-browser`, `@angular/router`, `@angular/service-worker` | 22.2.0 | MIT |
+| `@angular/common`, `@angular/compiler`, `@angular/core`, `@angular/forms`, `@angular/platform-browser`, `@angular/router`, `@angular/service-worker` | 22.2.3 | MIT |
 | `rxjs` | 7.8.2 | Apache-2.0 |
 | `tslib` | 2.8.1 | 0BSD |
 
@@ -100,8 +100,8 @@ ci-dessus. Aucun transfert OVH n'a été effectué.
 | Domaine | Preuve actuelle | Décision |
 |---|---|---|
 | Code applicatif | Dépôt Angular privé, licences des dépendances déclarées | À maintenir sous revue de diffusion |
-| Assets générés | Marqueurs C2PA/OpenAI sur 36 fichiers | Vérifier les conditions et les inputs |
-| Assets sans marqueur | 179 fichiers publics sans provenance détectée | Identifier source et autorisation |
+| Assets générés | Marqueurs C2PA/OpenAI sur 50 fichiers | Vérifier les conditions et les inputs |
+| Assets sans marqueur | 215 fichiers publics sans provenance détectée | Identifier source et autorisation |
 | Manuel et pages de règles | Contenu officiel localisé dans `public/assets/rules` | Autorisation ou retrait requis |
 | Nom et contenu Karak | Référence à un produit tiers | Autorisation requise avant publication |
 
