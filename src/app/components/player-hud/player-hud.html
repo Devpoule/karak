@@ -36,7 +36,6 @@
         [interactionLocked]="isCombatActive"
         [usablePowerIds]="usablePowerIds(player)"
         (playerTabClicked)="togglePlayerPanel(leftPlayerIndex)"
-        (powerSelected)="openPowerConsultation(player, $event)"
       />
     </aside>
   }
@@ -76,7 +75,6 @@
         [interactionLocked]="isCombatActive"
         [usablePowerIds]="usablePowerIds(player)"
         (playerTabClicked)="togglePlayerPanel(rightPlayerIndex)"
-        (powerSelected)="openPowerConsultation(player, $event)"
       />
     </aside>
   } @else if (rightAuxiliaryTemplate) {
@@ -212,23 +210,3 @@
   </div>
 
 </div>
-
-@if (consultationHero; as hero) {
-  @if (consultationPower; as power) {
-    <div class="player-hud__power-card-host" role="presentation" (click)="closePowerConsultation($event)">
-      <app-hero-power-card
-        mode="consultation"
-        [hero]="hero"
-        [power]="power"
-        [conditions]="consultation?.player?.isCursed ? 'Pouvoir indisponible sous malédiction.' : ''"
-        [showConsultationAction]="consultationPowerIsVoluntary"
-        [canActivate]="consultationPowerCanActivate"
-        [activationUnavailableReason]="consultationPowerUnavailableReason"
-        activateLabel="Utiliser"
-        (click)="$event.stopPropagation()"
-        (activationRequested)="activateConsultationPower()"
-        (closed)="closePowerConsultation()"
-      />
-    </div>
-  }
-}

@@ -39,7 +39,7 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     TestBed.flushEffects();
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.powerAnnouncement()).toBeNull();
+    expect(fixture.nativeElement.querySelector('.board__power-announcement')).toBeNull();
   });
 
   it('annonce Tisseuse de destin seulement après le choix effectif de l’IA', () => {
@@ -50,12 +50,12 @@ describe('Board affichage des récompenses et équipements au sol', () => {
     const tokens = [getTokenDefinition('giant-rat')!, getTokenDefinition('closed-chest')!] as const;
     gameService.pendingTokenChoice.set({ player, tile, sourceTile: tile, tokens });
     TestBed.flushEffects();
-    expect(fixture.componentInstance.powerAnnouncement()).toBeNull();
+    expect(fixture.nativeElement.querySelector('.board__power-announcement')).toBeNull();
 
     tile.tokenId = tokens[0].id;
     gameService.pendingTokenChoice.set(null);
     TestBed.flushEffects();
-    expect(fixture.componentInstance.powerAnnouncement()?.power.id).toBe('fate-weaver');
+    expect(fixture.nativeElement.querySelector('.board__power-announcement')).toBeNull();
   });
 
   it('conserve le verso tant qu’une récompense du jeton est en attente', () => {

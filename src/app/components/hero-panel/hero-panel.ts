@@ -4,7 +4,7 @@ import { getHeroDefinition, getHeroIdentityColor } from '../../data/hero-definit
 import { HeroDefinition, HeroPowerDefinition, HeroPowerId } from '../../models/hero';
 import { Player } from '../../models/player';
 import { PlayerService } from '../../services/player.service';
-import { GameService } from '../../services/game.service';
+import { GameService, PendingTokenChoice } from '../../services/game.service';
 import { HeroPowerCard, HeroPowerCardChoice } from '../hero-power-card/hero-power-card';
 import { DungeonService } from '../../services/dungeon.service';
 import { AudioService } from '../../services/audio.service';
@@ -18,6 +18,11 @@ interface InventoryPowerDecision {
   activateLabel: string;
   declineLabel: string;
   cancelable: boolean;
+}
+
+interface PowerAnnouncement {
+  power: HeroPowerDefinition;
+  message: string;
 }
 
 type CurseAnimation = '' | 'hero-panel__curse--appearing' | 'hero-panel__curse--disappearing';
@@ -51,6 +56,7 @@ export class HeroPanel implements DoCheck, OnDestroy {
   @Output() readonly portraitClicked = new EventEmitter<void>();
   /** Ouvre la fiche d'information dédiée à la malédiction. */
   @Output() readonly curseClicked = new EventEmitter<void>();
+  @Output() readonly powerClosed = new EventEmitter<void>();
 
   /**
    * Joueur dont le héros est représenté.
@@ -65,6 +71,7 @@ export class HeroPanel implements DoCheck, OnDestroy {
   readonly curseVisible = signal(false);
   readonly curseAnimation = signal<CurseAnimation>('');
   readonly substitutionFlipped = signal(false);
+  readonly powerAnnouncement = signal<PowerAnnouncement | null>(null);
   private previousPlayer: Player | null = null;
   private previousCurseState = false;
   private dismissalTimer: ReturnType<typeof setTimeout> | null = null;
@@ -72,6 +79,11 @@ export class HeroPanel implements DoCheck, OnDestroy {
   private substitutionPlayer: Player | null = null;
   private substitutionWaitingForAction = false;
   private observedSubstitutionRevision = 0;
+  private announcementPlayer: Player | null = null;
+  private announcementTimer: ReturnType<typeof setTimeout> | null = null;
+  private observedTokenChoice: PendingTokenChoice | null = null;
+  private observedHoranReincarnationRevision = 0;
+  private observedAstralWalkRevision = 0;
   private previousPowerCardFlipped: boolean | null = null;
 
   /** Synchronise l'animation avec les notifications de l'état métier. */
@@ -103,10 +115,13 @@ export class HeroPanel implements DoCheck, OnDestroy {
       if (
         player === this.player
         && player?.heroId === 'xanros'
-        && player.controller === 'human'
         && this.playerIndex === activePlayerIndex
       ) {
-        this.showSubstitutionCard(pendingAction?.player === player);
+        if (player.controller === 'human') {
+          this.showSubstitutionCard(pendingAction?.player === player);
+        } else if (this.substitutionPower) {
+          this.showPowerAnnouncement(this.substitutionPower, 'Position échangée.');
+        }
       }
       this.observedSubstitutionRevision = revision;
     }
@@ -123,9 +138,45 @@ export class HeroPanel implements DoCheck, OnDestroy {
     }
   });
 
+  /** Affiche les annonces automatiques sur le verso du héros concerné. */
+  private readonly powerAnnouncementEffect = effect(() => {
+    const tokenChoice = this.gameService.pendingTokenChoice();
+    const previousTokenChoice = this.observedTokenChoice;
+    const horanRevision = this.gameService.horanReincarnationRevision();
+    const astralRevision = this.gameService.astralWalkRevision();
+
+    this.observedTokenChoice = tokenChoice;
+
+    if (
+      tokenChoice === null
+      && previousTokenChoice?.player === this.player
+      && previousTokenChoice.player.controller === 'ai'
+    ) {
+      const power = this.heroDefinition?.powers.find(candidate => candidate.id === 'fate-weaver');
+      if (power) this.showPowerAnnouncement(power, 'Jeton choisi.');
+    }
+
+    if (horanRevision > this.observedHoranReincarnationRevision) {
+      const player = this.gameService.lastHoranReincarnationPlayer();
+      const power = this.heroDefinition?.powers.find(candidate => candidate.id === 'reincarnation');
+      if (player === this.player && power) this.showPowerAnnouncement(power, 'Réincarnation.');
+      this.observedHoranReincarnationRevision = horanRevision;
+    }
+
+    if (astralRevision > this.observedAstralWalkRevision) {
+      const player = this.gameService.lastAstralWalkPlayer();
+      const power = this.heroDefinition?.powers.find(candidate => candidate.id === 'astral-walk');
+      if (player === this.player && power) this.showPowerAnnouncement(power, 'Déplacement astral.');
+      this.observedAstralWalkRevision = astralRevision;
+    }
+  });
+
   ngDoCheck(): void {
     this.syncCurseState(this.player?.isCursed === true);
     this.syncPowerCardAudio();
+    if (this.announcementPlayer !== null && this.announcementPlayer !== this.player) {
+      this.resetPowerAnnouncement();
+    }
     if (this.substitutionPlayer !== null && this.substitutionPlayer !== this.player) {
       this.resetSubstitutionCard();
     }
@@ -175,6 +226,7 @@ export class HeroPanel implements DoCheck, OnDestroy {
       clearTimeout(this.substitutionTimer);
       this.substitutionTimer = null;
     }
+    this.resetPowerAnnouncement();
   }
 
   get isCursed(): boolean {
@@ -213,26 +265,18 @@ export class HeroPanel implements DoCheck, OnDestroy {
     return this.heroDefinition?.powers.find(power => power.id === 'substitution') ?? null;
   }
 
-  /** Consultation intégrée au verso pour l'activation manuelle de Substitution. */
+  /** Consultation de n'importe quel pouvoir sur le verso du portrait. */
   get selectedPowerConsultation(): HeroPowerDefinition | null {
     const player = this.player;
-    if (
-      !player
-      || player.controller !== 'human'
-      || player !== this.gameService.activePlayer
-      || player.heroId !== 'xanros'
-      || this.selectedPowerId !== 'substitution'
-      || this.powerDecision !== null
-    ) {
-      return null;
-    }
-    return this.substitutionPower;
+    if (!player || this.powerDecision !== null) return null;
+    return this.heroDefinition?.powers.find(power => power.id === this.selectedPowerId) ?? null;
   }
 
   get isPowerCardFlipped(): boolean {
     return this.substitutionFlipped()
       || this.powerDecision !== null
-      || this.selectedPowerConsultation !== null;
+      || this.selectedPowerConsultation !== null
+      || this.powerAnnouncement() !== null;
   }
 
   /** Présentation issue exclusivement des décisions déjà ouvertes par le moteur. */
@@ -303,8 +347,28 @@ export class HeroPanel implements DoCheck, OnDestroy {
 
   /** Active Substitution après revalidation par le moteur métier. */
   activateSelectedPower(): void {
-    if (this.selectedPowerConsultation?.id !== 'substitution') return;
-    this.gameService.openXanrosSubstitution();
+    if (!this.selectedPowerCanActivate) return;
+    if (this.gameService.openXanrosSubstitution()) this.powerClosed.emit();
+  }
+
+  closeSelectedPower(): void {
+    if (this.selectedPowerConsultation) this.powerClosed.emit();
+  }
+
+  get selectedPowerIsVoluntary(): boolean {
+    return this.player?.controller === 'human' && this.selectedPowerConsultation?.id === 'substitution';
+  }
+
+  get selectedPowerCanActivate(): boolean {
+    return this.selectedPowerIsVoluntary
+      && this.player === this.gameService.activePlayer
+      && this.gameService.canUseXanrosSubstitution;
+  }
+
+  get selectedPowerUnavailableReason(): string {
+    if (!this.selectedPowerIsVoluntary) return '';
+    if (this.player !== this.gameService.activePlayer) return 'Le joueur actif doit avoir la main.';
+    return this.gameService.xanrosSubstitutionUnavailableReason ?? '';
   }
 
   cancelPowerChoice(): void {
@@ -346,6 +410,24 @@ export class HeroPanel implements DoCheck, OnDestroy {
     this.substitutionFlipped.set(false);
     this.substitutionPlayer = null;
     this.substitutionWaitingForAction = false;
+  }
+
+  private showPowerAnnouncement(power: HeroPowerDefinition, message: string): void {
+    if (this.announcementTimer) clearTimeout(this.announcementTimer);
+    this.announcementPlayer = this.player;
+    this.powerAnnouncement.set({ power, message });
+    this.announcementTimer = setTimeout(() => {
+      this.powerAnnouncement.set(null);
+      this.announcementPlayer = null;
+      this.announcementTimer = null;
+    }, 3500);
+  }
+
+  private resetPowerAnnouncement(): void {
+    if (this.announcementTimer) clearTimeout(this.announcementTimer);
+    this.announcementTimer = null;
+    this.announcementPlayer = null;
+    this.powerAnnouncement.set(null);
   }
 
   openBiography(): void {

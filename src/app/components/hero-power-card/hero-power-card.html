@@ -44,6 +44,19 @@
         }
       </div>
     }
+    @if (mode === 'consultation' && showCloseAction) {
+      <div class="hero-power-card__consultation-close">
+        <button
+          type="button"
+          class="hero-power-card__close"
+          aria-label="Fermer la consultation du pouvoir"
+          title="Fermer"
+          (click)="closed.emit()"
+        >
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+    }
     @if (mode === 'decision' && showActions) {
       <div class="hero-power-card__actions">
         <button

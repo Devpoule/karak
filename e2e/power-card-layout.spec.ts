@@ -17,7 +17,7 @@ async function openBoard(page: import('@playwright/test').Page): Promise<void> {
 }
 
 async function assertCardInsideViewport(page: import('@playwright/test').Page): Promise<void> {
-  const geometry = await page.locator('.player-hud__power-card-host .hero-power-card').evaluate(element => {
+  const geometry = await page.locator('.hero-panel__card-stage--flipped .hero-power-card').evaluate(element => {
     const box = element.getBoundingClientRect();
     return { left: box.left, top: box.top, right: box.right, bottom: box.bottom, width: box.width, height: box.height };
   });
@@ -39,18 +39,18 @@ async function openFirstPowerConsultation(page: import('@playwright/test').Page)
   const power = page.locator('.player-sidebar__power-badge:visible').first();
   await expect(power).toBeVisible();
   await power.click();
-  await expect(page.locator('.player-hud__power-card-host .hero-power-card')).toBeVisible();
+  await expect(page.locator('.hero-panel__card-stage--flipped .hero-power-card')).toBeVisible();
 }
 
 test('la consultation du pouvoir reste centrée et refermable au clavier', async ({ page }) => {
   await openBoard(page);
   const trigger = page.locator('.player-sidebar__power-badge').first();
   await openFirstPowerConsultation(page);
-  await expect(page.locator('.player-hud__power-card-host .hero-power-card')).toBeVisible();
+  await expect(page.locator('.hero-panel__card-stage--flipped .hero-power-card')).toBeVisible();
   await assertCardInsideViewport(page);
-  await expect(page.locator('.player-hud__power-card-host .hero-power-card')).toBeFocused();
+  await expect(page.locator('.hero-panel__card-stage--flipped .hero-power-card__close')).toBeFocused();
   await page.keyboard.press('Escape');
-  await expect(page.locator('.player-hud__power-card-host')).toHaveCount(0);
+  await expect(page.locator('.hero-panel__card-stage--flipped')).toHaveCount(0);
   await expect(trigger).toBeFocused();
 });
 
@@ -60,9 +60,9 @@ test('le bouton du pouvoir retrouve son apparence normale après fermeture', asy
   await expect(power).toBeVisible();
 
   await power.click();
-  await expect(page.locator('.player-hud__power-card-host .hero-power-card')).toBeVisible();
+  await expect(page.locator('.hero-panel__card-stage--flipped .hero-power-card')).toBeVisible();
   await page.keyboard.press('Escape');
-  await expect(page.locator('.player-hud__power-card-host')).toHaveCount(0);
+  await expect(page.locator('.hero-panel__card-stage--flipped')).toHaveCount(0);
   await page.mouse.move(0, 0);
 
   const afterEscape = await power.evaluate(element => {
@@ -91,9 +91,9 @@ test('le bouton retrouve son apparence normale après fermeture par clic extéri
   const power = page.locator('.player-sidebar:visible').first().locator('.player-sidebar__power-badge:visible').nth(1);
   await power.click();
   const powerLabel = await power.getAttribute('aria-label');
-  await expect(page.locator('.player-hud__power-card-host .hero-power-card')).toBeVisible();
-  await page.locator('.player-hud__power-card-host').click({ position: { x: 5, y: 5 } });
-  await expect(page.locator('.player-hud__power-card-host')).toHaveCount(0);
+  await expect(page.locator('.hero-panel__card-stage--flipped .hero-power-card')).toBeVisible();
+  await page.locator('.hero-panel__card-stage--flipped .hero-power-card__close').click();
+  await expect(page.locator('.hero-panel__card-stage--flipped')).toHaveCount(0);
   await page.mouse.move(0, 0);
   const closedPower = page.locator(`button[aria-label="${powerLabel}"]`);
   await expect(closedPower).toHaveAttribute('aria-pressed', 'false');
@@ -104,7 +104,7 @@ test('la consultation ignore le clic intérieur et se ferme par le fond extérie
   await openBoard(page);
   await openFirstPowerConsultation(page);
 
-  const host = page.locator('.player-hud__power-card-host');
+  const host = page.locator('.hero-panel__card-stage--flipped');
   const card = host.locator('.hero-power-card');
   await card.click({ position: { x: 20, y: 20 } });
   await expect(host).toBeVisible();
@@ -121,9 +121,9 @@ test('la consultation ignore le clic intérieur et se ferme par le fond extérie
   });
   expect(geometry.overflowY).toBe('hidden');
   expect(geometry.descriptionVisible).toBe(true);
-  expect(geometry.closeVisible).toBe(false);
+  expect(geometry.closeVisible).toBe(true);
 
-  await host.click({ position: { x: 5, y: 5 } });
+  await card.locator('.hero-power-card__close').click();
   await expect(host).toHaveCount(0);
 });
 
@@ -143,13 +143,13 @@ test('un pouvoir maudit reste consultable sans devenir activable', async ({ page
   const power = page.locator('.player-sidebar__power-badge:visible').first();
   await expect(power).toBeVisible();
   await power.click();
-  const card = page.locator('.player-hud__power-card-host .hero-power-card');
+  const card = page.locator('.hero-panel__card-stage--flipped .hero-power-card');
   await expect(card).toBeVisible();
   await expect(card).toContainText('Pouvoir spécial');
   await expect(card.locator('.hero-power-card__activate')).toHaveCount(0);
   await expect(card.locator('.hero-power-card__decline')).toHaveCount(0);
   await page.keyboard.press('Escape');
-  await expect(page.locator('.player-hud__power-card-host')).toHaveCount(0);
+  await expect(page.locator('.hero-panel__card-stage--flipped')).toHaveCount(0);
 });
 
 test('les deux pouvoirs du joueur maudit restent consultables', async ({ page }) => {
@@ -169,12 +169,12 @@ test('les deux pouvoirs du joueur maudit restent consultables', async ({ page })
   await expect(powers).toHaveCount(2);
   for (let index = 0; index < 2; index++) {
     await powers.nth(index).click();
-    const card = page.locator('.player-hud__power-card-host .hero-power-card');
+    const card = page.locator('.hero-panel__card-stage--flipped .hero-power-card');
     await expect(card).toBeVisible();
     await expect(card.locator('.hero-power-card__activate')).toHaveCount(0);
     await expect(card.locator('.hero-power-card__decline')).toHaveCount(0);
     await page.keyboard.press('Escape');
-    await expect(page.locator('.player-hud__power-card-host')).toHaveCount(0);
+    await expect(page.locator('.hero-panel__card-stage--flipped')).toHaveCount(0);
   }
 });
 
@@ -213,7 +213,7 @@ test('la consultation reste contenue en portrait, paysage et faible hauteur', as
   await openFirstPowerConsultation(page);
   for (const viewport of [{ width: 390, height: 844 }, { width: 844, height: 390 }, { width: 390, height: 360 }]) {
     await page.setViewportSize(viewport);
-    const card = page.locator('.player-hud__power-card-host .hero-power-card');
+    const card = page.locator('.hero-panel__card-stage--flipped .hero-power-card');
     await expect(card).toBeVisible();
     await assertCardInsideViewport(page);
   }

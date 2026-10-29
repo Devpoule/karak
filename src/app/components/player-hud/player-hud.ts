@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Input, TemplateRef, effect, HostBinding, HostListener, QueryList, ViewChildren } from '@angular/core';
+import { AfterViewInit, Component, Input, TemplateRef, effect, HostListener } from '@angular/core';
 import { ElementRef, OnDestroy } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 
@@ -11,10 +11,9 @@ import { CombatService } from '../../services/combat.service';
 
 import { PlayerService } from '../../services/player.service';
 
-import { PlayerSidebar, PowerSelection } from '../player-sidebar/player-sidebar';
-import { HeroPowerCard } from '../hero-power-card/hero-power-card';
+import { PlayerSidebar } from '../player-sidebar/player-sidebar';
 import { HeroPowerId } from '../../models/hero';
-import { getHeroDefinition, getHeroIdentityColor } from '../../data/hero-definitions';
+import { getHeroIdentityColor } from '../../data/hero-definitions';
 import { ToastContainer } from '../toast-container/toast-container';
 import { ToastService } from '../../services/toast.service';
 
@@ -94,7 +93,7 @@ interface HudPlayerEntry {
 
   selector: 'app-player-hud',
 
-  imports: [PlayerSidebar, HeroPowerCard, ToastContainer, NgTemplateOutlet],
+  imports: [PlayerSidebar, ToastContainer, NgTemplateOutlet],
 
   templateUrl: './player-hud.html',
 
@@ -105,106 +104,6 @@ interface HudPlayerEntry {
 export class PlayerHud implements AfterViewInit, OnDestroy {
   /** Contenu du didacticiel occupant le logement droit en l’absence d’IA. */
   @Input() rightAuxiliaryTemplate: TemplateRef<unknown> | null = null;
-  @ViewChildren(PlayerSidebar) private readonly sidebars!: QueryList<PlayerSidebar>;
-
-  @HostBinding('class.player-hud--power-consultation')
-  get hasPowerConsultation(): boolean {
-    return this.consultation !== null;
-  }
-
-  consultation: { player: Player; powerId: HeroPowerId; trigger: HTMLElement | null; sidebar?: PlayerSidebar } | null = null;
-
-  /** Ouvre la consultation globale hors du panneau animé. */
-  openPowerConsultation(player: Player, selection: PowerSelection): void {
-    if (this.isCombatActive || this.inventoryPowerDecisionActive) return;
-    if (!selection.powerId) {
-      this.closePowerConsultation();
-      return;
-    }
-
-    // Substitution est une activation manuelle hors combat : la sélection
-    // reste dans l'inventaire et le verso de la carte porte la consultation,
-    // puis la question de choix. Le moteur métier ne s'ouvre qu'après l'action
-    // « Utiliser » présentée sur ce verso.
-    if (
-      selection.powerId === 'substitution'
-      && player.controller === 'human'
-      && player === this.gameService.activePlayer
-    ) {
-      this.consultation = null;
-      return;
-    }
-
-    this.consultation = { player, powerId: selection.powerId, trigger: selection.trigger, sidebar: selection.sidebar };
-    setTimeout(() => document.querySelector<HTMLElement>('.player-hud__power-card-host .hero-power-card')?.focus());
-  }
-
-  /** Ferme la consultation globale. */
-  closePowerConsultation(event?: Event): void {
-    event?.stopPropagation();
-    event?.stopImmediatePropagation();
-    const trigger = this.consultation?.trigger;
-    const sourceSidebar = this.consultation?.sidebar;
-    const clearSelection = (): void => {
-      sourceSidebar?.clearPowerSelection();
-      this.sidebars?.forEach(sidebar => sidebar.clearPowerSelection());
-    };
-    const close = (): void => {
-      this.consultation = null;
-      trigger?.focus();
-    };
-
-    // Stopper la propagation du clic de fond évite qu’il ne soit interprété
-    // comme une nouvelle interaction avec le bouton d’origine.
-    clearSelection();
-    close();
-  }
-
-  /** Ferme une consultation annulable avec la touche Échap. */
-  @HostListener('document:keydown.escape', ['$event'])
-  closePowerConsultationOnEscape(event: Event): void {
-    if (!this.consultation) return;
-    event.preventDefault();
-    this.closePowerConsultation();
-  }
-
-  /** Résout le pouvoir actuellement consulté. */
-  get consultationPower() {
-    if (!this.consultation?.player.heroId) return null;
-    const power = getHeroDefinition(this.consultation.player.heroId)?.powers.find(
-      power => power.id === this.consultation?.powerId,
-    ) ?? null;
-    return power;
-  }
-
-  /** Résout le héros actuellement consulté. */
-  get consultationHero() {
-    const hero = this.consultation?.player.heroId
-      ? getHeroDefinition(this.consultation.player.heroId) ?? null
-      : null;
-    return hero;
-  }
-
-  /** Les seuls pouvoirs activables depuis cette fiche sont ceux explicitement
-   * pris en charge par une action métier volontaire hors combat. */
-  get consultationPowerIsVoluntary(): boolean {
-    return this.consultation?.player.controller === 'human'
-      && this.consultationPower?.id === 'substitution';
-  }
-
-  get consultationPowerCanActivate(): boolean {
-    return this.consultationPowerIsVoluntary
-      && this.consultation?.player === this.gameService.activePlayer
-      && this.gameService.canUseXanrosSubstitution;
-  }
-
-  get consultationPowerUnavailableReason(): string {
-    if (!this.consultationPowerIsVoluntary) return '';
-    const player = this.consultation?.player;
-    if (player !== this.gameService.activePlayer) return 'Le joueur actif doit avoir la main.';
-    return this.gameService.xanrosSubstitutionUnavailableReason ?? '';
-  }
-
   /** Retourne les pouvoirs activables afin que le badge reste synchronisé
    * avec les gardes du service métier, sans les recopier dans le template. */
   usablePowerIds(player: Player): readonly HeroPowerId[] {
@@ -212,12 +111,6 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
     return player.heroId === 'xanros' && this.gameService.canUseXanrosSubstitution
       ? ['substitution']
       : [];
-  }
-
-  /** Revalide l'action au clic puis délègue intégralement au domaine. */
-  activateConsultationPower(): void {
-    if (!this.consultationPowerCanActivate) return;
-    if (this.gameService.openXanrosSubstitution()) this.closePowerConsultation();
   }
 
   compactViewport = false;
@@ -437,7 +330,9 @@ export class PlayerHud implements AfterViewInit, OnDestroy {
     if (compactViewport === this.compactViewport) return;
 
     this.compactViewport = compactViewport;
-    if (this.consultation) {
+    // Une consultation intégrée doit conserver son panneau d'ancrage pendant
+    // le redimensionnement, comme toute autre décision locale du héros.
+    if (document.querySelector('.player-sidebar__power-badge--selected')) {
       return;
     }
     if (compactViewport) {

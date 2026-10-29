@@ -18,12 +18,6 @@ import { MovementCounter } from '../movement-counter/movement-counter';
  */
 export type PlayerSide = 'left' | 'right';
 
-export interface PowerSelection {
-  powerId: HeroPowerId | null;
-  trigger: HTMLElement | null;
-  sidebar?: PlayerSidebar;
-}
-
 
 /**
  * Fiche visuelle d'un joueur.
@@ -97,8 +91,6 @@ export class PlayerSidebar {
   @Output() playerTabClicked = new EventEmitter<void>();
 
   /** Informe le HUD de la sélection d’un pouvoir à consulter. */
-  @Output() powerSelected = new EventEmitter<PowerSelection>();
-
 
   // ==========================================================
   // PANNEAUX VISIBLES
@@ -128,21 +120,18 @@ export class PlayerSidebar {
     return this.isActive && !this.interactionLocked && this.usablePowerIds.includes(powerId);
   }
 
-  togglePower(powerId: HeroPowerId, event?: Event): void {
+  togglePower(powerId: HeroPowerId): void {
     if (this.interactionLocked) return;
     this.biographyOpen = false;
     this.selectedPowerId = this.selectedPowerId === powerId ? null : powerId;
-    this.powerSelected.emit({
-      powerId: this.selectedPowerId,
-      trigger: event?.currentTarget instanceof HTMLElement ? event.currentTarget : null,
-      sidebar: this,
-    });
   }
 
   /** Réinitialise l'état visuel après la fermeture de la consultation globale. */
   clearPowerSelection(): void {
+    const trigger = document.querySelector<HTMLButtonElement>('.player-sidebar__power-badge--selected');
     this.selectedPowerId = null;
     this.changeDetector?.detectChanges();
+    queueMicrotask(() => trigger?.focus());
   }
 
   toggleBiography(): void {
@@ -162,7 +151,6 @@ export class PlayerSidebar {
     this.selectedPowerId = null;
     this.biographyOpen = false;
     this.curseDialogOpen = false;
-    this.powerSelected.emit({ powerId: null, trigger: null, sidebar: this });
   }
 
   /** Transmet le clic de languette uniquement hors combat. */
@@ -180,6 +168,10 @@ export class PlayerSidebar {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
+    if (this.selectedPowerId !== null) {
+      this.clearPowerSelection();
+      return;
+    }
     this.closeDetails();
   }
 

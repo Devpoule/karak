@@ -49,6 +49,9 @@ export class HeroPowerCard implements AfterViewInit {
   /** Affiche l'action métier volontaire dans la fiche descriptive. */
   @Input() showConsultationAction = false;
 
+  /** Affiche une fermeture locale lorsque la carte est intégrée à un panneau. */
+  @Input() showCloseAction = false;
+
   /** Indique si l'action volontaire peut être lancée au moment du rendu. */
   @Input() canActivate = false;
 
@@ -93,7 +96,7 @@ export class HeroPowerCard implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    if (!this.inventory || (this.mode !== 'decision' && this.mode !== 'choice')) return;
+    if (!this.inventory) return;
     queueMicrotask(() => this.elementRef.nativeElement.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus());
   }
 }

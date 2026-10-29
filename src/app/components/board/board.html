@@ -403,16 +403,6 @@
       </div>
     }
   </div>
-  @if (powerAnnouncement(); as announcement) {
-    <div class="board__power-announcement" aria-live="polite">
-      <app-hero-power-card
-        mode="announcement"
-        [hero]="announcement.hero"
-        [power]="announcement.power"
-        [message]="announcement.message"
-      />
-    </div>
-  }
   @if (humanPendingTreasure; as pending) {
     <div class="board__reward-backdrop" (pointerdown)="$event.stopPropagation()">
       <app-decision-card

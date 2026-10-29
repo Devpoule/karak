@@ -40,7 +40,7 @@
   }
 
   @if (showPlayer) {
-    <app-hero-panel [player]="player" [playerIndex]="playerIndex" [side]="side" [isActive]="isActive" [selectedPowerId]="selectedPowerId" (portraitClicked)="toggleBiography()" (curseClicked)="openCurseDialog()" />
+    <app-hero-panel [player]="player" [playerIndex]="playerIndex" [side]="side" [isActive]="isActive" [selectedPowerId]="selectedPowerId" (portraitClicked)="toggleBiography()" (curseClicked)="openCurseDialog()" (powerClosed)="clearPowerSelection()" />
     <app-life-panel [player]="player" [playerIndex]="playerIndex" />
   }
 
@@ -77,7 +77,7 @@
                 [attr.aria-label]="'Consulter pouvoir ' + (index + 1) + ' : ' + power.name + (player?.isCursed ? ' — pouvoir indisponible' : '')"
                 [attr.title]="isPowerUsable(power.id) ? power.name + ' — disponible' : power.name"
                 [attr.data-tooltip]="player?.isCursed ? 'Pouvoir indisponible en jeu ; cliquer pour consulter sa description' : power.name + ' — ' + power.description"
-                (click)="togglePower(power.id, $event)"
+                (click)="togglePower(power.id)"
               >
                 <img [src]="powerImage(index)" alt="" draggable="false" />
                 <span class="sr-only">Pouvoir {{ index + 1 }} : {{ power.name }}</span>

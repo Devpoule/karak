@@ -56,7 +56,7 @@ test('Marche astrale autorise à traverser un mur entre deux tuiles découvertes
   await expect(destination).toBeVisible();
   await destination.click();
 
-  const astralAnnouncement = page.locator('.board__power-announcement');
+  const astralAnnouncement = page.locator('.hero-panel__card-stage--flipped .hero-power-card--announcement');
   await expect(astralAnnouncement).toBeVisible({ timeout: 5_000 });
   await expect(astralAnnouncement).toContainText('Marche astrale');
 

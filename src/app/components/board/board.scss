@@ -37,24 +37,6 @@
   }
 }
 
-.board__power-announcement {
-  position: absolute;
-  z-index: var(--karak-z-modal);
-  top: 1rem;
-  left: 50%;
-  width: min(560px, calc(100% - 2rem));
-  max-width: calc(100% - 2rem);
-  pointer-events: none;
-  transform: translateX(-50%);
-}
-
-.board__power-announcement app-hero-power-card {
-  display: block;
-  width: 100%;
-  transform: scale(0.82);
-  transform-origin: top center;
-}
-
 /*
  * Révélation indépendante du monde du donjon.
  *

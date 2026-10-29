@@ -67,3 +67,4 @@
 ## Prochain chantier autonome proposé
 
 Le prochain lot autonome est une recette navigateur dédiée aux pouvoirs spécifiques et aux parcours de récompense.
+- Les consultations et annonces de pouvoirs spÃ©ciaux utilisent dÃ©sormais le verso du `HeroPanel` ; les dÃ©cisions de combat conservent leur retournement dÃ©diÃ© et aucun host flottant de pouvoir n'est rendu par le HUD.

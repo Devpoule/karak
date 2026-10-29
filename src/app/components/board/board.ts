@@ -1,9 +1,9 @@
-import { Component, effect, HostListener, Optional, signal } from '@angular/core';
+import { Component, effect, HostListener, Optional } from '@angular/core';
 import { getPlayerUiConfig } from '../../constants/player-ui.constants';
 import { getHeroDefinition, getHeroIdentityColor } from '../../data/hero-definitions';
 import { getTokenDefinition } from '../../data/token-definitions';
 import { getEquipmentDefinition } from '../../data/equipment-definitions';
-import { HeroDefinition, HeroPowerDefinition } from '../../models/hero';
+import { HeroDefinition } from '../../models/hero';
 import { Equipment } from '../../models/equipment';
 import { Player } from '../../models/player';
 import { DIRECTIONS, Direction, PlacedTile, TileDefinition } from '../../models/tile';
@@ -11,11 +11,10 @@ import { PlayerService } from '../../services/player.service';
 import { DungeonService } from '../../services/dungeon.service';
 import { TurnService } from '../../services/turn.service';
 import { ExplorationService, PendingTilePlacement } from '../../services/exploration.service';
-import { GameService, PendingGroundEquipment, PendingReward, PendingTokenChoice, PendingTreasure } from '../../services/game.service';
+import { GameService, PendingGroundEquipment, PendingReward, PendingTreasure } from '../../services/game.service';
 import { CombatService } from '../../services/combat.service';
 import { TREASURE_POINTS, Treasure } from '../../models/treasure';
 import { CombatOverlay } from '../combat-overlay/combat-overlay';
-import { HeroPowerCard } from '../hero-power-card/hero-power-card';
 import { QuantityPipe } from '../../pipes/quantity.pipe';
 import { DecisionCard, DecisionCardAction } from '../decision-card/decision-card';
 import { TutorialScenarioService } from '../../services/tutorial-scenario.service';
@@ -31,12 +30,6 @@ interface BoardPlayerView {
   playerIndex: number;
   label: string;
   heroColor: string;
-}
-
-interface PowerAnnouncement {
-  hero: HeroDefinition;
-  power: HeroPowerDefinition;
-  message: string;
 }
 
 /**
@@ -92,17 +85,11 @@ const DIRECTION_LABELS: Record<Direction, string> = {
  */
 @Component({
   selector: 'app-board',
-  imports: [CombatOverlay, HeroPowerCard, DecisionCard, QuantityPipe],
+  imports: [CombatOverlay, DecisionCard, QuantityPipe],
   templateUrl: './board.html',
   styleUrl: './board.scss',
 })
 export class Board {
-  readonly powerAnnouncement = signal<PowerAnnouncement | null>(null);
-  private announcementTimer: number | null = null;
-  private observedSubstitutionRevision = 0;
-  private observedHoranReincarnationRevision = 0;
-  private observedAstralWalkRevision = 0;
-  private observedTokenChoice: PendingTokenChoice | null = null;
   constructor(
     private readonly dungeonService: DungeonService,
     private readonly explorationService: ExplorationService,
@@ -142,62 +129,11 @@ export class Board {
     });
 
     effect(() => {
-      const revision = this.gameService.xanrosSubstitutionRevision();
-      if (revision > this.observedSubstitutionRevision) {
-        const player = this.gameService.lastXanrosSubstitutionPlayer();
-        const hero = player?.heroId ? getHeroDefinition(player.heroId) : undefined;
-        const power = hero?.powers.find(candidate => candidate.id === 'substitution');
-        if (player === this.gameService.activePlayer) queueMicrotask(() => this.centerOnActivePlayer());
-        if (hero && power && player?.controller !== 'human') {
-          this.showPowerAnnouncement(hero, power, 'Position échangée.');
-        }
-      }
-      this.observedSubstitutionRevision = revision;
+      this.gameService.xanrosSubstitutionRevision();
+      const player = this.gameService.lastXanrosSubstitutionPlayer();
+      if (player === this.gameService.activePlayer) queueMicrotask(() => this.centerOnActivePlayer());
     });
 
-    effect(() => {
-      const choice = this.gameService.pendingTokenChoice();
-      const previous = this.observedTokenChoice;
-      if (!choice && previous?.player.controller === 'ai'
-        && previous.tokens.some(token => token.id === previous.tile.tokenId)) {
-        const hero = previous.player.heroId ? getHeroDefinition(previous.player.heroId) : undefined;
-        const power = hero?.powers.find(candidate => candidate.id === 'fate-weaver');
-        if (hero && power) this.showPowerAnnouncement(hero, power, 'Jeton choisi.');
-      }
-      this.observedTokenChoice = choice;
-    });
-
-    effect(() => {
-      const revision = this.gameService.horanReincarnationRevision();
-      if (revision > this.observedHoranReincarnationRevision) {
-        const player = this.gameService.lastHoranReincarnationPlayer();
-        const hero = player?.heroId ? getHeroDefinition(player.heroId) : undefined;
-        const power = hero?.powers.find(candidate => candidate.id === 'reincarnation');
-        if (hero && power) this.showPowerAnnouncement(hero, power, 'Réincarnation.');
-      }
-      this.observedHoranReincarnationRevision = revision;
-    });
-
-    effect(() => {
-      const revision = this.gameService.astralWalkRevision();
-      if (revision > this.observedAstralWalkRevision) {
-        const player = this.gameService.lastAstralWalkPlayer();
-        const hero = player?.heroId ? getHeroDefinition(player.heroId) : undefined;
-        const power = hero?.powers.find(candidate => candidate.id === 'astral-walk');
-        if (hero && power) this.showPowerAnnouncement(hero, power, 'Déplacement astral.');
-      }
-      this.observedAstralWalkRevision = revision;
-    });
-  }
-
-  /** Affiche une annonce sans modifier la décision métier existante. */
-  private showPowerAnnouncement(hero: HeroDefinition, power: HeroPowerDefinition, message: string): void {
-    if (this.announcementTimer !== null) window.clearTimeout(this.announcementTimer);
-    this.powerAnnouncement.set({ hero, power, message });
-    this.announcementTimer = window.setTimeout(() => {
-      this.powerAnnouncement.set(null);
-      this.announcementTimer = null;
-    }, 3500);
   }
 
   get healingPortalSelection() {

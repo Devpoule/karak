@@ -76,11 +76,23 @@
               mode="consultation"
               [hero]="hero"
               [power]="power"
-              [showConsultationAction]="true"
-              [canActivate]="gameService.canUseXanrosSubstitution"
-              [activationUnavailableReason]="gameService.xanrosSubstitutionUnavailableReason ?? ''"
+              [showConsultationAction]="selectedPowerIsVoluntary"
+              [showCloseAction]="true"
+              [conditions]="player?.isCursed ? 'Pouvoir indisponible sous malédiction.' : ''"
+              [canActivate]="selectedPowerCanActivate"
+              [activationUnavailableReason]="selectedPowerUnavailableReason"
               activateLabel="Utiliser"
               (activationRequested)="activateSelectedPower()"
+              (closed)="closeSelectedPower()"
+            />
+          } @else if (powerAnnouncement(); as announcement) {
+            <app-hero-power-card
+              class="hero-panel__power-card"
+              [inventory]="true"
+              mode="announcement"
+              [hero]="hero"
+              [power]="announcement.power"
+              [message]="announcement.message"
             />
           } @else if (substitutionPower; as power) {
             <app-hero-power-card
